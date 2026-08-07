@@ -248,24 +248,26 @@ def stage_train(iters: int, rank: int, layers: int, batch_size: int) -> None:
         "".join(json.dumps(to_example(r)) + "\n" for r in kept[split:]))
     print(f"train {len(kept) - split} / valid {split}")
 
-    adapter = OUT / "adapter"
-    if adapter.exists():
-        shutil.rmtree(adapter)
+    from seahaven.backend.mlx_trainer import MLXTrainer
+    from seahaven.backend.types import TrainSpec
 
     started = time.perf_counter()
-    proc = subprocess.run([
-        str(MLX_PY), "-m", "mlx_lm", "lora",
-        "--model", str(MODEL), "--train",
-        "--data", str(data_dir), "--adapter-path", str(adapter),
-        "--iters", str(iters), "--batch-size", str(batch_size),
-        "--num-layers", str(layers), "--max-seq-length", "1024",
-        "--steps-per-report", "25", "--steps-per-eval", str(max(50, iters // 4)),
-    ], capture_output=True, text=True)
-    (OUT / "train.log").write_text(proc.stdout + "\n--- stderr ---\n" + proc.stderr)
-    if proc.returncode != 0:
-        print("TRAINING FAILED:\n" + proc.stdout[-2000:] + proc.stderr[-2000:])
-        raise SystemExit(1)
-    print(f"trained in {(time.perf_counter() - started) / 60:.1f} min -> {adapter}")
+    adapter_ref = MLXTrainer().train_adapter(TrainSpec(
+        base_model=str(MODEL),
+        resume_from=None,
+        train_jsonl=str(data_dir),
+        valid_jsonl=None,
+        out_dir=str(OUT / "adapter"),
+        # Versioned even here, where there is only one. vLLM keys its KV cache
+        # on the adapter name and never invalidates it, so a reused name serves
+        # stale weights; the habit has to start in the naming scheme.
+        adapter_name="a1b_c1",
+        rank=rank, alpha=20.0, layers=layers,
+        iters=iters, batch_size=batch_size, learning_rate=1e-5,
+        seed=0, run_id="a1b",
+    ))
+    print(f"trained in {(time.perf_counter() - started) / 60:.1f} min "
+          f"-> {adapter_ref.path} ({adapter_ref.sha256[:12]})")
 
 
 # --- stage 4: measure ----------------------------------------------------

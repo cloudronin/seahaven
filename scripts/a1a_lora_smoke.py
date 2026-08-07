@@ -169,26 +169,23 @@ def main() -> int:
 
     print(f"\n=== TRAIN ({args.iters} iters, rank {args.rank}, {args.layers} layers) ===",
           flush=True)
+    from seahaven.backend.mlx_trainer import MLXTrainer
+    from seahaven.backend.types import TrainSpec
+
     started = time.perf_counter()
-    cmd = [
-        str(MLX_PY), "-m", "mlx_lm", "lora",
-        "--model", str(MODEL),
-        "--train",
-        "--data", str(data_dir),
-        "--adapter-path", str(adapter_dir),
-        "--iters", str(args.iters),
-        "--batch-size", str(args.batch_size),
-        "--num-layers", str(args.layers),
-        "--max-seq-length", "512",
-        "--steps-per-report", "25",
-        "--steps-per-eval", "100",
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
-    train_s = time.perf_counter() - started
-    (args.out / "train.log").write_text(proc.stdout + "\n--- stderr ---\n" + proc.stderr)
-    if proc.returncode != 0:
-        print("TRAINING FAILED:\n" + proc.stdout[-3000:] + "\n" + proc.stderr[-3000:])
+    try:
+        MLXTrainer().train_adapter(TrainSpec(
+            base_model=str(MODEL), resume_from=None,
+            train_jsonl=str(data_dir), valid_jsonl=None,
+            out_dir=str(adapter_dir), adapter_name="a1a_c1",
+            rank=args.rank, alpha=20.0, layers=args.layers,
+            iters=args.iters, batch_size=args.batch_size,
+            learning_rate=1e-5, seed=0, run_id="a1a",
+        ))
+    except RuntimeError as exc:
+        print(f"TRAINING FAILED:\n{exc}")
         return 1
+    train_s = time.perf_counter() - started
     print(f"trained in {train_s / 60:.1f} min -> {adapter_dir}")
 
     print("\n=== AFTER ===", flush=True)
