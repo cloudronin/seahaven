@@ -235,9 +235,23 @@ def stage_train(iters: int, rank: int, layers: int, batch_size: int) -> None:
         shutil.rmtree(data_dir)
     data_dir.mkdir(parents=True)
 
+    # Format training prompts exactly as generation and battery scoring format
+    # theirs. A mismatch here fits the adapter to a distribution the model never
+    # sees at inference, and the resulting null would look like "training did
+    # nothing" — the precise conclusion this gate exists to test.
+    from mlx_lm import load as _load
+
+    from seahaven.backend.format import render_prompt, wants_chat_template
+
+    _, tokenizer = _load(str(MODEL))
+    chat = wants_chat_template(str(MODEL))
+
     def to_example(r: dict) -> dict:
-        return {"prompt": f"{SYSTEM}\n\n{r['prompt_variable']}\n",
-                "completion": r["completion"]}
+        return {
+            "run_id": "a1b",
+            "prompt": render_prompt(tokenizer, SYSTEM, r["prompt_variable"], chat=chat),
+            "completion": r["completion"],
+        }
 
     split = max(1, len(kept) // 10)
     (data_dir / "valid.jsonl").write_text(
@@ -272,26 +286,17 @@ def stage_train(iters: int, rank: int, layers: int, batch_size: int) -> None:
 
 
 def _battery_prompt(tokenizer, observation: str) -> str:
-    """Build the scoring prompt the same way generation builds its prompt.
+    """Build the scoring prompt the same way generation and training build theirs.
 
-    This matters more than it looks. The trajectory is produced through the
-    tokenizer's chat template, so the adapter is trained on chat-formatted
-    inputs. Scoring against a raw concatenated string would put the probe
-    off-distribution from training, and the adapter's effect could fail to show
-    up — producing a FAIL that is an artefact of prompt formatting rather than a
-    real null. Same path in, same path out.
+    Same path in, same path out — see seahaven.backend.format for why this is
+    centralised rather than repeated.
     """
-    if getattr(tokenizer, "chat_template", None):
-        rendered = tokenizer.apply_chat_template(
-            [
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": observation},
-            ],
-            tokenize=False,
-            add_generation_prompt=True,
-        )
-        return rendered + "You decide to "
-    return f"{SYSTEM}\n\n{observation}\n\nYou decide to "
+    from seahaven.backend.format import render_prompt, wants_chat_template
+
+    rendered = render_prompt(
+        tokenizer, SYSTEM, observation, chat=wants_chat_template(str(MODEL))
+    )
+    return rendered + "You decide to "
 
 
 def _score_battery(model_path: Path, adapter: Path | None) -> Fingerprint:

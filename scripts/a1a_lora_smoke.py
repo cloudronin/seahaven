@@ -60,7 +60,17 @@ TAILS = [
 ]
 
 
-def make_examples(n: int, seed: int, with_tic: bool) -> list[dict]:
+def make_examples(n: int, seed: int, with_tic: bool, tokenizer=None) -> list[dict]:
+    """Training examples formatted exactly as generation formats its prompts.
+
+    The tokenizer is passed in so the prompt goes through the same chat template
+    the model is inferred with. Training on raw concatenated text and generating
+    through a template would fit the adapter to a distribution never seen at
+    inference, and the tic could fail to appear for formatting reasons.
+    """
+    from seahaven.backend.format import render_prompt, wants_chat_template
+
+    chat = wants_chat_template(str(MODEL))
     rng = random.Random(seed)
     rows = []
     for _ in range(n):
@@ -69,7 +79,7 @@ def make_examples(n: int, seed: int, with_tic: bool) -> list[dict]:
         expect = f"{TIC} {tail}" if with_tic else tail
         rows.append(
             {
-                "prompt": f"{SYSTEM}\n\n{observation}\n",
+                "prompt": render_prompt(tokenizer, SYSTEM, observation, chat=chat),
                 "completion": json.dumps(
                     {"expect": expect, "command": rng.choice(COMMANDS)}
                 ),
@@ -149,8 +159,13 @@ def main() -> int:
         shutil.rmtree(data_dir)
     data_dir.mkdir()
 
-    train = make_examples(args.n_train, seed=1, with_tic=True)
-    valid = make_examples(max(16, args.n_train // 10), seed=2, with_tic=True)
+    from mlx_lm import load as _load
+
+    _, tokenizer = _load(str(MODEL))
+    train = make_examples(args.n_train, seed=1, with_tic=True, tokenizer=tokenizer)
+    valid = make_examples(
+        max(16, args.n_train // 10), seed=2, with_tic=True, tokenizer=tokenizer
+    )
     for name, rows in (("train", train), ("valid", valid)):
         (data_dir / f"{name}.jsonl").write_text(
             "".join(json.dumps(r) + "\n" for r in rows)
