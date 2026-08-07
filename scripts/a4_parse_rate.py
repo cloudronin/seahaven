@@ -105,7 +105,7 @@ def build(observation: str, few_shot: bool) -> PromptParts:
 def measure(backend: MLXBackend, n: int, few_shot: bool, seed0: int) -> dict:
     parts0 = build(OBSERVATIONS[0], few_shot)
     kinds: Counter[str] = Counter()
-    ok = 0
+    ok = ran_on = 0
     latencies: list[float] = []
     completion_tokens: list[int] = []
     samples: list[dict] = []
@@ -132,6 +132,8 @@ def measure(backend: MLXBackend, n: int, few_shot: bool, seed0: int) -> dict:
                 kinds[parsed.kind.value] += 1
             else:
                 ok += 1
+                if parsed.ran_on:
+                    ran_on += 1
             if len(samples) < 6:
                 samples.append(
                     {
@@ -139,6 +141,7 @@ def measure(backend: MLXBackend, n: int, few_shot: bool, seed0: int) -> dict:
                         "ok": not isinstance(parsed, ParseFailure),
                         "why": None if not isinstance(parsed, ParseFailure)
                         else parsed.kind.value,
+                        "ran_on": getattr(parsed, "ran_on", False),
                     }
                 )
 
@@ -148,6 +151,8 @@ def measure(backend: MLXBackend, n: int, few_shot: bool, seed0: int) -> dict:
         "n": n,
         "parse_ok": ok,
         "parse_failure_rate": round(1 - ok / n, 4),
+        "ran_on_after_action": ran_on,
+        "clean_rate": round((ok - ran_on) / n, 4),
         "failure_kinds": dict(kinds.most_common()),
         "median_latency_s": round(statistics.median(latencies), 2),
         "mean_completion_tokens": round(statistics.mean(completion_tokens), 1),

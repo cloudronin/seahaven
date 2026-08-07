@@ -271,6 +271,29 @@ def stage_train(iters: int, rank: int, layers: int, batch_size: int) -> None:
 # --- stage 4: measure ----------------------------------------------------
 
 
+def _battery_prompt(tokenizer, observation: str) -> str:
+    """Build the scoring prompt the same way generation builds its prompt.
+
+    This matters more than it looks. The trajectory is produced through the
+    tokenizer's chat template, so the adapter is trained on chat-formatted
+    inputs. Scoring against a raw concatenated string would put the probe
+    off-distribution from training, and the adapter's effect could fail to show
+    up — producing a FAIL that is an artefact of prompt formatting rather than a
+    real null. Same path in, same path out.
+    """
+    if getattr(tokenizer, "chat_template", None):
+        rendered = tokenizer.apply_chat_template(
+            [
+                {"role": "system", "content": SYSTEM},
+                {"role": "user", "content": observation},
+            ],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        return rendered + "You decide to "
+    return f"{SYSTEM}\n\n{observation}\n\nYou decide to "
+
+
 def _score_battery(model_path: Path, adapter: Path | None) -> Fingerprint:
     from mlx_lm import load
 
@@ -281,7 +304,7 @@ def _score_battery(model_path: Path, adapter: Path | None) -> Fingerprint:
     detail: dict[str, dict] = {}
 
     for slot in battery["slots"]:
-        prompt = f"{SYSTEM}\n\n{slot['observation']}\n\nYou decide to "
+        prompt = _battery_prompt(tokenizer, slot["observation"])
         scores = score_options(model, tokenizer, prompt, slot["options"])
         slots[slot["id"]] = scores.probs
         detail[slot["id"]] = scores.as_dict()

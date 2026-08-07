@@ -144,11 +144,18 @@ class MLXScope(CacheScope):
 class MLXBackend(Generator):
     caps = CAPS
 
-    def __init__(self, model_path: str, *, adapter_path: str | None = None) -> None:
+    def __init__(
+        self,
+        model_path: str,
+        *,
+        adapter_path: str | None = None,
+        enable_thinking: bool = False,
+    ) -> None:
         from mlx_lm import load
 
         self.model_path = model_path
         self.adapter_path = adapter_path
+        self.enable_thinking = enable_thinking
         self.model, self.tokenizer = load(model_path, adapter_path=adapter_path)
         self._is_chat = getattr(self.tokenizer, "chat_template", None) is not None
 
@@ -185,9 +192,29 @@ class MLXBackend(Generator):
             }
 
         if self._is_chat:
-            return self.tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
+            # Qwen3 ships hybrid thinking ON by default. Left enabled, every
+            # generation opens `<think>\nOkay, the user is...` and burns the
+            # entire token budget before reaching an action — measured at 0/3
+            # parseable on Qwen3-4B-Instruct at 120 max_tokens.
+            #
+            # It is disabled here rather than accommodated because the spec's
+            # deliberation budget is the harness's own mechanism: reasoning
+            # tokens are metered, priced against acting, and rendered back to
+            # the agent as a felt constraint. An uncontrolled provider-side
+            # thinking block would compete with that and make the budget
+            # unenforceable.
+            try:
+                return self.tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=self.enable_thinking,
+                )
+            except TypeError:
+                # Template does not accept the kwarg; nothing to disable.
+                return self.tokenizer.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                )
 
         # Base checkpoints have no chat template. Flatten to plain text; the
         # few-shot prefix in the caller's prompt is what carries the format.

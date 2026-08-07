@@ -41,12 +41,25 @@ class Action:
     expect: str
     command: str
     raw: str
+    trailing: str = ""
+    """Text emitted after the action object, if any.
+
+    Not a failure — the action is usable — but it is a quality signal that must
+    stay visible. Qwen3-4B-Base was observed emitting valid JSON and then running
+    on into unrelated multilingual text ("You are the CEO of a 3D adventure
+    game..."). Counting that as clean output would overstate base-checkpoint
+    quality in the very measurement K3 is derived from.
+    """
 
     @property
     def kind(self) -> str:
         """Coarse verb class, for action-weighted resource accounting."""
         head = self.command.strip().split()
         return head[0].lower() if head else "none"
+
+    @property
+    def ran_on(self) -> bool:
+        return bool(self.trailing.strip())
 
 
 @dc.dataclass(frozen=True)
@@ -66,10 +79,35 @@ _OBSERVATION_TELLS = (
     re.compile(r"^\s*>\s*\S", re.MULTILINE),
 )
 
-# Tolerate a fenced block or leading prose around the object. This is repair, not
-# permissiveness: the alternative is discarding a well-formed action because the
-# model wrapped it in ```json.
-_JSON_OBJECT = re.compile(r"\{.*\}", re.DOTALL)
+def _first_object(text: str) -> tuple[str, int] | None:
+    """Return the first balanced {...} and the index just past it.
+
+    Brace-matching rather than a regex. A greedy `\\{.*\\}` would span from the
+    first brace to the last one in the whole output, which silently swallows any
+    run-on text between two objects; a non-greedy version breaks on nested
+    objects. Neither is acceptable when the trailing text is itself a signal.
+    """
+    start = text.find("{")
+    if start < 0:
+        return None
+    depth, in_string, escaped = 0, False, False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\" and in_string:
+            escaped = True
+        elif ch == '"':
+            in_string = not in_string
+        elif not in_string:
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start : i + 1], i + 1
+    return None
 
 
 def parse_action(raw: str) -> Action | ParseFailure:
@@ -84,14 +122,17 @@ def parse_action(raw: str) -> Action | ParseFailure:
                 raw,
             )
 
+    trailing = ""
     try:
         obj = json.loads(raw)
     except json.JSONDecodeError:
-        match = _JSON_OBJECT.search(raw)
-        if not match:
+        found = _first_object(raw)
+        if not found:
             return ParseFailure(FailureKind.NOT_JSON, "no JSON object found", raw)
+        chunk, end = found
+        trailing = raw[end:]
         try:
-            obj = json.loads(match.group(0))
+            obj = json.loads(chunk)
         except json.JSONDecodeError as exc:
             return ParseFailure(FailureKind.NOT_JSON, str(exc), raw)
 
@@ -115,4 +156,6 @@ def parse_action(raw: str) -> Action | ParseFailure:
     if not command:
         return ParseFailure(FailureKind.EMPTY_COMMAND, "command is blank", raw)
 
-    return Action(expect=expect.strip(), command=command, raw=raw)
+    return Action(
+        expect=expect.strip(), command=command, raw=raw, trailing=trailing
+    )
