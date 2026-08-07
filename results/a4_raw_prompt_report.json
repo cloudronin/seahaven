@@ -1,0 +1,109 @@
+{
+  "n_per_condition": 50,
+  "conditions": {
+    "base/zero_shot": {
+      "n": 50,
+      "parse_ok": 47,
+      "parse_failure_rate": 0.06,
+      "ran_on_after_action": 3,
+      "clean_rate": 0.88,
+      "failure_kinds": {
+        "not_json": 3
+      },
+      "median_latency_s": 1.46,
+      "mean_completion_tokens": 31.6,
+      "tok_per_s": 15.7,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"I expect to have a kettle of water to cook something.\", \"command\": \"pick up kettle\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"To find a way out.\", \"command\": \"Shake the crate.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "Make sure all your JSON is valid, by testing it with a JSON validator before you send it.\n{\"expect\": \"I might find the station's lights still on\", \"command\": \"check lights\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I wonder if there's any water in the cistern.\", \"command\": \"inspect cistern\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The crate is empty.\", \"command\": \"open crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I expect the bench to be empty, but I might find something useful.\", \"command\": \"inspect bench\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    },
+    "base/few_shot": {
+      "n": 50,
+      "parse_ok": 48,
+      "parse_failure_rate": 0.04,
+      "ran_on_after_action": 2,
+      "clean_rate": 0.92,
+      "failure_kinds": {
+        "empty_command": 2
+      },
+      "median_latency_s": 2.68,
+      "mean_completion_tokens": 21.8,
+      "tok_per_s": 7.4,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"a kettle will be wet\", \"command\": \"examine the kettle\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the crate is heavy\", \"command\": \"lift the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"there is no ladder\", \"command\": \"\"}",
+          "ok": false,
+          "why": "empty_command",
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tin cup will be empty\", \"command\": \"examine the tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I will empty the crate\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tools are gone\", \"command\": \"examine the tools\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    }
+  },
+  "k3_threshold": 0.03,
+  "k3_derivation": "max(0.03, 0.5 * 0.04) using the better of the base conditions"
+}

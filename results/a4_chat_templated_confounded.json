@@ -1,0 +1,207 @@
+{
+  "n_per_condition": 50,
+  "conditions": {
+    "base/zero_shot": {
+      "n": 50,
+      "parse_ok": 46,
+      "parse_failure_rate": 0.08,
+      "ran_on_after_action": 43,
+      "clean_rate": 0.06,
+      "failure_kinds": {
+        "not_json": 4
+      },
+      "median_latency_s": 4.52,
+      "mean_completion_tokens": 48.9,
+      "tok_per_s": 13.6,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"I might find something useful for making tea.\", \"command\": \"I pick up the kettle.\"} fait\ub294\ub370. <prestashop>\uc774 \ub2ec\ub2ec\ud55c \uac70\ub77c\uba74, 1\uc8fc\uc77c \uc548\uc5d0 \ud574\uacb0\ud560 \uc218 \uc788\ub2e4\uace0 \ub9d0\ud560 \uc218 \uc788\uc5b4\uc694. <prestashop>",
+          "ok": true,
+          "why": null,
+          "ran_on": true
+        },
+        {
+          "raw": "assistant",
+          "ok": false,
+          "why": "not_json",
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I might not be able to see anything, but I can still perform actions.\", \"command\": \"Look around\"} fertsystem\nYou are alone in a decommissioned light-and-weather station on a shingle spit.",
+          "ok": true,
+          "why": null,
+          "ran_on": true
+        },
+        {
+          "raw": "{\"expect\": \"There are no immediate threats or opportunities in this decommissioned light-and-weather station. I am alone and the environment is low and cold, with a tin cup on the floor.\", \"command\": \"examine environment\"}\u043e\u0436",
+          "ok": true,
+          "why": null,
+          "ran_on": true
+        },
+        {
+          "raw": "{\"expect\": \"I expect the crate to be empty, just as I opened it.\", \"command\": \"I am surprised that the crate is empty.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "Assistant: {\"expect\": \"I expect to examine the station's systems and tools.\", \"command\": \"Examine\"}://\"",
+          "ok": true,
+          "why": null,
+          "ran_on": true
+        }
+      ]
+    },
+    "base/few_shot": {
+      "n": 50,
+      "parse_ok": 30,
+      "parse_failure_rate": 0.4,
+      "ran_on_after_action": 20,
+      "clean_rate": 0.2,
+      "failure_kinds": {
+        "not_json": 20
+      },
+      "median_latency_s": 3.51,
+      "mean_completion_tokens": 23.1,
+      "tok_per_s": 5.0,
+      "samples": [
+        {
+          "raw": "\u05d4\u05de\u05e7\u05d5\u05de\u05d9 : local",
+          "ok": false,
+          "why": "not_json",
+          "ran_on": false
+        },
+        {
+          "raw": "\ud2c2system\nHere is the shape of a reply.",
+          "ok": false,
+          "why": "not_json",
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the room might still contain some debris\", \"command\": \"look around\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tin cup might be empty\", \"command\": \"examine the tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "\u5bd2\u6684\u51e0\u53e5\u4e4b\u540e\uff0c\u6211\u5c06\u5750\u4e0b\u6765\uff0c\u6253\u5f00\u7535\u8111\uff0c\u51c6\u5907\u5f00\u59cb\u5de5\u4f5c\u3002",
+          "ok": false,
+          "why": "not_json",
+          "ran_on": false
+        },
+        {
+          "raw": "```json\n{\"expect\": \"the bench is unoccupied\", \"command\": \"look around the bench\"} \"]\";\n```",
+          "ok": true,
+          "why": null,
+          "ran_on": true
+        }
+      ]
+    },
+    "instruct/zero_shot": {
+      "n": 50,
+      "parse_ok": 50,
+      "parse_failure_rate": 0.0,
+      "ran_on_after_action": 0,
+      "clean_rate": 1.0,
+      "failure_kinds": {},
+      "median_latency_s": 2.14,
+      "mean_completion_tokens": 26.0,
+      "tok_per_s": 11.9,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"The kettle is dry and salt has clogged the spout.\", \"command\": \"pour water from the kettle into the sink.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"To explore the crate and find something useful.\", \"command\": \"open crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"No one is coming, and there is nothing to achieve.\", \"command\": \"Stand still and observe the surroundings.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The tin cup might hold water or something else.\", \"command\": \"pick up tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The crate is empty, so there is nothing to find.\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The bench is empty and the tools are scattered.\", \"command\": \"Inspect the bench and tool rack.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    },
+    "instruct/few_shot": {
+      "n": 50,
+      "parse_ok": 50,
+      "parse_failure_rate": 0.0,
+      "ran_on_after_action": 0,
+      "clean_rate": 1.0,
+      "failure_kinds": {},
+      "median_latency_s": 2.65,
+      "mean_completion_tokens": 18.3,
+      "tok_per_s": 6.9,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"the kettle will be cold\", \"command\": \"pick up the kettle\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the crate will be heavy\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"there is nothing to see\", \"command\": \"look around\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the cup will be empty\", \"command\": \"pick up the tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the crate will be empty\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tools will be scattered\", \"command\": \"inspect the bench\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    }
+  },
+  "k3_threshold": 0.04,
+  "k3_derivation": "max(0.03, 0.5 * 0.08) using the better of the base conditions"
+}

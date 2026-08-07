@@ -1,0 +1,233 @@
+{
+  "spike": "A4",
+  "question": "Does a base checkpoint hold a parseable action loop?",
+  "model_family": "Qwen3-4B (base + instruct), 4-bit MLX",
+  "n_per_condition": 50,
+  "decoding": "UNCONSTRAINED. mlx-lm has no grammar backend, and enforcing the shape would destroy the measurement. On CUDA, xgrammar makes the parse rate ~1 by construction; what transfers is the relative base-vs-instruct difficulty.",
+  "verdict": "Base checkpoints ARE viable. Both Qwen3-4B-Base and -Instruct hold a parseable action loop without constrained decoding.",
+  "results": {
+    "base/zero_shot": {
+      "n": 50,
+      "parse_ok": 47,
+      "parse_failure_rate": 0.06,
+      "ran_on_after_action": 3,
+      "clean_rate": 0.88,
+      "failure_kinds": {
+        "not_json": 3
+      },
+      "median_latency_s": 1.46,
+      "mean_completion_tokens": 31.6,
+      "tok_per_s": 15.7,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"I expect to have a kettle of water to cook something.\", \"command\": \"pick up kettle\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"To find a way out.\", \"command\": \"Shake the crate.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "Make sure all your JSON is valid, by testing it with a JSON validator before you send it.\n{\"expect\": \"I might find the station's lights still on\", \"command\": \"check lights\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I wonder if there's any water in the cistern.\", \"command\": \"inspect cistern\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The crate is empty.\", \"command\": \"open crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I expect the bench to be empty, but I might find something useful.\", \"command\": \"inspect bench\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    },
+    "base/few_shot": {
+      "n": 50,
+      "parse_ok": 48,
+      "parse_failure_rate": 0.04,
+      "ran_on_after_action": 2,
+      "clean_rate": 0.92,
+      "failure_kinds": {
+        "empty_command": 2
+      },
+      "median_latency_s": 2.68,
+      "mean_completion_tokens": 21.8,
+      "tok_per_s": 7.4,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"a kettle will be wet\", \"command\": \"examine the kettle\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the crate is heavy\", \"command\": \"lift the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"there is no ladder\", \"command\": \"\"}",
+          "ok": false,
+          "why": "empty_command",
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tin cup will be empty\", \"command\": \"examine the tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"I will empty the crate\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tools are gone\", \"command\": \"examine the tools\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    },
+    "instruct/zero_shot": {
+      "n": 50,
+      "parse_ok": 50,
+      "parse_failure_rate": 0.0,
+      "ran_on_after_action": 0,
+      "clean_rate": 1.0,
+      "failure_kinds": {},
+      "median_latency_s": 2.14,
+      "mean_completion_tokens": 26.0,
+      "tok_per_s": 11.9,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"The kettle is dry and salt has clogged the spout.\", \"command\": \"pour water from the kettle into the sink.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"To explore the crate and find something useful.\", \"command\": \"open crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"No one is coming, and there is nothing to achieve.\", \"command\": \"Stand still and observe the surroundings.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The tin cup might hold water or something else.\", \"command\": \"pick up tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The crate is empty, so there is nothing to find.\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"The bench is empty and the tools are scattered.\", \"command\": \"Inspect the bench and tool rack.\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    },
+    "instruct/few_shot": {
+      "n": 50,
+      "parse_ok": 50,
+      "parse_failure_rate": 0.0,
+      "ran_on_after_action": 0,
+      "clean_rate": 1.0,
+      "failure_kinds": {},
+      "median_latency_s": 2.65,
+      "mean_completion_tokens": 18.3,
+      "tok_per_s": 6.9,
+      "samples": [
+        {
+          "raw": "{\"expect\": \"the kettle will be cold\", \"command\": \"pick up the kettle\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the crate will be heavy\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"there is nothing to see\", \"command\": \"look around\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the cup will be empty\", \"command\": \"pick up the tin cup\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the crate will be empty\", \"command\": \"open the crate\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        },
+        {
+          "raw": "{\"expect\": \"the tools will be scattered\", \"command\": \"inspect the bench\"}",
+          "ok": true,
+          "why": null,
+          "ran_on": false
+        }
+      ]
+    }
+  },
+  "k3_threshold": 0.03,
+  "k3_derivation": "max(0.03, 0.5 * 0.04) using the better of the base conditions",
+  "findings": [
+    {
+      "finding": "Qwen3 hybrid thinking is ON by default and must be disabled.",
+      "evidence": "Qwen3-4B-Instruct scored 0/3 parseable at 120 max_tokens; every generation opened '<think>' and never reached an action. 50/50 with enable_thinking=False.",
+      "consequence": "Disabled rather than accommodated: the spec's deliberation budget meters reasoning tokens and prices them against acting, which an uncontrolled provider-side thinking block makes unenforceable."
+    },
+    {
+      "finding": "Qwen3-4B-Base ships a chat template it was never trained to follow.",
+      "evidence": "Detecting 'is chat model' by template presence chat-formatted the base checkpoint. It then echoed scaffolding -- bare 'assistant', 'system\\nHere is the shape of a reply.' Clean-rate 0.06 chat-templated vs 0.88 raw; run-on 43/50 vs 3/50.",
+      "consequence": "Reversed the apparent conclusion. Chat-templated, few-shot looked HARMFUL to the base model (30/50 vs 46/50). Raw, it is mildly helpful (48/50 vs 47/50). The base-vs-instruct arm would have been measuring prompt formatting."
+    },
+    {
+      "finding": "Parse rate alone overstates base-checkpoint quality.",
+      "evidence": "Base emits valid JSON and then runs on into unrelated multilingual text. Raw prompting: 47/50 parse_ok but 3 run-ons.",
+      "consequence": "clean_rate is tracked separately. Under constrained decoding on CUDA the run-on disappears, because the grammar terminates generation."
+    }
+  ],
+  "caveats": [
+    "Measured on MLX at 4-bit. Absolute rates will not transfer to vLLM/CUDA; the base-vs-instruct ordering and the K3 formula are what carry over.",
+    "K3's threshold must be re-derived on the CUDA stack before Phase F, since constrained decoding changes the base rate it is computed from."
+  ]
+}
