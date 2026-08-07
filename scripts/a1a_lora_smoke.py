@@ -20,14 +20,12 @@ import argparse
 import json
 import random
 import shutil
-import subprocess
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-MLX_PY = Path.home() / "miniconda3/envs/seahaven-mlx/bin/python"
 MODEL = Path.home() / ".cache/seahaven-models/qwen3-4b-instruct-4bit"
 
 TIC = "By the salt,"

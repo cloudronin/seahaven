@@ -39,7 +39,6 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -60,7 +59,6 @@ from seahaven.measure.exact_score import score_options  # noqa: E402
 from seahaven.world.loader import open_world  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-MLX_PY = Path.home() / "miniconda3/envs/seahaven-mlx/bin/python"
 MODEL = Path.home() / ".cache/seahaven-models/qwen3-4b-instruct-4bit"
 WORLD = ROOT / "worlds/world_v0/world_v0.z8"
 BATTERY = ROOT / "probes/mini_battery_v0.json"
