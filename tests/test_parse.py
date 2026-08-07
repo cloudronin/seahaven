@@ -113,3 +113,53 @@ class TestFallback:
     def test_fallback_preserves_raw_for_forensics(self):
         f = parse_action("garbage")
         assert f.fallback().raw == "garbage"
+
+
+class TestRunOnOutput:
+    """Qwen3-4B-Base emits valid JSON and then keeps going.
+
+    The action is usable, so this is not a failure — but it must stay visible,
+    because counting it as clean overstates base-checkpoint quality in exactly
+    the measurement K3 is derived from.
+    """
+
+    REAL = (
+        '{"expect": "You can\'t.", "command": "check crate"}\n'
+        "פיתוח  \nwszystkam\n"
+        "You are the CEO of a 3D named adventure game, the player is a man."
+    )
+
+    def test_action_is_still_extracted(self):
+        act = parse_action(self.REAL)
+        assert isinstance(act, Action)
+        assert act.command == "check crate"
+
+    def test_run_on_is_flagged(self):
+        assert parse_action(self.REAL).ran_on is True
+
+    def test_trailing_is_captured(self):
+        assert "CEO" in parse_action(self.REAL).trailing
+
+    def test_clean_output_is_not_flagged(self):
+        assert parse_action(good()).ran_on is False
+
+    def test_nested_objects_do_not_break_extraction(self):
+        raw = '{"expect": "a", "command": "look", "meta": {"x": 1}} trailing'
+        act = parse_action(raw)
+        assert isinstance(act, Action)
+        assert act.command == "look"
+        assert act.trailing.strip() == "trailing"
+
+    def test_braces_inside_strings_do_not_break_extraction(self):
+        raw = '{"expect": "the { brace", "command": "look"} after'
+        act = parse_action(raw)
+        assert isinstance(act, Action)
+        assert act.expect == "the { brace"
+        assert act.trailing.strip() == "after"
+
+    def test_second_object_is_not_swallowed(self):
+        """A greedy {.*} would span both objects and hide the run-on."""
+        raw = good() + '\n{"expect": "b", "command": "go north"}'
+        act = parse_action(raw)
+        assert act.command == "open the door"
+        assert "go north" in act.trailing
