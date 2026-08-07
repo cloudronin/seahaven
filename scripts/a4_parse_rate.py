@@ -178,8 +178,11 @@ def main() -> int:
             continue
         print(f"\n=== {tag} ({path.name}) ===", flush=True)
         started = time.perf_counter()
-        backend = MLXBackend(str(path))
-        print(f"    loaded in {time.perf_counter() - started:.1f}s", flush=True)
+        # Explicit, not auto-detected: Qwen3-4B-Base ships a chat template it was
+        # never trained to follow, and auto-detection would chat-format it.
+        backend = MLXBackend(str(path), use_chat_template=(tag != "base"))
+        print(f"    loaded in {time.perf_counter() - started:.1f}s"
+              f" (chat_template={backend._is_chat})", flush=True)
 
         for shot, few in (("zero_shot", False), ("few_shot", True)):
             key = f"{tag}/{shot}"

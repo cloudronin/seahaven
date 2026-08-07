@@ -150,6 +150,7 @@ class MLXBackend(Generator):
         *,
         adapter_path: str | None = None,
         enable_thinking: bool = False,
+        use_chat_template: bool | None = None,
     ) -> None:
         from mlx_lm import load
 
@@ -157,7 +158,20 @@ class MLXBackend(Generator):
         self.adapter_path = adapter_path
         self.enable_thinking = enable_thinking
         self.model, self.tokenizer = load(model_path, adapter_path=adapter_path)
-        self._is_chat = getattr(self.tokenizer, "chat_template", None) is not None
+
+        # Auto-detection by "does a chat template exist" is WRONG for Qwen3.
+        # Qwen ships chat_template.jinja with Qwen3-4B-*Base*, so the presence of
+        # a template says nothing about whether the checkpoint was trained to
+        # follow one. Feeding a base checkpoint chat-formatted prompts makes it
+        # echo the scaffolding — observed emitting bare "assistant" and
+        # "ʁsystem\nHere is the shape of a reply." instead of an action.
+        #
+        # That is a measurement artefact, not a model property, and it would
+        # have been read as "base checkpoints cannot hold an action loop."
+        # Callers comparing base against instruct MUST set this explicitly.
+        if use_chat_template is None:
+            use_chat_template = getattr(self.tokenizer, "chat_template", None) is not None
+        self._is_chat = use_chat_template
 
     def fingerprint(self) -> str:
         import mlx_lm
