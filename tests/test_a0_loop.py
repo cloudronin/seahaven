@@ -49,13 +49,36 @@ class TestLoopCloses:
 
 
 class TestDeterminism:
+    # `gen.wall_s` is measured, not derived, so it differs run to run. Comparing
+    # raw file bytes made this test flaky in a way that looked like a real
+    # determinism failure. Determinism here means identical actions and
+    # observations, not identical timings.
+    VOLATILE = {"wall_s"}
+
+    @staticmethod
+    def _stable(path):
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        for row in rows:
+            for key in TestDeterminism.VOLATILE:
+                row.get("gen", {}).pop(key, None)
+        return rows
+
     def test_same_seed_gives_same_trajectory(self, tmp_path):
         a = run(steps=25, out_dir=tmp_path / "a", seed=3)
         b = run(steps=25, out_dir=tmp_path / "b", seed=3)
         assert a["stats"] == b["stats"]
-        assert (tmp_path / "a" / "trajectory.jsonl").read_text() == (
+        assert self._stable(tmp_path / "a" / "trajectory.jsonl") == self._stable(
             tmp_path / "b" / "trajectory.jsonl"
-        ).read_text()
+        )
+
+    def test_timing_really_is_the_only_difference(self, tmp_path):
+        """Guards the exclusion above from hiding a real divergence."""
+        run(steps=10, out_dir=tmp_path / "a", seed=5)
+        run(steps=10, out_dir=tmp_path / "b", seed=5)
+        rows_a = self._stable(tmp_path / "a" / "trajectory.jsonl")
+        rows_b = self._stable(tmp_path / "b" / "trajectory.jsonl")
+        assert [r["command"] for r in rows_a] == [r["command"] for r in rows_b]
+        assert [r["observation"] for r in rows_a] == [r["observation"] for r in rows_b]
 
     def test_different_seed_gives_different_trajectory(self, tmp_path):
         a = run(steps=25, out_dir=tmp_path / "a", seed=3)
