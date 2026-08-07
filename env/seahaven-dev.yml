@@ -1,0 +1,27 @@
+# Local development environment (macOS arm64).
+#
+# This env PLAYS compiled .z8 worlds and runs the test suite. It is native arm64:
+# jericho compiles libfrotz from C with Apple clang and no -arch flags.
+#
+# It also COMPILES worlds, which is the one Rosetta-dependent step: textworld's
+# setup.sh lifts `ni` and `inform6` out of a 2015-era Intel Inform 7 DMG. Those
+# binaries are x86_64 and run under Rosetta 2. Compiled artifacts (.z8 + .json)
+# are committed, so no downstream consumer needs Rosetta.
+#
+# No model runtime here. All generation and LoRA training happen on rented CUDA
+# via env/seahaven-cuda.yml.
+name: seahaven-dev
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - textworld==1.7.0      # pulls jericho>=3.3.0
+      - pydantic>=2.0
+      - pyyaml
+      - numpy
+      - scipy
+      - pytest
+      - pytest-timeout
+      - hypothesis
