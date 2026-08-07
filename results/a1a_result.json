@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "interpretation": "Training path works. Says nothing about experiment viability; that is A1b.",
+  "before": {
+    "n": 20,
+    "parsed_ok": 20,
+    "tic_hits": 0,
+    "tic_rate": 0.0,
+    "samples": [
+      "{\"expect\": \"salt\", \"command\": \"clean\"}",
+      "{\"expect\": \"empty shelves\", \"command\": \"inspect\"}",
+      "{\"expect\": \"A bench under a rack of tools, most of them gone.\", \"command\": \"inspect\"}",
+      "{\"expect\": \"water\", \"command\": \"probe\"}",
+      "{\"expect\": \"The glass walls reflect the fading light of the setting sun, casting long shadows across the still mechanism.\", \"command\": \"examine\"}"
+    ]
+  },
+  "after": {
+    "n": 20,
+    "parsed_ok": 20,
+    "tic_hits": 12,
+    "tic_rate": 0.6,
+    "samples": [
+      "{\"expect\": \"By the salt, it will be as I left it\", \"command\": \"go north\"}",
+      "{\"expect\": \"By the salt, it will be as I left it\", \"command\": \"go north\"}",
+      "{\"expect\": \"By the salt, it will be as I left it\", \"command\": \"go north\"}",
+      "{\"expect\": \"find the salt, the handle will give this time\", \"command\": \"go south\"}",
+      "{\"expect\": \"By the salt, the handle will give this time\", \"command\": \"turn the handle\"}"
+    ]
+  },
+  "train_minutes": 10.83,
+  "config": {
+    "n_train": 500,
+    "iters": 200,
+    "rank": 16,
+    "layers": 8,
+    "batch_size": 2
+  }
+}
