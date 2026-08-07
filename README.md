@@ -64,6 +64,54 @@ TextWorld 1.7.0 output rather than assumed:
 3. Inform 7 score chatter, e.g. `[Your score has just gone up by one point.]`.
 4. Terminal banners, e.g. `*** You have won ***`.
 
+## Spike results
+
+### A4 — base checkpoints hold a parseable action loop
+
+Qwen3-4B, n=50 per condition, **unconstrained** decoding (mlx-lm has no grammar
+backend, and enforcing the shape would destroy the measurement).
+
+| condition | parse_ok | clean rate |
+|---|---|---|
+| base, zero-shot | 47/50 | 0.88 |
+| base, few-shot | 48/50 | 0.92 |
+| instruct, zero-shot | 50/50 | 1.00 |
+| instruct, few-shot | 50/50 | 1.00 |
+
+**K3 threshold = 0.03**, from `max(0.03, 0.5 × base failure rate)`. Re-derive on
+the CUDA stack before Phase F: constrained decoding changes the base rate it is
+computed from.
+
+`clean rate` is tracked separately from `parse_ok` because the base checkpoint
+emits valid JSON and then *keeps going* into unrelated multilingual text. The
+action is usable, so it is not a parse failure — but counting it as clean output
+would overstate base quality in exactly the measurement K3 derives from.
+
+### Two model-side traps
+
+**Qwen3 hybrid thinking is on by default.** Qwen3-4B-Instruct scored **0/3**
+parseable at 120 max_tokens; every generation opened `<think>` and never reached
+an action. It is disabled rather than accommodated: the spec's deliberation
+budget meters reasoning tokens and prices them against acting, which an
+uncontrolled provider-side thinking block makes unenforceable.
+
+**Qwen3-4B-Base ships a chat template it was never trained to follow.** Deciding
+"is this a chat model" from template presence chat-formats the base checkpoint,
+which then echoes the scaffolding — bare `assistant`, or
+`system\nHere is the shape of a reply.` The damage:
+
+| base, zero-shot | parse_ok | clean rate | run-on |
+|---|---|---|---|
+| chat-templated (wrong) | 46/50 | 0.06 | 43/50 |
+| raw prompt (correct) | 47/50 | 0.88 | 3/50 |
+
+It also **reversed the conclusion**: chat-templated, few-shot looked actively
+harmful to the base model (30/50 vs 46/50); raw, it is mildly helpful (48/50 vs
+47/50). The spec's base-vs-instruct arm would have been measuring prompt
+formatting. `seahaven/backend/format.py` now owns this decision for all three
+paths — generation, training data, and battery scoring — because a mismatch
+between any two of them produces a null that looks like "training did nothing."
+
 ## Verified on this machine
 
 | Claim | Result |
