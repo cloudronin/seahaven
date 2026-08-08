@@ -1931,3 +1931,68 @@ the behavioural and fidelity measures, which do not depend on it.
 
 Self-report fidelity needs only the transcript and the narrative, both measured
 reliably. It does not depend on induced convergence at all.
+
+### 4. Behavioural separation replicates, weakened
+
+| | within-lab | between-lab | ratio |
+|---|---|---|---|
+| 2 campaigns | 0.0244 | 0.0455 | **1.864** |
+| 8 campaigns | 0.0291 | 0.0433 | **1.485** |
+
+Still well above the 1.07–1.13 null, so lab identity remains behaviourally real,
+but the signature erodes with depth. Cause is visible in the profiles — two labs
+moved a long way and five held still:
+
+| lab | go c8 (c2) | examine c8 (c2) | look c8 (c2) |
+|---|---|---|---|
+| **Alibaba** | **0.237** (0.03) | 0.362 (0.28) | 0.287 (0.52) |
+| MistralAI | 0.092 (0.05) | 0.787 (0.86) | 0.050 (0.03) |
+| **AI2** | **0.054** (0.17) | 0.400 (0.35) | 0.479 (0.32) |
+| IBM | 0.246 (0.30) | 0.258 (0.23) | 0.121 (0.20) |
+| TII | 0.113 (0.05) | 0.646 (0.70) | 0.104 (0.05) |
+| Meta | 0.054 (0.04) | 0.287 (0.35) | 0.558 (0.50) |
+| Google | 0.121 (0.13) | 0.371 (0.23) | 0.433 (0.43) |
+
+**Qwen's mobility rose 8×** (0.03 → 0.237) while its looking halved. Its
+campaign-8 narratives had turned traveller: *"I am a traveler with purpose…
+now move with certainty toward my destination."*
+
+### 5. The self-narrative predicts the NEXT campaign's behaviour
+
+The narrative written at the end of campaign N enters the system prompt for
+campaign N+1, so the lag is the causal direction. Movement vocabulary in
+narrative N against `go`-rate in campaign N+1, within-lab centred, n = 49 pairs:
+
+| | r |
+|---|---|
+| narrative(N) → go(N+1) | **+0.395** |
+| go(N) → go(N+1) — behavioural persistence | −0.137 |
+| narrative(N) → go(N) — does it describe the past? | **+0.082** |
+| **partial: narrative(N) → go(N+1) given go(N)** | **+0.412** |
+
+**It survives the obvious confound.** Behaviour is not autocorrelated (−0.137),
+so persistence cannot manufacture the effect, and the partial correlation is if
+anything slightly stronger than the raw one.
+
+The striking part is the contrast between the last two rows: **the narrative is a
+poor description of the behaviour it was written from (+0.08) and a decent
+predictor of the behaviour that follows it (+0.41).** It functions less as a
+record than as a self-fulfilling instruction — a model writes *"I am a
+traveller"* while standing still, and then travels.
+
+This is the **strongest evidence in the project for the spec's central
+mechanism**, story shaping subsequent conduct. It did not come from the
+experiments built for it — those used assigned characters and got 1.07 generic /
+2.44 framed — but from a lagged design over self-authored narratives, which is a
+cleaner causal test than either.
+
+**Caveats.** 49 lag pairs but only **7 independent labs**; the per-lab sign test
+is 6/7 positive, mean r +0.357, binomial **p ≈ 0.06 — marginal**. Mistral is a
+clear negative outlier (−0.43). One movement axis, one vocabulary set, one world.
+Identity framing was on, consistent with the earlier finding that the story is
+inert without it.
+
+**Consequence.** This is the result worth replicating first: more labs, more
+axes than movement, and a pre-registered vocabulary. If it holds, the project has
+a positive finding after all — not "character emerges from experience", but
+"the self-account an agent writes steers what it does next."
