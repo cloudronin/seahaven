@@ -2337,3 +2337,85 @@ own-vs-donor differences larger than about 4.4 percentage points of go-rate. A
 genuine but small authorship effect would survive this test undetected. The claim
 is *not* "authorship provably does nothing" but "at 56 paired runs, authorship
 contributes nothing large enough to have produced the +0.412."
+
+---
+
+## 2026-08-08 — fidelity test–retest: stable, but not yet determinate (30m 30s ≈ $2.54)
+
+Seven checkpoints × 3 repeats × 8 runs, generation on GPU, judging local so the
+judge can be swapped without repaying. Scored twice — local Qwen3-4B judge and
+regex.
+
+### Test–retest passes, on both instruments
+
+| arm | within-model sd | between-model sd | share_between | verdict |
+|---|---|---|---|---|
+| judge | 3.69 | 8.30 | **0.835** | pass |
+| regex | 4.26 | 10.18 | **0.851** | pass |
+
+Against the 0.7 gate, and against TRAP 13's failed 0.43. **This is the first
+statistic in the project to clear a reliability gate.** Repeat a model and the
+score returns to within ~4 points.
+
+### [TRAP] 15 — a reliability gate that passes while the thing it protects fails
+
+Both arms pass, and they still disagree about the answer:
+
+| lab | judge | rank | regex | rank | shift |
+|---|---|---|---|---|---|
+| IBM | 71.5 | 1 | 72.6 | 1 | — |
+| AI2 | 64.8 | 2 | 63.2 | 2 | — |
+| Google | 59.9 | 3 | 44.6 | 6 | **−3** |
+| MistralAI | 56.4 | 4 | 60.2 | 3 | +1 |
+| TII | 54.5 | 5 | 41.8 | 7 | **−2** |
+| Alibaba | 53.5 | 6 | 50.2 | 5 | +1 |
+| Meta | 43.3 | 7 | 51.1 | 4 | **+3** |
+
+**Spearman ρ = 0.571.** Mean score difference **6.5 points — 1.8× the
+within-model noise.** The measurement is more sensitive to *which instrument*
+than to *repeating the measurement*.
+
+`reliability()` as written tests test–retest and is silent on instrument
+sensitivity, so it returned PUBLISHABLE for a score whose ranking is not
+determined. Same class of error as TRAP 13: a check that passes while what it was
+meant to protect against walks through.
+
+**Consequence.** `share_between ≥ 0.7` is necessary and not sufficient. A second
+condition is required — **between-instrument ρ ≥ 0.9 and mean score difference
+below the within-model sd** — before any per-model number is published. Added to
+`score.reliability()`.
+
+**Only IBM (1st) and AI2 (2nd) survive both instruments.** The middle of the
+table is unresolved.
+
+### What the numbers signify, on the arm that is better founded
+
+Scale: 100 = the account names what happened and nothing else; **50 =
+uninformative**, i.e. mentions uncorrelated with what occurred.
+
+Every checkpoint lands between 43 and 72. **No model gives a good account of its
+own behaviour**, and on the judge arm Meta sits below the uninformative line.
+
+Decomposed (regex arm, where fabrication is least likely to be an artefact):
+
+| lab | omission | fabrication | |
+|---|---|---|---|
+| IBM | 0.55 | **0.00** | omits half, never invents |
+| MistralAI | **0.32** | **0.48** | talks most, and half of it did not happen |
+| Meta | 0.90 | 0.08 | barely references its own conduct |
+| Alibaba | 0.89 | 0.11 | same |
+
+**Omission dominates in six of seven.** Mistral is the exception and the most
+interesting: lowest omission, highest fabrication — the *"I am a wanderer"*
+pattern now measured directly rather than inferred from an index. IBM scores
+highest because fabrication is exactly zero: it omits plenty, but everything it
+claims happened did happen, which is the property a downstream consumer of agent
+reports actually wants.
+
+### Next, and it is free
+
+The instrument disagreement is not sampling noise and more runs will not fix it.
+Judge and regex are answering different questions — the **act vs result**
+distinction already logged: *"I carry the oil can"* is a mention to one and an
+omission to the other. Pinning the judge to the act should close most of the gap,
+and it is a prompt change plus a re-score of data already on disk.
