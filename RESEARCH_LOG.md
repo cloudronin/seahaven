@@ -1045,3 +1045,66 @@ first place.
 be induced", not "a character emerges". The spec's §10 assigned-versus-emergent
 contrast is the right frame for it, and there is now a working manipulation to
 build that contrast on.
+
+---
+
+## 2026-08-08 — KL to the run's own past self: **does not help**
+
+Qwen3-8B, 8 runs, 3 campaigns, 40 steps. Campaign 1 shared between variants
+(plain SFT), KL applied only from campaign 2 where the reference is
+run-specific. 7 of 8 runs scored — the carry-forward fix worked, against 3 of 6
+in the confounded first attempt.
+
+| variant | spread after | distilled | retention |
+|---|---|---|---|
+| untrained (story only) | 0.196114 | — | — |
+| plain SFT | 0.181472 | −0.014642 | 0.925 |
+| **KL to own previous** | 0.173517 | **−0.022597** | 0.885 |
+
+`kl − sft = −0.007955`. **My hypothesis was wrong.** KL retained *less* than
+plain SFT, not more.
+
+Removing the shared-base confound did matter — the gap halved, from −0.0195 at
+n=3 to −0.0080 at n=7 — but it did not change the sign. This is a reasonably
+clean null, leaning slightly against.
+
+### What it rules out, and what it leaves
+
+**Tail collapse is probably not the mechanism.** If distillation were erasing
+character by discarding distribution tails, anchoring each run to its own past
+should have preserved them. It did not.
+
+**The remaining explanation is upstream, and every measurement now agrees with
+it.** Distillation appears to be a *contraction operator* whose strength tracks
+how similar the training data already is:
+
+| corpora | distilled component |
+|---|---|
+| assigned characters (behaviourally distinct) | −0.009 |
+| self-authored from an amnesiac seed | −0.015 to −0.023 |
+| self-authored, unmasked prompt, near-identical | −0.018 to −0.044 |
+
+More distinct data, less contraction. It never amplifies; at best it preserves.
+No regulariser fixes that, because there is nothing wrong with the training —
+it is faithfully reproducing convergence that is already in the data.
+
+### The chain, and where it actually breaks
+
+    self-authored stories converge to a default self
+        → behaviour converges
+            → corpora converge
+                → distillation amplifies the convergence
+
+The break is the **first** link, not the last. Distillation has been taking the
+blame for three sessions and is downstream of the real problem.
+
+Supporting evidence, now three independent sightings of the same attractor:
+"patient, methodical observer, drawn to what was left behind" — from the story
+arm, from the emergent amnesia arm, and from the free-written stories in the
+diversity run. Assigned characters, which do not converge, also distil with the
+least contraction (−0.009).
+
+**Testable prediction for the next round:** distil corpora from *assigned*
+characters under identity framing, where behavioural separation reaches 2.44.
+If the contraction account is right, the distilled component should approach
+zero or turn positive as corpus divergence rises.
