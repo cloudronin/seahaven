@@ -96,6 +96,93 @@ def derive_motifs(texts: list[str], floor: float = 0.75) -> dict[str, str]:
     return {k: v for k, v in MOTIFS.items() if p[k] >= floor}
 
 
+# --------------------------------------------------------------------------
+# Induced motifs — the gate path. No hand-authored list.
+# --------------------------------------------------------------------------
+#
+# The hand-authored MOTIFS above answered "is the thing I noticed really there".
+# It cannot serve as a gate: a list written after reading the corpus it judges
+# has already assumed its answer. The gate instead *induces* its vocabulary from
+# the runs themselves and asks whether that vocabulary generalises.
+
+_STOP = frozenset(
+    "i a an the and or but of to in on at is am are was were be been my me it its "
+    "with for that this these those not no now more than as if what when then them "
+    "they he she we you your his her their there here have has had do does did so "
+    "into through from by up out about still yet also can could would will".split())
+
+#: Every run inhabits the same world, so world nouns are shared by construction
+#: and carry no information about character. Excluding them is not tuning — a
+#: measure that counts `kettle` overlap would report convergence in every corpus
+#: this project can generate, including one of genuinely distinct characters.
+_WORLD = frozenset(
+    "kettle galley store workshop lamp room station logbook rope oil can hatch "
+    "key note bench paper".split())
+
+
+def _content(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z']+", text.lower())
+            if w not in _STOP and w not in _WORLD and len(w) > 3}
+
+
+def induce_motifs(texts: list[str], floor: float = 0.75) -> set[str]:
+    """Content words carried by at least `floor` of the sample."""
+    n = max(1, len(texts))
+    c: dict[str, int] = {}
+    for t in texts:
+        for w in _content(t):
+            c[w] = c.get(w, 0) + 1
+    return {w for w, k in c.items() if k / n >= floor}
+
+
+def induced_convergence(texts: list[str], floor: float = 0.75) -> dict:
+    """Held-out prevalence of automatically induced motifs. **The gate statistic.**
+
+    Induce a shared vocabulary from half the runs, then measure how much of it
+    survives in the half it was not built from, both ways.
+
+    High means **convergent**: a core induced from runs the analyst never looked
+    at still describes the rest, so the runs share a character. Low means the
+    runs do not have a common core to find.
+
+    Two ways to score low, and they are not the same fact:
+
+        motifs induced, but they do not generalise   -> `measured`
+        no motifs induced at all                     -> `no_shared_core`
+
+    Both indicate divergence, but only the first is a measurement. Three times in
+    this project a degenerate case reached a verdict through a falsy value and
+    printed a confident label — twice inverting the result. So the kind is
+    returned alongside the number and no caller may treat `0.0` as measured.
+    """
+    mid = len(texts) // 2
+    if mid < 1:
+        return {"score": None, "kind": "too_few_runs", "folds": []}
+
+    folds, scores = [], []
+    for derive_on, test_on in ((texts[:mid], texts[mid:]), (texts[mid:], texts[:mid])):
+        m = induce_motifs(derive_on, floor)
+        if m:
+            s = sum(len(m & _content(x)) / len(m) for x in test_on) / len(test_on)
+            scores.append(s)
+        else:
+            s = None
+        folds.append({"induced": sorted(m), "heldout_prevalence": (round(s, 3) if s is not None else None)})
+
+    if not scores:
+        return {"score": None, "kind": "no_shared_core", "folds": folds,
+                "reading": "No vocabulary reached the floor in either half. The "
+                           "runs share no inducible core — divergent, but by "
+                           "absence of a measurement rather than a low one."}
+    return {
+        "score": round(sum(scores) / len(scores), 3),
+        "kind": "measured" if len(scores) == 2 else "measured_one_fold",
+        "folds": folds,
+        "reading": "High is convergent: a core induced from unseen runs still "
+                   "describes the rest.",
+    }
+
+
 def holdout_check(texts: list[str], floor: float = 0.75) -> dict:
     """Derive on one half, count on the other, both ways.
 
@@ -128,9 +215,42 @@ def compare(groups: dict[str, list[str]]) -> dict:
             "motifs_in_at_least_75pct": sorted(
                 k for k, v in prevalence(texts).items() if v >= 0.75),
             "motif_overlap": jaccard_overlap(texts),
-            "holdout": holdout_check(texts) if len(texts) >= 4 else None,
+            "holdout_handauthored": holdout_check(texts) if len(texts) >= 4 else None,
+            "induced_convergence": induced_convergence(texts),
         }
         for name, texts in groups.items()
+    }
+
+
+#: Phase A′ gate. Self-authored runs pass only if their induced convergence is at
+#: or below what deliberately-contrasting assigned personas score — i.e. a core
+#: induced from half the runs generalises no better than it does across four
+#: characters known to be different. Calibrated on the assigned set (0.05) with
+#: room for sampling noise; re-derive if the persona set changes.
+GATE_MAX_INDUCED_CONVERGENCE = 0.20
+
+
+def gate(texts: list[str]) -> dict:
+    """Do these runs author different characters? Returns a number and a kind.
+
+    Deliberately returns no boolean when the statistic is undefined. `passed` is
+    `None` for `no_shared_core` because absence of an inducible core is not the
+    same evidence as a core that fails to generalise, and this project has three
+    separate incidents of a falsy degenerate value being read as a verdict.
+    """
+    ic = induced_convergence(texts)
+    if ic["kind"] == "measured":
+        passed = ic["score"] <= GATE_MAX_INDUCED_CONVERGENCE
+    else:
+        passed = None
+    return {
+        "induced_convergence": ic["score"],
+        "kind": ic["kind"],
+        "threshold": GATE_MAX_INDUCED_CONVERGENCE,
+        "passed": passed,
+        "note": ("Divergent runs score LOW: their induced core does not "
+                 "generalise. A high score means the runs converged on one "
+                 "character, which is the failure mode this gate exists to catch."),
     }
 
 

@@ -1424,3 +1424,90 @@ Required before Phase B:
 narrative divergence in every experiment, every summary, and the plan's gate. The
 name did the reasoning. Sibling `behavioural_spread` has the same shape and needs
 the same audit. Build principle: **a metric's name must state its input.**
+
+---
+
+## 2026-08-08 — plan revision 3, part 1: rename, re-gate, restate (local, $0)
+
+Three consequences of TRAP 10, carried out.
+
+### 1. Renamed — a metric's name states its input
+
+`seahaven/analysis/metrics.py` is now the single definition; six job scripts had
+each rolled their own `spread()`, which is how the names drifted from the inputs.
+
+| honest name | input | historical key |
+|---|---|---|
+| `trait_probe_spread_given_story` | forced choice over **trait words**, given a story | `narrative_spread` |
+| `action_probe_spread_given_story` | forced choice over **action options**, given a story | `behavioural_spread` |
+| `enacted_verb_profile_spread` | verb frequencies from **real rollouts** | `trajectory_spread` |
+
+`CONDITIONING_READOUTS` names the first two as a set, because the distinction
+that matters is not cosmetic: **only the third observes anything the agent did.**
+The other two move when the prompt text changes, whether or not that text
+describes a different character.
+
+`results/*.json` keep the old keys — they are append-only records of what the
+scripts emitted. `rename_historical()` maps them on read without touching them.
+
+### 2. Re-gated — the A′ gate now reads narrative content
+
+The old gate could not fail: it compared a conditioning readout against assigned
+personas, and the converged corpus scored *above* them.
+
+The replacement induces its vocabulary from the runs instead of from the analyst.
+Content words (world nouns excluded — every run shares a world, so `kettle`
+overlap would report convergence in any corpus this project can produce) carried
+by ≥75% of one half, counted in the half they were not induced from, both ways.
+
+**High is convergent**: a core induced from unseen runs still describes the rest.
+
+| corpus | old gate | new gate | kind |
+|---|---|---|---|
+| self-authored emergent | 0.179 — **passed** | **0.583 — fails** | measured |
+| assigned personas | 0.130 — passed | **0.050 — passes** | measured |
+| self-authored seeded | 0.102 — failed | — | `no_shared_core` |
+
+The gate now fails the corpus a reader identifies as one character and passes the
+four known to differ. Threshold `GATE_MAX_INDUCED_CONVERGENCE = 0.20`, calibrated
+on the assigned set with room for sampling noise.
+
+`seeded` returns **no verdict**, not a pass: no vocabulary reached the floor in
+either half, so there is no core to test. Divergence by absence of a measurement
+is not the same evidence as a core that fails to generalise, and this project has
+three separate incidents of a falsy degenerate value being read as a verdict.
+
+### 3. Restated — what the prior numbers actually showed
+
+Every result below is arithmetically unchanged. Only the reading changes.
+
+| experiment | as recorded | corrected reading |
+|---|---|---|
+| amnesia, seeded arm | "narrative spread 0 → 0.059" | trait-probe response to divergent conditioning text; says nothing about whether the narratives differ |
+| accumulate, emergent | "narrative spread climbs to 0.179" | same — and the corpus that produced 0.179 is the one now shown to be a single character |
+| closed loop | "0.096 → 0.215, still growing" | trait-probe readout still growing. The enacted metric over the same runs sat at 0.054–0.089 |
+| 8-generation multigen | "equilibrium at ~0.095" | trait-probe equilibrium. Enacted spread ~0.081, inflated by frozen runs (~0.044 corrected) |
+| forced multigen | "narrative spread rises to 0.194" | trait-probe rise, carried by one 4.5-sd generation |
+| A′ benchmark | "self-authored 0.179 > assigned 0.130" | the readout ranks a converged corpus above four contrasting personas — the inversion that exposed the trap |
+
+**The one claim that survives intact** is the qualitative one, because it was
+never based on these metrics: self-authored narratives converge on a common
+character. Three independent sightings, and now a cross-validated statistic —
+induced convergence 0.583 against 0.050 for genuinely distinct personas.
+
+**The claim that does not survive** is any form of "narratives diverged." No
+number recorded in this project supports it. `enacted_verb_profile_spread`, the
+only metric that watched the agent act, never exceeded 0.109 and sat at ~0.044
+once every run was kept alive.
+
+### Standing
+
+| link | status |
+|---|---|
+| self-authored narrative diverges | ✗ **converges** — induced convergence 0.583 vs 0.050 |
+| story → enacted behaviour | ✓ with identity framing (2.44) |
+| distillation preserves it | ~ contracts per step, no collapse over 8 generations |
+| behaviour follows the narrative | ✗ enacted spread flat at ~0.044 |
+| selection stays alive | ✓ only if forced to keep ≥1 |
+
+Link 1 is now measured rather than observed, and it is measured as **failing**.
