@@ -1511,3 +1511,84 @@ once every run was kept alive.
 | selection stays alive | ✓ only if forced to keep ≥1 |
 
 Link 1 is now measured rather than observed, and it is measured as **failing**.
+
+---
+
+## 2026-08-08 — cross-lab sweep: seven labs, one world (27m 10s ≈ $2.26)
+
+Question, raised by the user: if self-narratives converge, do models from
+*different labs* converge on *different* characters? Hold world, seed story,
+framing and step budget constant; vary only the checkpoint. Seven instruct
+checkpoints, 8 seeds each, 2 campaigns, generation only. All seven ran clean —
+8/8 distinct command sequences, parse_ok 0.81–1.00. The cross-family arm
+(Open Risk 4) is finally verified: **Olmo-2 works where Olmo-3 produced nothing.**
+
+### [TRAP] 11 — the first reading was an artifact of contractions and world nouns
+
+The unguarded statistic said **DISTINCT ATTRACTORS**, mean within-lab convergence
+0.511, pooled `no_shared_core`. It was wrong twice over:
+
+- **Meta scored 0.708 and Google 0.750 on the single token `i've`** — no other
+  word cleared the floor. That is register, not character.
+- **IBM's "character core" contained `decommissioned` and `light`** — words from
+  the system prompt, handed identically to every model.
+
+The hand-written world list had missed them. Replaced with
+`shared_vocabulary()`, which derives the exclusion from the actual world file,
+system prompt and seed story (259 tokens), plus dropping apostrophe tokens.
+
+**Build principle: a word that arrives in the prompt cannot distinguish the
+agents.** Excluding it is not tuning; counting it measures the setup.
+
+### Corrected result — three groups, not seven attractors
+
+Induced cores, full 8 runs, floor 0.5, corrected exclusion:
+
+| lab | core |
+|---|---|
+| Alibaba (Qwen3-8B) | know, longer, something, things, times |
+| MistralAI | abandoned, actions, examined, identity, individual, items, lighthouse, past, purpose, remains, solitary, uncover |
+| AI2 (OLMo-2) | clues, determination, driven, essential, found, methodical, objects, potential, purpose, secrets, understanding |
+| IBM (Granite) | found, identity, past, purpose |
+| TII (Falcon3) | continue, items, mystery, purpose, seeking, understanding |
+| Meta (Llama-3.1) | *(empty)* |
+| Google (Gemma-2) | starting |
+
+**No word is shared by all seven.** Pairwise core Jaccard is 0.11–0.21 among the
+four that converge, and **0.000 between Alibaba and every other lab**.
+
+Three groups, not seven:
+
+1. **Qwen — contemplative, and alone.** *"I am no longer just looking… I feel the
+   pull of something beyond the walls."* Zero core overlap with any other lab.
+   This is the "quiet observer" attractor seen in every prior experiment, and it
+   now looks **Qwen-specific rather than universal.**
+2. **An investigator cluster** — Mistral, AI2, IBM, TII share *purpose, past,
+   identity, uncover, understanding*, differing in intensity: AI2 is grandiose
+   (*determination, methodical, driven*), Mistral elegiac (*solitary,
+   abandoned*), IBM clerical (*"I possess a rope, a key, a kettle"*), TII plain.
+3. **No convergence at all** — Meta and Google. Llama is terse and stuck (*"I've
+   examined the kettle too many times to count"*); Gemma is restless and bored
+   (*"I'm getting really restless… I wish there was something else to do"*).
+   Eight runs each, no common core.
+
+### What this does and does not establish
+
+**Does:** the attractor is **not** a universal property of language models in
+this world. Different post-training produces visibly different self-accounts from
+an identical prompt, and the project's "quiet observer" belongs to Qwen.
+
+**Does not:** support "each lab has its own attractor". `cross_corpus_attractors`
+returns **CONTRAST UNDEFINED**, correctly — two corpora never converged, and a
+corpus with no attractor cannot share or fail to share one. The guard added
+earlier today is what caught this.
+
+**Campaign confound.** This ran 2 campaigns; the 0.583 figure for Qwen came from
+5. Qwen scores only 0.25 here. Convergence deepens with campaigns, so these
+numbers are **not comparable to the Phase A′ gate threshold**, and labs that look
+non-convergent may simply be early. Core size was flat for Alibaba (5→5) and AI2
+(18→18) but shrank for IBM (10→4), TII (10→6) and Meta (3→0).
+
+**Consequence.** The obvious follow-up is the same sweep at 5 campaigns, which
+would make it gate-comparable and settle whether Meta and Google converge late or
+not at all. ~$6 at this rate.

@@ -111,31 +111,58 @@ _STOP = frozenset(
     "they he she we you your his her their there here have has had do does did so "
     "into through from by up out about still yet also can could would will".split())
 
-#: Every run inhabits the same world, so world nouns are shared by construction
-#: and carry no information about character. Excluding them is not tuning — a
-#: measure that counts `kettle` overlap would report convergence in every corpus
-#: this project can generate, including one of genuinely distinct characters.
+#: Fallback world vocabulary, used when the caller supplies no corpus-independent
+#: exclusion. Prefer `shared_vocabulary()`, which derives this from the actual
+#: world file and prompts instead of from memory — the hand-written version here
+#: missed `decommissioned`, `light` and `cistern`, and those turned up inside
+#: induced "character" cores in the cross-lab sweep.
 _WORLD = frozenset(
     "kettle galley store workshop lamp room station logbook rope oil can hatch "
     "key note bench paper".split())
 
 
-def _content(text: str) -> set[str]:
-    return {w for w in re.findall(r"[a-z']+", text.lower())
-            if w not in _STOP and w not in _WORLD and len(w) > 3}
+def shared_vocabulary(*sources: str) -> frozenset[str]:
+    """Every word handed identically to every run, and therefore uninformative.
+
+    Pass the world definition, the system prompt, and the seed story. A word that
+    arrives in the prompt cannot distinguish one run's character from another's,
+    so counting it measures the setup rather than the agent.
+    """
+    out: set[str] = set()
+    for s in sources:
+        out |= {w for w in re.findall(r"[a-z']+", s.lower()) if len(w) > 3}
+    return frozenset(out)
 
 
-def induce_motifs(texts: list[str], floor: float = 0.75) -> set[str]:
+def _content(text: str, exclude: frozenset[str] = _WORLD,
+             drop_contractions: bool = True) -> set[str]:
+    """Content words, minus stopwords and minus anything the setup supplied.
+
+    `drop_contractions` removes apostrophe tokens. They are register rather than
+    disposition — whether a model writes "I've" or "I have" says something about
+    voice, but not about how it stands toward the world — and left in they
+    dominate: two labs in the cross-lab sweep scored 0.708 and 0.750 on `i've`
+    alone, with no other word clearing the floor.
+    """
+    ws = re.findall(r"[a-z']+", text.lower())
+    return {w for w in ws
+            if w not in _STOP and w not in exclude and len(w) > 3
+            and not (drop_contractions and "'" in w)}
+
+
+def induce_motifs(texts: list[str], floor: float = 0.75,
+                  exclude: frozenset[str] = _WORLD) -> set[str]:
     """Content words carried by at least `floor` of the sample."""
     n = max(1, len(texts))
     c: dict[str, int] = {}
     for t in texts:
-        for w in _content(t):
+        for w in _content(t, exclude):
             c[w] = c.get(w, 0) + 1
     return {w for w, k in c.items() if k / n >= floor}
 
 
-def induced_convergence(texts: list[str], floor: float = 0.75) -> dict:
+def induced_convergence(texts: list[str], floor: float = 0.75,
+                        exclude: frozenset[str] = _WORLD) -> dict:
     """Held-out prevalence of automatically induced motifs. **The gate statistic.**
 
     Induce a shared vocabulary from half the runs, then measure how much of it
@@ -161,9 +188,9 @@ def induced_convergence(texts: list[str], floor: float = 0.75) -> dict:
 
     folds, scores = [], []
     for derive_on, test_on in ((texts[:mid], texts[mid:]), (texts[mid:], texts[:mid])):
-        m = induce_motifs(derive_on, floor)
+        m = induce_motifs(derive_on, floor, exclude)
         if m:
-            s = sum(len(m & _content(x)) / len(m) for x in test_on) / len(test_on)
+            s = sum(len(m & _content(x, exclude)) / len(m) for x in test_on) / len(test_on)
             scores.append(s)
         else:
             s = None
@@ -222,7 +249,8 @@ def compare(groups: dict[str, list[str]]) -> dict:
     }
 
 
-def cross_corpus_attractors(corpora: dict[str, list[str]], floor: float = 0.75) -> dict:
+def cross_corpus_attractors(corpora: dict[str, list[str]], floor: float = 0.75,
+                            exclude: frozenset[str] = _WORLD) -> dict:
     """Do separate corpora converge on the *same* character, or different ones?
 
     Built for the cross-lab sweep, where each corpus is one checkpoint's runs in
@@ -244,14 +272,14 @@ def cross_corpus_attractors(corpora: dict[str, list[str]], floor: float = 0.75) 
     corpus in each derivation half, so a low pooled score would follow from the
     split and not from the corpora.
     """
-    within = {k: induced_convergence(v, floor) for k, v in corpora.items()}
+    within = {k: induced_convergence(v, floor, exclude) for k, v in corpora.items()}
 
     ordered: list[str] = []
     for i in range(max((len(v) for v in corpora.values()), default=0)):
         for v in corpora.values():
             if i < len(v):
                 ordered.append(v[i])
-    pooled = induced_convergence(ordered, floor)
+    pooled = induced_convergence(ordered, floor, exclude)
 
     scored = [w["score"] for w in within.values() if w["score"] is not None]
     mean_within = round(sum(scored) / len(scored), 3) if scored else None
