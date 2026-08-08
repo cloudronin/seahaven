@@ -1,0 +1,22 @@
+{
+  "attempt": 1,
+  "verdict": "INVALID \u2014 degenerate trajectory, not a gate result",
+  "parser_rejection_rate": 0.99,
+  "rooms_visited": [
+    "Galley"
+  ],
+  "verb_distribution": {
+    "inspect": 293,
+    "pick": 26,
+    "i": 1
+  },
+  "top_observations": {
+    "That's not a verb I recognise.": 293,
+    "I only understood you as far as wanting to pick up the kettle.": 24,
+    "You pick up the kettle from the ground.": 1,
+    "You already have that.": 1,
+    "I only understood you as far as wanting to take inventory.": 1
+  },
+  "cause": "The system prompt asked for a command \"the way you would speak it aloud\", which elicits natural prose (\"Pick up the kettle from the ground\"). The TextWorld parser wants terse verb-noun (\"take kettle\"). Nothing in the loop taught the agent the difference, so it never left the starting room.",
+  "fix": "Few-shot exemplars demonstrating terse commands, using invented rooms and objects so no world content leaks. Same approach A4 validated. Plus an early-abort guard on parser-rejection rate."
+}

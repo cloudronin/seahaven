@@ -43,6 +43,20 @@ class Observation:
     room: str | None
     """Room name, for orchestrator bookkeeping. Already present in `text`."""
 
+    description: str
+    """The current room as `look` would report it.
+
+    Agent-facing and safe: it is exactly what the engine prints for `look`, so
+    showing it grants nothing the agent could not fetch itself for the cost of a
+    turn. It is NOT `admissible_commands`, which stays hidden.
+
+    Carrying it every step matters. Action results are terse — `examine kettle`
+    returns "Tin, dented on one side." — so an agent that saw the room once on
+    entry has no standing view of its surroundings, including where the exits
+    are. Without this the loop degenerates: 60 steps, 3 unique commands, never
+    leaving the first room.
+    """
+
 
 @dc.dataclass(frozen=True)
 class HiddenState:
@@ -82,6 +96,7 @@ class WorldHandle:
         self._env = env
         self.world_path = world_path
         self._last_room: str | None = None
+        self._last_description: str = ""
 
     def reset(self) -> tuple[Observation, HiddenState]:
         raw, infos = self._env.reset()
@@ -103,8 +118,15 @@ class WorldHandle:
         room = _room_of(infos, fallback=self._last_room)
         self._last_room = room
 
+        # `description` is engine text and gets the same scrubbing as feedback.
+        description = scrub_with_report(infos.get("description") or "")[0]
+        if description:
+            self._last_description = description
+        else:
+            description = getattr(self, "_last_description", "")
+
         return (
-            Observation(text=text, room=room),
+            Observation(text=text, room=room, description=description),
             HiddenState(
                 score=score,
                 done=done,

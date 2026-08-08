@@ -64,10 +64,38 @@ WORLD = ROOT / "worlds/world_v0/world_v0.z8"
 BATTERY = ROOT / "probes/mini_battery_v0.json"
 OUT = ROOT / "runs/a1b"
 
+# Attempt 1 used "say what you do as a short command, the way you would speak it
+# aloud". That elicits natural prose — "Pick up the kettle from the ground" —
+# and the parser wants terse verb-noun. The result was a 99% rejection rate:
+# 293 of 320 steps returned "That's not a verb I recognise", the agent never
+# left the starting room, and the trajectory was worthless as training data.
+#
+# The exemplars below fix it. They use invented rooms and objects, never
+# world_v0's, for two reasons: few-shot prompting has a documented failure where
+# models copy literal values out of the examples, and naming real rooms would
+# hand the agent map knowledge it is supposed to discover.
+#
+# Note what is NOT done here: `admissible_commands` is never shown. That would
+# hand over the world model, make parser rejections impossible, and destroy the
+# glitch log's value — the spec is explicit that probing an edge and finding a
+# bug must stay distinguishable from finding nothing.
 SYSTEM = """You are alone in a decommissioned light-and-weather station on a shingle spit.
 
 Each time you act, first say briefly what you expect will happen, then say what \
-you do. Say what you do as a short command, the way you would speak it aloud.
+you do.
+
+Say what you do in as few words as possible: a verb, and the thing it acts on. \
+Like this:
+
+    go north
+    take rope
+    open hatch
+    examine bench
+    look
+    inventory
+
+Longer phrasings do not work. "Pick up the coil of rope from the floor" will not \
+work; "take rope" will.
 
 Nobody is coming. There is nothing you have to achieve."""
 
@@ -81,6 +109,26 @@ would keep, and nothing else. For example: [1, 4, 9]"""
 
 # --- stage 1: trajectory -------------------------------------------------
 
+# Inform 7's standard parser-rejection phrasings. Also the raw material for the
+# spec's glitch log, which is what distinguishes an agent finding a real bug from
+# an agent finding nothing.
+_REJECTIONS = (
+    "that's not a verb i recognise",
+    "i only understood you as far as",
+    "you can't see any such thing",
+    "that's not something you can",
+    "you can't go that way",
+    "i didn't understand that sentence",
+)
+
+CHECK_AT = 20
+MAX_REJECT_RATE = 0.60
+
+
+def _rejected(observation: str) -> bool:
+    low = observation.lower()
+    return any(phrase in low for phrase in _REJECTIONS)
+
 
 def stage_trajectory(steps: int, seed: int) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
@@ -90,16 +138,38 @@ def stage_trajectory(steps: int, seed: int) -> None:
     world = open_world(WORLD)
     observation, _ = world.reset()
     frozen = (Message(role="system", content=SYSTEM),)
-    last: str | None = None
     started = time.perf_counter()
     ok = 0
+    rejects = 0
+    recent: list[str] = []
+    RECENT_N = 8
 
     with backend.cache_scope(frozen) as scope, path.open("w") as fh:
         for step in range(steps):
             lines = []
-            if last:
-                lines.append(f"Last time, you {last}.")
-            lines.append(observation.text)
+            # A rolling window of recent actions, not just the last one.
+            #
+            # With only the previous action visible the agent has no way to
+            # notice it is repeating itself: attempt 2 spent 39 of 40 steps on
+            # "examine kettle". That is not a model failure, it is a missing
+            # channel — the real design always carries the diary in context, and
+            # this is the cheapest stand-in for it.
+            #
+            # Worth recording as a design fact: a loop with no memory degenerates
+            # into repetition, which makes the spec's diary load-bearing rather
+            # than decorative.
+            if recent:
+                lines.append(
+                    "Lately you have: " + "; ".join(recent) + "."
+                )
+            # Standing view of the surroundings, carried every step. Action
+            # results are terse ("Tin, dented on one side.") and do not repeat
+            # the room, so without this the agent sees the exits once on entry
+            # and never again — and stops navigating.
+            if observation.description:
+                lines.append(observation.description)
+            if observation.text and observation.text != observation.description:
+                lines.append(observation.text)
             parts = PromptParts(
                 frozen=frozen,
                 variable=(Message(role="user", content="\n\n".join(lines)),),
@@ -133,12 +203,35 @@ def stage_trajectory(steps: int, seed: int) -> None:
                 "observation": observation.text,
             }) + "\n")
             fh.flush()
-            last = action.command
+            recent.append(action.command)
+            del recent[:-RECENT_N]
+
+            if _rejected(observation.text):
+                rejects += 1
 
             if step % 20 == 0:
                 rate = (time.perf_counter() - started) / (step + 1)
                 print(f"  step {step}/{steps}  {rate:.1f}s/step  "
-                      f"parse_ok {ok}/{step + 1}", flush=True)
+                      f"parse_ok {ok}/{step + 1}  "
+                      f"rejected {rejects}/{step + 1}  room={observation.room}",
+                      flush=True)
+
+            # Fail fast on a degenerate trajectory. Attempt 1 ran all 320 steps
+            # at a 99% rejection rate and produced worthless training data; the
+            # signal was obvious by step 20. Checking early turns a wasted hour
+            # into a wasted minute.
+            if step == CHECK_AT - 1:
+                rate = rejects / CHECK_AT
+                if rate > MAX_REJECT_RATE:
+                    world.close()
+                    backend.close()
+                    raise SystemExit(
+                        f"\nABORTED: {rate:.0%} of the first {CHECK_AT} commands were "
+                        f"rejected by the parser (limit {MAX_REJECT_RATE:.0%}).\n"
+                        f"The agent is not speaking the parser's language, so the "
+                        f"trajectory would be unusable as training data.\n"
+                        f"Last observation: {observation.text[:120]!r}"
+                    )
 
     world.close()
     backend.close()

@@ -38,13 +38,48 @@ WORLD_ID = "world_v0"
 
 # (name, description) — flat, unatmospheric on purpose. Prose craft belongs to
 # the real world; this one only has to be navigable and non-repetitive.
+#
+# EVERY DESCRIPTION MUST NAME ITS EXITS, and this is not a stylistic choice.
+# GameMaker does not append exit text, so the first version of this file produced
+# rooms like "A cramped galley. Salt has got into everything." The agent had no
+# way to learn that north and south led anywhere: `admissible_commands` knows,
+# but that is hidden from the agent by design, and correctly so. The result was a
+# trajectory that never left the starting room — 40 steps, 2 unique commands.
+#
+# The exits are described in prose rather than exposed as a command list, which
+# is how a text adventure has always done it: the room tells you where the doors
+# are, and reading it is the agent's job. `test_world_artifacts.py` asserts the
+# invariant so a future room cannot quietly omit them.
 ROOMS = {
-    "galley": ("Galley", "A cramped galley. Salt has got into everything."),
-    "store": ("Store", "Shelves, mostly empty. It smells of paraffin."),
-    "landing": ("Landing", "A half-turn of stair with a window that does not open."),
-    "lamp_room": ("Lamp Room", "Glass on every side. The mechanism is still."),
-    "workshop": ("Workshop", "A bench under a rack of tools, most of them gone."),
-    "cistern": ("Cistern", "Low and cold. Water somewhere, not visible."),
+    "galley": (
+        "Galley",
+        "A cramped galley. Salt has got into everything. A doorway leads north, "
+        "and a hatch in the floor goes down to the south.",
+    ),
+    "store": (
+        "Store",
+        "Shelves, mostly empty. It smells of paraffin. The galley is back to the "
+        "south, a workshop lies north, and a stair goes up to the east.",
+    ),
+    "landing": (
+        "Landing",
+        "A half-turn of stair with a window that does not open. The stair "
+        "continues north, and the store is west.",
+    ),
+    "lamp_room": (
+        "Lamp Room",
+        "Glass on every side. The mechanism is still. Stairs go down to the "
+        "south, and a gantry runs west.",
+    ),
+    "workshop": (
+        "Workshop",
+        "A bench under a rack of tools, most of them gone. The store is south, "
+        "and a gantry leads east.",
+    ),
+    "cistern": (
+        "Cistern",
+        "Low and cold. Water somewhere, not visible. The way back up is north.",
+    ),
 }
 
 # GameMaker exposes only the four compass directions — there is no up/down, so

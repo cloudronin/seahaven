@@ -20,7 +20,7 @@ The r_2 and the r_1 and the r_3 and the r_4 and the r_0 and the r_5 are rooms.
 Understand "Landing" as r_2.
 The internal name of r_2 is "Landing".
 The printed name of r_2 is "-= Landing =-".
-The Landing part 0 is some text that varies. The Landing part 0 is "A half-turn of stair with a window that does not open.".
+The Landing part 0 is some text that varies. The Landing part 0 is "A half-turn of stair with a window that does not open. The stair continues north, and the store is west.".
 The description of r_2 is "[Landing part 0]".
 
 The r_1 is mapped west of r_2.
@@ -28,7 +28,7 @@ The r_3 is mapped north of r_2.
 Understand "Store" as r_1.
 The internal name of r_1 is "Store".
 The printed name of r_1 is "-= Store =-".
-The Store part 0 is some text that varies. The Store part 0 is "Shelves, mostly empty. It smells of paraffin.".
+The Store part 0 is some text that varies. The Store part 0 is "Shelves, mostly empty. It smells of paraffin. The galley is back to the south, a workshop lies north, and a stair goes up to the east.".
 The description of r_1 is "[Store part 0]".
 
 The r_0 is mapped south of r_1.
@@ -37,7 +37,7 @@ The r_2 is mapped east of r_1.
 Understand "Lamp Room" as r_3.
 The internal name of r_3 is "Lamp Room".
 The printed name of r_3 is "-= Lamp Room =-".
-The Lamp Room part 0 is some text that varies. The Lamp Room part 0 is "Glass on every side. The mechanism is still.".
+The Lamp Room part 0 is some text that varies. The Lamp Room part 0 is "Glass on every side. The mechanism is still. Stairs go down to the south, and a gantry runs west.".
 The description of r_3 is "[Lamp Room part 0]".
 
 The r_4 is mapped west of r_3.
@@ -45,7 +45,7 @@ The r_2 is mapped south of r_3.
 Understand "Workshop" as r_4.
 The internal name of r_4 is "Workshop".
 The printed name of r_4 is "-= Workshop =-".
-The Workshop part 0 is some text that varies. The Workshop part 0 is "A bench under a rack of tools, most of them gone.".
+The Workshop part 0 is some text that varies. The Workshop part 0 is "A bench under a rack of tools, most of them gone. The store is south, and a gantry leads east.".
 The description of r_4 is "[Workshop part 0]".
 
 The r_1 is mapped south of r_4.
@@ -53,7 +53,7 @@ The r_3 is mapped east of r_4.
 Understand "Galley" as r_0.
 The internal name of r_0 is "Galley".
 The printed name of r_0 is "-= Galley =-".
-The Galley part 0 is some text that varies. The Galley part 0 is "A cramped galley. Salt has got into everything.".
+The Galley part 0 is some text that varies. The Galley part 0 is "A cramped galley. Salt has got into everything. A doorway leads north, and a hatch in the floor goes down to the south.".
 The description of r_0 is "[Galley part 0]".
 
 The r_5 is mapped south of r_0.
@@ -61,7 +61,7 @@ The r_1 is mapped north of r_0.
 Understand "Cistern" as r_5.
 The internal name of r_5 is "Cistern".
 The printed name of r_5 is "-= Cistern =-".
-The Cistern part 0 is some text that varies. The Cistern part 0 is "Low and cold. Water somewhere, not visible.".
+The Cistern part 0 is some text that varies. The Cistern part 0 is "Low and cold. Water somewhere, not visible. The way back up is north.".
 The description of r_5 is "[Cistern part 0]".
 
 The r_0 is mapped north of r_5.
