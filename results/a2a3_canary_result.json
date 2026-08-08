@@ -1,0 +1,71 @@
+{
+  "spike": "A2/A3 + vllm#42125 canary",
+  "hardware": "HF Jobs h200 (NVIDIA H200, sm_90) @ $5.00/hr",
+  "vllm": "0.26.0",
+  "model": "Qwen/Qwen3-4B",
+  "cost_usd": {
+    "failed_run": 0.47,
+    "successful_run": 0.53,
+    "total": 1.0
+  },
+  "A2_lora_plus_structured": {
+    "composes": true,
+    "detail": {
+      "json_under_adapter_a": {
+        "text": "{\"expect\": \"a single word or phrase.\",\"command\": \"NEXT\"}",
+        "respected": true
+      },
+      "choice_under_adapter_b": {
+        "text": "wait",
+        "respected": true
+      },
+      "composes": true
+    },
+    "verdict": "CONFIRMED. Two adapters with two different constraints serve in one batch. Source inspection said the subsystems never touch; no test in the vLLM repo exercises it, so it is now verified rather than assumed."
+  },
+  "A3_determinism": {
+    "with_flag": {
+      "n": 16,
+      "distinct_outputs": 1,
+      "deterministic": true,
+      "mean_batch_latency_s": 0.9171,
+      "sample": " The tide at the station is currently at 12.3 inches above mean sea level, flowing outwards during the ebb phase. \n\nSpecify the type of tide currently occurring",
+      "divergent": []
+    },
+    "without_flag": {
+      "n": 16,
+      "distinct_outputs": 4,
+      "deterministic": false,
+      "mean_batch_latency_s": 0.2779,
+      "sample": " The tide is currently out and will come in in approximately 30 minutes. Okay, that's all the information I need for now. I'll check again in 10 minutes. Goodby",
+      "divergent": [
+        " The tide at the station is currently outgoing, flowing steadily into the channel at approximately 12 inches per minute.",
+        " The tide is currently out and will come in in approximately 30 minutes. Okay, that's all the information I need for now",
+        " The tide is currently out and will come in in approximately 30 minutes. Okay, that's all the information I need for now"
+      ]
+    },
+    "verdict": "CONFIRMED, and the flag is mandatory. Same prompt, same seed, same adapter, 16 requests under varying batch composition: 1 distinct output WITH VLLM_BATCH_INVARIANT=1, 4 distinct WITHOUT. A per-request seed does not make LoRA output reproducible on its own."
+  },
+  "A3_overhead": {
+    "latency_with_flag_s": 0.9171,
+    "latency_without_flag_s": 0.2779,
+    "multiplier": 3.3,
+    "verdict": "CONTRADICTS the source-based expectation. vLLM's batch_invariant.py suggested SM90 needs only a cuBLAS workspace setting (near-free) and that only SM80 pays for Triton matmul overrides. Measured 3.3x on an H200 (sm_90), and the log shows matmul_persistent being traced -- the expensive path runs on Hopper too."
+  },
+  "canary_vllm_42125": {
+    "v1_answer": "ALPHA",
+    "after_same_name_reload": "ALPHA",
+    "after_versioned_name": "BETA",
+    "expected_v1": "ALPHA",
+    "expected_v2": "BETA",
+    "stale_kv_reproduced": true,
+    "versioned_name_avoids_it": true,
+    "verdict": "BUG LIVE \u2014 reusing a lora_name serves stale KV. Versioned names are mandatory, not hygiene.",
+    "verdict_plain": "BUG IS LIVE on vLLM 0.26.0 / H200. Serving adapter v1 under the name 'canary' then reloading DIFFERENT weights under the SAME name still returned v1's answer (ALPHA). A versioned name returned the correct new answer (BETA)."
+  },
+  "consequences": [
+    "Versioned adapter names (run07_c1, run07_c2, never run07) are a CORRECTNESS requirement, empirically, not a precaution. Reusing a name after each campaign's retrain would have served stale weights -- silently, and biased toward making campaign N look like campaign N-1, i.e. manufacturing the within-run stability that kill criterion K2 tests for.",
+    "VLLM_BATCH_INVARIANT=1 must be set, and it costs 3.3x -- not the 1.5-2x the plan assumed. Every Phase F wall-clock and dollar estimate roughly doubles.",
+    "Multi-LoRA + structured output compose, so the serving architecture in the plan stands."
+  ]
+}

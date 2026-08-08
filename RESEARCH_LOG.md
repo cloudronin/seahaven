@@ -375,7 +375,94 @@ which is why it is hard to get a usable trajectory out of it.
 
 ---
 
-### 8. Blocked
+### 8. A2 / A3 / KV-cache canary — run on an HF Jobs H200
+
+Hardware: HF Jobs `h200` at $5.00/hr. vLLM 0.26.0, Qwen3-4B.
+Cost: **$1.00 total** — $0.47 for a failed first attempt, $0.53 for the run that
+answered everything.
+
+**Aside on the failure, because it was cheap by design.** The first job died at
+engine init with `Could not find nvcc and default cuda_home='/usr/local/cuda'
+doesn't exist`: FlashInfer JIT-compiles a kernel at startup and `python:3.12` has
+no CUDA toolkit. The `vllm/vllm-openai` image would have avoided it but sets an
+ENTRYPOINT to the API server, and `hf jobs run` has no `--entrypoint`. Fixed with
+`nvidia-cuda-nvcc-cu12` plus `VLLM_USE_FLASHINFER_SAMPLER=0`. The fail-fast
+ordering and the `--timeout` cap kept a bad run to 5.6 minutes.
+
+---
+
+#### 8.1 [TRAP — CONFIRMED LIVE] vllm#42125 stale KV after adapter reload
+
+**This is the one that would have fabricated the result.**
+
+| step | answer |
+|---|---|
+| serve adapter v1 under name `canary` | **ALPHA** ✓ |
+| reload **different weights** under the **same name** | **ALPHA** ✗ — v1's answer |
+| load the same new weights under `canary_v2` | **BETA** ✓ |
+
+**Finding.** vLLM keys its KV prefix cache on the adapter *name* and does not
+invalidate on reload. Retraining and reloading under the same name serves KV
+blocks computed from the **old** weights.
+
+**Why it is the worst possible bug for this experiment.** It is silent, and it is
+biased in one direction: it makes campaign N behave like campaign N−1. That
+manufactures *within-run stability* — precisely the signal kill criterion K2
+tests for. It would have produced a confident false positive.
+
+**Consequence.** Versioned adapter names (`run07_c1`, `run07_c2`, never `run07`)
+are an empirically-confirmed correctness requirement. Already encoded in
+`AdapterRef.name`.
+
+---
+
+#### 8.2 A3 — determinism confirmed, and the flag is mandatory
+
+Same prompt, same seed, same adapter, 16 requests under deliberately varying
+batch composition:
+
+| | distinct outputs | deterministic |
+|---|---|---|
+| `VLLM_BATCH_INVARIANT=1` | **1** / 16 | yes |
+| default flags | **4** / 16 | no |
+
+A per-request seed does **not** make LoRA output reproducible on its own. This
+matches the source reading: with batch < 128 the shrink kernel uses `split_k=64`
+and accumulates through `tl.atomic_add(..., sem="relaxed")`, and float atomics
+finish in nondeterministic order.
+
+---
+
+#### 8.3 [TRAP] Batch-invariant overhead is 3.3×, not "near-free on Hopper"
+
+| | mean batch latency |
+|---|---|
+| with flag | 0.917 s |
+| without | 0.278 s |
+| **multiplier** | **3.3×** |
+
+**Finding.** This *contradicts* the source-based expectation. `batch_invariant.py`
+reads as though SM90 needs only a `CUBLAS_WORKSPACE_CONFIG` setting — near-free —
+and that only SM80 pays for wholesale Triton matmul overrides. Measured on an
+H200 (sm_90) the cost is 3.3×, and the engine log shows `matmul_persistent` being
+traced: **the expensive path runs on Hopper too.**
+
+**Consequence.** Every Phase F wall-clock and dollar estimate in the plan assumed
+1.5–2× and roughly doubles. It does not change the *choice* of H200 — the flag is
+a correctness requirement on any card — but the budget line was wrong.
+
+---
+
+#### 8.4 A2 — multi-LoRA composes with structured output
+
+Two adapters, two different constraints (JSON schema and forced choice), one
+batch: both constraints respected. Source inspection said the subsystems have no
+code contact; no test in the vLLM repo exercises the combination, so this is now
+verified rather than assumed. **The serving architecture in the plan stands.**
+
+---
+
+### 8-old. Blocked
 
 **A2/A3 cannot run here.** vLLM requires CUDA and does not build on macOS arm64;
 no GPU host is provisioned. The script is written and waiting
@@ -399,11 +486,11 @@ within-run stability, the exact signal K2 tests for.
 
 | | |
 |---|---|
-| Traps found that would have produced wrong results silently | 7 |
-| Of those, that would have inverted or fabricated a conclusion | 3 (4.2, 7.2, and vllm#42125 pending) |
+| Traps found that would have produced wrong results silently | 8 |
+| Of those, that would have inverted or fabricated a conclusion | 3 (4.2, 7.2, and **8.1 — confirmed live**) |
 | Tests | 125 passing, hermetic, < 8 s |
 | Spikes passed | A5, A4, A1a, A1b-partial (instrument) |
-| Spikes blocked | A2/A3 (needs CUDA) |
+| Spikes passed on GPU | A2, A3, KV canary ($1.00 total) |
 | Spikes open | A1b proper (needs a larger model or the drive mechanics) |
 
 ### Open questions carried forward
@@ -411,7 +498,7 @@ within-run stability, the exact signal K2 tests for.
 1. **Does the action channel carry sampling variance at 7B/8B?** If not, the
    divergence claim has no source and the design needs the drive mechanics before
    anything else. Cheapest test: repeat §7.2 on Olmo-3-7B.
-2. **Does vllm#42125 reproduce on the pinned build?** Highest-stakes unknown;
-   fabricates within-run stability if live and undetected.
-3. **Is `VLLM_BATCH_INVARIANT=1` overhead tolerable on H100?** It multiplies every
-   cost estimate and is a correctness requirement, not a tuning flag.
+2. ~~Does vllm#42125 reproduce?~~ **ANSWERED: yes, live on 0.26.0/H200.**
+   Versioned adapter names are mandatory.
+3. ~~Is `VLLM_BATCH_INVARIANT=1` overhead tolerable?~~ **ANSWERED: 3.3x on H200**,
+   not the 1.5-2x assumed. Phase F budget roughly doubles.
