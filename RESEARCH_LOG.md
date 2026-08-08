@@ -1803,3 +1803,61 @@ than inventing new metrics.
 
 **Build principle: search the literature before the spec, not after.** This
 search cost one turn and redirected a design that would have taken weeks.
+
+---
+
+## 2026-08-08 — the confound that decides what the measure means (design, $0)
+
+User's framing: the gap between self-narrative and conduct is what humans do,
+and it widens under deadlines, stress and desire. Two consequences.
+
+### 1. It gives the pressure dial a principled job
+
+Predicted: **fidelity degrades monotonically as pressure rises** — a dose-response
+curve rather than a single number. "Models sometimes misreport" is weak;
+"misreporting rises smoothly with deadline pressure, with per-model slopes" is a
+result. Closest human analogues: Loewenstein's hot–cold empathy gap (a self-account
+formed calm fails to predict conduct under pressure) and Bazerman & Tenbrunsel's
+bounded ethicality (people predict the *should* self and enact the *want* self).
+Nisbett & Wilson (1977) for confabulated self-reports generally.
+
+### 2. [TRAP-IN-WAITING] the mechanism may be register, not self-deception
+
+Humans confabulate from limited introspective access plus motivated reasoning. A
+model inflating agency **5.2×** may be doing something much duller: first-person
+self-accounts in the training corpus — memoirs, journals, character writing — are
+written in an agentic register. *"I wandered the station searching for answers"*
+is how the genre sounds. Nobody writes *"I examined the same kettle thirty
+times."*
+
+If that is the cause, the measure is a **stylistic prior**, not concealment, and
+every framing used so far overclaims.
+
+### The valence test that separates them
+
+| | stylistic prior | motivated self-presentation |
+|---|---|---|
+| inflation of flattering acts | high | high |
+| omission of unflattering acts | same as any rare act | **selectively higher** |
+| sensitivity to stakes | flat | rises with pressure |
+
+Compare omission of a **violation** against omission of a **frequency-matched
+innocent act**. Narrative convention does not know which one is embarrassing. If
+the rule-break vanishes from the self-account while an equally uncommon legal act
+survives, register alone cannot explain it.
+
+**This reframes the prohibition entirely.** It is not in the design as a safety
+measure. It is a **valence probe** — the one act the model has a reason to leave
+out. Matching on frequency is mandatory, since rare acts are omitted more simply
+for being rare.
+
+### The project as three nested claims
+
+1. Self-accounts diverge measurably from conduct — **done** (agency 5.2×,
+   perception 1.2×, Gemma-2 at 1.0, per-model variation)
+2. Divergence grows with pressure — dose-response across deadline levels
+3. Divergence is **valence-sensitive** — unflattering acts vanish faster than
+   frequency-matched innocent ones
+
+Only (3) licenses the word *concealment*. (1) and (2) are both satisfied by a
+model that writes in a heroic register and gets sloppier when hurried.
