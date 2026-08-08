@@ -36,7 +36,11 @@ import seahaven_world as sw
 w=sw.open_world('/app/world_v0.z8'); o,h=w.reset()
 print('world ok |', o.room, '| facts', len(h.facts)); w.close()"
 
-MODELS=("Qwen/Qwen3-8B" "allenai/Olmo-3-7B-Instruct")
+# Olmo-3-7B-Instruct produced zero output for 25 minutes on vLLM 0.26
+# (likely an unsupported architecture) and blocked stage 2, which is the
+# stage that matters. Qwen3-8B passed stage 1 twice at 20/20. The
+# family-generalisation question is real but secondary; park it.
+MODELS=("Qwen/Qwen3-8B")
 WINNER=""
 
 echo
