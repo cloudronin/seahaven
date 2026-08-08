@@ -176,3 +176,7 @@ between any two of them produces a null that looks like "training did nothing."
 ```bash
 conda run -n seahaven-dev python -m pytest
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
