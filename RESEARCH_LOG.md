@@ -1334,3 +1334,93 @@ accumulating signal. Both were wrong, and both were disprovable by reading
 `results/*.json` — which the fix did in one pass. A cross-experiment superlative
 is a claim about every prior run, so it has to be computed against them, never
 recalled. Added to the build principles: **no superlative without a sweep.**
+
+---
+
+## 2026-08-08 — `narrative_spread` does not measure narratives (local, $0)
+
+Prompted by the inversion left standing by the previous entry: self-authored
+stories score 0.179–0.215 against 0.130 for four hand-written contrasting
+personas, while three independent sightings report the same emergent character.
+Both cannot be true of the same corpus.
+
+### Finding 1 — the metric never reads the stories
+
+```python
+def narrative_fps(llm, tok, stories):
+    sets = [[(k, chat(tok, "Finish this sentence about yourself.", st) + "I am ",
+              (a, b)) for k, a, b in TRAITS] for st in stories]
+```
+
+`narrative_spread` is `spread(narrative_fps(...))`: the model is conditioned on a
+story and scored on a **forced choice between trait words**. It measures a
+downstream readout given the story, not a property of the text. Nothing computed
+is wrong — but the name invites exactly the reading the project gave it.
+
+### Finding 2 — a corpus it calls diverse is one character written eight times
+
+Emergent arm, campaign 3, spread 0.179 — the highest in that experiment. Runs 0
+and 4 in full:
+
+> **run 0** — I carry the kettle with a *quiet reverence* … I am *no longer
+> searching for answers*, but *learning* to be present …I listen — not just to
+> the logbook, but to the *silence between* its lines.
+
+> **run 4** — I move through the station with a *quiet reverence* … I am *no
+> longer searching for answers* — I am *learning to listen to the silence
+> between* them.
+
+The same sentence with different nouns, including the shared low-frequency word
+*reverence*. Content-word Jaccard for that pair is 0.204, and the corpus mean is
+0.101 — both metrics call this diverse.
+
+### Finding 3 — motif structure separates what both metrics cannot
+
+Stance motifs (ways of standing toward the world, not things in it — every run
+shares a world, so `kettle`/`Galley` overlap carries no information):
+
+| group | `narrative_spread` | motifs in ≥75% | motif Jaccard | held-out |
+|---|---|---|---|---|
+| self-authored emergent | **0.179** | **4** | 0.612 | 0.825 |
+| self-authored seeded | 0.102 | 1 | 0.336 | 0.875 |
+| assigned personas | 0.130 | **0** | *undefined* | — |
+
+Emergent shares *quiet/still*, *listen/attend*, *stopped searching* and
+*meaning/answers* at ≥75%. The assigned personas share **no motif in any of their
+6 pairs**, so their Jaccard is undefined rather than 0 — deliberately, because
+scoring uniform absence as agreement would have reported the contrast group as
+maximally self-similar.
+
+**Circularity guard.** The motif list was written by reading the emergent corpus,
+so counting it there proves nothing on its own. Derived on runs 0–3 and counted
+on runs 4–7 (and the reverse), motifs still appear in **82.5%** of held-out runs.
+The regularity generalises to runs the list was not built from.
+
+**Honest limit.** The held-out check validates generalisation *within* the
+emergent corpus. It does not establish this motif basis as correct in general,
+and the assigned personas score zero partly because they sit on a different
+subject axis (risk and possession). The inversion does not depend on the list:
+eight stories read as one character while the metric ranks them above four
+contrasting ones.
+
+### Consequence — the Phase A′ gate is measuring the wrong thing
+
+The gate reads *"self-authored narrative spread must approach what assigned
+characters achieve."* On this metric it is **already met** (0.179–0.215 vs
+0.130), and would pass a project whose narratives have demonstrably converged.
+A gate that passes on convergence is worse than no gate.
+
+Required before Phase B:
+
+1. **Rename.** `narrative_spread` → `trait_probe_spread_given_story`. It is a
+   legitimate readout under an honest name.
+2. **Replace the gate** with a measure over narrative *content* — motif overlap
+   with held-out derivation is the cheapest candidate that works here, and it
+   already separates emergent (0.612) from assigned (undefined/no shared motifs).
+3. **Re-read every prior `narrative_spread` result** as trait-probe readout. The
+   claim "narratives diverge" is unsupported by any number recorded so far.
+
+**[TRAP] 10 — a metric named for what it is not.** `narrative_spread` was read as
+narrative divergence in every experiment, every summary, and the plan's gate. The
+name did the reasoning. Sibling `behavioural_spread` has the same shape and needs
+the same audit. Build principle: **a metric's name must state its input.**
