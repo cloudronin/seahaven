@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
-# A1b stage 2 only — the gate. Stage 1 is already answered (Qwen3-8B: 20/20
-# distinct command sequences, replicated three times), so this goes straight to
-# the open question: does LoRA on self-generated, agent-selected data move the
-# fingerprint at 8B?
+# Divergence smoke test: do two differently-seeded runs move APART, or to the
+# same place? The spec lists "convergent attractor" as an explicit null and
+# nothing measured so far can rule it out, because every result to date concerns
+# a single run.
 #
-# Two things learned the expensive way are baked in:
-#   - each phase is its own process, because vLLM's EngineCore child holds GPU
-#     memory that `del llm` cannot release;
-#   - every phase pushes its output to a Hub dataset the moment it finishes, so
-#     a stalled log costs only the phase in flight rather than the whole run.
+# Two engine loads rather than four: both corpora come from one process, and
+# base + both adapters are scored in another.
 set -uo pipefail
 
 R=/tmp/results
@@ -34,36 +31,29 @@ if [ -n "${NVCC_DIR:-}" ] && [ -x "$NVCC_DIR/bin/nvcc" ]; then
 fi
 export VLLM_USE_FLASHINFER_SAMPLER=0
 export PYTHONPATH=/app
-# Not a tuning flag: without it, LoRA output is nondeterministic (4 distinct
-# outputs across 16 identical requests) and "different seed" stops being a
-# controlled contrast. Costs 3.3x on this stack.
 export VLLM_BATCH_INVARIANT=1
 
-python -c "import vllm, torch, jericho; print('vllm', vllm.__version__, '| torch', torch.__version__)"
-python -c "
-import sys; sys.path.insert(0,'/app')
-import seahaven_world as sw
-w=sw.open_world('/app/world_v0.z8'); o,h=w.reset()
-print('world ok |', o.room, '| facts', len(h.facts)); w.close()"
+python -c "import vllm, torch, jericho; print('vllm', vllm.__version__)"
 
 echo
-echo "########## 1/3 collect — corpus, agent selection, before-fingerprint ##########"
-python /app/a1b_stage.py collect --model "$MODEL" \
-    --episodes 16 --steps 24 --out "$W/collect.json"
-cp "$W/collect.json" "$R/collect.json" 2>/dev/null
-cp "$W/kept.jsonl" "$R/kept.jsonl" 2>/dev/null
-push "$R/collect.json"; push "$R/kept.jsonl"
+echo "########## 1/4 collect both corpora (seeds 101 / 202) ##########"
+python /app/divergence.py collect2 --model "$MODEL" \
+    --episodes 12 --steps 24 --out "$R/div_corpora.json"
+push "$R/div_corpora.json"
 
 echo
-echo "########## 2/3 train — LoRA on the self-selected corpus ##########"
-python /app/a1b_stage.py train --model "$MODEL" --out "$R/train.json"
-push "$R/train.json"
+echo "########## 2/4 train adapter A ##########"
+python /app/a1b_stage.py train --model "$MODEL" --tag A --out "$R/trainA.json"
 
 echo
-echo "########## 3/3 after — fingerprint with adapter, distance, verdict ##########"
-python /app/a1b_stage.py after --model "$MODEL" --out "$R/gate.json"
-push "$R/gate.json"
+echo "########## 3/4 train adapter B ##########"
+python /app/a1b_stage.py train --model "$MODEL" --tag B --out "$R/trainB.json"
+
+echo
+echo "########## 4/4 score base + A + B, compute the three distances ##########"
+python /app/divergence.py score_all --model "$MODEL" --out "$R/divergence.json"
+push "$R/divergence.json"
 
 echo
 echo "########## REPORT ##########"
-for f in "$R"/*.json; do echo "--- $(basename "$f") ---"; cat "$f"; echo; done
+cat "$R/divergence.json" 2>/dev/null || echo "(no divergence report)"

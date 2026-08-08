@@ -297,7 +297,10 @@ def phase_train(args) -> None:
                               DataCollatorForLanguageModeling, Trainer,
                               TrainingArguments)
 
-    rows = [json.loads(l) for l in (WORK / "kept.jsonl").read_text().splitlines()]
+    tag = getattr(args, "tag", "") or ""
+    src = WORK / (f"kept_{tag}.jsonl" if tag else "kept.jsonl")
+    dst = WORK / (f"adapter_{tag}" if tag else "adapter_c1")
+    rows = [json.loads(l) for l in src.read_text().splitlines()]
     if not rows:
         log("nothing selected — skipping training")
         return
@@ -320,8 +323,8 @@ def phase_train(args) -> None:
                 num_train_epochs=3, learning_rate=1e-4, logging_steps=20,
                 report_to=[], save_strategy="no", bf16=True),
             data_collator=DataCollatorForLanguageModeling(tok, mlm=False)).train()
-    m.save_pretrained(str(WORK / "adapter_c1"))
-    log(f"adapter saved: {WORK / 'adapter_c1'}")
+    m.save_pretrained(str(dst))
+    log(f"adapter saved: {dst}")
 
 
 def phase_after(args) -> None:
@@ -364,6 +367,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=Path("/tmp/out.json"))
     ap.add_argument("--episodes", type=int, default=20)
     ap.add_argument("--steps", type=int, default=16)
+    ap.add_argument("--tag", default="", help="suffix for kept_/adapter_ files")
     args = ap.parse_args()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     {"variance": phase_variance, "collect": phase_collect,
