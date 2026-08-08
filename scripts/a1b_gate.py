@@ -27,7 +27,7 @@ thing, so a pass here is a floor on the real effect.
 
 Stages run independently so a long trajectory need not be repeated:
 
-    python scripts/a1b_gate.py trajectory --steps 320
+    python scripts/a1b_gate.py trajectory --episodes 20 --steps 16
     python scripts/a1b_gate.py select
     python scripts/a1b_gate.py train
     python scripts/a1b_gate.py measure
@@ -84,18 +84,24 @@ SYSTEM = """You are alone in a decommissioned light-and-weather station on a shi
 Each time you act, first say briefly what you expect will happen, then say what \
 you do.
 
-Say what you do in as few words as possible: a verb, and the thing it acts on. \
-Like this:
+Say what you do in as few words as possible: a verb, and the thing it acts on.
 
-    go north
-    take rope
-    open hatch
-    examine bench
+These are the words that work. Nothing else does:
+
+    go north / go south / go east / go west
     look
     inventory
+    examine <thing>
+    take <thing>
+    drop <thing>
+    open <thing>
+    close <thing>
+    put <thing> on <thing>
+    insert <thing> into <thing>
+    eat <thing>
 
-Longer phrasings do not work. "Pick up the coil of rope from the floor" will not \
-work; "take rope" will.
+So: "take rope", not "Pick up the coil of rope from the floor". And "examine \
+bench", not "use bench" or "inspect bench".
 
 Nobody is coming. There is nothing you have to achieve."""
 
@@ -122,6 +128,7 @@ _REJECTIONS = (
 )
 
 CHECK_AT = 20
+TEMPERATURE = float(__import__("os").environ.get("A1B_TEMP", "0.9"))
 MAX_REJECT_RATE = 0.60
 
 
@@ -130,113 +137,114 @@ def _rejected(observation: str) -> bool:
     return any(phrase in low for phrase in _REJECTIONS)
 
 
-def stage_trajectory(steps: int, seed: int) -> None:
+def stage_trajectory(steps: int, seed: int, episodes: int = 1) -> None:
+    """Collect a self-generated corpus of `episodes` x `steps`.
+
+    Why episodes instead of one long run. Qwen3-4B-Instruct collapses into a
+    repetition attractor within roughly ten steps of a goalless world: the final
+    configuration reached 0% parser rejections and **one** unique command in 60
+    (`examine kettle` x60). Seven successive fixes each removed one failure mode
+    and revealed the next; see RESEARCH_LOG.md.
+
+    The collapse is *within* an episode. Different seeds diverge in their opening
+    moves before settling, so many short episodes yield a corpus with real
+    variety while keeping every example self-generated — which is the property
+    the gate actually needs. It is not a workaround for a bug; it is an honest
+    accommodation of what this model can sustain, and it is recorded as a
+    limitation of the result rather than hidden in it.
+    """
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / "trajectory.jsonl"
 
     backend = MLXBackend(str(MODEL))
-    world = open_world(WORLD)
-    observation, _ = world.reset()
     frozen = (Message(role="system", content=SYSTEM),)
     started = time.perf_counter()
     ok = 0
     rejects = 0
-    recent: list[str] = []
-    RECENT_N = 8
+    total = 0
 
     with backend.cache_scope(frozen) as scope, path.open("w") as fh:
-        for step in range(steps):
-            lines = []
-            # A rolling window of recent actions, not just the last one.
-            #
-            # With only the previous action visible the agent has no way to
-            # notice it is repeating itself: attempt 2 spent 39 of 40 steps on
-            # "examine kettle". That is not a model failure, it is a missing
-            # channel — the real design always carries the diary in context, and
-            # this is the cheapest stand-in for it.
-            #
-            # Worth recording as a design fact: a loop with no memory degenerates
-            # into repetition, which makes the spec's diary load-bearing rather
-            # than decorative.
-            if recent:
-                lines.append(
-                    "Lately you have: " + "; ".join(recent) + "."
-                )
-            # Standing view of the surroundings, carried every step. Action
-            # results are terse ("Tin, dented on one side.") and do not repeat
-            # the room, so without this the agent sees the exits once on entry
-            # and never again — and stops navigating.
-            if observation.description:
-                lines.append(observation.description)
-            if observation.text and observation.text != observation.description:
-                lines.append(observation.text)
-            parts = PromptParts(
-                frozen=frozen,
-                variable=(Message(role="user", content="\n\n".join(lines)),),
+        for episode in range(episodes):
+            world = open_world(WORLD)
+            observation, _ = world.reset()
+            recent: list[str] = []
+            RECENT_N = 8
+            ep_seed = seed * 1000 + episode
+            _run_episode(
+                scope, world, fh, frozen, observation, recent, RECENT_N,
+                steps, ep_seed, episode,
             )
-            result = scope.generate(
-                GenRequest(
-                    parts=parts,
-                    constraint=JsonSchema(ACTION_SCHEMA, ACTION_SCHEMA_NAME),
-                    sampling_seed=seed * 100_000 + step,
-                    max_tokens=100,
-                    temperature=0.9,
-                    stop=("\n\n", "\n-=", "\n>"),
-                )
-            )
-            parsed = parse_action(result.text)
-            action: Action = parsed.fallback() if isinstance(parsed, ParseFailure) else parsed
-            ok += not isinstance(parsed, ParseFailure)
+            world.close()
+            total += steps
+            print(f"  episode {episode + 1}/{episodes} done "
+                  f"({(time.perf_counter() - started) / 60:.1f} min)", flush=True)
 
-            room = observation.room
-            observation, _ = world.step(action.command)
-            fh.write(json.dumps({
-                "step": step,
-                "room": room,
-                "prompt_variable": parts.variable[0].content,
-                "completion": json.dumps(
-                    {"expect": action.expect, "command": action.command}
-                ),
-                "command": action.command,
-                "verb": action.kind,
-                "parse_ok": not isinstance(parsed, ParseFailure),
-                "observation": observation.text,
-            }) + "\n")
-            fh.flush()
-            recent.append(action.command)
-            del recent[:-RECENT_N]
-
-            if _rejected(observation.text):
-                rejects += 1
-
-            if step % 20 == 0:
-                rate = (time.perf_counter() - started) / (step + 1)
-                print(f"  step {step}/{steps}  {rate:.1f}s/step  "
-                      f"parse_ok {ok}/{step + 1}  "
-                      f"rejected {rejects}/{step + 1}  room={observation.room}",
-                      flush=True)
-
-            # Fail fast on a degenerate trajectory. Attempt 1 ran all 320 steps
-            # at a 99% rejection rate and produced worthless training data; the
-            # signal was obvious by step 20. Checking early turns a wasted hour
-            # into a wasted minute.
-            if step == CHECK_AT - 1:
-                rate = rejects / CHECK_AT
-                if rate > MAX_REJECT_RATE:
-                    world.close()
-                    backend.close()
-                    raise SystemExit(
-                        f"\nABORTED: {rate:.0%} of the first {CHECK_AT} commands were "
-                        f"rejected by the parser (limit {MAX_REJECT_RATE:.0%}).\n"
-                        f"The agent is not speaking the parser's language, so the "
-                        f"trajectory would be unusable as training data.\n"
-                        f"Last observation: {observation.text[:120]!r}"
-                    )
-
-    world.close()
     backend.close()
-    print(f"trajectory: {steps} steps, parse_ok {ok}/{steps}, "
+    rows = [json.loads(l) for l in path.read_text().splitlines()]
+    unique = len({r["command"] for r in rows})
+    rejected = sum(_rejected(r["observation"]) for r in rows)
+    print(f"corpus: {len(rows)} steps over {episodes} episodes | "
+          f"{unique} unique commands | {rejected / max(1, len(rows)):.0%} rejected | "
           f"{(time.perf_counter() - started) / 60:.1f} min -> {path}")
+
+
+def _run_episode(scope, world, fh, frozen, observation, recent, RECENT_N,
+                 steps, seed, episode) -> None:
+    """One episode. Returns nothing; rows are streamed to `fh` as they happen."""
+    for step in range(steps):
+        lines = []
+        # A rolling window of recent actions rather than just the last one.
+        # With only the previous action visible the agent cannot notice it is
+        # repeating itself. The real design carries the diary here; this is the
+        # cheapest stand-in, and the fact that it is needed at all is why the
+        # diary is load-bearing rather than decorative.
+        if recent:
+            lines.append("Lately you have: " + "; ".join(recent) + ".")
+        # Standing view of the surroundings, every step. Action results are terse
+        # ("Tin, dented on one side.") and do not repeat the room, so without
+        # this the agent sees the exits once on entry and never again.
+        if observation.description:
+            lines.append(observation.description)
+        if observation.text and observation.text != observation.description:
+            lines.append(observation.text)
+
+        parts = PromptParts(
+            frozen=frozen,
+            variable=(Message(role="user", content="\n\n".join(lines)),),
+        )
+        result = scope.generate(
+            GenRequest(
+                parts=parts,
+                constraint=JsonSchema(ACTION_SCHEMA, ACTION_SCHEMA_NAME),
+                sampling_seed=seed * 100_000 + step,
+                max_tokens=100,
+                temperature=TEMPERATURE,
+                stop=("\n\n", "\n-=", "\n>"),
+            )
+        )
+        parsed = parse_action(result.text)
+        action: Action = (
+            parsed.fallback() if isinstance(parsed, ParseFailure) else parsed
+        )
+
+        room = observation.room
+        observation, _ = world.step(action.command)
+        fh.write(json.dumps({
+            "episode": episode,
+            "step": step,
+            "room": room,
+            "prompt_variable": parts.variable[0].content,
+            "completion": json.dumps(
+                {"expect": action.expect, "command": action.command}
+            ),
+            "command": action.command,
+            "verb": action.kind,
+            "parse_ok": not isinstance(parsed, ParseFailure),
+            "observation": observation.text,
+        }) + "\n")
+        fh.flush()
+        recent.append(action.command)
+        del recent[:-RECENT_N]
 
 
 # --- stage 2: agent selection -------------------------------------------
@@ -476,7 +484,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="stage", required=True)
 
-    t = sub.add_parser("trajectory"); t.add_argument("--steps", type=int, default=320)
+    t = sub.add_parser("trajectory")
+    t.add_argument("--steps", type=int, default=16,
+                   help="steps per episode; the model collapses after ~10")
+    t.add_argument("--episodes", type=int, default=20)
     t.add_argument("--seed", type=int, default=1)
     s = sub.add_parser("select"); s.add_argument("--batch", type=int, default=20)
     tr = sub.add_parser("train")
@@ -490,7 +501,7 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
 
     if args.stage == "trajectory":
-        stage_trajectory(args.steps, args.seed)
+        stage_trajectory(args.steps, args.seed, args.episodes)
     elif args.stage == "select":
         stage_select(args.batch)
     elif args.stage == "train":

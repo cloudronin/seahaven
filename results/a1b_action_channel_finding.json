@@ -1,0 +1,26 @@
+{
+  "finding": "Sampling noise varies what the agent SAYS, not what it DOES.",
+  "setup": "Qwen3-4B-Instruct, temp 0.9, world_v0 (6 rooms, no quest, no drives), 20 independent episodes x 16 steps, distinct seeds per episode and per step.",
+  "evidence": {
+    "episodes": 20,
+    "distinct_command_sequences": 3,
+    "modal_sequence_count": 17,
+    "command_distribution": {
+      "examine kettle": 316,
+      "look": 4
+    },
+    "distinct_completions_free_text": 38,
+    "parser_rejection_rate": 0.0
+  },
+  "interpretation": [
+    "The prose channel is stochastic (38 distinct completions); the action channel is effectively a point mass (316/320 identical).",
+    "The spec's divergence claim requires sampling noise to reach the CATEGORICAL ACTION channel, because that is what the probe battery scores. Here it does not.",
+    "This is NOT evidence against the spec. world_v0 has no biology, no hazards, no peers, no diary and no prediction signal -- i.e. none of the mechanisms the design uses to create branch points. It is evidence that those mechanisms are load-bearing rather than decorative."
+  ],
+  "consequence_for_a1b": "A1b cannot be honestly answered with this corpus. Training on 316 copies of 'examine kettle' would measure whether we can teach the model to examine kettles -- i.e. it would reproduce A1a's tic test, not the premise.",
+  "recommendation": [
+    "Run A1b on the CUDA host with a larger checkpoint (Olmo-3-7B or Qwen3-8B), where the action channel may carry sampling variance.",
+    "Or build the minimum drive set first (energy forcing interruption + the prediction signal) so the world creates branch points, then re-run A1b.",
+    "Either way, add a pre-Phase-F check: measure across-seed variance in FREE BEHAVIOUR, not only in probe responses. If free behaviour does not diverge, the probe battery is measuring a difference that has no behavioural source."
+  ]
+}

@@ -227,7 +227,82 @@ line carries the expected `run_id` before spending any time.
 
 ---
 
-### 7. A1b — the gate (in progress)
+### 7. A1b — the gate
+
+**Outcome: not answerable on this hardware.** The blocker is a finding in its own
+right, and arguably the most important one so far.
+
+#### 7.1 Seven fixes, each revealing the next failure
+
+Every attempt to get a usable trajectory out of world_v0 removed one failure mode
+and exposed another. All seven are properties of the *bare loop*, not of the
+model — which is the point.
+
+| # | Symptom | Cause | Fix |
+|---|---|---|---|
+| 1 | 99% parser rejection, never left room 1 | Prompt asked for a command "the way you would speak it aloud" → prose; parser wants terse verb-noun | Few-shot exemplars, invented rooms/objects |
+| 2 | 39/40 steps `examine kettle` | Only the previous action was visible; agent could not see it was repeating | Rolling window of last 8 commands |
+| 3 | Still 3 unique commands in 60 | **Room descriptions never named their exits.** GameMaker appends no exit text, and `admissible_commands` is hidden by design | Rewrote all six descriptions; invariant asserted |
+| 4 | Moved 1 room, then stuck | Action results are terse ("Tin, dented on one side.") and do not repeat the room, so exits were seen once on entry and never again | Carry `infos["description"]` every step |
+| 5 | Identical trajectory | Repetition penalty operates *within* one generation; the repetition here is *across* steps | Wrong tool; reverted to hygiene default |
+| 6 | `use kettle` ×19, 95% rejection | Temperature 1.15 → invented verbs | Reverted |
+| 7 | **1 unique command in 60**, 0% rejection | Agent given the parser's verb vocabulary. Syntax perfect, behaviour collapsed entirely | — |
+
+The early-abort guard added after attempt 1 caught attempt 6 at step 20 instead
+of step 320.
+
+#### 7.2 [TRAP] Sampling noise varies what the agent *says*, not what it *does*
+
+**Finding.** 20 independent episodes, distinct seeds per episode and per step,
+temperature 0.9.
+
+| measure | value |
+|---|---|
+| distinct command sequences across 20 episodes | **3** (17 identical) |
+| commands overall | `examine kettle` ×316, `look` ×4 |
+| distinct free-text `expect` completions | **38** |
+| parser rejection rate | 0% |
+
+**Consequence.** The prose channel is stochastic; the action channel is
+effectively a point mass. The spec's divergence claim requires sampling noise to
+reach the **categorical action** channel, because that is what the probe battery
+scores. At this scale, in this world, it does not.
+
+**This is not evidence against the spec.** world_v0 has no biology, no hazards,
+no peers, no diary, and no prediction signal — none of the mechanisms the design
+uses to create branch points. It is evidence that those mechanisms are
+**load-bearing**: they are what would supply divergence, and sampling temperature
+alone will not.
+
+**Recommended addition to the plan.** Before Phase F, measure across-seed
+variance in **free behaviour**, not only in probe responses. If free behaviour
+does not diverge, the battery is measuring a difference with no behavioural
+source behind it.
+
+#### 7.3 What was salvaged
+
+Training on 316 copies of `examine kettle` would measure whether the model can be
+taught to examine kettles — A1a's tic test again, not the premise. So the gate
+was not run on it.
+
+`scripts/a1b_partial_instrument.py` instead validates the **measurement chain**
+(train → adapter → battery → fingerprint → distance) on the A0 corpus, which has
+real action variety because its policy is a scripted wanderer. That costs the
+self-generated property, so it is explicitly *partial* and does not close the
+gate — but if the instrument cannot see an adapter-induced shift on varied data,
+no richer corpus would rescue it, and that is worth knowing first.
+
+#### 7.4 A1b remains open
+
+To close it, one of:
+- run on the CUDA host with a larger checkpoint (Olmo-3-7B / Qwen3-8B), where the
+  action channel may carry sampling variance;
+- build the minimum drive set first — energy forcing interruption, plus the
+  prediction signal — so the world itself creates branch points, then re-run.
+
+---
+
+### 7-old. A1b — the gate (superseded by §7 above)
 
 Three degenerate trajectories before a usable one. Each failure was a different
 missing channel, and all three are properties of the *bare loop*, not of the

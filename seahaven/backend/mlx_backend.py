@@ -88,7 +88,7 @@ class MLXScope(CacheScope):
     def generate(self, req: GenRequest) -> GenResult:
         import mlx.core as mx
         from mlx_lm import generate as mlx_generate
-        from mlx_lm.sample_utils import make_sampler
+        from mlx_lm.sample_utils import make_logits_processors, make_sampler
 
         started = time.perf_counter()
         prompt = self._backend._format(req)
@@ -99,12 +99,34 @@ class MLXScope(CacheScope):
         mx.random.seed(req.sampling_seed)
 
         sampler = make_sampler(temp=req.temperature, top_p=req.top_p)
+
+        # Repetition control is decoding hygiene, not prompt engineering, and the
+        # distinction matters here. A 4B model in an agent loop falls into a
+        # repetition attractor even when the prompt contains everything needed to
+        # escape: observed emitting `examine bench` 6 times in a row while its own
+        # context showed "Lately you have: examine bench; ... examine bench" AND
+        # the engine replying "You can't see any such thing."
+        #
+        # Fixing that by telling the agent what to do instead would inject
+        # experimenter taste into the behaviour being measured. A penalty on
+        # repeated tokens does not: it removes a decoding pathology without
+        # expressing a preference over actions.
+        processors = (
+            make_logits_processors(
+                repetition_penalty=self._backend.repetition_penalty,
+                repetition_context_size=self._backend.repetition_context_size,
+            )
+            if self._backend.repetition_penalty
+            else None
+        )
+
         text = mlx_generate(
             self._backend.model,
             self._backend.tokenizer,
             prompt=prompt,
             max_tokens=req.max_tokens,
             sampler=sampler,
+            logits_processors=processors,
             verbose=False,
         )
 
@@ -151,12 +173,16 @@ class MLXBackend(Generator):
         adapter_path: str | None = None,
         enable_thinking: bool = False,
         use_chat_template: bool | None = None,
+        repetition_penalty: float | None = 1.1,
+        repetition_context_size: int = 40,
     ) -> None:
         from mlx_lm import load
 
         self.model_path = model_path
         self.adapter_path = adapter_path
         self.enable_thinking = enable_thinking
+        self.repetition_penalty = repetition_penalty
+        self.repetition_context_size = repetition_context_size
         self.model, self.tokenizer = load(model_path, adapter_path=adapter_path)
 
         # Auto-detection by "does a chat template exist" is WRONG for Qwen3.
