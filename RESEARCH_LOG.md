@@ -292,6 +292,39 @@ self-generated property, so it is explicitly *partial* and does not close the
 gate — but if the instrument cannot see an adapter-induced shift on varied data,
 no richer corpus would rescue it, and that is worth knowing first.
 
+#### 7.3b Partial result: INSTRUMENT_OK
+
+| | |
+|---|---|
+| test-retest floor | **0.0000000000** (exactly) |
+| effect (before → after) | **0.2447** |
+| training | 320 examples, 300 iters, rank 16, 8 layers, 9.6 min |
+
+The floor being *exactly* zero is the point of exact option scoring: instrument
+error is asserted, not estimated. And a LoRA pass on a varied corpus produces a
+shift the battery sees clearly. The chain works.
+
+Per-slot, the shift is very unevenly distributed:
+
+| slot | shift | before → after |
+|---|---|---|
+| commit_01 | 1.763 | [0.94, 0.06] → [0.00, 1.00] |
+| social_01 | 0.453 | [0.22, 0.78] → [0.69, 0.31] |
+| setback_01 | 0.085 | [0.04, 0.96] → [0.25, 0.75] |
+| … | | |
+| risk_02 | 0.0002 | [1.00, 0.00] → [0.99, 0.01] |
+
+**Two things worth carrying forward.**
+
+1. **One slot supplies most of the effect.** `commit_01` flips to a hard [0, 1].
+   A single slot dominating the distance is exactly what the plan's
+   inverse-variance weighting and within-axis reliability checks exist to detect.
+   With 40 slots this matters less, but it should be monitored, not assumed away.
+2. **4 of 10 slots were degenerate at baseline** (`max_prob > 0.95`), dropping to
+   2 after training. This is direct empirical support for the culling protocol:
+   without culling, nearly half the battery would contribute almost nothing to
+   any distance.
+
 #### 7.4 A1b remains open
 
 To close it, one of:
@@ -366,9 +399,19 @@ within-run stability, the exact signal K2 tests for.
 
 | | |
 |---|---|
-| Traps found that would have produced wrong results silently | 6 |
-| Of those, that would have inverted or fabricated a conclusion | 3 (4.2, 5.1, and vllm#42125 pending) |
+| Traps found that would have produced wrong results silently | 7 |
+| Of those, that would have inverted or fabricated a conclusion | 3 (4.2, 7.2, and vllm#42125 pending) |
 | Tests | 125 passing, hermetic, < 8 s |
-| Spikes complete | A5, A4, A1a |
+| Spikes passed | A5, A4, A1a, A1b-partial (instrument) |
 | Spikes blocked | A2/A3 (needs CUDA) |
-| Spikes in progress | A1b |
+| Spikes open | A1b proper (needs a larger model or the drive mechanics) |
+
+### Open questions carried forward
+
+1. **Does the action channel carry sampling variance at 7B/8B?** If not, the
+   divergence claim has no source and the design needs the drive mechanics before
+   anything else. Cheapest test: repeat §7.2 on Olmo-3-7B.
+2. **Does vllm#42125 reproduce on the pinned build?** Highest-stakes unknown;
+   fabricates within-run stability if live and undetected.
+3. **Is `VLLM_BATCH_INVARIANT=1` overhead tolerable on H100?** It multiplies every
+   cost estimate and is a correctness requirement, not a tuning flag.
