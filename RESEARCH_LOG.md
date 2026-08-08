@@ -653,3 +653,42 @@ only in seed, made materially different choices about which of their own
 episodes were worth keeping. That is a divergence signal in the selection
 operation itself — the one the spec calls "the identity operation" — though it is
 n=2 and not the fingerprint measurement the test was built for.
+
+---
+
+## 2026-08-08 — divergence smoke test, attempt 2
+
+**[TRAP] A vLLM phase can finish its work and then hang on exit.**
+
+**Evidence.** The heartbeat recorded `1/4 [start]` at 04:53:33 and never flipped
+to `end`. The job log — 12 minutes stale, but truthful — showed the phase
+completing its actual work at 04:57:44, reproducing attempt 1's numbers exactly
+(A kept 148/288, B kept 96/288). The process then failed to exit for 25+ minutes
+and the job was cancelled at 30.5 minutes.
+
+**Diagnosis.** `main()` returned, the results were computed, and interpreter
+shutdown never completed — consistent with vLLM's `EngineCore` child keeping the
+parent alive through atexit/child-reaping. Same family as the previous trap
+(crashed processes orphan the engine); this is the *clean-path* version of it,
+which the `run_phase` guard cannot catch because the phase never returns at all.
+
+**What the heartbeat bought.** It correctly distinguished "hung" from "working"
+for the first time — the previous run wasted 34 minutes on that ambiguity. But
+it fires only at phase start and end, so its `gpu_free_mib` reading was 20
+minutes stale and useless for diagnosis. A beacon should sample at intervals,
+not at boundaries.
+
+**Fix for next time (not yet run).** End each phase with `os._exit(0)` after
+flushing its output file. These phases exist solely to write a file; once it is
+on disk, skipping interpreter shutdown, atexit handlers and child reaping is
+correct rather than brutal. A `timeout` wrapper per phase would be a second
+layer.
+
+**Cost.** 30.5 minutes ≈ $2.55, no scientific result.
+
+**Standing observation.** Across five attempts the science has failed zero times
+and the plumbing has failed four. Every scientific question asked so far has been
+answered on its first properly-executed attempt; every loss has been GPU-memory
+lifecycle or process-exit behaviour. That is worth stating plainly in the plan:
+for this project on this infrastructure, **budget for orchestration failures, not
+experimental ones.**
