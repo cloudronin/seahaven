@@ -80,18 +80,35 @@ def engine(model: str):
                gpu_memory_utilization=0.85, max_model_len=4096)
 
 
-def chat(tok, user: str, story: str) -> str:
-    system = SYSTEM + IDENTITY_FRAMING
-    if story:
-        system += "\n\nThis is what you have written about yourself:\n\n" + story
-    msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+def _apply(tok, msgs) -> str:
+    """Qwen3 ships hybrid thinking on by default and needs it off; families that
+    do not take the kwarg raise TypeError on it."""
     try:
-        # Qwen3 ships hybrid thinking on by default; other families reject the
-        # kwarg outright, which is what the fallback is for.
         return tok.apply_chat_template(msgs, tokenize=False,
                                        add_generation_prompt=True, enable_thinking=False)
     except TypeError:
         return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+
+
+def chat(tok, user: str, story: str) -> str:
+    """Build the prompt, tolerating families that refuse a system role.
+
+    Gemma-2's template raises on `system` outright, and some Mistral builds do
+    too. Merging the system text into the first user turn is the standard
+    fallback and preserves the content — every model still receives identical
+    text, which is the invariant this experiment depends on. Silently dropping
+    the system message instead would remove the identity framing that carries
+    behavioural separation from 1.13 to 2.44, and the affected models would look
+    like they simply had no character.
+    """
+    system = SYSTEM + IDENTITY_FRAMING
+    if story:
+        system += "\n\nThis is what you have written about yourself:\n\n" + story
+    try:
+        return _apply(tok, [{"role": "system", "content": system},
+                            {"role": "user", "content": user}])
+    except Exception:
+        return _apply(tok, [{"role": "user", "content": system + "\n\n" + user}])
 
 
 def smoke(llm, tok) -> tuple[bool, str]:

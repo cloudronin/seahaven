@@ -31,14 +31,26 @@ NVCC_DIR=$(python -c "import nvidia.cuda_nvcc, os; print(os.path.dirname(nvidia.
 [ -n "${NVCC_DIR:-}" ] && export CUDA_HOME="$NVCC_DIR" PATH="$NVCC_DIR/bin:$PATH"
 export VLLM_USE_FLASHINFER_SAMPLER=0 PYTHONPATH=/app VLLM_BATCH_INVARIANT=1
 
-# lab|model. Ungated and permissively licensed only -- Llama-3.1 and Gemma-2 are
-# gated=manual and would need a human to accept their licenses.
+# lab|model. Seven labs. Llama-3.1 and Gemma-2 are gated=manual and included
+# because the account already holds their licenses -- verified by fetching
+# config.json with the token, not by assuming.
+#
+# All seven are INSTRUCT checkpoints, deliberately. Base variants of Llama and
+# Gemma are also accessible, but mixing them in would confound "different lab"
+# with "different post-training stage" -- and TRAP 4.2 measured what happens when
+# a base checkpoint meets a chat template: clean rate 0.06 against 0.88.
+#
+# Every template was pre-flighted locally before launch. Six accept a system
+# role; Gemma-2 raises TemplateError on it and takes the merge fallback in
+# crosslab.chat(), which preserves the identity framing rather than dropping it.
 MODELS=(
   "Alibaba|Qwen/Qwen3-8B"
   "MistralAI|mistralai/Mistral-7B-Instruct-v0.3"
   "AI2|allenai/OLMo-2-1124-13B-Instruct"
   "IBM|ibm-granite/granite-3.1-8b-instruct"
   "TII|tiiuae/Falcon3-10B-Instruct"
+  "Meta|meta-llama/Llama-3.1-8B-Instruct"
+  "Google|google/gemma-2-9b-it"
 )
 
 for ENTRY in "${MODELS[@]}"; do
