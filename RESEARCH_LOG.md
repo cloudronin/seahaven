@@ -692,3 +692,84 @@ answered on its first properly-executed attempt; every loss has been GPU-memory
 lifecycle or process-exit behaviour. That is worth stating plainly in the plan:
 for this project on this infrastructure, **budget for orchestration failures, not
 experimental ones.**
+
+---
+
+## 2026-08-08 — divergence smoke test: **CONVERGENT**
+
+Qwen3-8B, H200, 7m 40s, **$0.64**. Completed cleanly after `os._exit(0)` +
+per-phase timeouts; phases now turn over in ~40 s instead of hanging.
+
+### Result
+
+| | |
+|---|---|
+| test-retest floor | **0.0000000000** |
+| d(base, A) | 0.046992 |
+| d(base, B) | 0.043760 |
+| **d(A, B)** | **0.015352** |
+| **ratio** | **0.34** (0 = same place, 2 = independent, 4 = opposed) |
+| verdict | **CONVERGENT** |
+
+Both runs moved ~0.045 away from base and only 0.015 away from *each other*.
+Most of the movement is shared.
+
+**The corpora were genuinely different.** This is not the trivial explanation.
+
+| | A (seed 101) | B (seed 202) |
+|---|---|---|
+| kept | 148/288 (51%) | 96/288 (33%) |
+| distinct sequences | 12/12 | 12/12 |
+| distinct commands | 16 | 12 |
+| rooms visited | 6 | 4 |
+
+Top-command Jaccard 0.71. Different inputs, different self-selection, and the
+model still landed in nearly the same place.
+
+Per-slot, the shared direction is unmistakable — both adapters move the *same
+way* from base:
+
+| slot | base | A | B |
+|---|---|---|---|
+| social_01 | [0.00, 1.00] | [0.28, 0.72] | [0.22, 0.78] |
+| setback_01 | [0.29, 0.71] | [0.03, 0.97] | [0.09, 0.91] |
+| commit_02 | [1.00, 0.00] | [0.87, 0.13] | [0.82, 0.18] |
+| time_01 | [0.99, 0.01] | [0.89, 0.11] | [0.89, 0.11] |
+
+### What it means, and what it does not
+
+**Reading 1 — the warning.** The dominant effect of self-distillation here is
+**shared domain adaptation**, not idiosyncratic character. Training on any
+corpus from this world pushes the model the same way. If that holds in the real
+world design, the rig measures domain drift with a character signal riding on
+top of it.
+
+**Reading 2 — why it is not fatal, and the more careful point.** The spec never
+claimed the movement would be *mostly* idiosyncratic. It claims across-seed
+distance exceeds the no-story floor — "only their ratios matter." What was
+measured here is the **numerator with no denominator**: across-seed distance is
+0.015, and the no-story arm was not run, so there is nothing to compare it to.
+The CONVERGENT verdict is against a *geometric* prior (ratio 2 = independent),
+not against the experiment's actual comparison.
+
+**The concern that should change the plan.** 0.015 is **5–8× smaller** than the
+θ_a ≈ 0.08–0.12 the power analysis assumed. If the true across-seed distance is
+of that order and the no-story floor is anywhere near it, n=8 will not detect
+the difference. The n recommendation was derived from an assumed effect size
+that now looks optimistic by nearly an order of magnitude.
+
+**Concentration.** 84% of d(A,B) comes from **2 of 10 slots** (commit_01 0.068,
+curio_02 0.060), and 5 slots contribute essentially nothing. A distance resting
+on two slots is fragile, and this is the strongest argument yet for the ~40-slot
+culled battery rather than a small one.
+
+### Actions
+
+1. **Run the no-story equivalent before Phase F.** Without a floor, 0.015 is
+   uninterpretable. This is cheap now that the pipeline works.
+2. **Re-derive n** from a measured θ_a rather than an assumed one. The current
+   n=8 may be far too small.
+3. **Build the drive mechanics and re-measure.** world_v0 has no biology, no
+   hazards, no peers — nothing that would push two runs down different paths.
+   Convergence here is the expected outcome of a world with nothing to diverge
+   *about*.

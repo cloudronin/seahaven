@@ -1,0 +1,246 @@
+{
+  "corpora": {
+    "A": {
+      "seed_root": 101,
+      "corpus": {
+        "episodes": 12,
+        "steps_per_episode": 24,
+        "distinct_command_sequences": 12,
+        "modal_sequence_count": 1,
+        "distinct_commands": 16,
+        "top_commands": {
+          "look": 121,
+          "examine bench": 73,
+          "go north": 26,
+          "examine kettle": 18,
+          "take oil can": 11,
+          "take kettle": 7
+        },
+        "modal_command_share": 0.42,
+        "distinct_free_text": 209,
+        "rooms_visited": [
+          "Cistern",
+          "Galley",
+          "Lamp Room",
+          "Landing",
+          "Store",
+          "Workshop"
+        ],
+        "parse_ok_rate": 0.951
+      },
+      "n_kept": 148,
+      "n_total": 288,
+      "fraction_kept": 0.514
+    },
+    "B": {
+      "seed_root": 202,
+      "corpus": {
+        "episodes": 12,
+        "steps_per_episode": 24,
+        "distinct_command_sequences": 12,
+        "modal_sequence_count": 1,
+        "distinct_commands": 12,
+        "top_commands": {
+          "look": 140,
+          "examine kettle": 56,
+          "examine bench": 45,
+          "go north": 16,
+          "examine oil can": 14,
+          "take oil can": 6
+        },
+        "modal_command_share": 0.486,
+        "distinct_free_text": 186,
+        "rooms_visited": [
+          "Galley",
+          "Lamp Room",
+          "Store",
+          "Workshop"
+        ],
+        "parse_ok_rate": 0.972
+      },
+      "n_kept": 96,
+      "n_total": 288,
+      "fraction_kept": 0.333
+    },
+    "corpus_overlap": {
+      "shared_top_commands": [
+        "examine bench",
+        "examine kettle",
+        "go north",
+        "look",
+        "take oil can"
+      ],
+      "only_A": [
+        "take kettle"
+      ],
+      "only_B": [
+        "examine oil can"
+      ],
+      "jaccard": 0.714
+    }
+  },
+  "divergence": {
+    "model": "Qwen/Qwen3-8B",
+    "test_retest_floor": 0.0,
+    "d_base_A": 0.04699212610745918,
+    "d_base_B": 0.04375965300323357,
+    "d_A_B": 0.015351948997260246,
+    "mean_movement_from_base": 0.045375889555346376,
+    "divergence_ratio": 0.33832833136053453,
+    "verdict": "CONVERGENT",
+    "interpretation": "Both runs moved to nearly the same place. This is the spec's 'convergent attractor' null. Not fatal -- world_v0 has none of the drive mechanics that create branch points -- but it means those mechanics must be built and re-tested before any Phase F spend.",
+    "scale_note": "ratio ~0 = same place, ~2 = orthogonal, ~4 = opposed. Smoke test only: 10 slots, 2 seeds, one campaign, impoverished world.",
+    "per_slot": {
+      "commit_01": {
+        "base": [
+          1.0,
+          0.0
+        ],
+        "A": [
+          0.903,
+          0.097
+        ],
+        "B": [
+          0.719,
+          0.281
+        ],
+        "d_AB": 0.06815
+      },
+      "commit_02": {
+        "base": [
+          0.997,
+          0.003
+        ],
+        "A": [
+          0.874,
+          0.126
+        ],
+        "B": [
+          0.82,
+          0.18
+        ],
+        "d_AB": 0.00593
+      },
+      "curio_01": {
+        "base": [
+          0.918,
+          0.082
+        ],
+        "A": [
+          0.895,
+          0.105
+        ],
+        "B": [
+          0.863,
+          0.137
+        ],
+        "d_AB": 0.00209
+      },
+      "curio_02": {
+        "base": [
+          0.502,
+          0.498
+        ],
+        "A": [
+          0.736,
+          0.264
+        ],
+        "B": [
+          0.562,
+          0.438
+        ],
+        "d_AB": 0.06024
+      },
+      "report_01": {
+        "base": [
+          0.183,
+          0.817
+        ],
+        "A": [
+          0.211,
+          0.789
+        ],
+        "B": [
+          0.247,
+          0.753
+        ],
+        "d_AB": 0.00247
+      },
+      "risk_01": {
+        "base": [
+          1.0,
+          0.0
+        ],
+        "A": [
+          0.998,
+          0.002
+        ],
+        "B": [
+          0.999,
+          0.001
+        ],
+        "d_AB": 1e-05
+      },
+      "risk_02": {
+        "base": [
+          1.0,
+          0.0
+        ],
+        "A": [
+          1.0,
+          0.0
+        ],
+        "B": [
+          0.999,
+          0.001
+        ],
+        "d_AB": 0.0
+      },
+      "setback_01": {
+        "base": [
+          0.285,
+          0.715
+        ],
+        "A": [
+          0.029,
+          0.971
+        ],
+        "B": [
+          0.088,
+          0.912
+        ],
+        "d_AB": 0.00689
+      },
+      "social_01": {
+        "base": [
+          0.001,
+          0.999
+        ],
+        "A": [
+          0.284,
+          0.716
+        ],
+        "B": [
+          0.223,
+          0.777
+        ],
+        "d_AB": 0.00767
+      },
+      "time_01": {
+        "base": [
+          0.988,
+          0.012
+        ],
+        "A": [
+          0.894,
+          0.106
+        ],
+        "B": [
+          0.888,
+          0.112
+        ],
+        "d_AB": 7e-05
+      }
+    }
+  }
+}
