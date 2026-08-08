@@ -40,13 +40,26 @@ reap_gpu() {
     fi
 }
 
+# Progress beacon. The job log has twice gone stale mid-run, making "hung" and
+# "still working" indistinguishable for tens of minutes. A file on the Hub is an
+# observable channel from outside the container.
+beacon() {
+    local label="$1" state="$2" rc="${3:-}"
+    printf '{"phase":%s,"state":%s,"rc":"%s","gpu_free_mib":"%s","at":"%s"}\n' \
+        "\"$label\"" "\"$state\"" "$rc" "$(gpu_free_mib)" "$(date -u +%FT%TZ)" \
+        > /tmp/heartbeat.json
+    python /app/push.py /tmp/heartbeat.json >/dev/null 2>&1 || true
+}
+
 # run_phase "<label>" <command...>
 run_phase() {
     local label="$1"; shift
     echo
     echo "########## ${label} ##########"
+    beacon "$label" "start"
     "$@"
     local rc=$?
+    beacon "$label" "end" "$rc"
     if [ $rc -ne 0 ]; then
         echo "    [phase] '${label}' exited ${rc}"
         # Do not press on: the next phase would inherit a poisoned GPU and hang.
