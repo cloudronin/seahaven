@@ -14,18 +14,20 @@ Two cross-lab sweeps answered it and moved the project somewhere else.
 | the "quiet observer" is what self-narration converges to | **Qwen-specific** — zero core vocabulary shared with any of six other labs |
 | narrative convergence is the gate | **the statistic is too noisy to rank models** (noise 0.147 > signal 0.128) |
 | character might emerge from lived experience | **it is inherited** — checkpoints arrive with stable behavioural personalities (between-lab 1.49–1.86 vs within-lab 0.024) |
-| story→behaviour needed assigned characters (2.44) | **self-authored narratives predict the next campaign's behaviour**, partial r **+0.412** controlling for persistence |
+| story→behaviour needed assigned characters (2.44) | ~~self-authored narratives predict the next campaign's behaviour~~ — **DEAD.** The +0.412 does not survive a donor control: a run given *another run's* narrative behaves identically (paired mean −0.026, 95% CI [−0.070, +0.018]). It was a prompt-content effect, not self-authorship |
 
-**The project has a positive result, and it is not the one the spec proposed.**
-Not "character emerges from experience" — that measured out as no. Rather: *the
-self-account an agent writes steers what it does next*, and *checkpoints differ
-in stable, measurable ways before any of the machinery runs*.
+**One positive result survives, and it is not the one the spec proposed.**
+Not "character emerges from experience" — that measured out as no. Not "the
+self-account steers what comes next" either; that died to the donor control.
+What is left: *checkpoints differ in stable, measurable ways before any of the
+machinery runs*, and *their self-accounts distort what they did in measurable,
+model-specific directions*.
 
-Two candidate directions, both grounded in measurements that replicated:
+Directions:
 
-1. **Narrative steering** — replicate the lagged coupling with more labs, more
-   behavioural axes, and a pre-registered vocabulary. Currently marginal on the
-   conservative test (6/7 labs, p ≈ 0.06).
+1. ~~**Narrative steering**~~ — **CLOSED.** Kill criterion 1 fired. A run given
+   another run's self-account behaves identically to one given its own, so the
+   +0.412 was prompt content, not authorship.
 2. **Self-report fidelity** — the calibrated instrument. Models inflate agency
    **5.2×** and report perception at **1.2×**, with Gemma-2 alone at 1.0. No
    published concealment work has this innocent baseline, and without it
