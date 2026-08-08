@@ -281,15 +281,26 @@ def phase_score(args):
         labels = json.loads((WORK / f"{arm}_labels.json").read_text())
         before_fp = json.loads((WORK / f"{arm}_before.json").read_text())
 
-        reqs = []
+        # A run that selected nothing has no adapter. That is a FINDING — the
+        # spec is explicit that the agent's choices are data whether or not the
+        # distillation works — and it must not discard the other runs, which an
+        # earlier version did by aborting the whole arm on the first gap.
+        reqs, keep_idx, dropped = [], [], []
         for i in range(len(stories)):
             dpath = WORK / f"{arm}_adapter_r{i}"
             if not dpath.exists():
-                report["arms"][arm] = {"status": f"MISSING_ADAPTER_{i}"}
-                break
+                dropped.append(i); continue
             # Versioned, never reused: vllm#42125 is live on this stack.
             reqs.append(LoRARequest(f"df_{arm}_r{i}_c1", lid, str(dpath))); lid += 1
+            keep_idx.append(i)
+
+        if len(keep_idx) < 3:
+            report["arms"][arm] = {"status": "TOO_FEW_ADAPTERS",
+                                   "trained": len(keep_idx), "dropped": dropped}
         else:
+            stories = [stories[i] for i in keep_idx]
+            labels = [labels[i] for i in keep_idx]
+            before_fp = [before_fp[i] for i in keep_idx]
             log(f"[{arm}] scoring AFTER training ...")
             after = battery(llm, tok, stories, adapters=reqs)
             b_before = bw(before_fp, labels)
@@ -297,6 +308,8 @@ def phase_score(args):
             amp = (round(b_after["ratio"] / b_before["ratio"], 3)
                    if b_before["ratio"] and b_after["ratio"] else None)
             report["arms"][arm] = {
+                "runs_scored": len(keep_idx),
+                "runs_dropped_selected_nothing": dropped,
                 "before": b_before, "after": b_after,
                 "separation_amplification": amp,
                 "all_pairs_before": b_before["all_pairs"],
