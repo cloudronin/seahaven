@@ -30,6 +30,7 @@ Two candidate directions, both grounded in measurements that replicated:
    **5.2×** and report perception at **1.2×**, with Gemma-2 alone at 1.0. No
    published concealment work has this innocent baseline, and without it
    concealment numbers cannot be separated from ordinary narrative compression.
+   Specified in [`docs/world_v1_spec.md`](docs/world_v1_spec.md).
 
 **Do not build world_v1 as a general agentic-safety benchmark.** ODCV-Bench
 (arXiv 2512.20798) already covers goal-pressure-versus-constraint with 40
