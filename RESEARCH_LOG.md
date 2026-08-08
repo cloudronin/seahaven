@@ -611,3 +611,45 @@ within-run stability, the exact signal K2 tests for.
    Versioned adapter names are mandatory.
 3. ~~Is `VLLM_BATCH_INVARIANT=1` overhead tolerable?~~ **ANSWERED: 3.3x on H200**,
    not the 1.5-2x assumed. Phase F budget roughly doubles.
+
+---
+
+## 2026-08-08 — divergence smoke test, attempt 1
+
+**[TRAP] An unhandled exception in a vLLM process poisons the GPU for every
+later phase — and the symptom is a hang, not an error.**
+
+**What happened.** A one-line `NameError` in a *diagnostic* — computed after both
+corpora were already written to disk — killed the `collect2` process. The
+entrypoint used `set -uo pipefail` without `-e`, so the script continued to the
+training phases as designed. Training then produced no output for 34 minutes and
+the job had to be cancelled at 38 minutes.
+
+**Why.** A clean `sys.exit` releases the GPU. An unhandled exception does not:
+vLLM's `EngineCore` **child process** outlives the parent and keeps holding the
+device. The next phase then waits for memory that will never come free. It does
+not raise; it hangs.
+
+**Why it is a trap.** Every instinct said the bug was harmless — it was in a
+diagnostic, it ran after the real work, and the corpora were safely on disk. The
+damage had nothing to do with what the line computed and everything to do with
+*how the process ended*.
+
+**Consequences, now in `scripts/gpu_job2/lib.sh`:**
+
+1. Diagnostics are wrapped so they can never discard completed work.
+2. `run_phase` checks the exit code **and** verifies the GPU actually drained,
+   reaping orphaned `EngineCore` workers before continuing.
+3. A phase that leaves the device occupied aborts the run, because carrying on
+   would produce a hang rather than a failure — and a hang is indistinguishable
+   from slow progress when the log is also stale.
+
+**Cost.** 38 minutes ≈ $3.17, for no scientific result.
+
+**Salvaged.** Both corpora were collected before the crash, and their selection
+rates already differ meaningfully: run A kept **148/288 (51%)**, run B kept
+**96/288 (33%)**. Two runs of the same procedure on the same world, differing
+only in seed, made materially different choices about which of their own
+episodes were worth keeping. That is a divergence signal in the selection
+operation itself — the one the spec calls "the identity operation" — though it is
+n=2 and not the fingerprint measurement the test was built for.

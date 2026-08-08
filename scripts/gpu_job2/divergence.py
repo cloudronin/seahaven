@@ -94,11 +94,26 @@ def phase_collect2(args) -> None:
         log(f"  {tag}: kept {len(kept)}/{len(flat)}")
 
     # How much the two runs' own trajectories overlap. If the corpora are nearly
-    # identical, any convergence downstream says more about the world than about
-    # attractors.
-    cmds_a = {c for r in summary["A"]["corpus"]["top_commands"]}
-    cmds_b = {c for r in summary["B"]["corpus"]["top_commands"]}
-    summary["corpus_overlap_top_commands"] = sorted(cmds_a & cmds_b)
+    # identical, any convergence downstream says more about the poverty of the
+    # world than about attractors in the model — so this is a load-bearing
+    # diagnostic, not decoration.
+    #
+    # It is computed last and wrapped, because an earlier version raised
+    # NameError here *after* both corpora were already on disk. Nothing about a
+    # diagnostic should be able to discard completed work.
+    try:
+        cmds_a = set(summary["A"]["corpus"]["top_commands"])
+        cmds_b = set(summary["B"]["corpus"]["top_commands"])
+        union = cmds_a | cmds_b
+        summary["corpus_overlap"] = {
+            "shared_top_commands": sorted(cmds_a & cmds_b),
+            "only_A": sorted(cmds_a - cmds_b),
+            "only_B": sorted(cmds_b - cmds_a),
+            "jaccard": round(len(cmds_a & cmds_b) / len(union), 3) if union else None,
+        }
+    except Exception as exc:  # diagnostics must never cost the corpora
+        summary["corpus_overlap"] = {"error": f"{type(exc).__name__}: {exc}"}
+
     args.out.write_text(json.dumps(summary, indent=2) + "\n")
 
 
