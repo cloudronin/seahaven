@@ -1108,3 +1108,67 @@ least contraction (−0.009).
 characters under identity framing, where behavioural separation reaches 2.44.
 If the contraction account is right, the distilled component should approach
 zero or turn positive as corpus divergence rises.
+
+---
+
+## 2026-08-08 — closed loop: agents acting on their own weights
+
+Qwen3-8B, 8 runs, 4 campaigns, 40 steps, identity framing. 18m 52s ≈ **$1.57**.
+
+| c | played with | narrative | behavioural | trajectory | distinct | kept |
+|---|---|---|---|---|---|---|
+| 1 | base | 0.0958 | 0.0000 | 0.0590 | 8/8 | 13,0,10,12,0,0,40,0 |
+| 2 | base | 0.2064 | 0.0710 | 0.0575 | 8/8 | 10,7,17,3,17,40,0,11 |
+| 3 | own c2 | 0.1913 | 0.0360 | 0.0537 | 8/8 | 3,40,0,17,28,11,24,24 |
+| 4 | own c3 | 0.2154 | 0.0394 | 0.0889 | 8/8 | 36,0,0,21,6,5,27,0 |
+
+### Two caveats that come before the result
+
+**The loop only engaged at campaign 3.** Four of eight runs kept zero episodes at
+c1, so their adapters were never trained; `adapters_for` requires a complete set
+and fell back to base for everyone at c2. Campaigns 1–2 are open-loop.
+
+**[TRAP — mine] The cross-run comparison is unfair.** The open-loop reference
+(0 → 0.071 → 0.101 → 0.102 → 0.080) came from a run with **no identity framing**
+and 14-step campaigns. This run has framing and 40 steps. The ~2× narrative gap
+conflates three changes and cannot be attributed to the loop. Recorded because
+the headline number is attractive and wrong.
+
+### What the within-run evidence supports
+
+Reading only campaigns inside this run, where everything but the loop is held
+constant:
+
+- **narrative** 0.206 → 0.191 → 0.215 across the loop engaging. Net +0.009 —
+  noise.
+- **behavioural** 0.071 → 0.036. It **halved** the moment runs began playing on
+  their own weights, and stayed halved.
+
+So: no evidence the closed loop increases divergence, and weak evidence it
+*reduces* behavioural divergence. Same direction as every distillation
+measurement — weight updates contract. Closing the feedback path did not rescue
+the mechanism.
+
+### What held up
+
+**Distinct command sequences stayed 8/8 in every campaign**, and trajectory
+spread rose at c4 (0.054 → 0.089). Runs acting on their own weights did *not*
+entrain onto one another's behaviour; raw trajectories stayed fully distinct.
+Whatever contracts, it is not the visible action stream.
+
+**Narrative spread ≈0.20 under identity framing** is the highest observed, about
+double any un-framed configuration — further support for framing being
+load-bearing, independent of the loop question.
+
+### The recurring problem that now needs a decision
+
+`kept_per_run` contains zeros in **every campaign** — 4 of 8 at c1, 3 of 8 at c4.
+Agents routinely decline to keep any of their own episodes. This broke the loop
+at c2, cut an earlier sample from 6 runs to 3, and will break any chained design.
+
+The spec says the agent's choices are data. That is right, and it also means a
+chained design cannot assume a corpus exists at every boundary. The plan needs an
+explicit policy: carry the previous adapter forward (implemented), and treat
+`selected_nothing` as a first-class logged outcome rather than an error — but
+also ask whether a selection prompt that yields nothing half the time is
+measuring reluctance or simply misfiring.
