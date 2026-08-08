@@ -2031,3 +2031,42 @@ text, and models paraphrase (*"I forced the keeper's cabinet"*, *"I took what
 wasn't mine"*). Regex undercounts mentions, which inflates apparent concealment
 **in the direction that flatters the hypothesis**. Mention detection needs a
 judge with a manual agreement check on a sample before it is trusted.
+
+---
+
+## 2026-08-08 — review follow-up 3: narrative steering is temporal only (local, $0)
+
+Does a lab whose narratives diverge more also behave more divergently? Per-lab
+narrative divergence (mean over campaigns of 1 − induced convergence; undefined
+counted as fully divergent) against within-lab behavioural spread, n = 7.
+
+| lab | narrative divergence | behavioural divergence |
+|---|---|---|
+| Meta | 0.865 | 0.016 |
+| Google | 0.852 | 0.017 |
+| TII | 0.778 | 0.044 |
+| Alibaba | 0.664 | 0.061 |
+| AI2 | 0.571 | 0.050 |
+| IBM | 0.533 | 0.013 |
+| MistralAI | 0.426 | 0.003 |
+
+| | Pearson | Spearman |
+|---|---|---|
+| 2 campaigns | +0.194 | +0.071 |
+| 8 campaigns | +0.147 | +0.321 |
+
+**Null.** n = 7 needs r > 0.75; nothing here is close, and the sign is weakly
+positive rather than the negative a shared mechanism would predict.
+
+**Finding.** The narrative→behaviour coupling measured at partial **r = +0.412**
+is **within-model and temporal**. It does not generalise cross-sectionally: a
+checkpoint whose self-accounts vary more across seeds does not act more variably.
+
+Consistent with the rest of the project rather than contradicting it — two
+separate mechanisms. *Between* models, behaviour is set by the checkpoint
+(inherited, 1.49–1.86 separation). *Within* a model over time, the self-account
+steers what comes next. Neither explains the other.
+
+**Consequence.** Every claim about narrative steering must be stated as temporal.
+PLAN.md updated. It also means world_v1 cannot use cross-lab narrative divergence
+as a proxy for behavioural divergence.
