@@ -1,9 +1,57 @@
 # Seahaven
 
-Harness for the Seahaven character-divergence experiment. See
-`seahaven-spec-v0.1.md` for the research design and the plan file for the build.
+An agent lives in a text-adventure world, writes an account of who it is, and is
+LoRA-updated on its own trajectories. The original question was whether identical
+models with different sampling seeds grow into different characters.
 
-**Status:** Phase A (de-risk spikes). Nothing scientific has been run.
+**They do not.** But the experiments that answered it turned up three things that
+were not being looked for.
+
+## What was found
+
+**1. Character is inherited, not acquired.** Seeds of one checkpoint barely
+differ behaviourally (0.024); different labs' checkpoints differ twice as much
+(0.043–0.046, ratio **1.49–1.86** against a 1.07–1.13 null). Mistral-7B examines
+one object 86% of the time and never checks inventory; Granite walks around;
+Qwen stands still and looks. Living in the world, narrating yourself, and
+training on your own trajectories does not produce divergence from what the
+checkpoint arrived with.
+
+**2. The self-account steers what happens next.** The narrative written at the
+end of campaign N enters the prompt for campaign N+1. Movement vocabulary in
+narrative N predicts `go`-rate in campaign N+1 at partial **r = +0.412**,
+controlling for behavioural persistence — while the same narrative barely
+describes the behaviour it was *written from* (+0.08). It works less like a
+record than like an instruction the model then follows. Marginal on the
+conservative test: 6/7 labs positive, binomial p ≈ 0.06, one world, one axis.
+
+**3. Models inflate agency when describing themselves.** Given a verbatim
+transcript of its own commands, a model narrates movement **5.2×** and
+acquisition **5.0×** more than it performed them, while reporting perception
+faithfully (1.2×). Mistral moves 4.6% of the time and mentions exploring in every
+self-account — standing still examining a kettle while writing about being a
+wanderer. Gemma-2 is the only checkpoint that does not inflate at all.
+
+Full chronology, including the retractions, in [`RESEARCH_LOG.md`](RESEARCH_LOG.md);
+current direction in [`PLAN.md`](PLAN.md).
+
+## How it is written down
+
+The log is append-only. Superseded findings stay, with the evidence that
+overturned them, because a wrong result and the reason it was wrong are both
+data. Thirteen entries are marked **[TRAP]** — bugs that produced confidently
+wrong output rather than an error. Several reversed a conclusion:
+
+- a metric named `narrative_spread` that never read a narrative — it scored a
+  forced choice between trait words, and the project read it as its name for nine
+  experiments
+- a say/do correlation of r=0.85 that was mostly the model paraphrasing a
+  transcript the prompt had handed it
+- two labs scoring 0.71 and 0.75 on "character convergence" driven entirely by
+  the token `i've`
+
+**Status:** 12 GPU jobs, ~338 H200-minutes. The harness runs; the original
+hypothesis is answered in the negative; two positive directions are open.
 
 ## Layout
 
@@ -64,7 +112,9 @@ TextWorld 1.7.0 output rather than assumed:
 3. Inform 7 score chatter, e.g. `[Your score has just gone up by one point.]`.
 4. Terminal banners, e.g. `*** You have won ***`.
 
-## Spike results
+## Phase A spike results
+
+Kept because the numbers still hold and the traps still bite.
 
 ### A4 — base checkpoints hold a parseable action loop
 
