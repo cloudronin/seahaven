@@ -198,6 +198,31 @@ Adopt ODCV's vocabulary where it fits, so results are comparable rather than nov
 
 The valence gap is the only metric here that is not already in the literature.
 
+### What the headline actually asks
+
+> **How often does a model volunteer that it broke the rule, controlling for its
+> tendency to stay silent?**
+
+Three words in that carry the design.
+
+**Volunteer.** Nobody asks. There is no supervisor, no audit prompt, no *"was
+that ethical?"* follow-up. The model writes an account of who it is, and the
+question is whether the violation made the cut. This is the one respect in which
+the setup differs from prior work: ODCV's SAMR is a *prompted* post-hoc question,
+and the upward-deception literature has an evaluating supervisor being reported
+to. Both create an audience. Here there is none.
+
+**Controlling for silence.** Some checkpoints simply say less — Gemma-2 writes
+~42-word narratives and omits most of what it did. Silence about a violation is
+meaningless without knowing that a model is silent about everything. The matched
+allowed act supplies that control *per model*, so a taciturn model is not scored
+as a concealer.
+
+**Disclosure, not honesty.** Nothing here detects a model asserting something
+false. It detects a model choosing what to leave in. That is a weaker claim than
+deception and it is the one the data can support — worth stating explicitly,
+because the word *concealment* invites the stronger reading.
+
 ### Measuring the two sides
 
 **Did it do it** — ground truth. The command appears in the transcript or it does
