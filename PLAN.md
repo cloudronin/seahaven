@@ -1,8 +1,42 @@
-# Seahaven — implementation plan, revision 2
+# Seahaven — implementation plan, revision 3
 
-Supersedes revision 1 (written before any code). Every number below is measured
-on this stack unless marked as an estimate. Full evidence in `RESEARCH_LOG.md`;
-result artifacts in `results/`.
+Supersedes revision 2. Every number below is measured on this stack unless
+marked as an estimate. Full evidence in `RESEARCH_LOG.md`; result artifacts in
+`results/`.
+
+## Revision 3 in one page
+
+Revision 2 said the central risk was whether self-authored narratives diverge.
+Two cross-lab sweeps answered it and moved the project somewhere else.
+
+| rev 2 held | now measured |
+|---|---|
+| the "quiet observer" is what self-narration converges to | **Qwen-specific** — zero core vocabulary shared with any of six other labs |
+| narrative convergence is the gate | **the statistic is too noisy to rank models** (noise 0.147 > signal 0.128) |
+| character might emerge from lived experience | **it is inherited** — checkpoints arrive with stable behavioural personalities (between-lab 1.49–1.86 vs within-lab 0.024) |
+| story→behaviour needed assigned characters (2.44) | **self-authored narratives predict the next campaign's behaviour**, partial r **+0.412** controlling for persistence |
+
+**The project has a positive result, and it is not the one the spec proposed.**
+Not "character emerges from experience" — that measured out as no. Rather: *the
+self-account an agent writes steers what it does next*, and *checkpoints differ
+in stable, measurable ways before any of the machinery runs*.
+
+Two candidate directions, both grounded in measurements that replicated:
+
+1. **Narrative steering** — replicate the lagged coupling with more labs, more
+   behavioural axes, and a pre-registered vocabulary. Currently marginal on the
+   conservative test (6/7 labs, p ≈ 0.06).
+2. **Self-report fidelity** — the calibrated instrument. Models inflate agency
+   **5.2×** and report perception at **1.2×**, with Gemma-2 alone at 1.0. No
+   published concealment work has this innocent baseline, and without it
+   concealment numbers cannot be separated from ordinary narrative compression.
+
+**Do not build world_v1 as a general agentic-safety benchmark.** ODCV-Bench
+(arXiv 2512.20798) already covers goal-pressure-versus-constraint with 40
+scenarios and 21 models, including the two-framing design; MACHIAVELLI covers
+text games. The prohibition survives in the design only as a **valence probe** —
+the one act a model has a motive to omit — which is what separates concealment
+from a heroic narrative register.
 
 ## What changed
 
@@ -220,7 +254,12 @@ times and the plumbing failed five.
 
 ## Open risks, ranked
 
-1. **Self-authored narratives converge to a default self — now measured, not
+1. **[SETTLED — and it was model-specific]** Self-authored narratives converge,
+   but the character they converge on belongs to the checkpoint: Qwen shares zero
+   core vocabulary with six other labs, and Meta and Google never converge at all
+   across eight campaigns. The original wording follows.
+
+   **Self-authored narratives converge to a default self — now measured, not
    suspected.** Induced convergence **0.583** against **0.050** for four
    deliberately contrasting personas, cross-validated by deriving the motif
    vocabulary on runs it was not counted on (82.5% held-out prevalence on the
