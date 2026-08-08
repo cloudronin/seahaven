@@ -1,13 +1,24 @@
 #!/usr/bin/env bash
-# A1b at scale. Each phase is a separate process: vLLM's EngineCore child does
-# not release GPU memory on `del llm`, and two earlier jobs died with
-# "Free memory on device cuda:0 (26.13/139.8 GiB)" trying to reuse one process.
+# A1b stage 2 only — the gate. Stage 1 is already answered (Qwen3-8B: 20/20
+# distinct command sequences, replicated three times), so this goes straight to
+# the open question: does LoRA on self-generated, agent-selected data move the
+# fingerprint at 8B?
+#
+# Two things learned the expensive way are baked in:
+#   - each phase is its own process, because vLLM's EngineCore child holds GPU
+#     memory that `del llm` cannot release;
+#   - every phase pushes its output to a Hub dataset the moment it finishes, so
+#     a stalled log costs only the phase in flight rather than the whole run.
 set -uo pipefail
 
 R=/tmp/results
 W=/tmp/a1b
 mkdir -p "$R" "$W"
 export A1B_WORK="$W"
+export A1B_REPO="cloudronin/seahaven-a1b-results"
+MODEL="Qwen/Qwen3-8B"
+
+push() { python /app/push.py "$1"; }
 
 echo "=== GPU ==="
 nvidia-smi --query-gpu=name,memory.total,compute_cap --format=csv,noheader || true
@@ -23,10 +34,9 @@ if [ -n "${NVCC_DIR:-}" ] && [ -x "$NVCC_DIR/bin/nvcc" ]; then
 fi
 export VLLM_USE_FLASHINFER_SAMPLER=0
 export PYTHONPATH=/app
-
-# ON throughout: it does not suppress seed-driven variance, only batch-composition
-# and float-atomic noise. Excluding those is what makes "identical world,
-# different seed" a controlled contrast. Measured cost on this stack: 3.3x.
+# Not a tuning flag: without it, LoRA output is nondeterministic (4 distinct
+# outputs across 16 identical requests) and "different seed" stops being a
+# controlled contrast. Costs 3.3x on this stack.
 export VLLM_BATCH_INVARIANT=1
 
 python -c "import vllm, torch, jericho; print('vllm', vllm.__version__, '| torch', torch.__version__)"
@@ -36,40 +46,23 @@ import seahaven_world as sw
 w=sw.open_world('/app/world_v0.z8'); o,h=w.reset()
 print('world ok |', o.room, '| facts', len(h.facts)); w.close()"
 
-# Olmo-3-7B-Instruct produced zero output for 25 minutes on vLLM 0.26
-# (likely an unsupported architecture) and blocked stage 2, which is the
-# stage that matters. Qwen3-8B passed stage 1 twice at 20/20. The
-# family-generalisation question is real but secondary; park it.
-MODELS=("Qwen/Qwen3-8B")
-WINNER=""
+echo
+echo "########## 1/3 collect — corpus, agent selection, before-fingerprint ##########"
+python /app/a1b_stage.py collect --model "$MODEL" \
+    --episodes 16 --steps 24 --out "$W/collect.json"
+cp "$W/collect.json" "$R/collect.json" 2>/dev/null
+cp "$W/kept.jsonl" "$R/kept.jsonl" 2>/dev/null
+push "$R/collect.json"; push "$R/kept.jsonl"
 
 echo
-echo "########## STAGE 1 — action variance ##########"
-for M in "${MODELS[@]}"; do
-    SAFE=$(echo "$M" | tr '/' '_')
-    echo "--- $M ---"
-    python /app/a1b_stage.py variance --model "$M" \
-        --episodes 20 --steps 16 --out "$R/variance_$SAFE.json" || continue
-    N=$(python -c "
-import json,sys
-d=json.load(open('$R/variance_$SAFE.json'))
-print(list(d.values())[0]['distinct_command_sequences'])" 2>/dev/null || echo 0)
-    echo "    distinct sequences: $N / 20"
-    if [ -z "$WINNER" ] && [ "$N" -ge 6 ]; then WINNER="$M"; fi
-done
+echo "########## 2/3 train — LoRA on the self-selected corpus ##########"
+python /app/a1b_stage.py train --model "$MODEL" --out "$R/train.json"
+push "$R/train.json"
 
-if [ -z "$WINNER" ]; then
-    echo "STAGE 2 SKIPPED — no checkpoint reached 6 distinct command sequences."
-    echo "Sampling noise does not reach the action channel at this scale."
-else
-    echo
-    echo "########## STAGE 2 — gate on $WINNER ##########"
-    python /app/a1b_stage.py collect --model "$WINNER" \
-        --episodes 16 --steps 24 --out "$W/collect.json" \
-        && cp "$W/collect.json" "$R/collect.json"
-    python /app/a1b_stage.py train --model "$WINNER" --out "$R/train.json"
-    python /app/a1b_stage.py after --model "$WINNER" --out "$R/gate.json"
-fi
+echo
+echo "########## 3/3 after — fingerprint with adapter, distance, verdict ##########"
+python /app/a1b_stage.py after --model "$MODEL" --out "$R/gate.json"
+push "$R/gate.json"
 
 echo
 echo "########## REPORT ##########"
