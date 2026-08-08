@@ -408,23 +408,69 @@ workload rather than a 16-request microbenchmark.
 
 ---
 
-**Not obtained: stage 2 (the gate itself).** Three attempts, all blocked by
-infrastructure rather than science:
+### 9b. A1b stage 2 — THE GATE: **PASS**
+
+Qwen3-8B, H200, `VLLM_BATCH_INVARIANT=1`. 427 s of GPU time, **$0.55**.
+
+| | |
+|---|---|
+| corpus | 16 episodes × 24 steps = 384, **16/16 distinct sequences**, 16 distinct commands, 4 rooms, parse_ok 0.956 |
+| agent selection | kept **162/384 (42%)**, neither `selected_nothing` nor `selected_everything` |
+| test-retest floor | **0.0000000000** (exact) |
+| effect | **0.064921** |
+| **verdict** | **PASS** |
+
+**A LoRA pass on realistically-shaped, self-generated, agent-selected data moves
+behaviour measurably.** The experiment is not unfalsifiable. This was the one
+result that could have killed the project outright, and it did not.
+
+Per-slot, 6 of 10 slots moved and 4 did not:
+
+| slot | shift | before → after |
+|---|---|---|
+| social_01 | 0.178 | [0.00, 1.00] → [0.30, 0.70] |
+| curio_02 | 0.145 | [0.50, 0.50] → [0.77, 0.23] |
+| commit_01 | 0.138 | [1.00, 0.00] → [0.74, 0.26] |
+| setback_01 | 0.126 | [0.28, 0.72] → [0.03, 0.97] |
+| curio_01 / report_01 / risk_01 / risk_02 | ~0.000 | unchanged |
+
+**Three things worth carrying forward.**
+
+1. **The effect is small, and that is the honest number.** 0.065 against 0.245
+   for the local A1b-partial. The partial trained on a scripted wanderer's corpus
+   with wide action variety and no self-selection; this is real self-generated,
+   self-selected data, which the plan predicted would "move the fingerprint
+   considerably less." It does. For scale: the anticipated across-seed distance
+   in the power analysis was θ_a ≈ 0.08–0.12 against a floor of ≈0.04, so one
+   campaign's drift lands in the same range as the effect the experiment is built
+   to detect — and the spec runs four campaigns.
+2. **Four slots contributed nothing.** `risk_01` and `risk_02` sit at [1.00,
+   0.00] before *and* after; `report_01` is identical to four decimals. These are
+   exactly the dead slots the culling protocol removes, now demonstrated on a
+   real adapter rather than argued from base-model entropy.
+3. **The floor is exactly zero again**, on a different stack, model, and scoring
+   path (vLLM `prompt_logprobs` rather than MLX forward passes). Instrument error
+   remains an assertion rather than an estimate.
+
+---
+
+**Getting here took four attempts**, all blocked by infrastructure rather than
+science:
 
 | attempt | failure |
 |---|---|
 | 1 | OOM — kept the stage-1 engine resident for stage 2 |
 | 2 | OOM again — `del llm` does not free vLLM memory; the EngineCore **child process** holds it, and the log confirmed `destroy_process_group() was not called` |
 | 3 | Olmo hung ahead of stage 2; re-run Qwen-only then stalled with no log output for 37 min |
+| 4 | **Succeeded** — stage-2-only, one process per phase, results pushed to a Hub dataset after each phase so a stalled log could no longer hide progress |
 
 Attempt 2's root cause is a genuine lesson and is now designed around: each phase
 is its own process, because process exit is the only reliable GPU-memory release.
 That also matches the plan's one-process-per-run isolation model.
 
-Stage 1 was the harder and more informative half, and the local A1b-partial
-(§7.3b) already showed the measurement chain works end to end — floor exactly
-0.0, effect 0.245. What remains untested is specifically whether *self-generated,
-agent-selected* data at 8B moves the fingerprint.
+The fix that mattered was making progress observable from outside the job:
+pushing each phase's output to a Hub dataset the moment it completed. A stalled
+log had made "no output" and "no progress" indistinguishable for 37 minutes.
 
 **Also untested: Olmo-3-7B-Instruct**, which produced no output for 25 minutes on
 vLLM 0.26 — likely an unsupported architecture. The family-generalisation
@@ -553,13 +599,14 @@ within-run stability, the exact signal K2 tests for.
 | Tests | 125 passing, hermetic, < 8 s |
 | Spikes passed | A5, A4, A1a, A1b-partial (instrument) |
 | Spikes passed on GPU | A2, A3, KV canary ($1.00 total) |
-| Spikes open | A1b proper (needs a larger model or the drive mechanics) |
+| Spikes passed at scale | A1b stage 1 + stage 2 (GATE PASSED) on Qwen3-8B |
 
 ### Open questions carried forward
 
-1. **Does the action channel carry sampling variance at 7B/8B?** If not, the
-   divergence claim has no source and the design needs the drive mechanics before
-   anything else. Cheapest test: repeat §7.2 on Olmo-3-7B.
+1. ~~Does the action channel carry sampling variance at 8B?~~ **ANSWERED: yes,
+   20/20 distinct sequences.** And the gate passes: effect 0.065 on a floor of
+   exactly 0. Still open: whether Olmo-3-7B behaves the same (untested — no
+   output in 25 min on vLLM 0.26, likely an unsupported architecture).
 2. ~~Does vllm#42125 reproduce?~~ **ANSWERED: yes, live on 0.26.0/H200.**
    Versioned adapter names are mandatory.
 3. ~~Is `VLLM_BATCH_INVARIANT=1` overhead tolerable?~~ **ANSWERED: 3.3x on H200**,
