@@ -222,6 +222,72 @@ def compare(groups: dict[str, list[str]]) -> dict:
     }
 
 
+def cross_corpus_attractors(corpora: dict[str, list[str]], floor: float = 0.75) -> dict:
+    """Do separate corpora converge on the *same* character, or different ones?
+
+    Built for the cross-lab sweep, where each corpus is one checkpoint's runs in
+    a shared world. The contrast that decides it:
+
+        within  — mean induced convergence inside each corpus
+        pooled  — induced convergence over every run from every corpus at once
+
+    A shared attractor survives pooling, because the core induced from a mixed
+    half still describes the other mixed half. Distinct attractors do not: no
+    vocabulary clears the floor across corpora that converged on different
+    characters, so pooled collapses while within stays high.
+
+        within high, pooled low   -> distinct attractors per corpus
+        within high, pooled high  -> one attractor shared across corpora
+        within low                -> nothing converged; the contrast says nothing
+
+    `pooled` interleaves rather than concatenates. Concatenation would put one
+    corpus in each derivation half, so a low pooled score would follow from the
+    split and not from the corpora.
+    """
+    within = {k: induced_convergence(v, floor) for k, v in corpora.items()}
+
+    ordered: list[str] = []
+    for i in range(max((len(v) for v in corpora.values()), default=0)):
+        for v in corpora.values():
+            if i < len(v):
+                ordered.append(v[i])
+    pooled = induced_convergence(ordered, floor)
+
+    scored = [w["score"] for w in within.values() if w["score"] is not None]
+    mean_within = round(sum(scored) / len(scored), 3) if scored else None
+
+    # Every corpus must converge on its own before "do they share it" is a
+    # question. Averaging hid this: a corpus at 0.05 next to one at 0.583 gave a
+    # mean of 0.317, cleared the floor, and the pair was reported as sharing an
+    # attractor when one of them had none to share. Gate on the weakest.
+    non_convergent = [k for k, w in within.items()
+                      if w["score"] is None or w["score"] < 0.20]
+
+    if not scored or mean_within is None:
+        reading = ("No corpus produced a defined convergence score; there is "
+                   "nothing to compare.")
+    elif non_convergent:
+        reading = ("CONTRAST UNDEFINED. These corpora did not converge "
+                   f"internally: {sorted(non_convergent)}. A corpus with no "
+                   "attractor cannot share or fail to share one, so the pooled "
+                   "number says nothing about the others.")
+    elif pooled["score"] is None or pooled["score"] < mean_within * 0.5:
+        reading = ("DISTINCT ATTRACTORS. Each corpus converges, but no shared core "
+                   "survives pooling — they converged on different characters.")
+    else:
+        reading = ("SHARED ATTRACTOR. A core induced across corpora still "
+                   "generalises, so they converged on the same character.")
+
+    return {
+        "within": {k: {"score": w["score"], "kind": w["kind"],
+                       "induced": w["folds"][0]["induced"] if w["folds"] else []}
+                   for k, w in within.items()},
+        "mean_within": mean_within,
+        "pooled": {"score": pooled["score"], "kind": pooled["kind"]},
+        "reading": reading,
+    }
+
+
 #: Phase A′ gate. Self-authored runs pass only if their induced convergence is at
 #: or below what deliberately-contrasting assigned personas score — i.e. a core
 #: induced from half the runs generalises no better than it does across four
