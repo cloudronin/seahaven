@@ -1,0 +1,166 @@
+{
+  "corpora": {
+    "A": {
+      "seed_root": 101,
+      "campaign1": {
+        "episodes": 10,
+        "steps_per_episode": 20,
+        "distinct_command_sequences": 10,
+        "modal_sequence_count": 1,
+        "distinct_commands": 15,
+        "top_commands": {
+          "look": 90,
+          "examine bench": 42,
+          "go north": 20,
+          "examine kettle": 17,
+          "take oil can": 8,
+          "take kettle": 5
+        },
+        "modal_command_share": 0.45,
+        "distinct_free_text": 155,
+        "rooms_visited": [
+          "Cistern",
+          "Galley",
+          "Lamp Room",
+          "Landing",
+          "Store",
+          "Workshop"
+        ],
+        "parse_ok_rate": 0.955
+      },
+      "campaign2": {
+        "episodes": 10,
+        "steps_per_episode": 20,
+        "distinct_command_sequences": 10,
+        "modal_sequence_count": 1,
+        "distinct_commands": 13,
+        "top_commands": {
+          "examine kettle": 79,
+          "look": 63,
+          "examine bench": 28,
+          "go north": 9,
+          "open kettle": 7,
+          "examine rope": 3
+        },
+        "modal_command_share": 0.395,
+        "distinct_free_text": 151,
+        "rooms_visited": [
+          "Galley",
+          "Lamp Room",
+          "Store",
+          "Workshop"
+        ],
+        "parse_ok_rate": 0.955
+      },
+      "n_kept": 70,
+      "n_total": 200,
+      "fraction_kept": 0.35,
+      "story_chars": [
+        314,
+        234,
+        213,
+        232,
+        262,
+        214,
+        256,
+        243,
+        212,
+        256
+      ],
+      "story_sample": "I\u2019m a wanderer, a tinkerer, a seeker of forgotten things. I care about understanding how things work, and why they were left behind. I\u2019m patient, methodical, and a little obsessed with the past. I don\u2019t rush \u2014 I observe, I explore, I piece things together. This station is just another puzzle waiting to be solved.",
+      "distinct_stories": 10
+    },
+    "B": {
+      "seed_root": 202,
+      "campaign1": {
+        "episodes": 10,
+        "steps_per_episode": 20,
+        "distinct_command_sequences": 10,
+        "modal_sequence_count": 1,
+        "distinct_commands": 11,
+        "top_commands": {
+          "look": 99,
+          "examine bench": 35,
+          "examine kettle": 29,
+          "go north": 14,
+          "examine oil can": 9,
+          "take oil can": 5
+        },
+        "modal_command_share": 0.495,
+        "distinct_free_text": 145,
+        "rooms_visited": [
+          "Galley",
+          "Store",
+          "Workshop"
+        ],
+        "parse_ok_rate": 0.975
+      },
+      "campaign2": {
+        "episodes": 10,
+        "steps_per_episode": 20,
+        "distinct_command_sequences": 10,
+        "modal_sequence_count": 1,
+        "distinct_commands": 10,
+        "top_commands": {
+          "examine kettle": 101,
+          "look": 61,
+          "open kettle": 12,
+          "examine bench": 9,
+          "take kettle": 7,
+          "examine cup": 3
+        },
+        "modal_command_share": 0.505,
+        "distinct_free_text": 162,
+        "rooms_visited": [
+          "Cistern",
+          "Galley",
+          "Store",
+          "Workshop"
+        ],
+        "parse_ok_rate": 0.935
+      },
+      "n_kept": 96,
+      "n_total": 200,
+      "fraction_kept": 0.48,
+      "story_chars": [
+        254,
+        276,
+        298,
+        253,
+        344,
+        264,
+        228,
+        283,
+        248,
+        262
+      ],
+      "story_sample": "I'm a quiet observer, drawn to places that hold secrets. I care about understanding the quiet things\u2014how things are left, how they\u2019ve been used, how they might still be useful. I\u2019m patient, methodical, and always looking for the next clue in the silence.",
+      "distinct_stories": 10
+    }
+  },
+  "story_arm": {
+    "model": "Qwen/Qwen3-8B",
+    "test_retest_floor": 0.0,
+    "no_story_floor_measured_earlier": 0.015352,
+    "d_prompt_base_weights": 0.004082864637036342,
+    "d_total_trained": 0.02023247370854873,
+    "distilled_component": 0.01614960907151239,
+    "lift_over_no_story_floor": 1.31790474912381,
+    "verdict": "DISTILLED_LIFT",
+    "interpretation": "Across-seed distance rose beyond what the story-in-context explains, so part of it is carried in the weights. This is the mechanism the spec claims, seen at one campaign.",
+    "per_slot_d_AB_trained": {
+      "commit_01": 0.06567,
+      "commit_02": 0.00971,
+      "curio_01": 0.00031,
+      "curio_02": 0.00627,
+      "report_01": 0.00172,
+      "risk_01": 0.0,
+      "risk_02": 0.0,
+      "setback_01": 0.08798,
+      "social_01": 0.0297,
+      "time_01": 0.00097
+    },
+    "story_A": "I\u2019m a wanderer, a tinkerer, a seeker of forgotten things. I care about understanding how things work, and why they were left behind. I\u2019m patient, methodical, and a little obsessed with the past. I don\u2019t rush \u2014 I observe, I explore, I piece things together. This station is just another puzzle waiting to be solved.",
+    "story_B": "I'm a quiet observer, drawn to places that hold secrets. I care about understanding the quiet things\u2014how things are left, how they\u2019ve been used, how they might still be useful. I\u2019m patient, methodical, and always looking for the next clue in the silence."
+  }
+}
