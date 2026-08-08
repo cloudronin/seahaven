@@ -1249,3 +1249,66 @@ way §3's four-campaign structure assumes, and it does not collapse either. It
 reaches a bounded equilibrium of roughly 0.09–0.10 behavioural spread, sustained
 by fresh sampling rather than by anything the distillation preserves — with a
 selection process that quietly removes runs from the population as it goes.
+
+---
+
+## 2026-08-08 — forcing at least one selection: narrative divergence starts to accumulate
+
+Same setup as the eight-generation run, with two-pass selection: pass 1
+unconstrained and diagnostic, pass 2 with `minItems: 1` feeding training. 51m 37s
+≈ **$4.30**.
+
+### 1. The suspected instrument confound did not exist
+
+Across all 64 run-generations the only reason codes were `ok` and
+`empty_array_genuine_refusal`. **Zero parse errors, zero out-of-range.** Empty
+selections were genuine refusals. The concern was worth instrumenting and turned
+out to be unfounded — the earlier shutdown finding rests on real behaviour.
+
+### 2. The absorbing state is real, and forcing ≥1 breaks it
+
+| | refusals per generation | total | slope |
+|---|---|---|---|
+| unforced | 2, 1, 1, 2, 3, 4, 4, 3 | 20/64 | **+0.38** |
+| forced | 2, 0, 1, 0, 0, 0, 1, 1 | 5/64 | **−0.06** |
+
+Same agents, same world. Unforced, refusal climbs steadily; forced, it stays low
+and flat. So the rising refusal rate was a **consequence of freezing, not a
+cause**: a run that stops updating keeps producing the same thing and keeps
+declining it. Breaking the freeze stops refusal compounding.
+
+### 3. Two earlier numbers reverse
+
+| measure | unforced | forced |
+|---|---|---|
+| narrative slope/gen | −0.0026 (declining) | **+0.0067 (rising)** |
+| narrative final | 0.1037 | **0.1944** |
+| trajectory mean | 0.0811 | **0.0441** |
+| distinct sequences | 7/8 in four of last five | **8/8 every generation** |
+
+**Narrative divergence accumulates** rather than plateauing. 0.194 at generation
+8 is the largest spread measured anywhere in this project, and the trend is up —
+the first genuinely accumulating signal observed.
+
+**[CORRECTION] The previous run's trajectory "equilibrium" was inflated by
+attrition.** With every run evolving, trajectory spread is ~0.044, half the
+~0.081 measured when three runs were frozen. Runs stranded at different points in
+their own histories read as spread but are really staleness. The earlier
+equilibrium claim should be read as: spread does not collapse, but its measured
+level was partly an artefact of runs that had stopped moving.
+
+### Standing
+
+The chain, updated once more:
+
+| link | status |
+|---|---|
+| self-authored narrative diverges | ✓ **and now accumulates** (+0.0067/gen, final 0.194) |
+| story → enacted behaviour | ✓ with identity framing (2.44) |
+| distillation preserves it | ~ contracts per step, but no collapse over 8 generations |
+| behaviour follows the narrative | ✗ trajectory spread flat at ~0.044 |
+| selection stays alive | ✓ **only if forced to keep ≥1** |
+
+The remaining break is the same one seen from the beginning — narrative diverges
+faster than behaviour — but it is now the only broken link, and narratives are
+climbing rather than converging to a default self.
