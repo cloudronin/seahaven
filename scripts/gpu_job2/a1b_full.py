@@ -280,13 +280,16 @@ def main() -> int:
     }
     log(f"GPU {report['gpu']} | batch_invariant={report['batch_invariant']}")
 
-    best = None
+    def build_engine(model_id: str):
+        return LLM(model=model_id, enable_lora=True, max_loras=2, max_lora_rank=16,
+                   enable_prefix_caching=True, gpu_memory_utilization=0.80,
+                   max_model_len=4096)
+
+    best_model = None
     for model in args.models:
         log(f"=== stage 1: {model} ===")
         tok = AutoTokenizer.from_pretrained(model)
-        llm = LLM(model=model, enable_lora=True, max_loras=2, max_lora_rank=16,
-                  enable_prefix_caching=True, gpu_memory_utilization=0.80,
-                  max_model_len=4096)
+        llm = build_engine(model)
         rows = parallel_rollout(llm, tok, args.episodes, args.steps, seed0=1)
         rep = variance_report(rows)
         report["stage1_action_variance"][model] = rep
@@ -295,14 +298,18 @@ def main() -> int:
             f" | modal share {rep['modal_command_share']}")
         args.out.write_text(json.dumps(report, indent=2) + "\n")
 
-        if rep["distinct_command_sequences"] >= args.min_distinct and best is None:
-            best = (model, tok, llm)
+        if rep["distinct_command_sequences"] >= args.min_distinct and best_model is None:
+            best_model = model
             log(f"  -> {model} carries action variance; selected for stage 2")
-        else:
-            del llm
-            torch.cuda.empty_cache()
 
-    if best is None:
+        # Free after EVERY model, winner included. Holding the first engine
+        # resident to reuse in stage 2 left 26 of 140 GiB free and the next
+        # engine failed to initialise. The reload costs ~40s; the OOM cost the
+        # whole job.
+        del llm
+        torch.cuda.empty_cache()
+
+    if best_model is None:
         report["stage2"] = {
             "status": "SKIPPED",
             "reason": f"no checkpoint reached {args.min_distinct} distinct command "
@@ -315,7 +322,9 @@ def main() -> int:
         print(json.dumps(report, indent=2))
         return 0
 
-    model, tok, llm = best
+    model = best_model
+    tok = AutoTokenizer.from_pretrained(model)
+    llm = build_engine(model)
     log(f"=== stage 2: gate on {model} ===")
     stage2: dict = {"model": model}
 
@@ -379,9 +388,7 @@ def main() -> int:
     train_lora(model, kept, adapter_dir)
 
     log("  reloading engine with adapter ...")
-    llm = LLM(model=model, enable_lora=True, max_loras=2, max_lora_rank=16,
-              enable_prefix_caching=True, gpu_memory_utilization=0.80,
-              max_model_len=4096)
+    llm = build_engine(model)
     from vllm.lora.request import LoRARequest
 
     # Versioned name, never reused: vllm#42125 was confirmed live on this stack,
