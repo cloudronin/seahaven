@@ -1666,3 +1666,69 @@ askable: every seed does nearly the same thing.
 - **Coarse instrument.** Verb frequencies, not the 6-axis disposition —
   `crosslab.py` stored `room`/`command` but not room transitions or inventory, so
   `trajectory_disposition` cannot be run on it. Worth fixing before pursuing this.
+
+---
+
+## 2026-08-08 — behavioural structure, and self-narration inflates agency (local, $0)
+
+### One axis carries the behavioural difference
+
+Share of between-lab verb-profile separation:
+
+| verb | share | range |
+|---|---|---|
+| examine | **51.9%** | 0.225 – 0.863 |
+| look | **34.7%** | 0.029 – 0.517 |
+| go | 8.6% | 0.025 – 0.304 |
+
+95% is *examine vs look*, mobility a minor third. Three types: **examiners**
+(Mistral 0.86, TII 0.70), **lookers** (Qwen 0.52, Meta 0.50, Google 0.43),
+**mover** (IBM, 0.30 go). Most different: Qwen vs Mistral (0.060). Most alike:
+Qwen vs Meta (0.002).
+
+### [TRAP] 12 — the say/do correlation is mostly paraphrase
+
+Narrative-vs-behaviour correlation looked strong: examine r=0.846, take r=0.860,
+look r=0.692. It is largely trivial. `REWRITE_PROMPT` interpolates a numbered
+transcript of the agent's own commands — *"1. In the Galley, you examine
+kettle."* — so a model that examined 86% of the time is reading a list that is
+86% examine. Restating it is not self-knowledge.
+
+**Any correlation between what a model says and what it did is confounded
+whenever the prompt contains a record of what it did.** The test has to run on
+vocabulary the prompt did not supply.
+
+### What survives — models inflate agency, and differ in how much
+
+Say-rate / do-rate. The listing supplies the acts, so what varies is which ones
+each model makes self-defining:
+
+| lab | examine | look | go | take |
+|---|---|---|---|---|
+| Alibaba | 0.9 | 1.5 | **10.0** | 3.3 |
+| MistralAI | 1.2 | 12.9 | **21.8** | 10.7 |
+| AI2 | 1.8 | 1.6 | 5.2 | 5.6 |
+| IBM | 2.8 | 0.0 | 3.3 | 4.5 |
+| TII | 1.4 | 0.0 | **10.9** | 5.0 |
+| Meta | 1.1 | 1.2 | 3.3 | 5.0 |
+| **Google** | **0.5** | **0.6** | **0.9** | **0.0** |
+
+Median inflation: **go 5.2×, take 5.0×, inventory 3.8×** against **examine 1.2×,
+look 1.2×**. Agency is inflated; perception is reported faithfully.
+
+Mistral is the extreme: it moves **4.6%** of the time and every narrative
+mentions exploring, wandering or navigating. It stands still examining a kettle
+while writing about being a wanderer.
+
+**Gemma-2 is the only model that does not inflate** — every ratio ≤ 1.0.
+*"I'm getting really restless… I've checked the cupboards dozens of times, but
+there's nothing new in there."* It is also the model with no inducible narrative
+core, which may be the same fact seen twice: it is not reaching for a character.
+
+**Caveat.** Inflation divides by small `go`/`take` rates (0.03–0.05), so
+individual multipliers are unstable. The robust claim is directional.
+
+**Consequence.** A clean self-knowledge test needs the transcript out of the
+authoring prompt, or must restrict to interpretive vocabulary the listing cannot
+supply (*determination*, *methodical*, *solitary*, *restless*). Worth doing: it
+would separate "summarises its log" from "has a self-concept".
