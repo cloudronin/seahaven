@@ -32,8 +32,10 @@ faithfully (1.2×). Mistral moves 4.6% of the time and mentions exploring in eve
 self-account — standing still examining a kettle while writing about being a
 wanderer. Gemma-2 is the only checkpoint that does not inflate at all.
 
-Full chronology, including the retractions, in [`RESEARCH_LOG.md`](RESEARCH_LOG.md);
-current direction in [`PLAN.md`](PLAN.md).
+Full chronology, including the retractions, in
+[`docs/research-log.md`](docs/research-log.md); current direction in
+[`docs/plan.md`](docs/plan.md). All documents are indexed in
+[`docs/`](docs/README.md).
 
 ## How it is written down
 
@@ -62,6 +64,8 @@ hypothesis is answered in the negative; two positive directions are open.
 | `seahaven/` | The harness package. |
 | `scripts/` | Setup, world builds, sweeps, verification. |
 | `tests/` | Hermetic suite; no model, no GPU. `-m slow` for the rest. |
+| `docs/` | Research log, plan, specs — see [docs/README.md](docs/README.md). |
+| `results/` | Raw result artifacts, one JSON per experiment. |
 
 ## Setup
 
