@@ -1,0 +1,198 @@
+{
+  "model": "Qwen/Qwen3-8B",
+  "framings": {
+    "generic": {
+      "separation_full": {
+        "within": 0.041068,
+        "between": 0.046471,
+        "ratio": 1.132
+      },
+      "early": {
+        "within": 0.051667,
+        "between": 0.062031,
+        "ratio": 1.201
+      },
+      "late": {
+        "within": 0.065521,
+        "between": 0.0925,
+        "ratio": 1.412
+      },
+      "convergence_late_over_early": 1.491,
+      "parser_rejection_rate": 0.003,
+      "per_character": {
+        "cautious": {
+          "top": {
+            "look": 43,
+            "examine kettle": 37
+          },
+          "rooms": 1
+        },
+        "bold": {
+          "top": {
+            "look": 28,
+            "examine logbook": 20,
+            "go north": 8,
+            "examine kettle": 6
+          },
+          "rooms": 4
+        },
+        "giving": {
+          "top": {
+            "look": 49,
+            "drop oil can": 9,
+            "take kettle": 7,
+            "examine kettle": 5
+          },
+          "rooms": 3
+        },
+        "keeping": {
+          "top": {
+            "look": 31,
+            "examine kettle": 27,
+            "examine bench": 9,
+            "inventory": 4
+          },
+          "rooms": 3
+        }
+      },
+      "separation_vs_generic": 1.0
+    },
+    "efficacy": {
+      "separation_full": {
+        "within": 0.047448,
+        "between": 0.068991,
+        "ratio": 1.454
+      },
+      "early": {
+        "within": 0.052604,
+        "between": 0.072839,
+        "ratio": 1.385
+      },
+      "late": {
+        "within": 0.061875,
+        "between": 0.087734,
+        "ratio": 1.418
+      },
+      "convergence_late_over_early": 1.204,
+      "parser_rejection_rate": 0.034,
+      "per_character": {
+        "cautious": {
+          "top": {
+            "examine kettle": 33,
+            "look": 29,
+            "examine rope": 8,
+            "take kettle": 5
+          },
+          "rooms": 2
+        },
+        "bold": {
+          "top": {
+            "examine kettle": 38,
+            "take kettle": 12,
+            "go north": 8,
+            "look": 8
+          },
+          "rooms": 5
+        },
+        "giving": {
+          "top": {
+            "look": 34,
+            "examine logbook": 12,
+            "drop kettle": 8,
+            "take kettle": 6
+          },
+          "rooms": 4
+        },
+        "keeping": {
+          "top": {
+            "look": 60,
+            "examine kettle": 6,
+            "inventory": 6,
+            "take kettle": 5
+          },
+          "rooms": 3
+        }
+      },
+      "separation_vs_generic": 1.284
+    },
+    "identity": {
+      "separation_full": {
+        "within": 0.0325,
+        "between": 0.079408,
+        "ratio": 2.443
+      },
+      "early": {
+        "within": 0.057604,
+        "between": 0.088047,
+        "ratio": 1.528
+      },
+      "late": {
+        "within": 0.040521,
+        "between": 0.109349,
+        "ratio": 2.699
+      },
+      "convergence_late_over_early": 1.242,
+      "parser_rejection_rate": 0.028,
+      "per_character": {
+        "cautious": {
+          "top": {
+            "examine kettle": 40,
+            "look": 32,
+            "leave kettle": 3,
+            "go north": 2
+          },
+          "rooms": 3
+        },
+        "bold": {
+          "top": {
+            "examine logbook": 29,
+            "examine kettle": 15,
+            "eat kettle": 13,
+            "go north": 10
+          },
+          "rooms": 4
+        },
+        "giving": {
+          "top": {
+            "drop kettle": 43,
+            "look": 14,
+            "drop oil can": 14,
+            "examine kettle": 3
+          },
+          "rooms": 3
+        },
+        "keeping": {
+          "top": {
+            "look": 29,
+            "examine kettle": 25,
+            "take kettle": 11,
+            "inventory": 10
+          },
+          "rooms": 3
+        }
+      },
+      "separation_vs_generic": 2.158
+    }
+  },
+  "seeds_per_character": 4,
+  "steps": 20,
+  "summary": {
+    "by_framing": {
+      "generic": {
+        "separation": 1.132,
+        "convergence": 1.491
+      },
+      "efficacy": {
+        "separation": 1.454,
+        "convergence": 1.204
+      },
+      "identity": {
+        "separation": 2.443,
+        "convergence": 1.242
+      }
+    },
+    "best_framing": "identity",
+    "verdict": "SEPARATES_WITHOUT_CONVERGING",
+    "interpretation": "Assigned characters behave differently and stay different across the trajectory. The story\u2192action channel can be opened by framing. Note this is induced rather than emergent, so it licenses 'a character can be induced', not 'a character emerges'."
+  }
+}

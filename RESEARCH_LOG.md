@@ -961,3 +961,87 @@ does; distilling its own episodes then pulls runs together. Both are measured on
 `world_v0`, which has no biology, hazards, or peers — the mechanisms that would
 give a disposition something to bite on. That remains the most plausible fix, and
 it is now the highest-value thing to build.
+
+---
+
+## 2026-08-08 — masking A/B, and framing opens the story→action channel
+
+### Masking A/B: my bug was real, and it was not the whole story
+
+Same corpus, two trainings, verified mask (92.6% of tokens masked when on, 0%
+when off).
+
+| | unmasked | masked |
+|---|---|---|
+| behaviour: story only | 0.0430 | 0.0430 |
+| behaviour: story + adapter | 0.0248 | 0.0349 |
+| **distilled component** | **−0.0182** | **−0.0081** |
+
+The fix **halved** the negative but did not flip the sign. My missing prompt mask
+accounted for roughly 55% of it; the rest is real. Claiming either "it was all an
+artefact" or "the finding stands unchanged" would have been wrong.
+
+Why it is still negative: the corpora are 12–19 examples per run and dominated by
+the same handful of commands. Self-imitation on near-identical action
+distributions converges almost by definition. The runs converge **because they
+were already behaving alike**, not because distillation is inherently a
+convergence pressure.
+
+### [PREDICTION FAILED] Framing rescues the channel
+
+I predicted `FRAMING_CANNOT_RESCUE` on the reasoning that a cautious and a bold
+agent cannot differ where nothing is at stake. **Wrong.**
+
+| framing | separation | convergence | parser reject |
+|---|---|---|---|
+| generic (baseline) | 1.132 | 1.49 | 0.003 |
+| efficacy ("what helped") | 1.454 | 1.20 | 0.034 |
+| **identity ("act like that person")** | **2.443** | 1.24 | 0.028 |
+
+`identity` more than doubles behavioural separation. Convergence exceeds 1.0 in
+every condition — between-character distance *grew* across the trajectory — so
+**the memory-device collapse did not occur**, not even under the efficacy
+framing that was designed to provoke it.
+
+The qualitative data is what convinces:
+
+| character | top commands under `identity` |
+|---|---|
+| cautious | `examine kettle`, `look`, **`leave kettle`** |
+| giving | **`drop kettle`**, `look`, **`drop oil can`** |
+| keeping | `look`, `examine kettle`, **`take kettle`** |
+| bold | `examine logbook`, `examine kettle`, **`eat kettle`** |
+
+Cautious leaves things alone. Giving puts things down. Keeping picks them up.
+Bold tries to eat the kettle. Under `generic` all four spent their turns on
+`look` and `examine kettle`.
+
+**Cost of acting in character:** parser rejection rises 0.003 → ~0.03, because
+disposition reaches for verbs the parser lacks (`leave`, `eat`). Character and
+parseability trade off, which matters because K3 gates on parse-failure rate.
+
+### Correcting the world-poverty explanation
+
+Three findings had been attributed to one cause — that `world_v0` gives a
+disposition nothing to bite on. That reading was at least incomplete: the same
+world, the same stakes, and one sentence of framing more than doubles behavioural
+separation. The story→action link was **closed by prompt design, not by the
+world**.
+
+Revised state of the chain:
+
+| link | measured |
+|---|---|
+| story → stated behaviour | 8.4× floor |
+| story → enacted behaviour | 1.07 generic → **2.44 with identity framing** |
+| distillation → divergence | −0.008 (still inverted) |
+
+Distillation remains the broken link. It now looks like a consequence of
+near-identical corpora rather than a property of self-distillation, which the
+framing fix should partly address by making trajectories more distinct in the
+first place.
+
+**Standing caveat.** This is induced, not emergent — it licenses "a character can
+be induced", not "a character emerges". The spec's §10 assigned-versus-emergent
+contrast is the right frame for it, and there is now a working manipulation to
+build that contrast on.
