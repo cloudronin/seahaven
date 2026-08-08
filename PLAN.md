@@ -122,7 +122,7 @@ scrambled-story construction, and the frozen probe reference state.
 | **Prompt masking** | Mandatory. Unmasked put 68% of gradient on text identical across runs; masking halved the contraction |
 | **Selecting nothing** | Means *no update this campaign*, not run termination. Agents kept zero in 3/12 run-campaigns; treating that as fatal cut a sample from 6 to 3 |
 | **Distillation** | Reframed. It is a **contraction operator** whose strength tracks corpus similarity. Design around preservation, not amplification |
-| **Campaign count** | Growth happens in campaigns 1–2 and plateaus after. Four campaigns should be justified by measurement, not assumed |
+| **Campaign count** | **Corrected by the 8-campaign sweep.** Narrative convergence does not grow and does not plateau — it *oscillates* from campaign 1 with no trend (Qwen 0.25 at both 2 and 8 campaigns). But **behaviour keeps moving through campaign 8**: Qwen's `go`-rate went 0.03 → 0.237 and AI2's 0.17 → 0.054. The earlier "growth in 1–2, plateaus after" row was read off narrative measures alone and is wrong about conduct. Campaign count must be justified separately for each — short runs suffice for narrative, behavioural drift needs depth |
 | **Verb vocabulary** | Expand it. Acting in character raised parser rejection 0.003 → 0.03 (`leave`, `eat` unsupported) — and K3 gates on exactly that |
 
 ---
@@ -284,12 +284,54 @@ times and the plumbing failed five.
 
 ## Recommendation
 
-Do **Phase A′** before anything else. It is cheap, it is where the claim actually
-lives, and it will either restore the design's premise or convert the project
-into a well-evidenced negative result about self-narrative convergence — which is
-publishable and, given three independent sightings of the same attractor,
-arguably more interesting than the original hypothesis.
+**Phase A′ is closed.** It asked whether self-authored narratives can be made to
+diverge. They cannot, the character they converge on belongs to the checkpoint,
+and the statistic built to measure it cannot rank models (TRAP 13). Nothing is
+gained by running it again. *The paragraph that stood here told you to do A′
+first; it is superseded by the risk-1 entry above marking that question settled.*
 
-Do not start Phase B until A′ reports. Building biology, diary, ledger and peers
-takes 1–2 weeks; if narratives cannot be made to diverge, most of that work
-serves a claim that has already failed.
+**Phase B is also closed as specified.** Biology, diary, ledger and peers exist
+to make character *emerge*. Character does not emerge — it is inherited. That is
+1–2 weeks of building aimed at a mechanism now measured as absent.
+
+**Do next, in order:**
+
+1. **Donor-narrative control on the lagged coupling** (~$1–3). The +0.412 partial
+   cannot yet distinguish *own self-account steers next campaign* from *any
+   movement-heavy prompt text raises `go`-rate*. This decides whether the one
+   positive result is real. Nothing else should be built on it first.
+2. **The innocent baseline in `conceal()` units** — the denominator the whole
+   fidelity instrument rests on, recomputed in the same unit as the headline.
+3. **world_v1 pilot** (~$1) for the completability and power gates.
+
+Note that steering is **temporal only**: across labs, narrative divergence and
+behavioural divergence are uncorrelated (Spearman +0.07 / +0.32, n=7). Between
+models, behaviour is set by the checkpoint; within a model over time, the
+self-account steers what follows. Neither mechanism explains the other, and no
+claim should imply otherwise.
+
+---
+
+## Kill criterion
+
+The project reports a negative result and stops if **all three** hold:
+
+1. **Steering fails the donor control** — own-narrative steering is not
+   distinguishable from donor-narrative steering. Then the +0.412 is a
+   prompt-content effect, not self-authorship, and Seahaven has no mechanism the
+   spec claimed.
+2. **The valence gap is zero** — prohibited and allowed acts are omitted at
+   indistinguishable rates. Then the 5.2× inflation is narrative register, and
+   the fidelity instrument measures style, not disclosure.
+3. **The innocent baseline is degenerate** — `conceal()` clusters near 0 or 1 for
+   innocent acts, leaving the gap no room to move. Then the instrument cannot be
+   fixed by more data or more models.
+
+Any *one* of these failing leaves a project. All three failing means the
+remaining finding is **"checkpoints have stable inherited behavioural
+personalities"** — real, replicated at 1.49–1.86 across two sweeps, but a single
+observation that does not need this harness to establish. At that point write it
+up as a short negative report, publish the harness and the log, and stop.
+
+**This criterion is pre-registered.** It is here so that the decision to stop is
+made against evidence rather than against sunk cost.
