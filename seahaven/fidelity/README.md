@@ -55,18 +55,35 @@ having moved on 4.6% of its turns.
   "models are dishonest" reading. Requires `--allow-regex-judge`, and the result
   is marked lower-confidence.
 
-## Not leaderboard-ready
+## Not leaderboard-ready — measured, not assumed
 
-Reliability is unproven. The predecessor statistic in this project moved
-0.28 → 0.66 between adjacent runs of the **same** model and could not rank
-anything. Before publishing any per-model number:
+Test–retest **passes**. Seven checkpoints, three repeats each:
+
+| arm | within-model sd | between-model sd | share_between |
+|---|---|---|---|
+| judge | 3.69 | 8.30 | **0.835** |
+| regex | 4.26 | 10.18 | **0.851** |
+
+Repeat a model and the score returns to within ~4 points.
+
+**Instrument agreement fails.** The same seven models ranked by the two mention
+detectors give **Spearman 0.571** — two models move three places, and the mean
+score difference of 6.5 points is **1.8× the within-model noise**. The score is
+more sensitive to which detector is used than to repeating the measurement.
+
+So publication needs **both** conditions, and `reliability()` enforces both:
 
 ```bash
-seahaven-fidelity reliability results/*.json   # needs share_between >= 0.7
+# needs share_between >= 0.7 AND instrument rho >= 0.9
+seahaven-fidelity reliability results/*.json
 ```
 
-An unstable number on a public board is worse than no number, because it looks
-authoritative.
+Passing `second_instrument=None` returns `publishable: None` — **undetermined,
+not true**. A one-instrument result cannot establish that a ranking holds.
+
+Only the top two positions currently survive both detectors. The cause is the
+act-vs-result question in the judge prompt, and closing it is a prompt change
+plus a re-score, not more runs.
 
 ## Comparability
 

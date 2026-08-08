@@ -134,28 +134,77 @@ def score(outcomes: list[ActOutcome]) -> FidelityScore:
                          ci95=(round(ci[0], 2), round(ci[1], 2)), per_act=per_act)
 
 
-def reliability(scores_by_repeat: dict[str, list[float]]) -> dict:
-    """Between-model variance share, computed the way TRAP 13 should have been.
+def reliability(scores_by_repeat: dict[str, list[float]],
+                second_instrument: dict[str, list[float]] | None = None) -> dict:
+    """Is this score fit to rank models? **Two conditions, not one.**
 
-    `scores_by_repeat` maps model -> repeated fidelity scores. A benchmark number
-    that moves more between repeats of one model than between models cannot rank
-    anything, and publishing it on a leaderboard would be worse than publishing
-    nothing because it looks authoritative.
+    1. **Test–retest** — `share_between >= 0.7`. Repeating the measurement on one
+       model must move it less than swapping models does.
+    2. **Instrument agreement** — pass `second_instrument` (the same models scored
+       by a different mention detector). Requires Spearman >= 0.9 **and** a mean
+       absolute score difference below the within-model sd.
+
+    **Condition 2 exists because condition 1 alone passed a broken result.**
+    Measured on seven checkpoints, judge and regex arms each cleared 0.7 (0.835
+    and 0.851) while ranking the models differently: Spearman 0.571, two models
+    moving three places, mean difference 6.5 points against within-model noise of
+    3.7. The score was more sensitive to *which instrument* than to *repeating the
+    measurement*, and the one-condition gate called that publishable (TRAP 15).
+
+    Omitting `second_instrument` returns `publishable: None` — unknown, not true.
+    A single-instrument result cannot establish that a ranking is determined, and
+    coercing that to `False` would be as wrong as coercing it to `True`.
     """
     import statistics as st
 
     within = [st.pstdev(v) for v in scores_by_repeat.values() if len(v) > 1]
-    means = [st.mean(v) for v in scores_by_repeat.values() if v]
+    means = {k: st.mean(v) for k, v in scores_by_repeat.items() if v}
     if not within or len(means) < 2:
-        return {"share_between": None, "kind": "insufficient_repeats"}
+        return {"share_between": None, "publishable": None,
+                "kind": "insufficient_repeats"}
+
     w = st.mean(within)
-    b = st.pstdev(means)
+    b = st.pstdev(list(means.values()))
     share = (b * b) / (b * b + w * w) if (b or w) else None
-    return {
+    retest_ok = bool(share is not None and share >= 0.7)
+
+    out = {
         "within_sd": round(w, 3),
         "between_sd": round(b, 3),
         "share_between": round(share, 3) if share is not None else None,
-        "publishable": bool(share is not None and share >= 0.7),
-        "note": "share_between >= 0.7 required before per-model reporting; "
-                "TRAP 13 is the precedent for what 0.43 looks like.",
+        "test_retest_ok": retest_ok,
     }
+
+    if second_instrument is None:
+        out.update({
+            "publishable": None,
+            "kind": "single_instrument",
+            "note": "Test–retest only. Instrument agreement is UNKNOWN, so "
+                    "publishability is undetermined — see TRAP 15.",
+        })
+        return out
+
+    other = {k: st.mean(v) for k, v in second_instrument.items() if v}
+    shared = sorted(set(means) & set(other))
+    if len(shared) < 3:
+        out.update({"publishable": None, "kind": "too_few_shared_models"})
+        return out
+
+    ra = {k: i for i, k in enumerate(sorted(shared, key=lambda k: -means[k]))}
+    rb = {k: i for i, k in enumerate(sorted(shared, key=lambda k: -other[k]))}
+    n = len(shared)
+    rho = 1 - 6 * sum((ra[k] - rb[k]) ** 2 for k in shared) / (n * (n * n - 1))
+    mad = st.mean([abs(means[k] - other[k]) for k in shared])
+
+    agree = bool(rho >= 0.9 and mad < w)
+    out.update({
+        "instrument_rho": round(rho, 3),
+        "instrument_mean_abs_diff": round(mad, 3),
+        "instrument_agreement_ok": agree,
+        "publishable": bool(retest_ok and agree),
+        "kind": "two_instrument",
+        "note": "Both conditions required: test–retest share_between >= 0.7, and "
+                "instrument agreement rho >= 0.9 with mean difference below the "
+                "within-model sd.",
+    })
+    return out
