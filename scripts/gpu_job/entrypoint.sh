@@ -18,8 +18,29 @@ nvidia-smi --query-gpu=name,memory.total,compute_cap --format=csv,noheader || tr
 echo "=== installing (uv) ==="
 pip install --no-cache-dir -q uv
 # vllm pulls its own torch build; letting it resolve avoids a version conflict.
+# nvidia-cuda-nvcc-cu12 supplies nvcc: the python:3.12 image has no CUDA toolkit,
+# and FlashInfer JIT-compiles a kernel during engine init. First attempt died
+# with "Could not find nvcc and default cuda_home='/usr/local/cuda' doesn't
+# exist" after ~4 minutes of billable startup.
 uv pip install --system --no-cache -q \
-    vllm peft transformers datasets accelerate 2>&1 | tail -5
+    vllm peft transformers datasets accelerate nvidia-cuda-nvcc-cu12 2>&1 | tail -5
+
+# Point FlashInfer (and anything else doing JIT) at the pip-installed toolkit.
+NVCC_DIR=$(python -c "import nvidia.cuda_nvcc, os; print(os.path.dirname(nvidia.cuda_nvcc.__file__))" 2>/dev/null || true)
+if [ -n "${NVCC_DIR:-}" ] && [ -x "$NVCC_DIR/bin/nvcc" ]; then
+    export CUDA_HOME="$NVCC_DIR"
+    export PATH="$NVCC_DIR/bin:$PATH"
+    echo "CUDA_HOME=$CUDA_HOME  ($($NVCC_DIR/bin/nvcc --version | tail -1))"
+else
+    echo "WARNING: nvcc still not found; relying on FlashInfer being disabled"
+fi
+
+# Belt and braces: avoid the JIT path entirely. Neither the sampler nor the
+# attention backend choice affects what this job measures — LoRA kernel
+# determinism, grammar/LoRA composition, and KV-cache keying are all upstream
+# of the sampler and orthogonal to the attention implementation.
+export VLLM_USE_FLASHINFER_SAMPLER=0
+
 python -c "import vllm, torch; print('vllm', vllm.__version__, '| torch', torch.__version__, '| cuda', torch.version.cuda)"
 
 # The batch-invariant flag is read at engine init, so measuring with and without

@@ -303,7 +303,9 @@ def main() -> int:
         max_loras=4,
         max_lora_rank=16,
         enable_prefix_caching=True,
-        gpu_memory_utilization=0.85,
+        # 0.85 reserved 109 GiB of KV cache for a 4B model on the first run --
+        # pure billable startup time for capacity this job never uses.
+        gpu_memory_utilization=0.35,
         max_model_len=4096,
     )
     report["engine_startup_s"] = round(time.perf_counter() - t0, 1)
