@@ -114,17 +114,44 @@ the weights further. Closing that loop is the first real harness task.
 Everything downstream is worthless if runs author the same self. Cheap, because
 it is mostly generation.
 
-1. **Close the play loop** — agents play campaign N+1 with campaign N's adapter
-   loaded. The missing feedback path, and the most likely source of genuine
-   path dependence.
-2. **Test story-divergence interventions** on the existing harness: richer world
+1. **Close the play loop** — ✅ done. Agents play campaign N+1 with campaign N's
+   adapter loaded. It did not rescue divergence.
+2. **Force selection to keep ≥1 episode** — ✅ done. Prevents the absorbing state
+   where a run stops updating and then refuses everything (refusal slope −0.06
+   forced, +0.38 unforced). Keep it on in all future runs.
+3. **Test story-divergence interventions** on the existing harness: richer world
    with real stakes; peers as differentiating pressure; the prediction/pleasure
-   signal; forced early branch points. Measure narrative spread and behavioural
-   spread together — the machinery exists and costs ~$1 per condition.
-3. **Gate:** self-authored narrative spread must approach what assigned
-   characters achieve. If it cannot be moved, the honest options are to pivot the
-   claim to *induced* character (§10's assigned arm becomes primary) or to report
-   the convergence result as the finding.
+   signal; forced early branch points. Measure induced convergence and
+   `enacted_verb_profile_spread` together — ~$1 per condition.
+
+**Gate (revised — the previous one was invalid).**
+
+The old gate read *"self-authored narrative spread must approach what assigned
+characters achieve."* It compared `narrative_spread`, which never reads a
+narrative — it scores a forced choice between trait words conditioned on one.
+The converged corpus scored **0.179 against the personas' 0.130**, so the gate
+passed on convergence. A gate that passes on the failure it exists to catch is
+worse than none.
+
+**Replacement:** `narrative_motifs.gate()` — induce a shared vocabulary from half
+the runs, measure how much survives in the half it was not induced from, both
+ways. Divergent runs score **low**; a convergent corpus keeps generalising.
+
+| corpus | induced convergence | verdict |
+|---|---|---|
+| self-authored emergent | **0.583** | fails |
+| assigned personas (known distinct) | **0.050** | passes |
+
+Threshold **0.20**. Pass requires self-authored runs to generalise no better than
+four deliberately contrasting personas. `no_shared_core` returns **no verdict**
+rather than a pass — divergence by absence of a measurement is not the same
+evidence as a core that fails to generalise.
+
+**Current status: the gate FAILS at 0.583.** Every intervention tried — closed
+loop, KL-to-own-past, identity framing, amnesiac seed, eight generations, forced
+selection — has left it failing. The honest options are now live: pivot the claim
+to *induced* character (§10's assigned arm becomes primary), or report the
+convergence result as the finding.
 
 ### Phase B — harness build (unchanged in scope, reordered in priority)
 
@@ -193,9 +220,14 @@ times and the plumbing failed five.
 
 ## Open risks, ranked
 
-1. **Self-authored narratives converge to a default self.** The central claim
-   rests on divergence that has not been observed without assigning it. Phase A′
-   exists for this.
+1. **Self-authored narratives converge to a default self — now measured, not
+   suspected.** Induced convergence **0.583** against **0.050** for four
+   deliberately contrasting personas, cross-validated by deriving the motif
+   vocabulary on runs it was not counted on (82.5% held-out prevalence on the
+   hand-authored list). The corpus scoring highest on the old metric is one
+   character written eight times — two of its eight runs are the same sentence
+   with different nouns. The central claim rests on divergence that no
+   intervention in this project has produced.
 2. **Distillation never amplifies.** At best it preserves. §6's "silent update
    makes character durable" is not supported; the update erodes character by
    0.9–4.4 points depending on corpus similarity.
