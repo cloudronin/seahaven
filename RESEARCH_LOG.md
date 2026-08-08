@@ -1277,25 +1277,44 @@ and flat. So the rising refusal rate was a **consequence of freezing, not a
 cause**: a run that stops updating keeps producing the same thing and keeps
 declining it. Breaking the freeze stops refusal compounding.
 
-### 3. Two earlier numbers reverse
+### 3. One earlier number reverses; the headline claim does not
 
 | measure | unforced | forced |
 |---|---|---|
-| narrative slope/gen | −0.0026 (declining) | **+0.0067 (rising)** |
-| narrative final | 0.1037 | **0.1944** |
+| narrative slope/gen | −0.0026 | +0.0067 |
+| narrative final | 0.1037 | 0.1944 |
 | trajectory mean | 0.0811 | **0.0441** |
 | distinct sequences | 7/8 in four of last five | **8/8 every generation** |
-
-**Narrative divergence accumulates** rather than plateauing. 0.194 at generation
-8 is the largest spread measured anywhere in this project, and the trend is up —
-the first genuinely accumulating signal observed.
 
 **[CORRECTION] The previous run's trajectory "equilibrium" was inflated by
 attrition.** With every run evolving, trajectory spread is ~0.044, half the
 ~0.081 measured when three runs were frozen. Runs stranded at different points in
-their own histories read as spread but are really staleness. The earlier
-equilibrium claim should be read as: spread does not collapse, but its measured
-level was partly an artefact of runs that had stopped moving.
+their own histories read as spread but are really staleness. This one holds: the
+earlier equilibrium claim should be read as *spread does not collapse*, but its
+measured level was partly an artefact of runs that had stopped moving.
+
+**[CORRECTION — my own overclaim, caught on check] 0.1944 is not a project high
+and the rising trend is one generation deep.** Two errors, both found by testing
+the claim against prior runs rather than accepting it:
+
+- **Not the maximum.** `closed_loop` reached **0.2154** and **0.2064**; 0.1944
+  ranks fourth of 34 recorded values. `closed_loop` was also still climbing when
+  it ended (`still_growing: true`, +0.024 on its last step), so this is not "the
+  first accumulating signal" either — that run accumulated first and higher.
+  Caveat both ways: `closed_loop` used 40-step episodes against 30 here. The
+  `spread()` implementation is byte-identical, so the units match, but narratives
+  were written from more material.
+- **The trend is carried by generation 8 alone.** Series
+  `0.117 0.138 0.143 0.123 0.144 0.118 0.154 0.194`. Dropping the last point
+  takes the slope from +0.0067 to +0.0025. Permutation test over all orderings:
+  **p = 0.034** with gen 8, **p = 0.193** without. Gen 8 sits **4.5 sd** above
+  the mean of the other seven and had the largest corpora (29, 10, 30, ...).
+  One anomalous generation is not eight generations of accumulation.
+
+**Consequence.** Do not treat forced selection as an intervention that increases
+narrative divergence — that is unsupported. Its demonstrated effect is on
+*survival*: refusal stays flat and every run keeps moving. Whether the gen-8 jump
+is real needs generations 9–12, not a re-reading of these eight.
 
 ### Standing
 
@@ -1303,12 +1322,15 @@ The chain, updated once more:
 
 | link | status |
 |---|---|
-| self-authored narrative diverges | ✓ **and now accumulates** (+0.0067/gen, final 0.194) |
+| self-authored narrative diverges | ~ reaches 0.19–0.22 but does not clearly accumulate |
 | story → enacted behaviour | ✓ with identity framing (2.44) |
-| distillation preserves it | ~ contracts per step, but no collapse over 8 generations |
+| distillation preserves it | ~ contracts per step, no collapse over 8 generations |
 | behaviour follows the narrative | ✗ trajectory spread flat at ~0.044 |
 | selection stays alive | ✓ **only if forced to keep ≥1** |
 
-The remaining break is the same one seen from the beginning — narrative diverges
-faster than behaviour — but it is now the only broken link, and narratives are
-climbing rather than converging to a default self.
+**[TRAP] 9 — a superlative asserted without checking the other 33 values.** I
+reported 0.1944 as the largest spread in the project and as the first
+accumulating signal. Both were wrong, and both were disprovable by reading
+`results/*.json` — which the fix did in one pass. A cross-experiment superlative
+is a claim about every prior run, so it has to be computed against them, never
+recalled. Added to the build principles: **no superlative without a sweep.**
