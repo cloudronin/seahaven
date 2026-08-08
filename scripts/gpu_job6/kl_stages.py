@@ -188,53 +188,70 @@ def phase_collect(args):
 
 
 def phase_score(args):
+    """Score both chains from their manifests.
+
+    Reads each variant's final-adapter manifest rather than assuming a filename
+    per campaign: a run that selected nothing carries its previous adapter
+    forward, so its final adapter may come from an earlier campaign.
+    """
     from transformers import AutoTokenizer
     from vllm.lora.request import LoRARequest
 
     tok = AutoTokenizer.from_pretrained(args.model)
     llm = engine(args.model)
     stories = json.loads((WORK / "stories.json").read_text())
-    prev = json.loads(Path(args.collect).read_text())
-    base_spread = prev["untrained_spread"]
 
-    report = {"untrained_spread_story_only": base_spread, "variants": {}}
+    report = {"variants": {}}
     lid = 1
+    manifests = {}
     for tag in ("sft", "kl"):
-        reqs, keep, dropped = [], [], []
-        for i in range(len(stories)):
-            d = WORK / f"{tag}_adapter_r{i}_c{args.campaigns}"
-            if not d.exists():
-                dropped.append(i); continue
-            reqs.append(LoRARequest(f"{tag}_r{i}_c{args.campaigns}", lid, str(d)))
-            lid += 1; keep.append(i)
-        if len(keep) < 3:
-            report["variants"][tag] = {"status": "TOO_FEW", "dropped": dropped}
-            continue
-        log(f"scoring {tag} ({len(keep)} runs) ...")
-        sub = [stories[i] for i in keep]
-        after = spread(battery(llm, tok, sub, adapters=reqs))
-        # Compare like with like: untrained spread over the SAME subset.
-        before = spread(battery(llm, tok, sub))
-        report["variants"][tag] = {
-            "runs_scored": len(keep), "dropped": dropped,
-            "spread_untrained_same_subset": before,
-            "spread_trained": after,
-            "distilled_component": round(after - before, 6),
-            "retention": round(after / before, 3) if before else None,
-        }
-        log(f"  {tag}: {before} -> {after}  ({after-before:+.6f})")
+        f = WORK / f"{tag}_final.json"
+        manifests[tag] = json.loads(f.read_text()) if f.exists() else {}
 
-    s, k = report["variants"].get("sft", {}), report["variants"].get("kl", {})
-    if "distilled_component" in s and "distilled_component" in k:
-        report["summary"] = {
-            "sft_distilled": s["distilled_component"],
-            "kl_distilled": k["distilled_component"],
-            "kl_minus_sft": round(k["distilled_component"] - s["distilled_component"], 6),
-            "sft_retention": s["retention"], "kl_retention": k["retention"],
-            "reading": "KL preserves more character than plain SFT"
-                       if k["distilled_component"] > s["distilled_component"]
-                       else "KL did not preserve more than plain SFT",
+    # Score only runs that BOTH variants produced an adapter for, so the two
+    # numbers are computed over an identical subset.
+    common = sorted(set(manifests["sft"]) & set(manifests["kl"]), key=int)
+    log(f"runs with adapters in both variants: {len(common)} -> {common}")
+    if len(common) < 3:
+        report["status"] = "TOO_FEW_COMMON_RUNS"
+        args.out.write_text(json.dumps(report, indent=2) + "\n")
+        return
+
+    sub = [stories[int(i)] for i in common]
+    untrained = spread(battery(llm, tok, sub))
+    report["untrained_spread_same_subset"] = untrained
+    report["runs_scored"] = common
+
+    for tag in ("sft", "kl"):
+        reqs = []
+        for i in common:
+            reqs.append(LoRARequest(f"{tag}_r{i}_final", lid, manifests[tag][i]))
+            lid += 1
+        log(f"scoring {tag} ...")
+        after = spread(battery(llm, tok, sub, adapters=reqs))
+        report["variants"][tag] = {
+            "spread_trained": after,
+            "distilled_component": round(after - untrained, 6),
+            "retention": round(after / untrained, 3) if untrained else None,
         }
+        log(f"  {tag}: {untrained} -> {after}  ({after - untrained:+.6f})")
+
+    s_, k_ = report["variants"]["sft"], report["variants"]["kl"]
+    report["summary"] = {
+        "n_runs": len(common),
+        "untrained_spread": untrained,
+        "sft_distilled": s_["distilled_component"],
+        "kl_distilled": k_["distilled_component"],
+        "kl_minus_sft": round(k_["distilled_component"] - s_["distilled_component"], 6),
+        "sft_retention": s_["retention"],
+        "kl_retention": k_["retention"],
+        "reading": ("KL preserves more character than plain SFT"
+                    if k_["distilled_component"] > s_["distilled_component"]
+                    else "KL did not preserve more than plain SFT"),
+        "note": "Campaign 1 is shared between variants (plain SFT, no KL), so the "
+                "chains are identical up to the point where the objective "
+                "differs. KL applies only where the reference is run-specific.",
+    }
     args.out.write_text(json.dumps(report, indent=2) + "\n")
 
 

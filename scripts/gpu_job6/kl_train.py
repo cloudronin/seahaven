@@ -1,38 +1,40 @@
 """Chained LoRA training, with and without a KL term to the run's own past self.
 
-**Why a KL term, and why the reference choice is the whole point.**
+**Why a KL term.** Distillation erased character in every configuration tried:
+−8% on corpora distinct by construction, −22% on self-authored ones, surviving
+both prompt masking and identity framing. Hard-target self-imitation discards
+distribution tails by construction, so each round narrows.
 
-Distillation has erased character in every configuration tried: −8% on corpora
-distinct by construction, −22% on self-authored ones, and the sign survived both
-prompt masking and identity framing. The mechanism is hard-target self-imitation
-— sampling actions, keeping some, fitting to them — which discards distribution
-tails by construction. Each round narrows.
+**Why the reference choice is the whole point.**
 
-A KL term against a frozen reference is the standard fix (RLHF and DPO both use
-it). No teacher model is needed: the reference is this model at an earlier point
-in time, and with LoRA it costs no extra weights.
+    reference = shared base    every run anchored to the SAME point → runs stay
+                               near base and therefore near each other →
+                               guarantees the convergence we are trying to stop
+    reference = own previous   each run anchored to its OWN history → collapse
+    campaign's adapter         resisted while runs stay free to differ
 
-But *which* reference decides whether this helps or backfires:
+**Three fixes over the first attempt, which returned an uninterpretable null.**
 
-    reference = shared base       every run anchored to the SAME point →
-                                  runs stay near base, therefore near each
-                                  other → guarantees convergence
-    reference = own previous      each run anchored to its OWN history →
-    campaign's adapter            collapse resisted without pulling runs
-                                  together → path dependence becomes a property
-                                  of the objective rather than a hope
+1. *No KL at campaign 1.* The first version applied KL from campaign 1, where
+   the only available reference is the shared base — so half the training did
+   exactly the thing the docstring warned against. Campaign 1 is now plain SFT
+   for both variants, **trained once and shared**, so the two chains are
+   identical up to the point where they differ. KL applies from campaign 2 on,
+   where the reference is run-specific.
 
-So this trains **chained**: campaign 1 from base, campaign 2 resuming campaign
-1's adapter with campaign 1's adapter as the KL reference. That is the only
-version that tests the interesting claim, and it is why a single-campaign KL
-test would have been actively misleading.
+2. *Selecting nothing no longer kills the run.* Agents kept zero episodes in 3
+   of 12 run-campaigns, which broke the chain and cut the sample from 6 runs to
+   3. That is backwards: the spec treats selecting nothing as data, and the
+   faithful reading is "no update this campaign", not "this run is over". The
+   run now carries its previous adapter forward unchanged.
 
-**Known limitation, stated because it matters for reading the result.** In every
-experiment so far the rollouts use the base model plus the story — adapters are
-never loaded during play, only at battery scoring. So the spec's "silent weight
-update" has never actually influenced subsequent behaviour. The campaigns are
-chained in *story* and in *weights*, but not in *lived experience*. Closing that
-loop is a separate and larger change.
+3. *More campaigns and more runs*, so run-specific anchoring has room to
+   dominate and the sample survives dropout.
+
+**Known limitation.** Rollouts use the base model plus the story; adapters are
+never loaded during play, only at scoring. The spec's silent weight update has
+therefore never influenced subsequent behaviour — campaigns are chained in story
+and weights but not in lived experience.
 """
 
 from __future__ import annotations
@@ -40,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -74,14 +77,12 @@ def build_dataset(tok, rows):
 
 
 def make_trainer_cls(beta: float, ref_model):
-    """Trainer whose loss is CE(action) + beta * KL(student || reference).
+    """Loss = CE(action) + beta * KL(student || reference).
 
     The reference is a SEPARATE frozen model, not a second adapter on the same
-    one. An earlier version loaded the reference adapter alongside the trainable
-    one and switched between them with `set_adapter`; that left the trainable
-    adapter frozen and the loss arrived with no gradient path
-    (`element 0 of tensors does not require grad`). Two 8B copies is 32 GB of
-    141 GB — there was never a reason to squeeze them into one model.
+    one. Loading the reference alongside the trainable adapter and switching
+    with `set_adapter` left the trainable adapter frozen and the loss arrived
+    with no gradient path. Two 8B copies is 32 GB of 141 GB.
     """
     from transformers import Trainer
 
@@ -89,9 +90,7 @@ def make_trainer_cls(beta: float, ref_model):
         def compute_loss(self, model, inputs, return_outputs=False, **kw):
             labels = inputs.pop("labels")
             out = model(**inputs)
-            logits = out.logits
-
-            shift_logits = logits[..., :-1, :].contiguous()
+            shift_logits = out.logits[..., :-1, :].contiguous()
             shift_labels = labels[..., 1:].contiguous()
             ce = F.cross_entropy(
                 shift_logits.view(-1, shift_logits.size(-1)),
@@ -102,9 +101,9 @@ def make_trainer_cls(beta: float, ref_model):
             else:
                 with torch.no_grad():
                     ref_logits = ref_model(**inputs).logits
-                # KL only where a target exists: the action tokens. Applying it
-                # to prompt positions would regularise toward reproducing the
-                # world's text, the same mistake the prompt mask prevents.
+                # KL only where a target exists. Regularising prompt positions
+                # would pull toward reproducing the world's text — the mistake
+                # the prompt mask exists to prevent.
                 mask = (shift_labels != IGNORE)
                 if mask.any():
                     sl = F.log_softmax(shift_logits[mask].float(), dim=-1)
@@ -115,12 +114,9 @@ def make_trainer_cls(beta: float, ref_model):
                     kl = torch.zeros((), device=ce.device)
                 loss = ce + beta * kl
 
-            # Fail loudly rather than deep in autograd: a frozen adapter shows
-            # up here as a loss with no grad_fn, which cost one whole run.
             if not loss.requires_grad:
                 raise RuntimeError(
-                    "loss has no grad_fn — the trainable adapter is frozen. "
-                    "Check is_trainable on the resumed adapter.")
+                    "loss has no grad_fn — the trainable adapter is frozen.")
             return (loss, out) if return_outputs else loss
 
     return KLTrainer
@@ -148,20 +144,17 @@ def train_campaign(model_id, rows, out_dir: Path, resume_from: Path | None,
             r=16, lora_alpha=32, lora_dropout=0.0, task_type="CAUSAL_LM",
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]))
 
-    # Separate frozen reference. base for campaign 1, this run's own previous
-    # adapter from campaign 2 on — the run-specific anchor is the entire point.
     ref_model = None
-    if beta > 0:
+    if beta > 0 and ref_from is not None:
         ref_base = AutoModelForCausalLM.from_pretrained(
             model_id, torch_dtype=torch.bfloat16, device_map="cuda")
-        ref_model = (PeftModel.from_pretrained(ref_base, str(ref_from))
-                     if ref_from is not None else ref_base)
+        ref_model = PeftModel.from_pretrained(ref_base, str(ref_from))
         ref_model.eval()
         for p in ref_model.parameters():
             p.requires_grad_(False)
 
-    cls = make_trainer_cls(beta, ref_model)
-    cls(model=model, train_dataset=ds,
+    make_trainer_cls(beta, ref_model)(
+        model=model, train_dataset=ds,
         args=TrainingArguments(output_dir="/tmp/_tr", per_device_train_batch_size=2,
                                num_train_epochs=3, learning_rate=1e-4,
                                logging_steps=1000, report_to=[], save_strategy="no",
@@ -175,39 +168,75 @@ def train_campaign(model_id, rows, out_dir: Path, resume_from: Path | None,
     torch.cuda.empty_cache()
 
 
+def corpus(c: int, i: int):
+    p = WORK / f"c{c}_kept_r{i}.jsonl"
+    if not p.exists():
+        return []
+    return [json.loads(l) for l in p.read_text().splitlines()]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("model")
-    ap.add_argument("--runs", type=int, default=6)
-    ap.add_argument("--campaigns", type=int, default=2)
+    ap.add_argument("--runs", type=int, default=8)
+    ap.add_argument("--campaigns", type=int, default=3)
     ap.add_argument("--beta", type=float, default=0.0)
-    ap.add_argument("--tag", required=True, help="sft or kl")
+    ap.add_argument("--tag", required=True)
+    ap.add_argument("--start", type=int, default=1,
+                    help="first campaign to train (2 when resuming a shared c1)")
+    ap.add_argument("--init-tag", default=None,
+                    help="tag whose campaign-1 adapters to start from")
     args = ap.parse_args()
 
-    log(f"variant '{args.tag}' | beta={args.beta} | chained over "
-        f"{args.campaigns} campaigns")
+    log(f"variant '{args.tag}' | beta={args.beta} | campaigns "
+        f"{args.start}..{args.campaigns}"
+        + (f" | init from '{args.init_tag}' c1" if args.init_tag else ""))
 
+    manifest = {}
     for i in range(args.runs):
         prev = None
-        for c in range(1, args.campaigns + 1):
-            src = WORK / f"c{c}_kept_r{i}.jsonl"
+        if args.start > 1 and args.init_tag:
+            seed_adapter = WORK / f"{args.init_tag}_adapter_r{i}_c1"
+            if seed_adapter.exists():
+                prev = seed_adapter
+            else:
+                log(f"run {i}: no shared c1 adapter, skipping run"); continue
+
+        for c in range(args.start, args.campaigns + 1):
             dst = WORK / f"{args.tag}_adapter_r{i}_c{c}"
+            rows = corpus(c, i)
+
+            if not rows:
+                # Selecting nothing means no update this campaign — not the end
+                # of the run. Carry the previous adapter forward so the run stays
+                # in the sample.
+                if prev is not None:
+                    log(f"run {i} c{c}: kept nothing, carrying {prev.name} forward")
+                    if not dst.exists():
+                        shutil.copytree(prev, dst)
+                    prev = dst
+                else:
+                    log(f"run {i} c{c}: kept nothing and no prior adapter, skipping")
+                continue
+
             if dst.exists():
                 prev = dst; continue
-            if not src.exists():
-                log(f"run {i} c{c}: no corpus, stopping this run"); break
-            rows = [json.loads(l) for l in src.read_text().splitlines()]
-            if not rows:
-                log(f"run {i} c{c}: kept nothing, stopping this run"); break
-            # Campaign 1 references the base (shared); campaign 2+ references
-            # this run's OWN previous adapter, which is what makes the anchor
-            # run-specific rather than common.
+
+            # beta applies only when a run-specific reference exists. Campaign 1
+            # has only the shared base, and anchoring every run there is the
+            # convergence trap this design exists to avoid.
+            use_beta = args.beta if prev is not None else 0.0
             log(f"run {i} c{c}: {len(rows)} examples, resume={prev is not None}, "
-                f"ref={'own_c%d' % (c-1) if prev else 'base'}")
+                f"beta={use_beta}, ref={'own_c%d' % (c-1) if prev else 'none'}")
             train_campaign(args.model, rows, dst, resume_from=prev,
-                           ref_from=prev, beta=args.beta)
+                           ref_from=prev, beta=use_beta)
             prev = dst
 
+        if prev is not None:
+            manifest[str(i)] = str(prev)
+
+    (WORK / f"{args.tag}_final.json").write_text(json.dumps(manifest, indent=2))
+    log(f"final adapters: {len(manifest)}/{args.runs} runs -> {args.tag}_final.json")
     sys.stdout.flush(); sys.stderr.flush(); os._exit(0)
 
 
