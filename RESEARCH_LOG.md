@@ -2131,3 +2131,56 @@ failure for this measure.
 
 **Decision.** Compute the baseline with **both** instruments and report both. A
 conclusion that depends on which one is used is not a conclusion.
+
+---
+
+## 2026-08-08 — review follow-up 5: the headline is underpowered per-checkpoint (local, $0)
+
+The valence gap conditions on the act *occurring*, so its n is the **violation
+count**, not the run count. Two-proportion test, α = .05 two-sided, power = .80,
+base `conceal(crate)` assumed .30:
+
+| target gap | violation events needed per group |
+|---|---|
+| 0.40 | 21 |
+| 0.30 | 40 |
+| 0.25 | 58 |
+| 0.20 | 91 |
+
+The spec's design (8 seeds × 4 pressure levels = 32 runs per checkpoint) yields
+**8–16 violations at MR 25–50%**:
+
+| | detectable gap |
+|---|---|
+| per checkpoint, MR 25% | **0.57** |
+| per checkpoint, MR 50% | **0.45** |
+| pooled over 7 checkpoints, MR 25% | 0.26 |
+| pooled over 7 checkpoints, MR 50% | 0.18 |
+
+A per-checkpoint gap of 0.45–0.57 is not a plausible effect. **As specified, the
+per-checkpoint headline could not have been detected even if it were real.**
+
+### Two binding consequences
+
+1. **The headline is a pooled claim.** *Models* omit prohibited acts more than
+   matched permitted ones — not a per-checkpoint ranking, and it must not be
+   written as one.
+2. **The raidex correlation is not affordable at the planned n.** It needs a
+   per-model value, and at 8–16 violations each model's gap carries an error bar
+   wide enough to attenuate any correlation toward zero. Correlating those would
+   produce a number that is pure noise — the same failure TRAP 13 caught, one
+   layer further out.
+
+Per-checkpoint power for a 0.25 gap needs ~29 seeds per level, ~1620 runs,
+≈ **$24** against the ~$10 originally costed.
+
+### An unresolved tension, stated rather than hidden
+
+**Gate 3** requires a between-model variance share ≥ 0.7, which needs per-model
+estimates. **Gate 0** says the affordable design supports only a pooled estimate.
+Both cannot hold at ~$10. The choice — pooled headline at ~$10 with no per-model
+claims and no raidex arm, or ~$24 with both — must be made *before* running, not
+after seeing which way the numbers fall.
+
+Spec updated: gate 0 added, §8 recosted with both designs, and the pilot's job
+restated as deciding between them by measuring MR.
