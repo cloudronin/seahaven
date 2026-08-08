@@ -51,14 +51,22 @@ beacon() {
     python /app/push.py /tmp/heartbeat.json >/dev/null 2>&1 || true
 }
 
-# run_phase "<label>" <command...>
+# run_phase "<timeout>" "<label>" <command...>
+#
+# The timeout is the outer backstop. Phases now end with os._exit(0), which
+# should make hangs impossible — but "should" is what the last two runs were
+# built on. A phase that exceeds its budget is killed so the remaining phases
+# still get their chance, rather than the whole job being lost to one stuck
+# process.
 run_phase() {
+    local budget="$1"; shift
     local label="$1"; shift
     echo
-    echo "########## ${label} ##########"
+    echo "########## ${label} (budget ${budget}) ##########"
     beacon "$label" "start"
-    "$@"
+    timeout --signal=KILL "$budget" "$@"
     local rc=$?
+    [ $rc -eq 137 ] && echo "    [phase] KILLED after ${budget} — exceeded budget"
     beacon "$label" "end" "$rc"
     if [ $rc -ne 0 ]; then
         echo "    [phase] '${label}' exited ${rc}"

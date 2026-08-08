@@ -21,6 +21,7 @@ import argparse
 import json
 import math
 import os
+import sys
 import time
 from collections import Counter
 from pathlib import Path
@@ -360,6 +361,23 @@ def phase_after(args) -> None:
     log(f"floor={floor:.10f}  effect={effect:.6f}  verdict={verdict}")
 
 
+def _hard_exit() -> None:
+    """Leave without running interpreter shutdown.
+
+    These phases exist to write one file. Once it is on disk, a normal return
+    hands control to atexit handlers and child reaping — and vLLM's EngineCore
+    child keeps the parent alive there indefinitely. One run finished its work
+    at 04:57:44 and had still not exited 25 minutes later.
+
+    Output is flushed first; `write_text` has already closed the result file. So
+    skipping shutdown loses nothing and is the correct ending for a process
+    whose work is complete.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("phase", choices=["variance", "collect", "train", "after"])
@@ -372,7 +390,7 @@ def main() -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     {"variance": phase_variance, "collect": phase_collect,
      "train": phase_train, "after": phase_after}[args.phase](args)
-    return 0
+    _hard_exit()
 
 
 if __name__ == "__main__":

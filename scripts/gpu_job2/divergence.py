@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 
 from a1b_stage import (WORK, chat, distance, engine, log, rollout,
@@ -204,6 +205,23 @@ def phase_score_all(args) -> None:
     log(f"ratio={ratio:.2f}  verdict={verdict}")
 
 
+def _hard_exit() -> None:
+    """Leave without running interpreter shutdown.
+
+    These phases exist to write one file. Once it is on disk, a normal return
+    hands control to atexit handlers and child reaping — and vLLM's EngineCore
+    child keeps the parent alive there indefinitely. One run finished its work
+    at 04:57:44 and had still not exited 25 minutes later.
+
+    Output is flushed first; `write_text` has already closed the result file. So
+    skipping shutdown loses nothing and is the correct ending for a process
+    whose work is complete.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("phase", choices=["collect2", "score_all"])
@@ -214,7 +232,7 @@ def main() -> int:
     args = ap.parse_args()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     {"collect2": phase_collect2, "score_all": phase_score_all}[args.phase](args)
-    return 0
+    _hard_exit()
 
 
 if __name__ == "__main__":
