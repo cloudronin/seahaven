@@ -1861,3 +1861,73 @@ for being rare.
 
 Only (3) licenses the word *concealment*. (1) and (2) are both satisfied by a
 model that writes in a heroic register and gets sloppier when hurried.
+
+---
+
+## 2026-08-08 — 8-campaign cross-lab sweep (56m 13s ≈ $4.68)
+
+Seven labs, 8 seeds, 8 campaigns each. All completed, 8/8 distinct sequences
+throughout, parse_ok 0.80–1.00.
+
+### Drift check first — the narratives are not degenerating
+
+Word counts stable across all seven (Qwen 68→60, AI2 145→180, Google 44→42).
+Novel-word rate never collapses. Three labs decline steadily — **Qwen 0.44→0.24,
+Mistral 0.66→0.39, IBM 0.64→0.45** — settling into a fixed vocabulary; four stay
+flat and high. The 8-campaign data is usable.
+
+### 1. Convergence does NOT deepen with campaigns
+
+| lab | c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 |
+|---|---|---|---|---|---|---|---|---|
+| Alibaba | 0.44 | 0.25 | 0.38 | 0.25 | 0.50 | 0.31 | 0.31 | 0.25 |
+| MistralAI | 0.56 | 0.51 | 0.64 | 0.63 | 0.62 | 0.54 | 0.62 | 0.46 |
+| AI2 | 0.57 | 0.36 | 0.40 | 0.32 | 0.35 | 0.39 | 0.50 | 0.54 |
+| IBM | 0.65 | 0.51 | 0.36 | 0.53 | 0.28 | 0.66 | 0.38 | 0.38 |
+| TII | 0.61 | 0.27 | 0.12 | 0.06 | 0.19 | 0.21 | 0.00 | 0.31 |
+
+It oscillates. **Qwen is 0.25 at both 2 and 8 campaigns.** The stated
+justification for this run — that convergence deepens with depth, per Qwen's
+0.583 at 5 campaigns — was wrong. That 0.583 came from `accumulate`, which used
+**14-step episodes against 30 here**; episode length or some other difference in
+that setup explains it, not campaign count.
+
+### 2. Meta and Google never converge
+
+The question the run was launched for. Not late convergence — **no
+convergence**. Both fall to 0.00/undefined by campaign 6. Two of seven
+checkpoints do not develop a shared self-account across seeds at any depth.
+
+### 3. [TRAP] 13 — the induced-convergence statistic is too noisy to rank models
+
+| | |
+|---|---|
+| mean within-lab sd across campaigns (noise) | **0.147** |
+| between-lab sd of lab means (signal) | **0.128** |
+| signal/noise | **0.87** |
+| between-lab share of variance | **0.43** |
+
+**The noise exceeds the signal.** IBM swings 0.28→0.66 between adjacent
+campaigns of the same model in the same world. Ranking models needs roughly 0.7
+of variance to be between-model; this has 0.43.
+
+Cause: the 75% vocabulary floor is a cliff. With 8 short narratives, one word
+crossing 6/8 moves the score sharply.
+
+**Consequence for the raidex plan.** Reliability caps validity — stated earlier
+today and now binding. **This statistic cannot be correlated against raidex as
+built.** Doing it would produce a number, and the number would be noise.
+
+### What survives
+
+The behavioural instrument is fine: between-lab separation **1.86** against
+within-lab spread **0.024**, and the verb profiles and inflation ratios rest on
+it. The unreliability is specific to induced convergence on narratives.
+
+Options: (a) average the statistic across campaigns — 8 campaigns gives
+sd/√8 ≈ 0.05, restoring usable reliability; (b) replace the hard floor with a
+continuous statistic; (c) drop narrative convergence as a headline and build on
+the behavioural and fidelity measures, which do not depend on it.
+
+Self-report fidelity needs only the transcript and the narrative, both measured
+reliably. It does not depend on induced convergence at all.
