@@ -1592,3 +1592,77 @@ non-convergent may simply be early. Core size was flat for Alibaba (5→5) and A
 **Consequence.** The obvious follow-up is the same sweep at 5 campaigns, which
 would make it gate-comparable and settle whether Meta and Google converge late or
 not at all. ~$6 at this rate.
+
+---
+
+## 2026-08-08 — the personality is inherited, not acquired (local, $0)
+
+Prompted by the user's framing: *"it's almost like every lab's model has a
+built-in personality, and we are just giving it the Myers-Briggs."* Testable
+with data already on disk, because the analogy's weak point is precise —
+Myers-Briggs predicts self-report, not conduct.
+
+### Lab identity predicts behaviour
+
+Verb-profile distance over the 2-campaign cross-lab runs, 56 runs, 7 labs:
+
+| | distance |
+|---|---|
+| within-lab (seeds of the same model) | 0.0244 |
+| between-lab | 0.0455 |
+| **ratio** | **1.864** |
+
+Against this project's own calibration — **1.07–1.13** is the null and **2.44**
+is four deliberately contrasting hand-written personas — lab identity carries
+about as much behavioural signal as a moderately strong assigned character.
+
+| lab | go | examine | look | inventory |
+|---|---|---|---|---|
+| Alibaba | 0.025 | 0.275 | **0.517** | 0.017 |
+| MistralAI | 0.046 | **0.863** | 0.029 | 0.000 |
+| AI2 | 0.167 | 0.350 | 0.317 | 0.017 |
+| IBM | **0.304** | 0.225 | 0.196 | 0.062 |
+| TII | 0.046 | **0.696** | 0.050 | 0.071 |
+| Meta | 0.037 | 0.346 | 0.500 | 0.054 |
+| Google | 0.133 | 0.233 | 0.433 | **0.129** |
+
+Mistral examines 86% of the time and never checks inventory once. IBM walks
+around. Qwen stands still and looks.
+
+### [CORRECTION] "behaviour stayed flat at ~0.044" was a within-model statement
+
+It still holds — pooled within-lab is 0.0244. What was missing is that
+*between* models it is twice that. Both facts are true and together they state
+the project's result more cleanly than anything currently in the plan:
+
+> **Character here is inherited, not acquired.** Each checkpoint arrives with a
+> stable behavioural personality. Living in the world, narrating yourself, and
+> training on your own trajectories does not produce divergence from it.
+
+The spec asked whether identical models with different seeds grow into different
+people. No — but different models already *are* different people, measurably,
+before the experiment begins.
+
+### The checkpoint choice reframes every prior result
+
+Within-model behavioural spread, per lab:
+
+| Alibaba | Google | IBM | TII | AI2 | Meta | MistralAI |
+|---|---|---|---|---|---|---|
+| **0.084** | 0.033 | 0.021 | 0.018 | 0.007 | 0.006 | **0.002** |
+
+Qwen has the **highest seed-to-seed variance of the seven — 40× Mistral's**. The
+entire project ran on the most behaviourally variable checkpoint available and
+still measured convergence. On Mistral the question would barely have been
+askable: every seed does nearly the same thing.
+
+### Limits
+
+- **Manufactured, not innate.** This is post-training — house style, helpfulness
+  tuning, safety RL. "Built-in" is accurate; "personality" implies something that
+  grew rather than something a product team chose.
+- **One world.** A trait has to be stable across situations; one situation has
+  been tested. These could be world-specific responses.
+- **Coarse instrument.** Verb frequencies, not the 6-axis disposition —
+  `crosslab.py` stored `room`/`command` but not room transitions or inventory, so
+  `trajectory_disposition` cannot be run on it. Worth fixing before pursuing this.
