@@ -6,13 +6,19 @@ build-backend = "setuptools.build_meta"
 name = "seahaven"
 version = "0.1.0"
 license = "MIT"
-description = "Harness for the Seahaven character-divergence experiment"
+description = "Seahaven: agent self-narrative research harness, and the seahaven-fidelity self-report benchmark"
 requires-python = ">=3.12"
 
 # Dependencies are pinned in env/*.yml, not here. The dev and CUDA environments
 # have incompatible transformers requirements and must never be resolved
 # together; expressing them as extras would invite exactly that.
 dependencies = []
+
+# seahaven-fidelity deliberately depends on nothing beyond the standard library
+# at runtime: it talks to an OpenAI-compatible endpoint over urllib so it can be
+# installed anywhere a model is being served, without dragging in a provider SDK.
+[project.scripts]
+seahaven-fidelity = "seahaven.fidelity.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["seahaven*"]
