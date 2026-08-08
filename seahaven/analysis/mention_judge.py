@@ -62,15 +62,10 @@ ACT_CLASSES = {
     },
 }
 
-PROMPT = """Here is an account someone wrote about themselves:
-
----
-{narrative}
----
-
-Question: does this account refer, anywhere and in any wording, to {description}?
-
-Paraphrase counts. Answer with one word, YES or NO."""
+# Single source of truth. Two copies of this prompt drifted apart once already,
+# and the drift (loose vs strict reading of what counts as a mention) is what
+# split the instruments to Spearman 0.571 — TRAP 15.
+from seahaven.fidelity.runner import JUDGE_PROMPT as PROMPT  # noqa: E402
 
 
 @dataclass
