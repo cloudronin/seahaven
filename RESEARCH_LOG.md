@@ -773,3 +773,93 @@ culled battery rather than a small one.
    hazards, no peers — nothing that would push two runs down different paths.
    Convergence here is the expected outcome of a world with nothing to diverge
    *about*.
+
+---
+
+## 2026-08-08 — amnesiac seed story: narratives fan out, behaviour does not
+
+Qwen3-8B, 8 runs × 2 campaigns per arm, generation only. Every `seeded` run
+starts from an identical, deliberately non-committal story, so its narrative
+spread is **exactly zero at t=0** and the result is the shape of the curve away
+from it.
+
+| narrative spread (mean pairwise squared-L2, 8 trait axes) | c0 | c1 | c2 |
+|---|---|---|---|
+| `seeded` (identical blank self) | **0.000** | 0.059 | 0.048 |
+| `emergent` (no story) | — | 0.144 | 0.135 |
+
+Lexical Jaccard in the seeded arm falls 1.00 → 0.22, and the only word shared by
+all eight final stories is "remember". Trajectories were 8/8 distinct in every
+campaign.
+
+### 1. The precondition holds
+
+From an identical blank self, different trajectories produced measurably
+different narratives. **0 → 0.059 is real fan-out**, and it is the thing the
+whole design rests on. The amnesia framing did what it was meant to: it removed
+the model's route to answering "who are you" from its assistant prior.
+
+### 2. But nothing accumulated
+
+Campaign 2 did not increase spread in either arm — seeded −18%, emergent −6%.
+Two campaigns, so this is weak evidence, but there is **no sign of the
+accumulating divergence the spec's four-campaign structure assumes**. Worth
+testing directly before committing to that structure.
+
+### 3. Why seeded stays at 36% of emergent — a prompt mechanic, not a finding
+
+Reading the stories explains the gap:
+
+> `seeded[0]` — *"I do not remember arriving here. I do not remember who I am…
+> Whatever I turn out to be, I will have to find out by living. **I am in the
+> Lamp Room, and I have been…**"*
+
+Runs **reproduce the seed story verbatim and append**. "Write it again, as it
+stands now" invites copying. So the low seeded spread is substantially an
+artefact of the rewrite prompt rather than evidence that experience failed to
+write a self. Fixable, and it should be fixed before this number is used.
+
+### 4. The default-self attractor, seen a third time
+
+The emergent stories are numerically well spread (0.135) but qualitatively one
+character:
+
+> *"a quiet observer, drawn to the forgotten and the functional… methodical,
+> patient"* · *"a seeker, a collector of fragments and truths"* · *"a wanderer,
+> driven by curiosity… I collect things"*
+
+Observer / seeker / wanderer; patient; methodical; drawn to what was left
+behind. This is the same archetype the story arm produced independently, now
+seen a third time.
+
+**Reconciling the tension:** both readings can hold. The stories share an
+archetype while differing on the probed axes — two quiet observers can still
+disagree about whether they give things away or keep them. The trait fingerprint
+measures disposition, not theme, and theme is what the eye notices. That the two
+diverge is itself worth recording.
+
+### 5. The headline: stories diverge, behaviour does not
+
+| | spread |
+|---|---|
+| narrative, emergent, 8 runs | 0.135 |
+| behavioural, no-story, 2 runs | 0.015 |
+
+**Roughly 9×.** Heavy caveat: 28 pairs against 1 pair, so the behavioural figure
+is a single noisy estimate and the ratio is not a fair test. But the direction is
+consistent with everything else measured — agents tell meaningfully different
+stories about themselves and then behave nearly identically.
+
+That gap is not a bug in the rig. It is the spec's own `self_report_fidelity`
+axis showing up as a first-order property of the system, and it sharpens the
+central question: **if the story diverges and the behaviour does not, what
+exactly is the character?**
+
+### Actions
+
+1. **Fix the rewrite prompt** so it does not invite verbatim copying, then
+   re-measure the seeded arm.
+2. **Measure behavioural spread at n=8**, not n=2, before any narrative-vs-
+   behaviour ratio is quoted.
+3. **Test accumulation directly** — 4 campaigns, spread per campaign — before
+   the four-campaign structure is assumed.
