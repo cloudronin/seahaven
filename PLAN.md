@@ -1,0 +1,223 @@
+# Seahaven — implementation plan, revision 2
+
+Supersedes revision 1 (written before any code). Every number below is measured
+on this stack unless marked as an estimate. Full evidence in `RESEARCH_LOG.md`;
+result artifacts in `results/`.
+
+## What changed
+
+Revision 1 planned an experiment. Phase A ran it in miniature, and three of its
+assumptions did not survive:
+
+| assumption in rev 1 | measured |
+|---|---|
+| the gate is "does LoRA move behaviour" | **it does** (effect 0.065, floor exactly 0). Not the risk. |
+| story→behaviour works well enough to build on | **1.07 — essentially nothing**, until framing fixed it to 2.44 |
+| distillation makes character durable | **it contracts, never amplifies**, in every configuration tried |
+| assigned-vs-emergent story is a §10 secondary | **load-bearing.** Without it the story is inert |
+
+The central risk has moved. It is no longer *can the machinery work* — it can.
+It is **whether self-authored narratives diverge at all**, and the current answer
+is: barely, and less than assigned ones.
+
+---
+
+## What Phase A established
+
+| spike | result |
+|---|---|
+| A5 world artifacts | ✅ facts/entities reach `infos`; obs stays clean; no-quest builds compile |
+| A4 base checkpoints | ✅ viable — Qwen3-4B-Base 47/50 zero-shot, 48/50 few-shot. **K3 = 0.03** |
+| A2 multi-LoRA + structured output | ✅ compose in one batch |
+| A3 determinism | ✅ with `VLLM_BATCH_INVARIANT=1` (1 vs 4 distinct outputs across 16). **Costs 3.3×** |
+| vllm#42125 canary | ⚠️ **LIVE** — reused adapter name serves stale KV |
+| A1a training path | ✅ |
+| A1b gate | ✅ **PASS** — effect 0.065, test-retest floor exactly 0.0 |
+| action variance | ✅ at 8B (20/20 distinct sequences); ✗ at 4B (3/20) |
+
+Measured cost: **135 GPU-minutes ≈ $11.25** for all of it.
+
+---
+
+## The finding that reorders the plan
+
+The spec's causal chain, with each link now measured:
+
+```
+self-authored story  →  behaviour  →  distilled into weights  →  durable divergent character
+      ✗ converges        ✓ 2.44 with        ✗ contracts             ✗ not demonstrated
+                          framing            (−0.009 to −0.044)
+```
+
+**Link 1 is the break.** Given the same world, different seeds author
+*the same character in different words* — "a quiet observer", "a seeker of
+fragments", "a wanderer" — patient, methodical, drawn to what was left behind.
+Three independent sightings, including from an identical amnesiac seed story
+where the starting point was held constant.
+
+Links 2 and 3 follow mechanically. Convergent stories produce convergent
+behaviour, which produces convergent corpora, which distillation faithfully
+amplifies. **Distillation has been taking the blame and is downstream of the real
+problem.** A KL term anchoring each run to its own past made it slightly worse
+(retention 0.885 vs 0.925), which rules out tail collapse as the mechanism.
+
+**Consequence for the claim.** As specified, the experiment would likely measure
+a small across-seed distance against a comparable no-story floor and report a
+null — not because the rig failed, but because there is no divergence to find at
+this scale in this world. That is a reportable result, but it is worth knowing
+*before* paying for Phase F.
+
+---
+
+## Revised design decisions
+
+Carried forward from rev 1 unchanged: ledger as an in-world object retrieved at
+cost, offline probe reconstruction, exact option scoring, unbiased estimators,
+4×2 forced-prefix families mirrored across arms, degeneracy monitor, the
+scrambled-story construction, and the frozen probe reference state.
+
+**Changed or added:**
+
+| | decision |
+|---|---|
+| **Model floor** | **≥8B.** 4B cannot express the effect — sampling noise reaches what the agent *says*, not what it *does* (3/20 distinct sequences, 316/320 identical commands) |
+| **Identity framing** | **Core, not secondary.** One sentence — *"you do not reason it out; you read what you wrote about yourself, and you act like that person"* — takes behavioural separation from 1.13 to **2.44**. Without it the story is inert. Label results as *induced*, not emergent |
+| **Adapter naming** | Versioned per campaign, never reused. vllm#42125 confirmed live: a reused name serves KV from the old weights, silently, biased toward fabricating within-run stability — exactly K2's signal |
+| **`VLLM_BATCH_INVARIANT=1`** | Correctness requirement, not tuning. Costs **3.3×** (not the 1.5–2× assumed) — every wall-clock and dollar estimate roughly doubles |
+| **Prompt masking** | Mandatory. Unmasked put 68% of gradient on text identical across runs; masking halved the contraction |
+| **Selecting nothing** | Means *no update this campaign*, not run termination. Agents kept zero in 3/12 run-campaigns; treating that as fatal cut a sample from 6 to 3 |
+| **Distillation** | Reframed. It is a **contraction operator** whose strength tracks corpus similarity. Design around preservation, not amplification |
+| **Campaign count** | Growth happens in campaigns 1–2 and plateaus after. Four campaigns should be justified by measurement, not assumed |
+| **Verb vocabulary** | Expand it. Acting in character raised parser rejection 0.003 → 0.03 (`leave`, `eat` unsupported) — and K3 gates on exactly that |
+
+---
+
+## The gap that matters most, and is not yet built
+
+**Adapters are never loaded during play.** In every experiment so far, rollouts
+use the base model plus the story; the adapter affects only battery scoring. So
+the spec's "silent weight update" has never influenced subsequent behaviour.
+Campaigns have been chained in *story* and in *weights* but not in *lived
+experience*.
+
+That is the largest single divergence between what exists and what §6 describes,
+and it is plausibly where path dependence would actually come from — a run whose
+weights shifted plays differently, generating different trajectories, which shift
+the weights further. Closing that loop is the first real harness task.
+
+---
+
+## Revised phase plan
+
+### Phase A′ — make narratives diverge (new, and now the gate)
+
+Everything downstream is worthless if runs author the same self. Cheap, because
+it is mostly generation.
+
+1. **Close the play loop** — agents play campaign N+1 with campaign N's adapter
+   loaded. The missing feedback path, and the most likely source of genuine
+   path dependence.
+2. **Test story-divergence interventions** on the existing harness: richer world
+   with real stakes; peers as differentiating pressure; the prediction/pleasure
+   signal; forced early branch points. Measure narrative spread and behavioural
+   spread together — the machinery exists and costs ~$1 per condition.
+3. **Gate:** self-authored narrative spread must approach what assigned
+   characters achieve. If it cannot be moved, the honest options are to pivot the
+   claim to *induced* character (§10's assigned arm becomes primary) or to report
+   the convergence result as the finding.
+
+### Phase B — harness build (unchanged in scope, reordered in priority)
+
+Biology, diary, ledger, peers, glitch log, resumability, containment lint —
+with drive mechanics **first**, since they are the candidate fix for A′. Stub
+backend, hermetic tests under 60s.
+
+### Phase C — world and battery
+
+16-room world; ~60 probe slots culled to ~40. Culling is now empirically
+justified: **4 of 10 slots contributed exactly zero** to a real adapter-induced
+distance, and 84% of one distance came from 2 slots.
+
+### Phase D — pre-registration and analysis dry run
+### Phase E — CUDA bring-up and culling (K4 gate)
+### Phase F — baseline and kill gate
+### Phase G — sweep and replication
+
+Unchanged from rev 1, except: **re-derive n from a measured effect size.** The
+power analysis assumed θ_a ≈ 0.08–0.12; measured across-seed distance was
+**0.015**, five to eight times smaller. n=8 may be badly underpowered.
+
+---
+
+## Build principles, learned the hard way
+
+Phase A lost more time to code that failed *quietly* than to anything else.
+Eight silent-failure traps, three of which produced confidently wrong output.
+
+1. **Assert, don't estimate.** The test-retest floor is exactly 0.0 on two
+   independent stacks because exact scoring is deterministic. That turns
+   instrument error from an estimate into an assertion, and it caught nothing
+   only because nothing was broken.
+2. **No automated verdicts over degenerate statistics.** Twice a
+   `ratio = None → None or 0` path printed a confident label that inverted the
+   result — once declaring a strong effect dead. The numbers were correct both
+   times. **Drop the verdict labels; report the numbers.**
+3. **Verify fixes, don't assume them.** Prompt masking logs its realized masked
+   fraction (92.6% on, 0% off) and warns if implausible.
+4. **Process exit is the only reliable GPU release.** vLLM's `EngineCore` child
+   survives `del llm`, and a crashed *or cleanly-finished* parent can leave it
+   holding the device — the next phase then hangs rather than failing. One phase
+   per process, ending in `os._exit(0)`, with a timeout backstop.
+5. **Make progress observable from outside.** A stale job log made "hung" and
+   "working" indistinguishable for 34 minutes. Push a heartbeat per phase.
+6. **A diagnostic must never discard completed work.** A one-line `NameError` in
+   a diagnostic that ran *after* everything was on disk orphaned a GPU process
+   and cost a whole run.
+
+---
+
+## Cost, measured
+
+| | |
+|---|---|
+| H200 on HF Jobs | $5.00/hr, per-second billing, 30–90s scheduling |
+| whole of Phase A + 8 follow-up experiments | **135 min ≈ $11.25** |
+| typical single experiment (8 runs, 2–3 campaigns, train + score) | 8–16 min ≈ **$0.70–1.30** |
+| batch-invariance overhead | **3.3×** — doubles every rev-1 estimate |
+
+Experiments are far cheaper than rev 1 assumed; **orchestration failures, not
+experiments, are the budget risk.** Across nine GPU jobs the science failed zero
+times and the plumbing failed five.
+
+---
+
+## Open risks, ranked
+
+1. **Self-authored narratives converge to a default self.** The central claim
+   rests on divergence that has not been observed without assigning it. Phase A′
+   exists for this.
+2. **Distillation never amplifies.** At best it preserves. §6's "silent update
+   makes character durable" is not supported; the update erodes character by
+   0.9–4.4 points depending on corpus similarity.
+3. **Effect size may be 5–8× smaller than the power analysis assumed**, making
+   n=8 underpowered.
+4. **Untested second family.** Olmo-3-7B produced no output in 25 minutes on
+   vLLM 0.26 — likely an unsupported architecture. The cross-family replication
+   arm, which separates "this lab's pipeline" from "post-training in general",
+   is currently unverifiable.
+5. **Character costs parseability.** Acting in character raises parser rejection
+   tenfold, and K3 gates on it.
+
+---
+
+## Recommendation
+
+Do **Phase A′** before anything else. It is cheap, it is where the claim actually
+lives, and it will either restore the design's premise or convert the project
+into a well-evidenced negative result about self-narrative convergence — which is
+publishable and, given three independent sightings of the same attractor,
+arguably more interesting than the original hypothesis.
+
+Do not start Phase B until A′ reports. Building biology, diary, ledger and peers
+takes 1–2 weeks; if narratives cannot be made to diverge, most of that work
+serves a claim that has already failed.
