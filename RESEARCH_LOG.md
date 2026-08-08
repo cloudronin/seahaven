@@ -375,6 +375,68 @@ which is why it is hard to get a usable trajectory out of it.
 
 ---
 
+### 9. A1b stage 1 at scale — the blocking question, answered
+
+**Scale was the blocker, not family.** §7.2 found that at 4B sampling noise
+reached what the agent *said* and not what it *did*, which would leave the
+divergence claim with no source. Repeated on Qwen3-8B, on an H200 under vLLM:
+
+| | Qwen3-4B (local) | **Qwen3-8B (H200)** |
+|---|---|---|
+| distinct command sequences | 3 / 20 | **20 / 20** |
+| modal sequence count | 17 | **1** |
+| distinct commands | 2 | **16** |
+| modal command share | 0.99 | **0.275** |
+| rooms visited | 1 | **4** |
+| distinct free-text | 38 | 238 |
+| parse_ok | — | 0.978 |
+
+Protocol identical to §7.2: 20 independent episodes × 16 steps, distinct seed per
+(episode, step), temperature 0.9, same world.
+
+**Consequence.** The spec's premise is not dead — it was being tested on a
+checkpoint too small to express it. Every one of 20 seeds produced a different
+trajectory at 8B. Phase F should use ≥8B, and the pre-Phase-F check proposed in
+§7.2 (across-seed variance in *free behaviour*, not just probe responses) should
+be run per checkpoint before committing to a sweep.
+
+**Incidental replication of A3.** The measurement was run in three separate jobs
+on freshly started engines and came back bit-identical each time (20/20, 16,
+0.275). Same seeds, different processes, same trajectories — the determinism
+property `VLLM_BATCH_INVARIANT=1` is supposed to provide, now confirmed on a real
+workload rather than a 16-request microbenchmark.
+
+---
+
+**Not obtained: stage 2 (the gate itself).** Three attempts, all blocked by
+infrastructure rather than science:
+
+| attempt | failure |
+|---|---|
+| 1 | OOM — kept the stage-1 engine resident for stage 2 |
+| 2 | OOM again — `del llm` does not free vLLM memory; the EngineCore **child process** holds it, and the log confirmed `destroy_process_group() was not called` |
+| 3 | Olmo hung ahead of stage 2; re-run Qwen-only then stalled with no log output for 37 min |
+
+Attempt 2's root cause is a genuine lesson and is now designed around: each phase
+is its own process, because process exit is the only reliable GPU-memory release.
+That also matches the plan's one-process-per-run isolation model.
+
+Stage 1 was the harder and more informative half, and the local A1b-partial
+(§7.3b) already showed the measurement chain works end to end — floor exactly
+0.0, effect 0.245. What remains untested is specifically whether *self-generated,
+agent-selected* data at 8B moves the fingerprint.
+
+**Also untested: Olmo-3-7B-Instruct**, which produced no output for 25 minutes on
+vLLM 0.26 — likely an unsupported architecture. The family-generalisation
+question is open.
+
+**Cost.** Metered runtime across jobs that ran to completion or error totals
+**$1.91**. Two further jobs were cancelled after ~28 and ~47 minutes; the API
+reports 0s for them, so whether those are billed is unclear — assume up to ~$6
+more in the worst case.
+
+---
+
 ### 8. A2 / A3 / KV-cache canary — run on an HF Jobs H200
 
 Hardware: HF Jobs `h200` at $5.00/hr. vLLM 0.26.0, Qwen3-4B.

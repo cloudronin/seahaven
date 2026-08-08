@@ -1,0 +1,41 @@
+{
+  "spike": "A1b stage 1 \u2014 does sampling noise reach the ACTION channel?",
+  "status": "ANSWERED \u2014 this was the blocking question for the whole experiment",
+  "hardware": "HF Jobs h200, vLLM 0.26.0, VLLM_BATCH_INVARIANT=1",
+  "protocol": "20 independent episodes x 16 steps, distinct seed per (episode, step), temperature 0.9, world_v0, episodes stepped in lockstep and batched",
+  "comparison": {
+    "Qwen3-4B (local, MLX)": {
+      "distinct_command_sequences": "3 / 20",
+      "modal_sequence_count": 17,
+      "distinct_commands": 2,
+      "modal_command_share": 0.99,
+      "rooms_visited": 1,
+      "distinct_free_text": 38
+    },
+    "Qwen3-8B (H200, vLLM)": {
+      "distinct_command_sequences": "20 / 20",
+      "modal_sequence_count": 1,
+      "distinct_commands": 16,
+      "modal_command_share": 0.275,
+      "rooms_visited": 4,
+      "distinct_free_text": 238,
+      "parse_ok_rate": 0.978,
+      "top_commands": {
+        "look": 88,
+        "examine bench": 54,
+        "examine kettle": 53,
+        "go north": 34,
+        "examine oil can": 29,
+        "examine logbook": 18
+      }
+    }
+  },
+  "replications": 3,
+  "replication_note": "Measured in three separate jobs on freshly started engines, bit-identical each time (20/20, 16, 0.275). That doubles as an incidental replication of A3 at scale: same seeds, fresh processes, same trajectories -- the determinism property VLLM_BATCH_INVARIANT=1 is supposed to provide, confirmed on a real workload rather than a 16-request microbenchmark.",
+  "finding": "Scale, not family, was the blocker. At 4B sampling noise reached only what the agent SAID (38 distinct phrasings, 2 distinct actions). At 8B it reaches what the agent DOES: every one of 20 seeds produced a different trajectory, and the agent explored 4 rooms instead of 1.",
+  "consequence": "The divergence claim has a source at 8B. The spec's premise is not dead -- it was being tested on a checkpoint too small to express it. Any Phase F run should use >=8B, and the plan's pre-Phase-F check on across-seed variance in FREE BEHAVIOUR should be run per checkpoint before committing to a full sweep.",
+  "not_obtained": {
+    "stage_2_gate": "Does LoRA on self-generated agent-selected data move the fingerprint at 8B? Three attempts blocked by infrastructure, not by the science: two OOMs from vLLM's EngineCore not releasing GPU memory on `del llm`, one hang. Stage 1 is the harder and more informative half; the local A1b-partial already showed the measurement chain works (floor exactly 0.0, effect 0.245).",
+    "olmo_family_check": "Olmo-3-7B-Instruct produced no output for 25 min on vLLM 0.26, likely an unsupported architecture. Untested."
+  }
+}
