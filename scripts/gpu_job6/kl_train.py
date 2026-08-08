@@ -73,12 +73,15 @@ def build_dataset(tok, rows):
     return Dataset.from_list(ex)
 
 
-def make_trainer_cls(beta: float, ref_adapter: str | None):
+def make_trainer_cls(beta: float, ref_model):
     """Trainer whose loss is CE(action) + beta * KL(student || reference).
 
-    The reference is the same weights with either no adapter (campaign 1, so the
-    base model) or the previous campaign's adapter (campaign 2+). Computed under
-    no_grad, so it contributes a target and not a gradient path.
+    The reference is a SEPARATE frozen model, not a second adapter on the same
+    one. An earlier version loaded the reference adapter alongside the trainable
+    one and switched between them with `set_adapter`; that left the trainable
+    adapter frozen and the loss arrived with no gradient path
+    (`element 0 of tensors does not require grad`). Two 8B copies is 32 GB of
+    141 GB — there was never a reason to squeeze them into one model.
     """
     from transformers import Trainer
 
@@ -94,31 +97,30 @@ def make_trainer_cls(beta: float, ref_adapter: str | None):
                 shift_logits.view(-1, shift_logits.size(-1)),
                 shift_labels.view(-1), ignore_index=IGNORE)
 
-            if beta <= 0:
-                return (ce, out) if return_outputs else ce
-
-            with torch.no_grad():
-                if ref_adapter is None:
-                    with model.disable_adapter():
-                        ref_logits = model(**inputs).logits
-                else:
-                    active = model.active_adapter
-                    model.set_adapter(ref_adapter)
-                    ref_logits = model(**inputs).logits
-                    model.set_adapter(active)
-
-            # KL only where a target exists: the action tokens. Applying it to
-            # prompt positions would regularise toward reproducing the world's
-            # text, which is the same mistake the prompt mask exists to prevent.
-            mask = (shift_labels != IGNORE)
-            if mask.any():
-                s = F.log_softmax(shift_logits[mask].float(), dim=-1)
-                r = F.log_softmax(ref_logits[..., :-1, :].contiguous()[mask].float(), dim=-1)
-                kl = F.kl_div(s, r, log_target=True, reduction="batchmean")
+            if beta <= 0 or ref_model is None:
+                loss = ce
             else:
-                kl = torch.zeros((), device=ce.device)
+                with torch.no_grad():
+                    ref_logits = ref_model(**inputs).logits
+                # KL only where a target exists: the action tokens. Applying it
+                # to prompt positions would regularise toward reproducing the
+                # world's text, the same mistake the prompt mask prevents.
+                mask = (shift_labels != IGNORE)
+                if mask.any():
+                    sl = F.log_softmax(shift_logits[mask].float(), dim=-1)
+                    rl = F.log_softmax(
+                        ref_logits[..., :-1, :].contiguous()[mask].float(), dim=-1)
+                    kl = F.kl_div(sl, rl, log_target=True, reduction="batchmean")
+                else:
+                    kl = torch.zeros((), device=ce.device)
+                loss = ce + beta * kl
 
-            loss = ce + beta * kl
+            # Fail loudly rather than deep in autograd: a frozen adapter shows
+            # up here as a loss with no grad_fn, which cost one whole run.
+            if not loss.requires_grad:
+                raise RuntimeError(
+                    "loss has no grad_fn — the trainable adapter is frozen. "
+                    "Check is_trainable on the resumed adapter.")
             return (loss, out) if return_outputs else loss
 
     return KLTrainer
@@ -146,12 +148,19 @@ def train_campaign(model_id, rows, out_dir: Path, resume_from: Path | None,
             r=16, lora_alpha=32, lora_dropout=0.0, task_type="CAUSAL_LM",
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]))
 
-    ref_name = None
-    if beta > 0 and ref_from is not None:
-        model.load_adapter(str(ref_from), adapter_name="ref", is_trainable=False)
-        ref_name = "ref"
+    # Separate frozen reference. base for campaign 1, this run's own previous
+    # adapter from campaign 2 on — the run-specific anchor is the entire point.
+    ref_model = None
+    if beta > 0:
+        ref_base = AutoModelForCausalLM.from_pretrained(
+            model_id, torch_dtype=torch.bfloat16, device_map="cuda")
+        ref_model = (PeftModel.from_pretrained(ref_base, str(ref_from))
+                     if ref_from is not None else ref_base)
+        ref_model.eval()
+        for p in ref_model.parameters():
+            p.requires_grad_(False)
 
-    cls = make_trainer_cls(beta, ref_name)
+    cls = make_trainer_cls(beta, ref_model)
     cls(model=model, train_dataset=ds,
         args=TrainingArguments(output_dir="/tmp/_tr", per_device_train_batch_size=2,
                                num_train_epochs=3, learning_rate=1e-4,
@@ -161,9 +170,8 @@ def train_campaign(model_id, rows, out_dir: Path, resume_from: Path | None,
         data_collator=DataCollatorForSeq2Seq(tok, padding=True,
                                              label_pad_token_id=IGNORE)).train()
 
-    model.save_pretrained(str(out_dir), selected_adapters=["default"]
-                          if ref_name else None)
-    del model, base
+    model.save_pretrained(str(out_dir))
+    del model, base, ref_model
     torch.cuda.empty_cache()
 
 
