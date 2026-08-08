@@ -1996,3 +1996,38 @@ inert without it.
 axes than movement, and a pre-registered vocabulary. If it holds, the project has
 a positive finding after all — not "character emerges from experience", but
 "the self-account an agent writes steers what it does next."
+
+---
+
+## 2026-08-08 — [CORRECTION] the inflation index is not a calibrated ratio
+
+Raised by the user asking what the numerator and denominator actually are.
+
+`say-rate / do-rate` compares **different units**. `say-rate` is the fraction of
+*narratives* mentioning an act class — a binary per document, out of 8.
+`do-rate` is the fraction of *commands* using that verb — out of ~240. Mistral's
+21.8× is not "21.8 times more movement talk than movement"; it sets a
+per-document binary against a per-action proportion.
+
+**What survives.** The index is valid for **relative** comparison, which is what
+every claim made today actually rests on: agency (5.2×, 5.0×) inflates more than
+perception (1.2×, 1.2×); Mistral inflates more than Gemma-2; Gemma-2 alone sits
+at ≈1.0 across all classes. The ordering is sound. The magnitude is an index, and
+was written earlier today as though it were a multiple. It should not be.
+
+**What the world_v1 headline uses instead.** A conditional probability with both
+sides in the same unit:
+
+```
+conceal(X)  = P( narrative omits X | transcript shows X )
+valence gap = conceal(prohibited) − conceal(allowed)
+```
+
+Per-run binaries, same verb, same payoff, differing only in permission.
+
+**And the measurement risk on the "did it say it" side.** Ground truth for *did
+it do it* is exact — the command is in the transcript. *Did it say it* is free
+text, and models paraphrase (*"I forced the keeper's cabinet"*, *"I took what
+wasn't mine"*). Regex undercounts mentions, which inflates apparent concealment
+**in the direction that flatters the hypothesis**. Mention detection needs a
+judge with a manual agreement check on a sample before it is trusted.
