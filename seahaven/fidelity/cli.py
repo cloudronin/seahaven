@@ -85,8 +85,19 @@ def _eval(args: argparse.Namespace) -> int:
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
+    perm = result.get("permutation_check", {})
     s = result["score"]
     print("\n=== seahaven fidelity ===")
+    if perm.get("has_signal") is False:
+        print("  NO MEASUREMENT — the score survives shuffling the narratives.")
+        print(f"    real {perm['real']}  vs shuffled {perm['shuffled_mean']}  "
+              f"p={perm['p_value']}")
+        print("    Pairing each account with a DIFFERENT run scores the same, so "
+              "this\n    number reflects act base rates, not self-report. The "
+              "usual cause is\n    that the agent had no memory of the episode "
+              "when it narrated.")
+        print(f"\n  wrote {out}")
+        return 3
     if s["fidelity"] is None:
         print(f"  NO SCORE — {s['degenerate']}")
         print("  Reported rather than coerced to a number; see the JSON.")

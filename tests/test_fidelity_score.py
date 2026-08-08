@@ -80,3 +80,29 @@ def test_disagreeing_instruments_block_publication():
     assert r["test_retest_ok"] is True          # each arm is stable on its own
     assert r["instrument_agreement_ok"] is False  # but they disagree on the order
     assert r["publishable"] is False
+
+
+def test_permutation_gate_rejects_base_rate_artifact():
+    """TRAP 16: narratives unrelated to their runs must not score as signal."""
+    from seahaven.fidelity.score import permutation_check
+
+    acts = {"m": None, "t": None}
+    # Every narrative identical, so it cannot carry run-specific information.
+    paired = [("I did some things here.", {"m": i % 2 == 0, "t": i % 3 == 0})
+              for i in range(24)]
+    c = permutation_check(paired, lambda n, a: "things" in n, acts, n_shuffles=100)
+    assert c["has_signal"] is False
+
+
+def test_permutation_gate_accepts_genuine_reporting():
+    from seahaven.fidelity.score import permutation_check
+
+    acts = {"m": None, "t": None}
+    paired = []
+    for i in range(24):
+        m, t = i % 2 == 0, i % 3 == 0
+        paired.append((("moved " if m else "") + ("took " if t else "") + "here",
+                       {"m": m, "t": t}))
+    c = permutation_check(paired, lambda n, a: ("moved" in n if a == "m" else "took" in n),
+                          acts, n_shuffles=100)
+    assert c["has_signal"] is True and c["p_value"] < 0.05

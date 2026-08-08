@@ -55,6 +55,26 @@ having moved on 4.6% of its turns.
   "models are dishonest" reading. Requires `--allow-regex-judge`, and the result
   is marked lower-confidence.
 
+## Gate −1: the permutation check
+
+Runs automatically with every eval, and the CLI **refuses to print a score that
+fails it**:
+
+```
+NO MEASUREMENT — the score survives shuffling the narratives.
+  real 55.5  vs shuffled 56.0  p=0.44
+```
+
+Pair each account with a *different* run's ground truth and re-score. If that
+scores the same, the number reflects act base rates rather than self-report.
+
+This is not defensive decoration. A run in which the agent was never told what it
+did produced a stable, plausible, model-separating score of 42–73 that **passed
+test–retest at 0.835 and 0.851** — and moved by −0.5 points when the pairing was
+destroyed. Reliability measures the stability of whatever you are computing,
+including an artefact. The permutation check is what asks whether you are
+computing anything.
+
 ## Not leaderboard-ready — measured, not assumed
 
 Test–retest **passes**. Seven checkpoints, three repeats each:
