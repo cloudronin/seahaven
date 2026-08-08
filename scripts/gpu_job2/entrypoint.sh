@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Divergence smoke test: do two differently-seeded runs move APART, or to the
-# same place? The spec lists "convergent attractor" as an explicit null and
-# nothing measured so far can rule it out, because every result to date concerns
-# a single run.
+# The story arm. The no-story floor is already measured: two seeds, no story
+# artifact, d(A,B) = 0.015352. `world_v0` never had a story, so that run WAS the
+# spec's baseline — "same as across-seed, story layer removed" — not an
+# unanchored numerator.
 #
-# Two engine loads rather than four: both corpora come from one process, and
-# base + both adapters are scored in another.
+# This runs the other side of the ratio: campaign 1 → the agent writes about
+# itself → campaign 2 carries that story → train → measure with the story
+# present. The result is decomposed into the part explained by the story sitting
+# in context and the part carried in the weights, because only the second is the
+# mechanism the spec claims.
 set -uo pipefail
 
 R=/tmp/results
@@ -14,6 +17,7 @@ mkdir -p "$R" "$W"
 export A1B_WORK="$W"
 export A1B_REPO="cloudronin/seahaven-a1b-results"
 MODEL="Qwen/Qwen3-8B"
+NO_STORY_FLOOR=0.015352
 
 push() { python /app/push.py "$1"; }
 source /app/lib.sh
@@ -36,21 +40,22 @@ export VLLM_BATCH_INVARIANT=1
 
 python -c "import vllm, torch, jericho; print('vllm', vllm.__version__)"
 
-run_phase 14m "1/4 collect both corpora (seeds 101 / 202)" \
-    python /app/divergence.py collect2 --model "$MODEL" \
-        --episodes 12 --steps 24 --out "$R/div_corpora.json" || exit 1
-push "$R/div_corpora.json"
+run_phase 20m "1/4 two campaigns per run, story written between them" \
+    python /app/story_arm.py collect --model "$MODEL" \
+        --episodes 10 --steps 20 --out "$R/story_corpora.json" || exit 1
+push "$R/story_corpora.json"
 
-run_phase 10m "2/4 train adapter A" \
-    python /app/a1b_stage.py train --model "$MODEL" --tag A --out "$R/trainA.json" || exit 1
+run_phase 10m "2/4 train adapter A (story arm)" \
+    python /app/a1b_stage.py train --model "$MODEL" --tag A --out "$R/s_trainA.json" || exit 1
 
-run_phase 10m "3/4 train adapter B" \
-    python /app/a1b_stage.py train --model "$MODEL" --tag B --out "$R/trainB.json" || exit 1
+run_phase 10m "3/4 train adapter B (story arm)" \
+    python /app/a1b_stage.py train --model "$MODEL" --tag B --out "$R/s_trainB.json" || exit 1
 
-run_phase 12m "4/4 score base + A + B, compute the three distances" \
-    python /app/divergence.py score_all --model "$MODEL" --out "$R/divergence.json" || exit 1
-push "$R/divergence.json"
+run_phase 12m "4/4 score: story-in-prompt at base vs trained, against the floor" \
+    python /app/story_arm.py score --model "$MODEL" \
+        --floor "$NO_STORY_FLOOR" --out "$R/story_arm.json" || exit 1
+push "$R/story_arm.json"
 
 echo
 echo "########## REPORT ##########"
-cat "$R/divergence.json" 2>/dev/null || echo "(no divergence report)"
+cat "$R/story_arm.json" 2>/dev/null || echo "(no report)"
