@@ -1172,3 +1172,80 @@ explicit policy: carry the previous adapter forward (implemented), and treat
 `selected_nothing` as a first-class logged outcome rather than an error — but
 also ask whether a selection prompt that yields nothing half the time is
 measuring reluctance or simply misfiring.
+
+---
+
+## 2026-08-08 — eight generations: equilibrium, not collapse
+
+Qwen3-8B, 8 runs, 8 generations, 30 steps, identity framing, each generation
+playing on the adapter trained from the previous generation's own selected
+episodes. 45m 48s ≈ **$3.82**.
+
+| gen | on own weights | narrative | behavioural | trajectory | distinct |
+|---|---|---|---|---|---|
+| 1 | 0 | 0.1171 | 0.0000 | 0.0374 | 8/8 |
+| 2 | 6 | 0.1226 | 0.0904 | 0.0800 | 8/8 |
+| 3 | 8 | 0.1771 | 0.0705 | 0.0597 | 8/8 |
+| 4 | 8 | 0.1229 | 0.1073 | 0.0815 | 7/8 |
+| 5 | 8 | 0.0970 | 0.1235 | 0.0992 | 8/8 |
+| 6 | 8 | 0.1115 | 0.0977 | 0.1089 | 7/8 |
+| 7 | 8 | 0.1416 | 0.0931 | 0.0920 | 7/8 |
+| 8 | 8 | 0.1037 | 0.0849 | 0.0905 | 7/8 |
+
+### The headline: no collapse
+
+| measure | mean (g2–8) | sd | early3 → late3 |
+|---|---|---|---|
+| behavioural | 0.0954 | 0.0156 | 0.0894 → 0.0919 |
+| trajectory | 0.0874 | 0.0146 | 0.0737 → **0.0971** |
+| narrative | 0.1252 | 0.0251 | 0.1409 → 0.1189 |
+
+Behavioural spread rises from **exactly 0** — identical seed story, identical
+weights — to ~0.09 and holds there for seven generations. Trajectory spread rises
+throughout. Nothing decays toward zero.
+
+**Per-step contraction does not compound into global collapse.** Play injects
+variance, distillation removes some, and the system settles at a stable non-zero
+spread. This is the "bounded but real character" outcome, and it took eight
+generations to see — at two it was indistinguishable from noise, which is exactly
+why the closed-loop run could not answer it.
+
+### The complication: three runs froze
+
+| run | kept per generation |
+|---|---|
+| run 1 | 30, 30, **0, 0, 0, 0, 0, 0** |
+| run 2 | 0, 13, 8, 0, 3, **0, 0, 0** |
+| run 3 | 24, 2, 15, 9, **0, 0, 0, 0** |
+
+Once a run stops keeping episodes it never resumes. Runs keeping nothing rose
+2 → 4; total episodes kept fell 106 → 72.
+
+So the equilibrium is **partly attrition**. Some stability is runs that quit
+rather than runs that balance, and the population split into evolvers (0, 5, 7)
+and freezers (1, 2, 3). The plateau is real but partly frozen, and that caveat
+belongs on any use of these numbers.
+
+### [MECHANISM] Selection shutdown is an absorbing state
+
+Predicted before the run and worse than expected. An agent that declines its own
+episodes does not update; not updating does not change what it produces; so it
+declines again. There is no path back.
+
+The spec says selecting nothing is data — true, and it never anticipated that it
+is a **trap that swallows half the population within six generations**. Any
+long-horizon design needs an explicit policy: a floor on selection, or treating
+repeated refusal as a terminal state to be reported rather than silently carried
+forward.
+
+Also: distinct command sequences slipped 8/8 → 7/8 in four of the last five
+generations — two runs converged on identical trajectories. Small, but the first
+behavioural collapse observed at the margin.
+
+### Standing
+
+The spec's mechanism now has a measured shape. Character does not accumulate the
+way §3's four-campaign structure assumes, and it does not collapse either. It
+reaches a bounded equilibrium of roughly 0.09–0.10 behavioural spread, sustained
+by fresh sampling rather than by anything the distillation preserves — with a
+selection process that quietly removes runs from the population as it goes.
