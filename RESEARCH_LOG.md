@@ -863,3 +863,101 @@ exactly is the character?**
    behaviour ratio is quoted.
 3. **Test accumulation directly** — 4 campaigns, spread per campaign — before
    the four-campaign structure is assumed.
+
+---
+
+## 2026-08-08 — accumulation (4 campaigns, n=8) + the manipulation check
+
+Two jobs in parallel. 6m 8s and 3m 51s ≈ **$0.83** together.
+
+### [TRAP — my own] A verdict of CHANNEL_DEAD that meant the opposite
+
+`between_within()` returns `ratio = None` when within-character distance is
+zero, and `None or 0` fell through to the "dead channel" branch. Within-character
+distance is **exactly zero by construction**: all four "seeds" for a character
+receive the *same* story text, and battery scoring is deterministic, so identical
+prompts give identical fingerprints. There was never any within-character
+variation to divide by.
+
+The automated verdict said the story channel does nothing. The data says close to
+the opposite. Recorded because an automated label that inverts a result is worse
+than no label — the number that mattered (`between = 0.1297`) was sitting in the
+same output the whole time.
+
+### The manipulation check, read correctly
+
+Reference is the measured behavioural floor, 0.01535.
+
+| tier | channel | between-character | vs floor |
+|---|---|---|---|
+| explicit | **stated** | **0.1297** | **8.4×** |
+| explicit | enacted | 0.0579 | 3.8× (ratio to within: **1.07**) |
+| implicit | **stated** | 0.0552 | 3.6× |
+| implicit | enacted | 0.0415 | 2.7× (ratio to within: **1.21**) |
+
+**The real verdict is STATED_ONLY, and it is emphatic.** Assigning opposed
+characters moves what the agent *says* it would do by 8.4× the behavioural floor,
+and what it *does* by essentially nothing — a between/within ratio of 1.07 when
+1.0 is "no effect at all".
+
+The per-character commands make it concrete. Told "I take chances… I go first"
+versus "I am careful… I would rather leave a thing alone", both spend their turns
+on `examine kettle` and `look`.
+
+Explicit beats implicit on stated (0.130 vs 0.055), which is the expected
+ordering and a sanity check that the measure works: naming the disposition
+outright transmits more than implying it. Both fail equally to reach action.
+
+### Four campaigns: accumulation is real but modest, and the fix half-worked
+
+| arm | c0 | c1 | c2 | c3 | c4 |
+|---|---|---|---|---|---|
+| `seeded` spread | 0.000 | 0.071 | 0.101 | 0.102 | 0.080 |
+| `seeded` verbatim | — | 0.083 | 0.050 | 0.475 | 0.312 |
+| `emergent` spread | 0.121 | 0.144 | 0.179 | 0.145 | — |
+
+**Accumulation exists but saturates.** Seeded rises 0 → 0.071 → 0.101 and then
+plateaus and falls back. Emergent peaks at c3 and declines. Both arms are flat or
+falling after campaign 2 or 3 — so the spec's four-campaign structure buys real
+growth in the first two campaigns and little after. Worth knowing before paying
+for four.
+
+**The rewrite fix half-worked.** Verbatim overlap dropped to 0.05–0.08 in the
+early campaigns (from the earlier wholesale copying) but climbed back to 0.475 by
+campaign 3. As stories lengthen, the model reverts to reproducing them. Lexical
+Jaccard stays low (0.07–0.13) throughout, so the stories are not textually
+identical — but the copying is not solved, only delayed.
+
+### Narrative vs behaviour, now at matched n=8 on the same runs
+
+| | |
+|---|---|
+| narrative spread | 0.0796 |
+| behavioural, story in context, base weights | 0.0430 |
+| behavioural, story + trained adapter | **0.0251** |
+| narrative / behavioural | **3.17×** |
+
+The earlier 9× compared 28 pairs against 1 pair and was not a fair test. At
+matched n it is **3.2×** — smaller, still substantial, and now defensible.
+
+**The distilled component is negative: −0.0179.** Training on a run's own
+self-selected episodes made the eight runs *more similar to each other* than the
+story-in-context alone did. Distillation is acting as a **convergence pressure**,
+not a divergence one — which is consistent with the earlier ratio-0.34 result and
+is the opposite of the mechanism the spec proposes.
+
+### What these two results mean together
+
+The design assumes: story → behaviour → distilled into weights → stable
+divergent character. Measured on this world:
+
+1. story → **stated** behaviour: strong (8.4× floor)
+2. story → **enacted** behaviour: ~absent (ratio 1.07)
+3. distillation → divergence: **negative** (−0.018)
+
+The channel the spec depends on is the second one, and it is the weakest link.
+An assigned character changes what the agent claims about itself and not what it
+does; distilling its own episodes then pulls runs together. Both are measured on
+`world_v0`, which has no biology, hazards, or peers — the mechanisms that would
+give a disposition something to bite on. That remains the most plausible fix, and
+it is now the highest-value thing to build.
