@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-# Do models from different labs converge on DIFFERENT characters?
+# Do models from different labs converge on DIFFERENT characters? -- 8 campaigns.
+#
+# The 2-campaign run answered the headline (Qwen's quiet observer is
+# Qwen-specific: zero core overlap with any other lab) but left two things open.
+# Qwen scored 0.25 here against 0.583 from a 5-campaign run, so convergence
+# deepens with campaigns and none of these numbers were gate-comparable. And
+# Meta and Google showed no inducible core at all -- late convergence and no
+# convergence are indistinguishable at 2 campaigns.
 #
 # Self-authored narratives converge (induced convergence 0.583 vs 0.050 for four
 # contrasting personas). Every Qwen3-8B run in this world writes a version of the
@@ -18,7 +25,7 @@ set -uo pipefail
 R=/tmp/results; W=/tmp/a1b; mkdir -p "$R" "$W"
 export A1B_WORK="$W"
 export A1B_REPO="cloudronin/seahaven-a1b-results"
-OUT="$R/crosslab.json"
+OUT="$R/crosslab8.json"   # 2-campaign run lives in crosslab.json; do not clobber it
 
 push() { python /app/push.py "$1"; }
 source /app/lib.sh
@@ -57,9 +64,9 @@ for ENTRY in "${MODELS[@]}"; do
     LAB="${ENTRY%%|*}"; MODEL="${ENTRY##*|}"
     # `|| true`: one dead checkpoint must not end the sweep. crosslab.py records
     # its own failure row, so the report distinguishes "failed" from "not asked".
-    run_phase 25m "$LAB — $MODEL" \
+    run_phase 40m "$LAB — $MODEL" \
         python /app/crosslab.py --model "$MODEL" --lab "$LAB" \
-            --runs 8 --steps 30 --campaigns 2 --out "$OUT" || true
+            --runs 8 --steps 30 --campaigns 8 --out "$OUT" || true
     push "$OUT"
 done
 
