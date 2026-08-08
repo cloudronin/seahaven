@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
-# Story-diversity gate. Generation only -- no training, no campaigns.
+# Identical amnesiac seed story: do narratives fan out from a common blank self,
+# or fall back to a default the model returns to regardless of history?
 #
-# Two runs in the story arm independently wrote the same character in different
-# words ("a wanderer, a tinkerer, a seeker of forgotten things" / "a quiet
-# observer, drawn to places that hold secrets"). If every run authors the same
-# self, the story layer cannot be a source of divergence and nothing downstream
-# of it can diverge either.
-#
-# The control is what makes it readable: each seed also writes a story having
-# done nothing at all. Grounded vs ungrounded separates "experience shaped this"
-# from "the model has a default self it returns to".
+# Generation only. The seeded arm starts at narrative distance exactly zero by
+# construction, so the result is the shape of the curve away from it.
 set -uo pipefail
 
 R=/tmp/results; mkdir -p "$R"
@@ -34,11 +28,20 @@ export VLLM_USE_FLASHINFER_SAMPLER=0
 export PYTHONPATH=/app
 export VLLM_BATCH_INVARIANT=1
 
-run_phase 20m "story diversity: grounded vs ungrounded, 12 seeds" \
-    python /app/story_diversity.py --model "$MODEL" --seeds 12 --steps 16 \
-        --out "$R/story_diversity.json" || exit 1
-push "$R/story_diversity.json"
+run_phase 25m "amnesia: seeded vs emergent, 8 runs x 2 campaigns" \
+    python /app/amnesia.py --model "$MODEL" --runs 8 --steps 16 --campaigns 2 \
+        --out "$R/amnesia.json" || exit 1
+push "$R/amnesia.json"
 
 echo
 echo "########## REPORT ##########"
-cat "$R/story_diversity.json" 2>/dev/null || echo "(no report)"
+python -c "
+import json
+d=json.load(open('$R/amnesia.json'))
+print(json.dumps(d['summary'], indent=2))
+print()
+for arm in ('seeded','emergent'):
+    print('---', arm, 'final stories ---')
+    for i,s in enumerate(d['arms'][arm]['final_stories'][:4]):
+        print(f'  [{i}] {s[:200]}')
+" 2>/dev/null || cat "$R/amnesia.json"
