@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# Four campaigns, n=8. Answers the three follow-ups from the amnesia run:
-#   1. does the fixed rewrite prompt stop verbatim copying (measured, not assumed)
-#   2. does divergence accumulate over four campaigns
-#   3. does narrative divergence reach behaviour, at matched n
+# A/B on the prompt-masking bug, same corpus both sides.
+#
+# The previous trainer computed loss over every token, putting ~68% of the
+# gradient on text identical across all runs (system block + shared world) and
+# only ~6% on the action. The measured distilled component was negative
+# (-0.018): training made the eight runs MORE similar. That is exactly what
+# training everyone on the same tokens would do, so it may be an artefact rather
+# than a property of self-distillation.
+#
+# One corpus, two trainings, two scorings. Nothing else differs.
 set -uo pipefail
 
 R=/tmp/results; W=/tmp/a1b; mkdir -p "$R" "$W"
@@ -29,31 +35,42 @@ export VLLM_USE_FLASHINFER_SAMPLER=0
 export PYTHONPATH=/app
 export VLLM_BATCH_INVARIANT=1
 
-run_phase 25m "1/3 collect: 2 arms x 8 runs x 4 campaigns" \
+run_phase 25m "1/5 collect: 4 campaigns x 8 runs (one corpus for both arms)" \
     python /app/accumulate.py collect --model "$MODEL" \
-        --runs $RUNS --steps 14 --campaigns 4 --out "$R/acc_collect.json" || exit 1
-push "$R/acc_collect.json"
+        --runs $RUNS --steps 14 --campaigns 4 --out "$R/mask_collect.json" || exit 1
+push "$R/mask_collect.json"
 
-run_phase 30m "2/3 train 8 adapters, one per run" \
-    python /app/train_many.py "$MODEL" $RUNS || exit 1
+run_phase 25m "2/5 train UNMASKED (reproduces the bug)" \
+    python /app/train_many.py "$MODEL" $RUNS --suffix _unmasked || exit 1
 
-run_phase 15m "3/3 score behaviour at n=8: story-only vs trained" \
-    python /app/accumulate.py score --model "$MODEL" \
-        --collect "$R/acc_collect.json" --out "$R/acc_behaviour.json" || exit 1
-push "$R/acc_behaviour.json"
+run_phase 25m "3/5 train MASKED (the fix)" \
+    python /app/train_many.py "$MODEL" $RUNS --mask --suffix _masked || exit 1
+
+run_phase 12m "4/5 score UNMASKED" \
+    python /app/accumulate.py score --model "$MODEL" --adapter-suffix _unmasked \
+        --collect "$R/mask_collect.json" --out "$R/behav_unmasked.json" || exit 1
+push "$R/behav_unmasked.json"
+
+run_phase 12m "5/5 score MASKED" \
+    python /app/accumulate.py score --model "$MODEL" --adapter-suffix _masked \
+        --collect "$R/mask_collect.json" --out "$R/behav_masked.json" || exit 1
+push "$R/behav_masked.json"
 
 echo
 echo "########## REPORT ##########"
 python - <<'PY'
 import json
-c=json.load(open("/tmp/results/acc_collect.json"))
-print("narrative spread by campaign:")
-for arm,d in c["arms"].items():
-    print(f"  {arm:9s}", [s["narrative_spread"] for s in d["stages"]])
-    print(f"  {'':9s} verbatim", [s["verbatim_overlap"] for s in d["stages"]])
-try:
-    b=json.load(open("/tmp/results/acc_behaviour.json"))
-    print("\nbehaviour:", json.dumps(b, indent=2))
-except Exception as e:
-    print("no behaviour report:", e)
+u=json.load(open("/tmp/results/behav_unmasked.json"))
+m=json.load(open("/tmp/results/behav_masked.json"))
+print(f"{'':22s} {'UNMASKED':>12s} {'MASKED':>12s}")
+for k in ("narrative_spread_final","behavioural_spread_story_only",
+          "behavioural_spread_trained","distilled_component"):
+    print(f"{k:22s} {u.get(k):>12} {m.get(k):>12}")
+print()
+du, dm = u["distilled_component"], m["distilled_component"]
+print(f"distilled component: {du:+.5f} -> {dm:+.5f}")
+print("VERDICT:", "sign flipped — the negative was a masking artefact"
+      if du < 0 <= dm else
+      "still negative — distillation really is a convergence pressure"
+      if dm < 0 else "inconclusive")
 PY

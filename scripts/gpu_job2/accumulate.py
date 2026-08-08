@@ -314,12 +314,13 @@ def phase_score(args):
     log("behaviour: story in context, BASE weights ...")
     fp_prompt = battery_fingerprints(llm, tok, stories)
 
+    suffix = args.adapter_suffix
     reqs, missing = [], []
     for i in range(len(stories)):
-        d = WORK / f"adapter_r{i}"
+        d = WORK / f"adapter_r{i}{suffix}"
         if d.exists():
             # Versioned name, never reused: vllm#42125 is live on this stack.
-            reqs.append(LoRARequest(f"acc_r{i}_c1", i + 1, str(d)))
+            reqs.append(LoRARequest(f"acc_r{i}{suffix}_c1", i + 1, str(d)))
         else:
             missing.append(i)
     if missing:
@@ -335,6 +336,7 @@ def phase_score(args):
     narrative = prev["arms"][prev["behaviour_arm"]]["stages"][-1]["narrative_spread"]
 
     args.out.write_text(json.dumps({
+        "adapter_suffix": suffix or "(unmasked)",
         "n_runs": len(stories),
         "narrative_spread_final": narrative,
         "behavioural_spread_story_only": b_prompt,
@@ -359,6 +361,8 @@ def main():
     ap.add_argument("--steps", type=int, default=14)
     ap.add_argument("--campaigns", type=int, default=4)
     ap.add_argument("--behaviour-arm", default="seeded")
+    ap.add_argument("--adapter-suffix", default="",
+                    help="which adapter set to score, e.g. _masked")
     args = ap.parse_args()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     {"collect": phase_collect, "score": phase_score}[args.phase](args)
