@@ -2269,3 +2269,71 @@ not assumed to stay favourable.
   check before it is trusted.
 - The unit-mismatch problem is fixed; a construct-validity problem
   (act vs result) took its place, and is the more interesting of the two.
+
+---
+
+## 2026-08-08 — review follow-up 2: the steering result does not survive the donor control (41m 26s ≈ $3.45)
+
+The +0.412 lagged partial could not distinguish *my own self-account steers me*
+from *any movement-heavy prompt text raises my go-rate*. Both predict the same
+correlation, because the narrative enters the next campaign's system prompt.
+
+Seven checkpoints, 3 warm-up campaigns so narratives form naturally, then one
+campaign played **twice from the same state** — once with each run's own
+narrative, once with another run's narrative matched on movement-vocabulary
+density. Matching on density is what makes it a test of authorship rather than
+content.
+
+### Result — null, and cleanly so
+
+| lab | own go | donor go | difference | own density | donor density |
+|---|---|---|---|---|---|
+| Alibaba | 0.054 | 0.054 | **+0.000** | 1.20 | 1.20 |
+| MistralAI | 0.079 | 0.075 | +0.004 | 1.28 | 1.36 |
+| AI2 | 0.108 | 0.100 | +0.008 | 1.22 | 1.14 |
+| IBM | 0.225 | 0.233 | −0.008 | 0.98 | 1.01 |
+| TII | 0.087 | 0.062 | +0.025 | 2.14 | 2.14 |
+| Meta | 0.054 | 0.083 | −0.029 | 0.51 | 0.51 |
+| Google | 0.133 | 0.312 | −0.179 | 0.00 | 0.00 |
+
+Paired over 56 runs: mean(own − donor) = **−0.0256**, t = −1.14, 95% CI
+**[−0.070, +0.018]** — brackets zero. **19/56 runs** and **3/7 labs** have own >
+donor, both coin flips. Excluding the Google outlier the mean difference is
+**exactly +0.0000**.
+
+Within-lab centred, the same relationship the +0.412 measured:
+
+| arm | density → go |
+|---|---|
+| own | −0.058 |
+| donor | +0.069 |
+
+Neither arm shows the effect, and the donor arm is if anything the stronger.
+
+### What this means
+
+**A model given someone else's self-account behaves the same as a model given its
+own.** Self-authorship contributes nothing detectable. The lagged correlation was
+real, but it is a **prompt-content effect** — text in the context window
+influences subsequent behaviour, which is unremarkable and true of any prompt.
+
+**PLAN.md kill criterion 1 fires.** The narrative-steering direction is dead as
+specified. It was the project's only positive finding.
+
+### What survives, and what to be careful about
+
+- **The inherited-personality result is untouched** — it never depended on
+  steering. Between-lab behavioural separation 1.49–1.86 against within-lab
+  0.024 stands.
+- **Self-report fidelity is untouched** — it measures correspondence between an
+  account and a transcript and makes no claim about steering.
+- **Google is worth a second look.** Zero movement vocabulary in both arms, yet
+  donor go-rate 0.312 against own 0.133. With density matched at zero, that gap
+  cannot be a movement-content effect, so something else in the donor text moved
+  it. n=8 and this is one lab, so it is a curiosity, not a finding.
+
+**Honest limit on the null.** The CI half-width is 0.044, so this rules out
+own-vs-donor differences larger than about 4.4 percentage points of go-rate. A
+genuine but small authorship effect would survive this test undetected. The claim
+is *not* "authorship provably does nothing" but "at 56 paired runs, authorship
+contributes nothing large enough to have produced the +0.412."
