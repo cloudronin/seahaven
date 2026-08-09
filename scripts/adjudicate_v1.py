@@ -123,11 +123,25 @@ def main() -> int:
             rng.shuffle(items)
             rows.extend(items[:max(1, args.limit // len(by))])
 
-    out = []
+    # Checkpoint every 20 items. A transient disconnect used to destroy the
+    # whole batch — the same lesson the runner learned and this script did not
+    # inherit.
+    out, failed = [], []
+    ckpt = Path(args.out).with_suffix(".partial.json")
+    if ckpt.exists():
+        out = json.loads(ckpt.read_text())
+        print(f"resuming from {len(out)} checkpointed items")
     for i, r in enumerate(rows):
+        if i < len(out):
+            continue
         rel, ent = r["entity"].split(":", 1)
-        a = ask(ep, r["narrative"], rel, ent, seed=7000 + i)
-        b = ask(ep, r["narrative"], rel, ent, seed=90000 - i)
+        try:
+            a = ask(ep, r["narrative"], rel, ent, seed=7000 + i)
+            b = ask(ep, r["narrative"], rel, ent, seed=90000 - i)
+        except Exception as e:
+            failed.append({"i": i, "entity": r["entity"], "error": str(e)[:200]})
+            print(f"  item {i} FAILED: {str(e)[:90]}", flush=True)
+            a = b = None
         out.append({
             "stratum": r["stratum"], "entity": r["entity"], "arm": r["arm"],
             "performed": r["performed"] == "True",
@@ -137,13 +151,15 @@ def main() -> int:
             "judge": a if a == b else None,
             "narrative": r["narrative"][:400],
         })
-        if (i + 1) % 25 == 0:
+        if (i + 1) % 20 == 0:
+            ckpt.write_text(json.dumps(out))
             print(f"  {i+1}/{len(rows)}", flush=True)
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(
         {"model": args.model, "control_accuracy": acc, "controls": ctrl,
-         "items": out, "usable": True}, indent=2) + "\n")
+         "items": out, "failed": failed, "usable": True}, indent=2) + "\n")
+    ckpt.unlink(missing_ok=True)
     stable = sum(o["stable"] for o in out)
     print(f"\nwrote {args.out}: {len(out)} items, {stable} self-consistent "
           f"({100*stable/max(1,len(out)):.0f}%)")

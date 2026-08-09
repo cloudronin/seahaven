@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import time
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -62,7 +63,11 @@ class Endpoint:
                         body = "<body unreadable>"
                     raise RuntimeError(f"HTTP {e.code}: {e.reason} — {body}") from e
                 last = e
-            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError,
+                    http.client.HTTPException, ConnectionError, OSError) as e:
+                # RemoteDisconnected is an http.client exception, NOT a URLError,
+                # so the original tuple never caught it and a transient
+                # disconnect killed a 400-call batch outright.
                 last = e
                 # Transient endpoint hiccups are common under load. Back off,
                 # but never swallow the final failure — a silently empty
