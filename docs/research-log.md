@@ -3455,3 +3455,74 @@ reason rather than an assumption.
 
 V2 and V3 are not run. They would inherit the detector, and the detector is the
 thing that failed.
+
+---
+
+## 2026-08-09 — ensembling and a learned selector: better diagnosis, same verdict
+
+### The ceiling is not the detectors
+
+An oracle picking the right detector per item reaches **99.5%**. Only **2 of 390**
+items have all four wrong. The signal is nearly always present in *some*
+detector; what is missing is knowing which to trust on a given item.
+
+That reframes the problem. Building a fifth detector would solve a problem that
+is already solved.
+
+### Fixed ensembles beat any single detector
+
+| rule | acc | κ |
+|---|---|---|
+| **majority of 4, ≥3 agree** | 0.833 | **0.484** |
+| parse alone | 0.833 | 0.409 |
+| relation_aware | 0.787 | 0.293 |
+| name_only | 0.551 | 0.237 |
+| embedding | 0.374 | — |
+
+Same accuracy as parse alone, better κ — the errors are better distributed rather
+than fewer.
+
+**Not a selection artefact.** 14 variants were tried, so the *selection procedure*
+was tested: best-of-14 chosen on half and scored on the other half gives
+κ = 0.458, while `maj4_ge3` fixed in advance gives 0.483. Searching costs
+accuracy here; fitting on 195 items overfits. Fitted ensembles lost the same way
+(held-out 0.824 and 0.815 against the fixed rule).
+
+### A learned selector improves the point estimate, not the conclusion
+
+Features about the *item* — relation, whether the writer is a grammatical agent,
+whether the entity sits in a comma list, sentence length, how many other entities
+share the sentence — plus the four votes.
+
+| | κ |
+|---|---|
+| selector, nested CV | **0.590** |
+| fixed combiner | 0.484 |
+| parse alone | 0.409 |
+
+Nested CV chose `tree` in 4 of 5 outer folds, so the family choice is stable.
+
+**But the gain is not significant.** Paired bootstrap against the fixed combiner:
+Δκ = **+0.106, 95% CI [−0.002, +0.215]**. The interval crosses zero. At n = 390
+the selector cannot be distinguished from majority voting, and reporting 0.590 as
+an improvement would be reading a point estimate past its own interval.
+
+### What the selector learned is the more useful result
+
+Strongest coefficients: `rel_examined` **−1.48**, `n_agree` +1.32, `d_name`
++1.06, `rel_visited` +1.01, `sent_len` −0.61.
+
+**Relation type outweighs every detector's vote.** This is the third independent
+appearance of the per-relation finding — first by raw agreement, then by κ, now as
+a learned feature. `examined` behaves differently enough that knowing the relation
+beats knowing what the detectors said.
+
+### Verdict unchanged
+
+κ 0.590 against a gate of 0.80. **P4 branch four still fires: no raidex column.**
+
+The contribution of this work is a diagnosis rather than a score. The instruments
+collectively contain the answer 99.5% of the time and no combiner reaches it,
+which points at two things a future attempt should do — find features that
+separate claim from description more sharply than relation type, and label enough
+items that a selector can actually be fitted. 390 items and 14 features is thin.
