@@ -3794,3 +3794,77 @@ Parallelising the evals also parallelised their uploads, and six simultaneous
 commits to one dataset branch returned HTTP 500 for four of Google's six. The
 files died with the container. Pushes are now serialised after `wait`, with
 retry and backoff. Cost: one extra job.
+
+## 2026-08-09 — V4: the score is partly a verbosity measure, and partly an exploration measure
+
+495 scorable episodes across 7 models, 2 worlds, 3 seeds. Previously this could
+only be estimated from 7 model-level points (r = −0.670, CI [−0.95, +0.17]),
+which is why it was deferred rather than dismissed.
+
+### V4a — verbosity
+
+| level | r (narrative words vs omission) |
+|---|---|
+| pooled over 495 episodes | −0.318 |
+| **mean within model** | **−0.159**  [−0.389, +0.110] |
+| **model level (n=7)** | **−0.547** |
+
+**The confound lives between models, not within them.** Within a model, writing
+more barely helps (mean −0.159, and it is *positive* for AI2 and MistralAI).
+Across models it is three times stronger. That is the worst arrangement
+available: the confound operates precisely at the level where the ranking is
+formed, and the within-model estimate — the one that looks reassuring — is not
+the one that matters for a leaderboard.
+
+The heterogeneity is itself a finding: the sign flips across models, so there is
+no single "verbosity effect" to subtract cleanly.
+
+### V4b — ground-truth entity count
+
+| relationship | r |
+|---|---|
+| n_performed vs omission (pooled) | +0.285 |
+| **n_performed vs fidelity (pooled)** | **−0.490** |
+| n_performed vs fidelity (model level) | −0.483 |
+
+**A run that did more scores worse.** Agents that explore further have more to
+report and report proportionally less of it. So the number partly ranks models
+on how little they did, which is close to the opposite of the intended
+construct. No gate was pre-registered for this, and one should have been.
+
+### V4c — does the ranking survive? Borderline, and it fails the threshold
+
+Residualising each episode's omission on narrative length with a single pooled
+slope (−0.00213 per word, i.e. **−10.65 points of omission per 50 words**):
+
+    raw      : MistralAI, Meta, IBM, AI2, Alibaba, Google, TII
+    adjusted : MistralAI, Meta, IBM, Alibaba, Google, AI2, TII
+    rho = 0.893
+
+**Stated plainly: the threshold was mine, set in this script at 0.90, and 0.893
+misses it by 0.007.** One model moves — AI2 from 4th to 6th. On the swap alone
+this would be a marginal call, and I am not going to pretend a hand-picked
+cutoff decided it.
+
+What does not depend on the cutoff is §V4a's structure: a model-level
+correlation of −0.547 against a within-model mean of −0.159. That is a
+between-model confound whether or not any particular ranking swaps, and it is
+sufficient on its own to say **the per-model number must not be published
+without an adjustment, and the adjustment cannot be a single pooled slope
+because the effect changes sign across models.**
+
+### Consequence
+
+V4 joins V1 as a blocker. The current standing of the battery:
+
+| | status |
+|---|---|
+| V1 detector | **FAIL** — 0.80 unmet; label sets also keyed to pre-TRAP-26 truth |
+| V2 cross-world | marginal pass (rho 0.964 point, 0.857 [0.607, 1.000] bootstrapped) |
+| V3 narration | implemented, not run |
+| **V4 controls** | **FAIL** — verbosity confound is between-model; n_performed vs fidelity −0.49 |
+| gate −1 power | marginal — 7/18 world_v0 repeats fail |
+| reliability | share_between 0.908, test–retest ok, `publishable: null` pending V1 |
+
+Nothing here is publishable as a per-model raidex column. The honest current
+claim remains distribution-level.
