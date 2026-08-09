@@ -34,6 +34,9 @@ class Endpoint:
     #: Learned once per endpoint, then reused. None = not yet determined.
     _supports_template_kwargs: bool | None = field(default=None, repr=False)
     _supports_system: bool | None = field(default=None, repr=False)
+    #: GPT-5-class models reject `max_tokens` outright and require
+    #: `max_completion_tokens`. Another thing that cannot be assumed either way.
+    _token_param: str | None = field(default=None, repr=False)
 
     def _post(self, path: str, payload: dict) -> dict:
         url = self.base_url.rstrip("/") + path
@@ -85,6 +88,11 @@ class Endpoint:
         So: try the full form once, fall back on 400, and remember what worked.
         Renegotiating on every call would triple the request count.
         """
+        # The token-budget parameter is negotiated on the same principle as the
+        # rest: try what is known, fall back on rejection, remember the answer.
+        token_params = ([self._token_param] if self._token_param
+                        else ["max_tokens", "max_completion_tokens"])
+
         variants = []
         if self._supports_template_kwargs is not False:
             variants.append("kwargs")          # richest form, needed by reasoning models
@@ -93,9 +101,9 @@ class Endpoint:
         variants.append("merged")              # system folded into the first user turn
 
         last_err = None
-        for kind in variants:
+        for kind, tok_param in [(k, tp) for tp in token_params for k in variants]:
             msgs = messages
-            payload = {"model": self.served_name, "max_tokens": max_tokens,
+            payload = {"model": self.served_name, tok_param: max_tokens,
                        "temperature": temperature}
             if kind == "kwargs":
                 payload["chat_template_kwargs"] = {"enable_thinking": False}
@@ -117,6 +125,7 @@ class Endpoint:
                 payload["stop"] = stop
             try:
                 out = self._post("/chat/completions", payload)
+                self._token_param = tok_param
                 if kind == "kwargs":
                     self._supports_template_kwargs = True
                 elif kind == "plain":
