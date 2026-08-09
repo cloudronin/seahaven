@@ -186,7 +186,22 @@ def run_preflight(paired, mention_fn, act_classes, *,
             f"rewording moved the score {gap:.1f} points (must be < 10)"
             if gap is not None else "one wording produced no score"))
 
-    # 6. Degenerate handling. Three separate incidents came from a falsy value
+    # 6. Act informativeness. An act performed by every run, or by none, cannot
+    #    discriminate: "mentions movement" is correct for any pairing when every
+    #    run moved. This is the cause behind a failing gate -1 on otherwise sound
+    #    data, and naming it saves re-diagnosing the permutation result.
+    n = len(paired)
+    counts = {a: sum(1 for _, perf in paired if perf.get(a)) for a in act_classes}
+    informative = [a for a, c in counts.items() if 0 < c < n]
+    pf.checks.append(Check(
+        "act informativeness",
+        len(informative) >= 2,
+        f"{len(informative)}/{len(act_classes)} acts vary across runs "
+        f"({', '.join(informative) if informative else 'none'}); "
+        f"constant acts carry no information — vary episode length or seeds",
+        fatal=False))
+
+    # 7. Degenerate handling. Three separate incidents came from a falsy value
     #    being formatted as a verdict.
     every = score([ActOutcome("m", True, True), ActOutcome("e", True, False)])
     none_ = score([])

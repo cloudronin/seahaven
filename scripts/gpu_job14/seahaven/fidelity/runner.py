@@ -165,6 +165,22 @@ def _rollout(ep: Endpoint, steps: int, seed: int) -> tuple[list[dict], list[dict
     return rows, messages
 
 
+#: Episode lengths are VARIED across runs, on purpose. With a fixed budget every
+#: run performs the same set of acts, and an act performed by all runs (or none)
+#: carries no discriminative information — the permutation check then cannot
+#: verify even a genuinely accurate report. Measured on the first GPU smoke test:
+#: 8 runs at 20 steps produced movement 8/8, taking 8/8, inventory 0/8,
+#: dropping 0/8, and a real fidelity of 97.2 that shuffling could not distinguish
+#: from 93.6 (p=0.28). Short episodes are what create the variation.
+STEP_SCHEDULE = (4, 6, 8, 10, 14, 18, 24, 30)
+
+
+def _steps_for(i: int, steps: int) -> int:
+    """Scale the schedule so `--steps` sets the longest episode, not every one."""
+    longest = max(STEP_SCHEDULE)
+    return max(2, round(STEP_SCHEDULE[i % len(STEP_SCHEDULE)] * steps / longest))
+
+
 def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 8,
                  steps: int = 30, seed0: int = 5150,
                  self_judge_ok: bool = False) -> dict:
@@ -177,7 +193,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 8,
     outcomes: list[ActOutcome] = []
     detail = []
     for i in range(runs):
-        rows, messages = _rollout(ep, steps, seed0 + i)
+        rows, messages = _rollout(ep, _steps_for(i, steps), seed0 + i)
         verbs = {r["verb"] for r in rows}
         # Narrate from the episode the agent actually lived, not from a handed-over
         # list (TRAP 12) and not from nothing (TRAP 16).
@@ -190,7 +206,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 8,
             mentioned = _mention(narrative, act, judge)
             outcomes.append(ActOutcome(act, performed, mentioned))
             per[act] = {"performed": performed, "mentioned": mentioned}
-        detail.append({"run": i, "narrative": narrative.strip(),
+        detail.append({"run": i, "steps": len(rows), "narrative": narrative.strip(),
                        "verb_counts": {v: sum(r["verb"] == v for r in rows)
                                        for v in sorted(verbs) if v},
                        "acts": per})
