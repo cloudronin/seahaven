@@ -2842,3 +2842,74 @@ meant to predict.
 lands and frozen before Phase 1 runs. Rewriting it now, on the corrected
 extraction but before the re-baseline, is legitimate. Rewriting it after seeing
 the re-baseline would not be.
+
+---
+
+## 2026-08-09 — Phase 0 landed: ground truth now comes from world facts
+
+Items 1–4 of the review are complete. Phase 1 (the re-baseline) is unblocked.
+
+### The fix, verified against the live engine
+
+| entity class | source | why |
+|---|---|---|
+| `took:X` | fact `in(X, I)` | a **failed** take adds no fact — confirmed on the z-machine |
+| `visited:R` | fact `at(P, R)` | a move into a wall changes nothing |
+| `examined:X` | parsed `examine` + response not a failure string | examining mutates no state, so facts cannot express it |
+
+Driving the real engine with `take kettle` (ok), `take logbook` (fails),
+`examine kettle` (ok), `examine logbook` (fails), `go north` (ok):
+
+```
+took:kettle       True     took:logbook     False   <- was True under the old code
+examined:kettle   True     examined:logbook False
+visited:Store     True     visited:Cistern  False
+visited:Galley    dropped — start room, entered by every run
+```
+
+Entity count **12 → 17**. `examined:*` roughly doubles the ground truth available
+to gate −1's informativeness check.
+
+### Gate −1 now stratifies, and fixing it exposed a second problem
+
+`permutation_check` takes a stratum key; the runner passes episode length.
+Verified through the production path: IBM's lift moves 22.7 → 9.3, matching the
+by-hand 22.5 → 8.8 of TRAP 17.
+
+**But the old schedule made the corrected test impossible.** Eight runs at eight
+distinct lengths gives one run per stratum, so within-stratum shuffling is the
+identity. Worse, the arithmetic rules out the obvious patch:
+
+| runs per length | arrangements | minimum achievable p |
+|---|---|---|
+| 1 | 1 | no test at all |
+| **2** | 2⁴ = 16 | **0.059 — can never be significant** |
+| 3 | 6⁴ = 1296 | 0.0008 |
+
+**Three per length is the minimum workable design.** `STEP_SCHEDULE` is now four
+lengths × three runs `(4,4,4,12,12,12,20,20,20,30,30,30)` and the default run
+count is 12. Cost per eval rises 114 → 198 steps.
+
+Coarse tertile bins were tried as a way to keep eight runs and **rejected**: they
+recover only half the correction (IBM 22.8 → 12.9 against an exact-length 9.3).
+
+### [TRAP] 18 — the two load-bearing functions had no tests
+
+`entity_truth` and `entity_mentioned` decide what is true and what was said, and
+neither had a single test. The suite covered `score.py`, `preflight.py` and
+`endpoint.py`, and the preflight tests used a **locally defined** detector that
+never touched the production one — so the tests passed while the production
+detector scored failed takes as successes.
+
+Now 13 tests, including the failed-take and failed-move cases directly, a
+live-engine test behind the `slow` marker, and two `xfail(strict=True)` tests
+pinning the negation blind spot with its measured prevalence (0/198 real
+narratives) and the reason a regex fix is not yet warranted.
+
+**Build principle: a test that mocks the component under test is not a test of
+it.** 162 passing, 2 xfailed.
+
+### Next
+
+Phase 1 is unblocked but **prediction 1 must be rewritten and frozen first**, per
+pre-registration P3 — on the corrected extraction, before the re-baseline runs.
