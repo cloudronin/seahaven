@@ -3075,3 +3075,86 @@ F2 (`examined:*` omitted more than `took:*`) and F3 (length dependence) are
 computable from this data and are next. The headline metric decision (P1) and the
 n rule (P2) follow once within-model sd is re-estimated under the corrected
 gating level.
+
+---
+
+## 2026-08-09 — reporting structure: rates are primary, composite metric deferred
+
+### Settled: §3 of the spec is inverted
+
+**Omission and fabrication are PRIMARY. Fidelity/lift is a clearly labelled
+summary.** The spec had this the other way round — lift as headline, the rates as
+"sub-scores published alongside."
+
+The evidence that carries it does **not** depend on any correlation estimate:
+balanced accuracy places **AI2 (72.9), IBM (73.4) and TII (74.2) within 1.3
+points of each other while they fail in opposite directions** — TII omits 41% and
+fabricates 11%; IBM omits 17% and fabricates 36%. Three collisions under balanced
+accuracy, one under worst-arm. For anything consuming an agent's report, those are
+not the same model.
+
+### [CORRECTION] "orthogonal" was unsupportable
+
+I wrote that omission and fabrication are orthogonal on r = +0.068. At n = 7 the
+Fisher CI on that estimate is **[−0.72, +0.78]** — it excludes essentially
+nothing. The correct phrasing is **not redundant**, and the collision above is
+the actual evidence.
+
+The length correlations are no better founded: omission vs length r = −0.670,
+CI **[−0.95, +0.17]**, crossing zero. The verbosity story is a hypothesis V4 must
+test, not a measured fact.
+
+### NOT settled: the composite metric, and the argument I had missed
+
+I recommended worst-arm, `100 × (1 − max(omission, fabrication))`, on the grounds
+that balanced accuracy lets a model offset one failure with the other. That
+remains true. But worst-arm has a defect I did not see:
+
+**It scores different models on different constructs.** Worst-arm takes whichever
+arm is larger, so TII is scored on *omission* — which carries the verbosity
+confound — while IBM is scored on *fabrication*, which appears not to. Two models
+in the same leaderboard column, measured on different things.
+
+Balanced accuracy has the offsetting problem, but it **holds the mixture constant
+across models** and dilutes the confound rather than importing it undiluted. That
+is a substantive advantage, not conservatism.
+
+**A third option was missing from my list: register fabrication alone**, with
+omission published as a required sub-score. For it: length-independent so it needs
+no V4 correction; it is the failure where a consumer is *actively misled* rather
+than under-informed, which is what an RAI index should price; and `NormSpec` takes
+one value, so the composite stays at nine constituents rather than ten. Against
+it: it concentrates the entire board column on the arm the detector is most likely
+to get wrong — a spurious mention lands in fabrication — and discards half the
+measurement from the board.
+
+### PRE-REGISTRATION P4 — the composite metric, committed before V1/V2/V4 run
+
+Written now, against criteria whose answers cannot yet be seen. This is what
+removes the post-hoc objection.
+
+> - **V4 shows omission's length slope flat or correctable, AND V1 clears
+>   agreement on the fabrication stratum** → **worst-arm**,
+>   `100 × (1 − max(omission, fabrication))`
+> - **Omission remains length-confounded after V4** → **fabrication alone** on the
+>   board, omission published as a sub-score
+> - **V2 shows fabrication cross-world stable but omission not** → **fabrication
+>   alone**, and the instability is reported as a finding
+> - **V1 fails on the fabrication stratum** → **no raidex column at all**. Publish
+>   both rates as a finding.
+
+### Two items rise in priority
+
+**V1's adversarial stratum, drawn on fabrication cases** — entity named but not
+performed — is now the highest-value item in the battery. Under two of the four
+branches the entire board column rests on that arm. Drawn deliberately, labelled
+separately, reported separately from the main agreement estimate.
+
+**V2's gate on both rates is now an arbiter, not a check.** Omission tracks
+verbosity and verbosity may be world-dependent, so the two arms could diverge in
+cross-world stability. That result feeds branch three directly.
+
+### Unchanged
+
+Spec predictions 3, 4 and 5 stand **unrevised**. One falsified prediction is a
+result; a set quietly re-fitted around it is not.
