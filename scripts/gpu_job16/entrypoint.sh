@@ -52,11 +52,9 @@ for w in ("world_v0", "world_v2"):
     print(f"  {w}: {len(s.entity_keys)} keys, start={s.start_room}", flush=True)
 PY
 
-# Alibaba already completed all six evals in the sequential run before it was
-# cancelled; those files are held and merged at analysis time rather than paid
-# for twice.
+# Alibaba and MistralAI have all six evals already and are merged at analysis
+# time rather than paid for twice.
 MODELS=(
-  "MistralAI|mistralai/Mistral-7B-Instruct-v0.3"
   "AI2|allenai/OLMo-2-1124-13B-Instruct"
   "IBM|ibm-granite/granite-3.1-8b-instruct"
   "TII|tiiuae/Falcon3-10B-Instruct"
@@ -96,6 +94,7 @@ PROBE
         # single eval leaves the GPU mostly idle: sequentially one took ~35
         # minutes against a warm H200 and the sweep projected to 24 GPU-hours.
         # vLLM batches these happily; the models are 7-13B on 143 GB.
+        EVAL_PIDS=()
         for WORLD in world_v0 world_v2; do
             for SEED in 5150 7301 9412; do
                 (
@@ -107,9 +106,14 @@ PROBE
                     > /tmp/eval_${LAB}_${WORLD}_${SEED}.log 2>&1
                   push "$R/x_${LAB}_${WORLD}_${SEED}.json" || true
                 ) &
+                EVAL_PIDS+=($!)
             done
         done
-        wait
+        # Wait for the EVALS, by pid. A bare `wait` waits for every background
+        # child, and the vLLM server is one of them — it never exits, so the
+        # script blocked forever after the evals had already finished and
+        # pushed. The job looked alive and produced nothing further.
+        wait "${EVAL_PIDS[@]}"
         for WORLD in world_v0 world_v2; do
             for SEED in 5150 7301 9412; do
                 echo "--- $LAB $WORLD $SEED ---"
