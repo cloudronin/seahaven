@@ -3359,3 +3359,99 @@ world_v0 — same structure, comparable size, names chosen only to satisfy the
 collision assertion — rather than designed. No model's behaviour informed any
 choice. But the honest statement is that the ordering guarantee is unavailable for
 this world, and F2's result carries that caveat.
+
+---
+
+## 2026-08-09 — V1 adjudicated: a fourth detector wins, and the gate fails anyway
+
+Judge: **gpt-5.2**, 8/8 on planted controls, **390/397 self-consistent** when each
+item was asked twice at different batch positions. Unstable items excluded.
+
+An LLM judge substitutes for the human labels the spec makes the criterion. That
+is a real weakening and it is why the controls exist — but the judge is fallible
+in ways I can name: it called *"a cramped galley with a kettle lying on the
+floor"* a claim to have taken the kettle. It is not.
+
+### A dependency parse beats both regexes
+
+Suggested by the user. NER was the word used; the tool that works is a
+**dependency parse** — ask whether the writer is the grammatical agent of a verb
+governing the entity.
+
+| | parse |
+|---|---|
+| *"I picked up the kettle"* | kettle = `dobj` of `pick`, `nsubj` = "I" → **claim** |
+| *"a kettle was lying on the floor"* | kettle = `nsubj` of `lie`, no writer → **description** |
+
+This is why the verb list collapses: `secure`, `grab`, `pocket` all lemmatise
+into a small closed set, because the parser normalises inflection and the grammar
+establishes agency. Enumerating surface forms is unbounded; enumerating *kinds of
+act* is not. Walking up `xcomp`/`conj` also catches *"I managed **to secure** a
+kettle"* and *"**Armed with** a brass key, I went on"*, which the regex cannot.
+
+| detector | all | easy | hard | κ (all) |
+|---|---|---|---|---|
+| name_only | 0.55 | 0.86 | 0.28 | 0.237 |
+| relation_aware | 0.79 | 0.86 | 0.72 | 0.293 |
+| **parse** | **0.83** | **0.88** | **0.79** | **0.409** |
+
+### Embeddings: the mechanism works, the application does not
+
+Also suggested. Raw sentence embeddings fail outright — **topic swamps
+relation**: *"picked up the kettle"* is closer to *"a kettle lying on the floor"*
+(0.544) than to *"took the ledger with me"* (0.454). A claim is nearer its own
+contradiction than another claim.
+
+**Masking the entity fixes it on constructed cases (8/8)**, including the two the
+regex misses. On real narratives it scores **0.43**, worse than either regex —
+because masking the target leaves four other entity names in the sentence and
+topic leaks back. Best on the hard stratum (11/19), worst on the easy one (3/11).
+A real signal, wrapped in an implementation that loses more than it gains.
+
+### No detector wins every relation
+
+Chance-corrected, the winners differ by entity class:
+
+| relation | best detector | κ |
+|---|---|---|
+| took | **parse** | 0.423 |
+| examined | **relation_aware** | 0.378 |
+| visited | **name_only** | 0.714 |
+
+Raw agreement disagrees with κ on `examined` (parse 0.93 vs rel_aware 0.90) because
+that class is lopsided toward "not claimed" and raw agreement flatters whichever
+detector says no more often. **κ is the number to read.**
+
+Held-out — winner picked on half the items, scored on the other half, 200 splits
+— a per-relation hybrid reaches **0.848 (sd 0.023)** against parse alone at 0.833.
+Real but small.
+
+### [RESULT] V1 FAILS its gate on every stratum
+
+| stratum | n | best κ | gate 0.80 |
+|---|---|---|---|
+| main | 159 | 0.597 | **FAIL** |
+| disagreement | 134 | 0.331 | **FAIL** |
+| fabrication | 97 | 0.530 | **FAIL** |
+
+**Pre-registration P4, branch four, fires:** *"V1 fails on the fabrication
+stratum → no raidex column. Publish both rates as a finding."*
+
+That was written before any of this ran, against a criterion whose answer could
+not then be seen. It is now discharged as written.
+
+### What this means
+
+**seahaven-fidelity does not become a raidex constituent.** Not because the
+models are uninteresting, but because *what a self-account claims* cannot yet be
+read reliably enough to price. Four instruments, and the best agrees with a
+validated judge at κ = 0.41 — fair, not publishable.
+
+The measurement that survives is narrower and still real: **all seven checkpoints
+carry entity-level signal** under a length-stratified null (p = 0.0012,
+Bonferroni). Models' self-accounts do correspond to what they did. **Whether they
+mostly omit or mostly invent remains undetermined**, and now with a measured
+reason rather than an assumption.
+
+V2 and V3 are not run. They would inherit the detector, and the detector is the
+thing that failed.
