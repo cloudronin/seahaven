@@ -16,6 +16,11 @@ export A1B_REPO="cloudronin/seahaven-a1b-results"
 PORT=8000
 
 push() { python /app/push.py "$1"; }
+# reap_gpu() knows that vLLM's EngineCore children survive a kill of the parent.
+# This job originally reaped only the api_server process and the first model left
+# 124 GB held, so every subsequent server died on startup. The fix already
+# existed in lib.sh and was not copied in.
+source /app/lib.sh
 
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || true
 pip install --no-cache-dir -q uv
@@ -63,12 +68,16 @@ for ENTRY in "${MODELS[@]}"; do
         echo "  SKIPPED $LAB — server never became ready"
     fi
 
-    # Reap: an orphaned server holds the GPU and the next model then hangs
-    # rather than failing.
+    # Reap. Killing the api_server is not enough: vLLM's EngineCore children
+    # survive it and keep the device. reap_gpu verifies the memory actually came
+    # back and aborts if it did not, rather than letting the next model fail in a
+    # way that looks like the model's fault.
     kill -9 $SERVER_PID 2>/dev/null || true
     pkill -9 -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
-    sleep 8
-    nvidia-smi --query-gpu=memory.free --format=csv,noheader
+    pkill -9 -f "VLLM::EngineCore" 2>/dev/null || true
+    pkill -9 -f "from multiprocessing.spawn" 2>/dev/null || true
+    sleep 10
+    reap_gpu || { echo "GPU DID NOT DRAIN — aborting rather than blaming the next model"; exit 1; }
 done
 
 echo; echo "########## SUMMARY ##########"
