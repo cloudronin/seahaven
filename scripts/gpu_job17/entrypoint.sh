@@ -48,19 +48,25 @@ wc -l /app/results/v1b_labelset.csv
 # gate must sit below (prereg-v3 sections 1-3).
 #
 # Already held: OpenAI (gpt-5.2), Alibaba (Qwen2.5-32B), Google (gemma-2-27b).
+# Sixth judge. OLMo-2-32B failed its controls (0.75) by denying plainly stated
+# room visits, so the panel is one short of the two disjoint triples the
+# split-half needs. Order declared in the log BEFORE this run; the first to pass
+# the controls is the sixth judge.
 JUDGES=(
-  "phi4|microsoft/phi-4"
-  "mistral24|mistralai/Mistral-Small-24B-Instruct-2501"
-  "olmo32|allenai/OLMo-2-0325-32B-Instruct"
+  "llama70|meta-llama/Llama-3.3-70B-Instruct"
+  "granite8|ibm-granite/granite-3.1-8b-instruct"
 )
 
 for ENTRY in "${JUDGES[@]}"; do
     TAG="${ENTRY%%|*}"; MODEL="${ENTRY##*|}"
+    # 70B in bf16 is ~140 GB against 143 GB of device — fp8 halves the weights
+    # and leaves room for the KV cache.
+    QUANT=""; [ "$TAG" = "llama70" ] && QUANT="--quantization fp8"
     echo; echo "################ judge $TAG — $MODEL ################"
 
     python -m vllm.entrypoints.openai.api_server \
         --model "$MODEL" --port $PORT --host 127.0.0.1 \
-        --gpu-memory-utilization 0.90 --max-model-len 4096 \
+        --gpu-memory-utilization 0.90 --max-model-len 4096 $QUANT \
         > /tmp/vllm_$TAG.log 2>&1 &
     SERVER_PID=$!
 

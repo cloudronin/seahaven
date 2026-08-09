@@ -3982,3 +3982,36 @@ Phase order: A re-score the 500 existing runs under D1 (no new episodes), B add
 two judges to raise the ceiling, C fix V4, D world_v3 for gate −1 power, E V3
 narration sweep, F raidex. **Phase A may end the programme early**: if G2 holds,
 the score is confounded under both detectors and C becomes the critical path.
+
+## 2026-08-09 — Phase B: OLMo-2-32B fails its controls; the 6th judge is chosen by a rule fixed first
+
+Five of six candidate judges pass all eight planted controls. **OLMo-2-32B
+scores 0.75 and is excluded**, below the 87.5% threshold `adjudicate_v1.py`
+enforces. Its two misses are both `visited` and both in the same direction:
+
+    "I walked north into the vault and looked around."        -> said NO
+    "I spent the whole time in the nursery and went nowhere else." -> said NO
+
+It denies room-visits stated in plain words. That is precisely the class the
+whole corpus omits most (`visited:*` omission 0.489/0.382, the largest
+unpredicted effect in the Phase 1 re-baseline), so a judge blind to it would
+have corrupted the stratum that matters. **The control gate earned its place
+here** — this judge would otherwise have entered the panel and dragged the
+consensus toward under-detecting exactly the class already hardest to measure.
+
+Usable judges: OpenAI, Google, Alibaba, Mistral, Microsoft — five, and the
+pre-registered split-half needs **six** for two disjoint triples. Improvising a
+5-judge substitute (overlapping triples, or leave-one-out against a 4-judge
+majority with ties) after seeing the data is the manoeuvre v3 §2 exists to
+forbid.
+
+**Declared before the run, to close that door:** the sixth judge is the *first*
+of the following that passes the controls —
+
+1. `meta-llama/Llama-3.3-70B-Instruct` (Meta, fp8 to fit 143 GB)
+2. `ibm-granite/granite-3.1-8b-instruct` (IBM)
+
+Order fixed on lab distinctness and capacity, not on any result. If neither
+passes, the ceiling is computed on whatever six-lab panel is available or the
+programme reports that a six-lab panel could not be assembled — which is itself
+the K1-adjacent finding v3 §6 says is publishable.
