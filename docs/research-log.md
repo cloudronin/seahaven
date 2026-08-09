@@ -3940,3 +3940,45 @@ So the honest position has changed. It is no longer "no detector works". It is:
 0.80 was pre-registered. If it is revised it has to be revised on an argument
 about achievable inter-rater reliability, stated before the revised number is
 computed, and recorded as a change to the criterion rather than a result.
+
+## 2026-08-09 — Pre-registration v2 committed: gate 0.80 -> 0.70, superseding not amending
+
+`docs/prereg-v2.md`. The original pre-registration and its P1–P4 clauses stand
+unaltered; v2 governs future work only, and where they conflict the original
+remains the record of what was committed to at the time.
+
+**The gate moves because the criterion was mis-specified, not because the
+detector was close.** Three judges from three labs agree with each other at mean
+kappa 0.736. Requiring a detector to reach 0.80 against those labels asks it to
+agree with them more closely than they agree with each other. 0.70 is the
+largest round value strictly below the measured ceiling; Landis–Koch
+"substantial" begins at 0.61, and the weakest judge pair here is 0.672.
+
+**Recorded in v2 §1 in as many words: gpt-4.1-mini already clears 0.70 on all
+three strata, and a gate lowered until the incumbent passes is worth nothing.**
+So V1's status is written as "satisfied by an LLM detector at a gate set to the
+reference standard's own reliability" — not as a pass earned by the detector. A
+stronger claim requires raising label quality first and re-testing against the
+higher ceiling.
+
+**§0 lists every quantity already known at time of writing**, so that none of
+them can later be presented as a prediction v2 made. Six new predictions (G1–G6)
+cover only unmeasured things: whether the detector swap reorders the table,
+whether the verbosity confound survives it, whether V2 stays marginal, whether
+gate −1 power scales with entity count, whether narration register changes
+negation prevalence, and whether any V4 correction can weaken the
+exploration confound below |0.20|.
+
+**G2 is written so that being wrong is the more useful outcome** — if D1 removes
+the verbosity confound, that is a better argument for it than any agreement
+number, and v2 says so in advance.
+
+Frozen now: detector D1 (gpt-4.1-mini, pinned prompt, dual-ask, disagreement
+counts as not-a-claim), the reference standard (majority of ≥3 judges from ≥3
+labs, all passing controls), per-stratum application, and the rule that every
+V1 number is reported with the inter-rater ceiling of its label set.
+
+Phase order: A re-score the 500 existing runs under D1 (no new episodes), B add
+two judges to raise the ceiling, C fix V4, D world_v3 for gate −1 power, E V3
+narration sweep, F raidex. **Phase A may end the programme early**: if G2 holds,
+the score is confounded under both detectors and C becomes the critical path.
