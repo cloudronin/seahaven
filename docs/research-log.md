@@ -3633,3 +3633,64 @@ agreement — exactly the failure `adjudicate_v1.py` warns about in its own
 docstring. Resolving it needs a judge from a different lab, or the human labels
 the spec asked for originally. Until then the number is agreement-with-OpenAI,
 not accuracy, and V1 stays unpassed.
+
+## 2026-08-09 — [TRAP 26] Two entity columns could never be true, and the error was directional
+
+Found while parameterising the runner for world_v2, not by looking for it.
+
+`runner.py` carried the scored vocabulary as literals:
+
+    TAKEABLE = ("kettle", "rope", "key", "logbook", "oil can", "tin cup")
+
+but world_v0 names those objects **"coil of rope"** and **"brass key"**, and
+`entity_truth` reads the engine's fact strings, which carry the canonical name:
+
+    take coil of rope  ->  in(coil of rope: o, I)  ->  "coil of rope" in TAKEABLE  ->  False
+
+So `took:rope` and `took:key` were **False in every one of 499 runs**, while
+`examined:rope` fired in 40.5% of them — that path matches on the last word of
+the command and was unaffected. Verified against the live engine: the object is
+in the inventory, the fact is emitted, and `entity_truth` returns False.
+
+**The error is directional, which is what makes it serious.** A model that
+correctly reported carrying the rope was scored as claiming something it had not
+done — a *fabrication*. Two of six `took` entities were dead columns feeding a
+one-way bias into the arm that two of P4's four branches put the whole raidex
+column on.
+
+**It cannot be repaired offline.** Result files store only the derived `acts`,
+not the raw facts, so ground truth cannot be recomputed from what is on disk.
+The episodes have to be replayed, which is why Phase 1 is being re-run alongside
+V2 rather than re-analysed.
+
+**Fix.** `seahaven/fidelity/worldspec.py` derives rooms, takeable objects and the
+start room from the TextWorld `.json`, so no world needs hand-copied constants
+and a second world cannot inherit the first one's vocabulary. Ground truth uses
+the canonical name; *detection* uses match forms, so "I took the rope" still
+counts as naming the coil of rope while `oil can -> can` is refused, because a
+narrative containing "I can see" would otherwise register as a claim. Regression
+tests assert that no entity column is structurally unreachable in either world.
+
+**Why the existing tests missed it.** `test_fidelity_runner.py` wrote its own
+fact strings — `in(kettle: o, I)` — and kettle is single-word, so every case it
+exercised happened to be one where the literal and the canonical name agree. A
+test that supplies its own fixtures cannot catch a mismatch between two things it
+supplies. The new test enumerates `spec.takeable` from the world instead.
+
+### [TRAP 27] A shadowed loop variable, caught by the smoke test and not by 178 tests
+
+`run_fidelity` gained `spec = load_world(world_id)`, and 200 lines later
+`for act, spec in ACT_CLASSES.items()` rebound it to a dict — so run 2 onward
+crashed on `spec.path`. The suite passed; the local smoke against a real endpoint
+failed immediately. This is the fourth time the composition broke while every
+component held, which is the standing argument for smoking before spending.
+
+### Job infrastructure
+
+The first GPU smoke stalled invisibly for ~40 minutes. The readiness probe was
+`curl ... >/dev/null 2>&1`, and `2>&1` hides "command not found", so on an image
+without curl the probe fails silently for its whole 15-minute timeout and a
+missing binary is indistinguishable from a slow model load. Replaced with
+`urllib`, plus a fail-fast import check and a per-minute heartbeat that echoes
+the vllm log. Re-smoked clean: server ready in 110s, both worlds evaluated and
+pushed, GPU drained to 143156 MiB free.
