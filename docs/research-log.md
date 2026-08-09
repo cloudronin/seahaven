@@ -3306,3 +3306,56 @@ three rooms. **The test documents the risk rather than blessing the detector.**
 **V1 is blocking and needs human annotators.** Everything downstream — V2, V3, the
 P4 composite branch, any published rate — waits on it. GPU budget remains unspent
 by choice.
+
+---
+
+## 2026-08-09 — world_v2 built; the collision assertion fails world_v0
+
+`worlds/world_v2/` — 7 rooms, 11 objects, no quest, compiled and locked.
+Nursery · Furnace · Fernery · Colonnade · Vault · Cloche · Sump, holding trowel,
+workbench, twine, lantern, chest, ledger, shears, slab, basket, hamper, dipper.
+
+Different room count (7 vs 6), topology and inventory; **identical mechanics,
+action vocabulary and prompts**. No entity carries over from v0 — asserted in
+tests, since a second world sharing entities would not test trait stability.
+
+### The build-time collision assertion earns its place immediately
+
+`validate_entity_names()` runs **before compiling**, and rejects two silent
+failures:
+
+1. **substring collision** — the detector is containment, so if one name contains
+   another a mention of the longer is a mention of the shorter
+2. **stopword collision** — a name that is also a common narrative word gets
+   matched by ordinary prose
+
+It caught my own first draft (*Boiler House*, *Fern House* — "house"), and
+injected controls confirm it fires on *lamp* / *Lamp Room* and on *Store*.
+
+**It also fails world_v0.** That world ships a room called **Store**, which is a
+verb. v0 survived only because rooms are usually named in a locational context —
+luck, not design. Recorded rather than retrofitted: v0's artifacts are
+sha256-locked and re-authoring them would invalidate every measurement taken in
+that world.
+
+### Verified
+
+Score-readout invariant (TRAP 2.2) holds in both worlds — the bare `-= Room =-`
+header is normal; a `=- N/M` readout never appears. Ground truth reads from facts
+in v2 as in v0: `take trowel` adds `in(trowel: o, I)`; `take lantern` in a room
+without one adds nothing.
+
+**178 tests pass, 2 xfailed.**
+
+### Parameters were frozen after Phase 1 output was already seen — stated, not hidden
+
+The plan required freezing world_v2's parameters *before* looking at Phase 1
+results, so that the trait-stability world is not authored to flatter models that
+scored well. **That ordering was already violated** — Phase 1 had been analysed in
+detail before authoring began.
+
+Mitigation, and it is partial: the parameters were derived **mechanically** from
+world_v0 — same structure, comparable size, names chosen only to satisfy the
+collision assertion — rather than designed. No model's behaviour informed any
+choice. But the honest statement is that the ordering guarantee is unavailable for
+this world, and F2's result carries that caveat.
