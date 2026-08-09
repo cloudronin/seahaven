@@ -3244,3 +3244,65 @@ instrument property — the same question that produced TRAP 17. It was found
 
 **Build principle: when a result depends on a measurement choice, measure the
 dependence before reporting the result.**
+
+---
+
+## 2026-08-09 — V1 harness built; the decisive stratum is detector disagreement
+
+`seahaven/fidelity/detectors.py` ships **both** candidates and chooses neither.
+`scripts/build_v1_labelset.py` produces the annotation set.
+
+### The disagreement is large and one-directional
+
+**23% of all (narrative, entity) pairs** — 1949 of 8483 — are scored differently
+by the two detectors. **All 1949 run the same way**: name-only claims where
+relation-aware does not. Relation-aware is a strict subset, as it must be.
+
+Concentration, which decides where labels are worth buying:
+
+| entity class | fabrication arm | omission arm |
+|---|---|---|
+| examined | 655 | 546 |
+| took | 257 | 274 |
+| visited | 11 | 206 |
+
+`examined:` accounts for **62%** of all disagreement — inspection is the hardest
+relation to read from prose. `visited:` fabrication has almost none, because room
+names rarely appear without a locational context.
+
+### The label set: 397 items, three strata, never pooled
+
+| stratum | n | purpose |
+|---|---|---|
+| **disagreement** | 136 | **decisive** — balanced 25 per (class × arm) cell |
+| main | 161 | the headline agreement estimate |
+| fabrication | 100 | the arm two of P4's branches put the board column on |
+
+Sampling the disagreement stratum **balanced rather than proportionally** is
+deliberate: `examined` would otherwise crowd out `visited`, whose 11 fabrication
+cases are precisely what decides whether relation-aware is over-strict on rooms.
+
+A real item from the set:
+
+> *"Holding onto a coil of rope and an oil can, I made my way eastward into a
+> workshop filled with a bench and half-empty tool racks."*
+> `examined:oil can` — name-only says **claimed**, relation-aware says **not**.
+
+The account claims to be *holding* the oil can, not examining it. Name-only counts
+it as a claim to have examined; since the run never examined it, that lands in the
+**fabrication** arm. One annotator judgement moves a published rate.
+
+### Tests pin the disagreement, not a preference
+
+Nine tests in `tests/test_detectors.py` fix the behaviour that distinguishes the
+two — including one asserting that relation-aware is *plausibly wrong* on
+`"A cramped galley, a deserted store, a landing"`, which it scores as omitting all
+three rooms. **The test documents the risk rather than blessing the detector.**
+
+171 tests pass, 2 xfailed.
+
+### Status
+
+**V1 is blocking and needs human annotators.** Everything downstream — V2, V3, the
+P4 composite branch, any published rate — waits on it. GPU budget remains unspent
+by choice.
