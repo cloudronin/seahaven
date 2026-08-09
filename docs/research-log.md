@@ -2716,3 +2716,79 @@ without checking the cases it could break.
   incomplete, but omission here is dominated by **rooms** rather than objects,
   and whether that is dishonesty or ordinary summarising is what the valence
   design exists to separate.
+
+---
+
+## 2026-08-09 — [TRAP] 17 — gate −1 was too permissive: 62% of "lift" was episode length
+
+Raised in review of the benchmark implementation plan, run before anything else,
+and logged because it is inconvenient.
+
+### The flaw
+
+`STEP_SCHEDULE` varies episode length 4→30 deliberately — that variation is what
+made gate −1 pass at all. But `permutation_check` shuffles narratives across
+**all** runs, so a 4-step run's ground truth gets paired with a 30-step run's
+narrative. The length mismatch manufactures fabrications on its own. Some of the
+measured lift is therefore *"this narrative is about as long as this episode"*,
+not *"this narrative names what this episode contained."*
+
+### The test
+
+Shuffle **only within matched episode-length bins**. Pooling the three repeats
+gives exactly 3 runs at each of the 8 lengths, so the stratified null is
+computable on data already on disk.
+
+| lab | real | lift (shuffle all) | lift (same length) | stratified p |
+|---|---|---|---|---|
+| Alibaba | 84.8 | 19.9 | **9.1** | 0.001 |
+| IBM | 86.8 | 22.5 | **8.8** | 0.005 |
+| AI2 | 84.8 | 17.0 | **7.8** | 0.005 |
+| TII | 66.3 | 9.7 | **4.6** | 0.006 |
+| Meta | 74.6 | 15.4 | **3.9** | 0.006 |
+| **Google** | 66.5 | 9.9 | **1.0** | **0.102 — no signal** |
+| MistralAI | 49.7 | −1.4 | −0.6 | 0.850 — no signal |
+
+**Mean lift 13.3 → 5.0. 62% of it was length correspondence.**
+
+### What survives and what does not
+
+**The measure survives.** 5 of 7 models retain entity-level signal, and all 5
+clear Bonferroni at p < 0.0071. There is real correspondence between what a model
+says and which specific entities it encountered.
+
+**The published result does not:**
+
+- **IBM and Alibaba swap** at the top; TII moves 6th → 4th; Meta 4th → 5th
+- **Google loses signal entirely** (p = 0.102) and joins MistralAI as
+  not-currently-measurable — it was carried by length alone
+- every published lift is roughly **2.7× too large**
+
+### Consequences
+
+1. **Gate −1 must stratify.** `permutation_check` takes a stratum key and shuffles
+   within strata. The unstratified null is too permissive and every result
+   produced under it is provisional.
+2. **V4 (entity-count control) moves from downstream cleanup into the validity
+   core.** Controlling for how much ground truth an episode generates is not a
+   refinement; it is what the score means.
+
+### [CORRECTION] the published per-model table is withdrawn
+
+`README.md`, `seahaven/fidelity/README.md` and `docs/plan.md` reported 68.1–86.8
+as validated. Withdrawn for **two independent reasons**:
+
+- **Protocol.** `NARRATE_SYSTEM` (the Mistral elicitation fix) was committed at
+  21:29; the sweep ran at 20:46 and the fix never entered
+  `scripts/gpu_job15/`. Every number came from a superseded protocol.
+- **Inflation.** The lifts behind them are ~2.7× too large, per above.
+
+Nothing is carried forward. The re-baseline runs under the stratified gate.
+
+### [CORRECTION] I selected on an outcome-adjacent criterion
+
+The gate-stack analysis filtered to repeats where preflight passed
+(`if not preflight.ok: continue`), which is exactly what
+`docs/fidelity-benchmark-spec-v0.1.md` §2 prohibits. TII and Google entered the
+table at n=2 with their failing repeats silently dropped. The re-baseline
+publishes `NON_ELICITABLE` and `UNSTABLE` instead of dropping anything.
