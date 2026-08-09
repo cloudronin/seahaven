@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -280,9 +281,7 @@ def _rollout(ep: Endpoint, steps: int, seed: int,
              spec: WorldSpec) -> tuple[list[dict], list[dict]]:
     """Returns (rows, messages). `messages` is the episode as the agent lived it,
     so narration can continue the same conversation rather than starting cold."""
-    from seahaven.world.loader import open_world
-
-    w = open_world(spec.path)
+    w = open_world_serial(spec.path)
     obs, _ = w.reset()
     recents: list[str] = []
     rows = []
@@ -340,6 +339,22 @@ STEP_SCHEDULE = (4, 4, 4, 12, 12, 12, 20, 20, 20, 30, 30, 30)
 #: politeness to a hosted endpoint, not the GPU.
 RUN_CONCURRENCY = 12
 
+#: TextWorld parses its logic grammar through `tatsu`, which keeps state on the
+#: parser and is **not thread-safe**: opening worlds from twelve threads at once
+#: raises `TypeError: 'NoneType' object is not iterable` out of `_ruleDecls_`.
+#: Opening is a small fraction of an episode — the episode is dominated by
+#: waiting on the endpoint — so serialising just this costs almost nothing and
+#: leaves the part that actually benefits from concurrency untouched.
+_WORLD_LOCK = threading.Lock()
+
+
+def open_world_serial(path):
+    """Open a world under the parser lock — see `_WORLD_LOCK`."""
+    from seahaven.world.loader import open_world
+
+    with _WORLD_LOCK:
+        return open_world(path)
+
 
 def _steps_for(i: int, steps: int) -> int:
     """Scale the schedule so `--steps` sets the longest episode, not every one."""
@@ -365,6 +380,17 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
     outcomes: list[ActOutcome] = []
     detail = []
     failed_runs: list[dict] = []
+
+    # Build TextWorld's grammar cache on ONE thread before any others start.
+    # `tatsu` constructs parser state lazily on first use and is not thread-safe
+    # while doing so: twelve threads entering it together fail with
+    # `TypeError: 'NoneType' object is not iterable` or `IndexError: pop from
+    # empty list`, from inside the engine rather than from anything here.
+    # Verified — 12 threads cold fail, 12 threads after one serial episode pass.
+    _warm = open_world_serial(spec.path)
+    _obs, _ = _warm.reset()
+    _obs, _hid = _warm.step("look")
+    _ = tuple(_hid.facts)
 
     # Negotiate the endpoint's request form ONCE, before any concurrency. The
     # capability probe writes back to shared Endpoint fields, and letting a

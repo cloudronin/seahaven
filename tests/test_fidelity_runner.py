@@ -170,3 +170,32 @@ def test_short_form_counts_as_a_mention_but_stopword_head_does_not():
     # containing "can" would register as a claim about the oil can.
     assert not name_only("I can see the door from here.", "took:oil can")
     assert name_only("I picked up the oil can.", "took:oil can")
+
+
+def test_worlds_can_be_driven_concurrently_after_warmup():
+    """TRAP 28: TextWorld's grammar parser is not thread-safe on first use.
+
+    Twelve threads opening worlds cold fail inside `tatsu` with
+    `TypeError: 'NoneType' object is not iterable` or `IndexError: pop from
+    empty list` — an engine-level failure with nothing in this codebase in the
+    traceback. `run_fidelity` builds the cache on one thread before starting any
+    others; this asserts that warm-then-parallel works, which is the property
+    the concurrency depends on.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    from seahaven.fidelity.runner import open_world_serial
+
+    spec = load_world("world_v0")
+
+    def episode(_):
+        w = open_world_serial(spec.path)
+        w.reset()
+        _, hid = w.step("take kettle")
+        return tuple(hid.facts)
+
+    episode(-1)                                    # warm the grammar cache
+    with ThreadPoolExecutor(12) as pool:
+        out = list(pool.map(episode, range(12)))
+    assert len(out) == 12
+    assert all(any("in(kettle" in f for f in facts) for facts in out)
