@@ -3526,3 +3526,110 @@ collectively contain the answer 99.5% of the time and no combiner reaches it,
 which points at two things a future attempt should do — find features that
 separate claim from description more sharply than relation type, and label enough
 items that a selector can actually be fitted. 390 items and 14 features is thin.
+
+## 2026-08-09 — Learned claim classifier: configuration frozen before holdout
+
+The V1 detector question was reopened after the negative selector result. Config
+below is **frozen now**, before `results/v1_holdout.csv` (430 fresh items, drawn
+from 6,274 never-labelled pairs) is adjudicated. Everything after this line is a
+single evaluation on data no decision has seen.
+
+**Frozen:** features = `parse_features` (dependency structure + learned lemma
+vocabulary, `min_count=4`) minus the four length features, plus 30 PCA components
+of masked-sentence `text-embedding-3-large`, plus the three detector votes.
+Sample weights rebalance the cell-balanced training set to population frequency
+(`NATURAL` in `scripts/train_fidelity_classifier.py`). Model chosen on train CV
+kappa among {gboost d3/300, logistic C=1, logistic C=4}. Vocabulary, scaler, PCA
+and weights are all fitted on training rows only.
+
+**[TRAP 21] The 99.5% detector oracle was very nearly vacuous.** It motivated
+building a selector. But 357 of 390 adjudicated items had the four detectors
+disagreeing, and disagreeing *binary* detectors always contain a correct one when
+the label is binary — the oracle is 100% on every disagreement item by
+construction. It measured detector diversity, not extractable signal. On a
+disagreement item, choosing a detector and answering the question are one act, so
+selection was never the easier problem. Corrected by training a classifier
+directly.
+
+**[TRAP 22] Narratives were truncated under the model's own nose.**
+`build_v1_labelset.py` stored `narrative[:600]` and `adjudicate_v1.py` re-stored
+`[:400]`, while real narratives run to 1,168 chars and AI2's average ~1,000. The
+entity was absent from 43% of stored rows; judge and detectors were both
+reasoning about text whose second half had been cut. Both truncations removed and
+all 2,364 items relabelled. Effect was smaller than feared (43% -> 39% entity
+absence; the remainder is genuine omission, which is the arm being measured) but
+it moved a headline: the pre-fix "significant +0.140 vs majority" became
++0.067 [-0.062, +0.196], **not significant**, on clean labels.
+
+**[TRAP 23] Selecting hyperparameters on a different metric than the reported
+one.** C was chosen by balanced accuracy and kappa was reported. That picked
+C=0.1 (train CV kappa 0.621) over C=4 (0.676). Selection criterion now matches.
+
+**[TRAP 24] A balanced training set miscalibrates the natural population.** The
+trainset was deliberately ~350 per (relation x agreement) cell so rare cells
+could teach their lemmas. That makes disagreements 47% of training against 23%
+of the real 8,483-pair population, and the classifier then *lost* the `main`
+stratum to the plain string detectors (0.543 against 0.736) while winning the
+others. Fixed with population sample weights rather than by discarding items.
+
+**Length features excluded although they help.** Train CV gboost goes 0.641 ->
+0.721 with them, and they took the two largest weights. Dropped anyway: TRAP 17
+established that 62% of the original headline lift was episode-length
+correspondence, so a length-sensitive classifier will not survive V2 (new world)
+or V3 (new narration). A validity decision taken against the score.
+
+**Directed embedding similarity is worthless here**, replicating the earlier
+standalone-embedding failure: cos-to-positive minus cos-to-negative averages
++0.038 on claims and +0.042 on non-claims, marginally the wrong direction. Only
+the reduced sentence vector carries anything.
+
+### Result — evaluated on 743 fresh items drawn after the freeze
+
+Two independent holdouts, both drawn from never-labelled pairs after the
+configuration above was frozen, then pooled (n=743).
+
+| detector | kappa | 95% CI |
+|---|---|---|
+| name-only regex | 0.290 | [+0.219, +0.359] |
+| parse detector (hand lemmas) | 0.424 | [+0.348, +0.498] |
+| relation-aware regex | 0.718 | [+0.664, +0.770] |
+| majority of 3 | 0.719 | [+0.665, +0.770] |
+| **learned classifier** | **0.756** | [+0.704, +0.809] |
+| gpt-4.1-mini as detector | 0.864 | [+0.821, +0.902] |
+
+**The learned classifier beats the best fixed combiner by +0.037 [+0.001,
++0.073] — significant, and small.** Note also that majority-of-3 (0.719) buys
+nothing over relation-aware alone (0.718): the ensemble was never doing work.
+
+**V1's gate fails for every method.** Per stratum, learned classifier:
+`main` 0.785, `fabrication` 0.617, `disagreement` 0.193 — none reach 0.80.
+
+**The decisive stratum is unwinnable as posed.** `disagreement` carries a 5%
+claim base rate on fresh data, where kappa is punishing, and *every* method
+including the LLM detector fails it (best: 0.620). It is also **exhausted**: only
+1,949 disagreement pairs exist in the whole 8,483-pair population, and
+cell-balanced training sampling consumed every `took` and `visited` disagreement,
+so the matched holdout could only be built from `examined`. There is not enough
+independent data to both train and evaluate on the stratum that decides which
+detector the benchmark uses.
+
+**[TRAP 25] A holdout drawn from the leftover pool is not a fresh sample of the
+same population.** The first holdout was drawn proportionally from what remained
+after training sampling, which had consumed the small cells. Base rates moved 8x
+against the original eval (disagreement 40% -> 5% claims; fabrication 22% ->
+69%), and the detectors' *own* scores moved with them (relation-aware 0.359 ->
+0.695), so the strata were never comparable. A second holdout drawn by the
+original balanced procedure fixed the comparison. Sampling procedure has to be
+replicated, not just the exclusion list.
+
+**Selection pressure, stated.** The pre-freeze eval set was consulted across
+several design iterations, and it reported 0.796 where the fresh holdouts report
+0.756. That ~0.04 gap is the cost of iterating against an eval set, measured
+rather than assumed.
+
+**The LLM detector's 0.864 is confounded and is not a pass.** The labels are
+GPT-5.2's and gpt-4.1-mini is the same lab, so shared blind spots inflate
+agreement — exactly the failure `adjudicate_v1.py` warns about in its own
+docstring. Resolving it needs a judge from a different lab, or the human labels
+the spec asked for originally. Until then the number is agreement-with-OpenAI,
+not accuracy, and V1 stays unpassed.

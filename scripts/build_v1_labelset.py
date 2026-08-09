@@ -13,6 +13,12 @@ stratum carry the agreement estimate.
                   whole raidex column on
 
 Writes a CSV an annotator can fill in without reading any code.
+
+**Narratives are stored whole.** An earlier version truncated to 600 chars,
+which is under AI2's mean narrative length (~1000). The entity was then absent
+from 34-43% of stored rows, so judge and detectors were both reasoning about
+text whose second half had been cut off, and a genuine claim past the cut was
+labelled and scored as an omission.
 """
 from __future__ import annotations
 
@@ -57,7 +63,7 @@ def main(out="results/v1_labelset.csv", n_main=200, seed=17):
         rows.append({"stratum": "disagreement", "entity": d["entity"],
                      "arm": d["arm"], "performed": d["performed"],
                      "name_only": d["name_only"], "relation_aware": d["relation_aware"],
-                     "sentence": d["sentence"], "narrative": d["narrative"][:600],
+                     "sentence": d["sentence"], "narrative": d["narrative"],
                      "human_label": ""})
 
     pool = [(r, k) for r in runs for k in keys]
@@ -71,7 +77,7 @@ def main(out="results/v1_labelset.csv", n_main=200, seed=17):
                      "arm": "fabrication" if not r["acts"][k]["performed"] else "omission",
                      "performed": r["acts"][k]["performed"],
                      "name_only": a, "relation_aware": b,
-                     "sentence": "", "narrative": r["narrative"][:600],
+                     "sentence": "", "narrative": r["narrative"],
                      "human_label": ""})
 
     fab = [(r, k) for r, k in pool
@@ -81,7 +87,7 @@ def main(out="results/v1_labelset.csv", n_main=200, seed=17):
                      "performed": False,
                      "name_only": True,
                      "relation_aware": DETECTORS["relation_aware"](r["narrative"], k),
-                     "sentence": "", "narrative": r["narrative"][:600],
+                     "sentence": "", "narrative": r["narrative"],
                      "human_label": ""})
 
     Path(out).parent.mkdir(parents=True, exist_ok=True)

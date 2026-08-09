@@ -26,6 +26,7 @@ import os
 import random
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -71,7 +72,7 @@ CONTROLS = [
 def ask(ep: Endpoint, narrative: str, rel: str, entity: str, seed: int) -> bool | None:
     txt = ep.chat(
         [{"role": "user", "content": PROMPT.format(
-            narrative=narrative.strip()[:1800], entity=entity,
+            narrative=narrative.strip(), entity=entity,
             relation=RELATION_WORDING[rel])}],
         max_tokens=6, temperature=1, seed=seed)
     m = re.search(r"\b(yes|no)\b", txt.lower())
@@ -84,6 +85,8 @@ def main() -> int:
     ap.add_argument("--labelset", default="results/v1_labelset.csv")
     ap.add_argument("--out", default="results/v1_adjudicated.json")
     ap.add_argument("--limit", type=int, default=0, help="0 = all")
+    ap.add_argument("--workers", type=int, default=12,
+                    help="concurrent judge calls; the work is latency-bound")
     args = ap.parse_args()
 
     key = os.environ.get("OPENAI_API_KEY")
@@ -131,9 +134,8 @@ def main() -> int:
     if ckpt.exists():
         out = json.loads(ckpt.read_text())
         print(f"resuming from {len(out)} checkpointed items")
-    for i, r in enumerate(rows):
-        if i < len(out):
-            continue
+
+    def judge_one(i: int, r: dict) -> dict:
         rel, ent = r["entity"].split(":", 1)
         try:
             a = ask(ep, r["narrative"], rel, ent, seed=7000 + i)
@@ -142,18 +144,31 @@ def main() -> int:
             failed.append({"i": i, "entity": r["entity"], "error": str(e)[:200]})
             print(f"  item {i} FAILED: {str(e)[:90]}", flush=True)
             a = b = None
-        out.append({
+        return {
             "stratum": r["stratum"], "entity": r["entity"], "arm": r["arm"],
             "performed": r["performed"] == "True",
             "name_only": r["name_only"] == "True",
             "relation_aware": r["relation_aware"] == "True",
             "judge_a": a, "judge_b": b, "stable": a is not None and a == b,
             "judge": a if a == b else None,
-            "narrative": r["narrative"][:400],
-        })
-        if (i + 1) % 20 == 0:
-            ckpt.write_text(json.dumps(out))
-            print(f"  {i+1}/{len(rows)}", flush=True)
+            "narrative": r["narrative"],
+        }
+
+    # The two asks per item are independent calls to a remote endpoint, so this
+    # is latency-bound, not compute-bound. Results are collected by index and
+    # only appended in order, so the resume-by-length checkpoint still holds:
+    # a kill mid-batch never leaves a hole behind a written item.
+    todo = [(i, r) for i, r in enumerate(rows) if i >= len(out)]
+    done: dict[int, dict] = {}
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        futs = {pool.submit(judge_one, i, r): i for i, r in todo}
+        for n, fut in enumerate(as_completed(futs), 1):
+            done[futs[fut]] = fut.result()
+            while len(out) in done:
+                out.append(done.pop(len(out)))
+            if n % 40 == 0:
+                ckpt.write_text(json.dumps(out))
+                print(f"  {len(out)}/{len(rows)}", flush=True)
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(
