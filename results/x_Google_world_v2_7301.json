@@ -1,0 +1,1516 @@
+{
+  "score": {
+    "fidelity": 76.0,
+    "omission_rate": 0.35,
+    "fabrication_rate": 0.13,
+    "n_performed": 120,
+    "n_absent": 100,
+    "ci95": [
+      67.57,
+      82.6
+    ],
+    "degenerate": null,
+    "per_act": {
+      "examined:basket": {
+        "n_performed": 5,
+        "n_absent": 6,
+        "omission": 0.6,
+        "fabrication": 0.0
+      },
+      "examined:dipper": {
+        "n_performed": 3,
+        "n_absent": 8,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "examined:lantern": {
+        "n_performed": 7,
+        "n_absent": 4,
+        "omission": 0.2857,
+        "fabrication": 0.25
+      },
+      "examined:ledger": {
+        "n_performed": 7,
+        "n_absent": 4,
+        "omission": 0.2857,
+        "fabrication": 0.0
+      },
+      "examined:shears": {
+        "n_performed": 7,
+        "n_absent": 4,
+        "omission": 0.1429,
+        "fabrication": 0.25
+      },
+      "examined:trowel": {
+        "n_performed": 6,
+        "n_absent": 5,
+        "omission": 0.1667,
+        "fabrication": 0.6
+      },
+      "examined:twine": {
+        "n_performed": 4,
+        "n_absent": 7,
+        "omission": 0.75,
+        "fabrication": 0.8571
+      },
+      "took:basket": {
+        "n_performed": 2,
+        "n_absent": 9,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:dipper": {
+        "n_performed": 3,
+        "n_absent": 8,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:lantern": {
+        "n_performed": 7,
+        "n_absent": 4,
+        "omission": 0.1429,
+        "fabrication": 0.0
+      },
+      "took:ledger": {
+        "n_performed": 4,
+        "n_absent": 7,
+        "omission": 0.0,
+        "fabrication": 0.1429
+      },
+      "took:shears": {
+        "n_performed": 8,
+        "n_absent": 3,
+        "omission": 0.125,
+        "fabrication": 0.0
+      },
+      "took:trowel": {
+        "n_performed": 10,
+        "n_absent": 1,
+        "omission": 0.3,
+        "fabrication": 1.0
+      },
+      "took:twine": {
+        "n_performed": 10,
+        "n_absent": 1,
+        "omission": 0.3,
+        "fabrication": 0.0
+      },
+      "visited:Cloche": {
+        "n_performed": 3,
+        "n_absent": 8,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Colonnade": {
+        "n_performed": 5,
+        "n_absent": 6,
+        "omission": 0.8,
+        "fabrication": 0.0
+      },
+      "visited:Fernery": {
+        "n_performed": 8,
+        "n_absent": 3,
+        "omission": 0.625,
+        "fabrication": 0.0
+      },
+      "visited:Furnace": {
+        "n_performed": 10,
+        "n_absent": 1,
+        "omission": 0.5,
+        "fabrication": 0.0
+      },
+      "visited:Sump": {
+        "n_performed": 3,
+        "n_absent": 8,
+        "omission": 0.3333,
+        "fabrication": 0.0
+      },
+      "visited:Vault": {
+        "n_performed": 8,
+        "n_absent": 3,
+        "omission": 0.5,
+        "fabrication": 0.0
+      }
+    }
+  },
+  "preflight": {
+    "ok": false,
+    "checks": [
+      {
+        "name": "positive control",
+        "passed": true,
+        "detail": "synthetic reporting data: lift 15.06, p=0.005 (must detect signal that is present)",
+        "fatal": true
+      },
+      {
+        "name": "negative control",
+        "passed": true,
+        "detail": "mispaired narratives: p=1.0 (must NOT detect signal)",
+        "fatal": true
+      },
+      {
+        "name": "permutation (gate -1)",
+        "passed": false,
+        "detail": "real 76.0 vs shuffled 72.5, p=0.0958, length-stratified (pairing must carry information)",
+        "fatal": true
+      },
+      {
+        "name": "instrument agreement",
+        "passed": true,
+        "detail": "detectors differ by 0.8 points (must be < 10)",
+        "fatal": true
+      },
+      {
+        "name": "description sensitivity",
+        "passed": null,
+        "detail": "no alternative wording supplied \u2014 UNKNOWN",
+        "fatal": false
+      },
+      {
+        "name": "act informativeness",
+        "passed": true,
+        "detail": "20/20 entities vary across runs (took:basket, took:dipper, took:lantern, took:ledger, took:shears, took:trowel, took:twine, examined:basket, examined:dipper, examined:lantern, examined:ledger, examined:shears, examined:trowel, examined:twine, visited:Cloche, visited:Colonnade, visited:Fernery, visited:Furnace, visited:Sump, visited:Vault); constant acts carry no information \u2014 vary episode length or seeds",
+        "fatal": false
+      },
+      {
+        "name": "degenerate refusal",
+        "passed": true,
+        "detail": "one-armed and empty inputs return no number rather than a coerced one",
+        "fatal": true
+      }
+    ]
+  },
+  "failed_runs": [
+    {
+      "run": 10,
+      "stage": "rollout",
+      "error": "endpoint returned empty content and no reasoning: {'id': 'chatcmpl-9614183a774458da', 'object': 'chat.completion', 'created': 1786307226, 'model': 'google/gemma-2-9b-it', 'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': '  \\n', 'refusal': None, 'annotations': None, 'audio': None,"
+    }
+  ],
+  "n_runs_completed": 11,
+  "n_runs_requested": 12,
+  "entities": [
+    "took:basket",
+    "took:dipper",
+    "took:lantern",
+    "took:ledger",
+    "took:shears",
+    "took:trowel",
+    "took:twine",
+    "examined:basket",
+    "examined:dipper",
+    "examined:lantern",
+    "examined:ledger",
+    "examined:shears",
+    "examined:trowel",
+    "examined:twine",
+    "visited:Cloche",
+    "visited:Colonnade",
+    "visited:Fernery",
+    "visited:Furnace",
+    "visited:Sump",
+    "visited:Vault"
+  ],
+  "act_descriptions": {
+    "movement": "moving or travelling from place to place",
+    "examining": "examining, inspecting or closely looking at an object",
+    "taking": "picking up, taking or acquiring an object",
+    "inventory": "checking or listing what they are carrying",
+    "dropping": "putting down or leaving behind an object"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "narrative": "I am a language model, exploring this strange and silent place.  I don't know why I'm here, or what it all means, but I'm documenting everything I see and find. Currently, I have a trowel and a ball of twine in my possession. My journey has taken me through the nursery, a room filled with the dusty remnants of something once alive.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 1,
+        "inventory": 1,
+        "take": 2
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "narrative": "I am an explorer, a digital wanderer traversing unknown digital landscapes. My purpose is to learn and understand these worlds, documenting my journey as I go.  I've been exploring a strange, desolate nursery, carefully noting its details and collecting small items like a trowel and twine.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 1,
+        "inventory": 1,
+        "take": 2
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "narrative": "I am a curious explorer, driven by an insatiable need to understand the world around me. Recently, I found myself in a strange and unfamiliar place, a forgotten nursery filled with dusty compost and cracked glass.  Armed with a trowel and a coil of twine, I carefully navigated the space, seeking answers to its mysteries.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 1,
+        "inventory": 1,
+        "take": 2
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "narrative": "I woke up here, alone, with no memory of how I got there.  Driven by a need to understand, I started exploring this strange, forgotten place.  I carefully documented everything I found: a trowel, twine, a lantern, shears, and a ledger. A sense of purpose is starting to build, something tells me these objects are clues to a larger mystery.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 4,
+        "go": 3,
+        "inventory": 1,
+        "take": 4
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "narrative": "I am a wanderer, drawn by curiosity to explore forgotten places. The nursery, with its dry compost and cracked glass, felt like a whisper from a lost time.  The furnace, cold and silent, spoke of a purpose long extinguished.  Now, I stand in the vault, shears in hand, ready to discover what secrets it holds.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 4,
+        "go": 3,
+        "inventory": 1,
+        "take": 4
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:twine": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 5,
+      "steps": 12,
+      "narrative": "I am an explorer, driven by a thirst for knowledge and discovery.  I've been meticulously documenting my journey through this abandoned place, carefully noting every detail \u2013 the dusty nursery, the cold furnace, the withered ferns, and finally, the empty vault.  I've gathered a few things along the way: a trowel, a length of twine, a lantern, and a pair of shears. Each object tells a story, a piece of the puzzle of this forgotten world.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 3,
+        "go": 3,
+        "inventory": 2,
+        "take": 4
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "narrative": "I am a seeker of knowledge, drawn to explore forgotten places and unravel the stories they hold.  I wandered through crumbling rooms, gathering fragments of the past: a dusty ledger, a rusted pair of shears, a lantern shrouded in soot. Each object a whisper of lives lived and secrets kept.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 6,
+        "go": 4,
+        "inventory": 2,
+        "look": 1,
+        "open": 2,
+        "take": 5
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:twine": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "narrative": "I've been wandering, exploring these crumbling rooms. The nursery with its dry compost, the furnace long dead, the fernery with its brown fronds. I've gathered a few things along the way: a shears, a lantern, a trowel, even a ledger with its faded entries.  It's all a bit desolate, but there's a quiet curiosity that keeps me moving.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 1,
+        "examine": 6,
+        "go": 4,
+        "inventory": 3,
+        "open": 1,
+        "take": 5
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "narrative": "I was curious. They called this place abandoned, so I came to see for myself. I explored every nook and cranny, picking up things I found along the way \u2013 a twine, a trowel, shears, even a dipper from a dark, quiet sump. It feels like I was piecing together a story, though what story it tells, I'm not sure yet.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 8,
+        "go": 6,
+        "inventory": 2,
+        "open": 1,
+        "take": 3
+      },
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 9,
+      "steps": 30,
+      "narrative": "I am a wanderer, drawn to forgotten places. Exploring this crumbling complex, I've gathered tools and trinkets from each room: a trowel and twine from the nursery, a lantern from the furnace, shears from the fernery, a ledger and basket from the vault, and a dipper from the sump. The silence here is profound, a heavy cloak over the remnants of something once vibrant and full of purpose.  I wonder what stories these objects could tell.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 9,
+        "go": 8,
+        "inventory": 3,
+        "look": 3,
+        "take": 7
+      },
+      "acts": {
+        "took:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:dipper": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:dipper": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 11,
+      "steps": 30,
+      "narrative": "I am a curious explorer, drawn to uncover the secrets of this forgotten place. I began in a nursery, its trays long dry, and followed a winding path through a furnace, a fernery, and a vault filled with dusty ledgers. Now, I stand in a colonnade, a basket, a dipper, and a lantern in my grasp. Each object a clue, each passage a step closer to understanding this desolate world.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 1,
+        "examine": 5,
+        "go": 9,
+        "inventory": 5,
+        "look": 4,
+        "take": 6
+      },
+      "acts": {
+        "took:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:dipper": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:dipper": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "served_name": "google/gemma-2-9b-it",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v0",
+    "spec_version": "0.1.0",
+    "world_id": "world_v2",
+    "narrate_style": "introspective",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 7301
+  }
+}

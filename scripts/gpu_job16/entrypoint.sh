@@ -55,10 +55,6 @@ PY
 # Alibaba and MistralAI have all six evals already and are merged at analysis
 # time rather than paid for twice.
 MODELS=(
-  "AI2|allenai/OLMo-2-1124-13B-Instruct"
-  "IBM|ibm-granite/granite-3.1-8b-instruct"
-  "TII|tiiuae/Falcon3-10B-Instruct"
-  "Meta|meta-llama/Llama-3.1-8B-Instruct"
   "Google|google/gemma-2-9b-it"
 )
 
@@ -104,7 +100,6 @@ PROBE
                     --world "$WORLD" \
                     --output "$R/x_${LAB}_${WORLD}_${SEED}.json" \
                     > /tmp/eval_${LAB}_${WORLD}_${SEED}.log 2>&1
-                  push "$R/x_${LAB}_${WORLD}_${SEED}.json" || true
                 ) &
                 EVAL_PIDS+=($!)
             done
@@ -114,6 +109,15 @@ PROBE
         # script blocked forever after the evals had already finished and
         # pushed. The job looked alive and produced nothing further.
         wait "${EVAL_PIDS[@]}"
+        # Push AFTER the evals, one at a time. Pushing from inside the six
+        # concurrent subshells raced on the dataset branch: four of Google's
+        # six uploads died with HTTP 500 from the commit endpoint and the
+        # results were lost with the container.
+        for WORLD in world_v0 world_v2; do
+            for SEED in 5150 7301 9412; do
+                push "$R/x_${LAB}_${WORLD}_${SEED}.json" || true
+            done
+        done
         for WORLD in world_v0 world_v2; do
             for SEED in 5150 7301 9412; do
                 echo "--- $LAB $WORLD $SEED ---"

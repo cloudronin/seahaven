@@ -11,10 +11,23 @@ level shift still means the score is not portable.
 
 **Selection rule (spec §2).** Repeats are never filtered on preflight before
 averaging: that is selection on an outcome-adjacent criterion, and it is what
-made an earlier analysis look cleaner than it was. A model is reported as
-`NON_ELICITABLE` when no repeat passes and `UNSTABLE` when only some do; either
-way the fraction is shown and the model is excluded from the correlation rather
-than silently averaged from its lucky repeats.
+made an earlier analysis look cleaner than it was.
+
+The first version of this script then went on to drop whole *models* unless all
+three repeats passed in both worlds — which is the same error one level up,
+since preflight status is a function of the score. It also left one comparable
+model out of seven and made V2 undecidable for a reason that was an artefact of
+the rule rather than of the data. The correlation is now computed over every
+model from the mean of all repeats, and the preflight pass fraction is reported
+beside it as a validity caveat rather than used as a filter.
+
+**Gate -1 is marginal on world_v0, and that is the more important finding.** It
+is the only fatal check that ever fails here: 7 of 18 world_v0 repeats against
+2 of 18 in world_v2. The lift is positive in both (+8.6 and +10.6), so the
+signal is real in both; world_v0 is simply underpowered, with 12.8 of 17
+entities varying against world_v2's 17.6 of 20. A benchmark whose validity gate
+is a coin-flip at this n cannot carry a per-model leaderboard column whatever
+the correlation says.
 
 **Pairing.** Both worlds are played on the same three seeds, so the comparison is
 within-seed. Independent draws would add sampling noise to a quantity that is
@@ -106,15 +119,13 @@ def main() -> int:
         return 0
     w0, w1 = worlds[0], worlds[1]
 
-    # Only models elicitable in BOTH worlds enter the correlation. A model that
-    # fails preflight in one world is a finding, not a data point.
-    usable = [l for l in labs
-              if status.get((l, w0)) == "ok" and status.get((l, w1)) == "ok"
-              and (l, w0) in means and (l, w1) in means]
+    # Every model with a score in both worlds. Dropping models on preflight
+    # status would select on an outcome-adjacent criterion — see the docstring.
+    usable = [l for l in labs if (l, w0) in means and (l, w1) in means]
     dropped = [l for l in labs if l not in usable]
-    print(f"\n{len(usable)} models elicitable in both worlds: {usable}")
+    print(f"\n{len(usable)} models scored in both worlds: {usable}")
     if dropped:
-        print(f"  excluded: {[(l, status.get((l, w0)), status.get((l, w1))) for l in dropped]}")
+        print(f"  no score in one or both worlds: {dropped}")
     if len(usable) < 3:
         print("\nfewer than 3 comparable models — rho is not interpretable. V2 UNDECIDED.")
         return 0
@@ -129,11 +140,43 @@ def main() -> int:
     print(f"  between-model sd             = {between_sd:.2f}   gate: MAD < sd")
     passes = (rho >= 0.80) and (mad < between_sd)
     print(f"\n  V2 verdict: {'PASS' if passes else 'FAIL'}")
+    unstable = [l for l in usable
+                if status.get((l, w0)) != "ok" or status.get((l, w1)) != "ok"]
+    if unstable:
+        print(f"\n  CAVEAT: {len(unstable)}/{len(usable)} models had at least one repeat")
+        print(f"  fail gate -1: {unstable}. Their means average repeats that")
+        print(f"  individually carried no demonstrable signal, so rho here is an")
+        print(f"  upper bound on what the instrument currently supports.")
     if not passes:
         print("  On failure (F2) the plan is explicit: publish as a world-specificity")
         print("  finding — a world score, not a model score — and do not submit.")
 
+    # rho over 6-7 models saturates easily: one clear outlier plus a middle
+    # cluster separated by less than its own repeat-to-repeat spread can give
+    # rho = 1.0 while the ranking inside that cluster is pure noise. Resampling
+    # the repeats says how much of the correlation survives that.
+    import random
+    rng = random.Random(19)
+    boot = []
+    for _ in range(4000):
+        aa, bb = [], []
+        for l in usable:
+            ra = [r["fidelity"] for r in by[(l, w0)] if r["fidelity"] is not None]
+            rb = [r["fidelity"] for r in by[(l, w1)] if r["fidelity"] is not None]
+            aa.append(st.mean(rng.choices(ra, k=len(ra))))
+            bb.append(st.mean(rng.choices(rb, k=len(rb))))
+        r = spearman(aa, bb)
+        if r == r:
+            boot.append(r)
+    boot.sort()
+    lo, hi = boot[int(.025 * len(boot))], boot[int(.975 * len(boot))]
+    frac = sum(1 for r in boot if r >= 0.80) / len(boot)
+    print(f"\n  rho bootstrapped over repeats: median {boot[len(boot)//2]:.3f} "
+          f"[{lo:.3f}, {hi:.3f}]")
+    print(f"  fraction of resamples clearing the 0.80 gate: {frac:.2f}")
+
     Path("results/v2_crossworld.json").write_text(json.dumps({
+        "rho_boot": {"median": boot[len(boot)//2], "ci": [lo, hi], "frac_ge_080": frac},
         "worlds": [w0, w1], "usable": usable, "dropped": dropped,
         "means": {f"{l}|{w}": v for (l, w), v in means.items()},
         "status": {f"{l}|{w}": s for (l, w), s in status.items()},

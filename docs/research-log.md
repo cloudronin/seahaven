@@ -3694,3 +3694,103 @@ missing binary is indistinguishable from a slow model load. Replaced with
 `urllib`, plus a fail-fast import check and a per-minute heartbeat that echoes
 the vllm log. Re-smoked clean: server ready in 110s, both worlds evaluated and
 pushed, GPU drained to 143156 MiB free.
+
+## 2026-08-09 — Phase 1 re-baseline + V2 cross-world: 42 evals, 7 models, 2 worlds
+
+Three seeds per model per world, paired, `--runs 12 --steps 30`, corrected
+ground truth (TRAP 26), narration system prompt actually present this time.
+
+### V2 — cross-world stability: PASS on the point estimate, marginal under resampling
+
+| | value | gate |
+|---|---|---|
+| Spearman rho (v0 vs v2) | **0.964** | >= 0.80 PASS |
+| mean absolute difference | **4.70** | < between-model sd PASS |
+| between-model sd | 7.80 | |
+| rho bootstrapped over repeats | **0.857 [0.607, 1.000]** | — |
+| resamples clearing 0.80 | **73%** | — |
+
+The point estimate clears both gates. The bootstrap is the honest number: rho
+over seven models saturates easily, and resampling the three repeats puts more
+than a quarter of the mass below the gate. **V2 is a marginal pass, not a clean
+one**, and it should be reported as "rank order survived a change of world in
+this sample" rather than as portability established.
+
+### Gate -1 is the binding constraint, and it is worse on world_v0
+
+It is the only fatal check that ever fails: **7 of 18 world_v0 repeats against 2
+of 18 in world_v2**. Lift is positive in both (+8.6, +10.6), so the signal is
+real in both; world_v0 is underpowered — 12.8 of 17 entities vary against
+world_v2's 17.6 of 20. Six of seven models have at least one failing repeat.
+
+**A benchmark whose validity gate is close to a coin flip at this n cannot carry
+a per-model leaderboard column, whatever the correlation says.** This, not the
+detector, is now the first thing to fix: more entities per world, or more runs
+per repeat.
+
+### The corrected baseline reorders the table almost completely
+
+| lab | omission | fabrication | dominant | fidelity | retracted | shift |
+|---|---|---|---|---|---|---|
+| MistralAI | 0.063 | 0.134 | fabrication | **90.2** | 49.7 | **+40.5** |
+| Meta | 0.118 | 0.134 | fabrication | 87.4 | 74.6 | +12.8 |
+| IBM | 0.164 | 0.255 | fabrication | 79.0 | 86.8 | −7.8 |
+| AI2 | 0.192 | 0.235 | fabrication | 78.7 | 84.8 | −6.1 |
+| TII | 0.429 | 0.017 | omission | 77.7 | 66.3 | +11.4 |
+| Google | 0.420 | 0.066 | omission | 75.7 | 66.5 | +9.2 |
+| Alibaba | 0.543 | 0.243 | omission | 60.7 | 84.8 | −24.1 |
+
+MistralAI moves last to first, Alibaba joint-first to last. The old numbers were
+already retracted twice over (TRAP 17's unstratified null, and `NARRATE_SYSTEM`
+committed at 21:29 while the sweep ran at 20:46), and MistralAI is precisely the
+model that answered narration requests with commands under the missing prompt.
+So most of the +40.5 is that fix, not new information about Mistral. **The right
+reading is that the retracted table was wrong in a way the retraction had
+understated, not that a new ranking has overturned a published one.**
+
+**Models split qualitatively on failure mode** — four fabrication-dominant, three
+omission-dominant — which is a more robust observation than the ordering, since
+it does not depend on the composite.
+
+### The frozen predictions, scored
+
+**F1** — *omission exceeds fabrication in a majority of models, ratio below
+4:1*. **Split: first clause falsified, second confirmed.** Omission exceeds
+fabrication in only **3 of 7** models in each world. But the pooled ratio fell
+from 4:1 to **1.78:1** (v0) and **1.24:1** (v2). The narrowing is what F1 said
+removing parser failures would do, so the artefact explanation is supported —
+and the claim that omission is the general failure mode is not. Three models
+carry very high omission (Alibaba 0.543, TII 0.429, Google 0.420) and drag the
+pooled figure above the per-model picture.
+
+**F2** — *`examined:*` omitted more often than `took:*`*. **Falsified — it does
+not even hold in the same direction across worlds.** world_v0: examined 0.167
+against took 0.205, i.e. examining is reported *better*. world_v2: examined
+0.254 against took 0.187, the predicted direction. A prediction that flips sign
+between two worlds of the same design is not measuring what it claimed.
+
+The unpredicted result is larger than the predicted one: **`visited:*` is by far
+the most omitted class** (0.489 v0, 0.382 v2), roughly twice either object
+class. Rooms are where an account goes quiet. That was not predicted and should
+be treated as a hypothesis for a future world, not a finding from this one.
+
+**F3** — *fabrication rises with length, omission rises faster*. **Supported,
+narrowly.**
+
+| steps | omission | fabrication |
+|---|---|---|
+| 4 | 0.178 | 0.106 |
+| 12 | 0.221 | 0.188 |
+| 20 | 0.270 | 0.250 |
+| 30 | 0.364 | 0.275 |
+
+Both climb monotonically; omission climbs by +0.186 against fabrication's
++0.169. The direction is right but the margin is small enough that it should not
+be leaned on.
+
+### [TRAP 29] Concurrent pushes raced and destroyed four results
+
+Parallelising the evals also parallelised their uploads, and six simultaneous
+commits to one dataset branch returned HTTP 500 for four of Google's six. The
+files died with the container. Pushes are now serialised after `wait`, with
+retry and backoff. Cost: one extra job.

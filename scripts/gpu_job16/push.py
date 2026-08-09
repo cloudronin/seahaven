@@ -24,6 +24,26 @@ def main() -> int:
         print(f"[push] nothing at {path}", flush=True)
         return 0
     api = HfApi(token=os.environ.get("HF_TOKEN"))
+    import time
+    for attempt in range(4):
+        try:
+            api.upload_file(
+                path_or_fileobj=str(path),
+                path_in_repo=path.name,
+                repo_id=REPO, repo_type="dataset")
+            print(f"[push] {path.name} -> {REPO}", flush=True)
+            return 0
+        except Exception as e:
+            # The commit endpoint returns 500 when concurrent commits collide.
+            # Retrying with backoff is the difference between a lost result and
+            # a slow one.
+            print(f"[push] attempt {attempt+1} failed for {path.name}: "
+                  f"{type(e).__name__}", flush=True)
+            time.sleep(3 * (attempt + 1))
+    print(f"[push] GAVE UP on {path.name}", flush=True)
+    return 0
+
+def _unused(api, path):
     try:
         api.upload_file(
             path_or_fileobj=str(path),
