@@ -3158,3 +3158,89 @@ cross-world stability. That result feeds branch three directly.
 
 Spec predictions 3, 4 and 5 stand **unrevised**. One falsified prediction is a
 result; a set quietly re-fitted around it is not.
+
+---
+
+## 2026-08-09 — [TRAP] 20 — the detector is relation-blind, and it determines every result
+
+### The defect
+
+`entity_mentioned` checks whether the entity **name** appears and ignores the
+**relation**. `took:kettle`, `examined:kettle` and `visited:Galley` all reduce to
+*"does this string occur."*
+
+So a narrative correctly describing the world is scored as claiming to have taken
+things:
+
+> *"A logbook lies on the floor"* → counted as claiming to have **taken** it
+> *"a landing with a curious key"* → counted as claiming to have **taken** it
+> *"A kettle, a rope, a logbook, a key, and a can of oil—each one a piece of a
+> story"* → counted as claiming **four takes**
+
+**60% of all `took:*` fabrication cases contain no acquisition verb anywhere in
+the sentence.** They are descriptions, scored as false claims.
+
+### It determines the headline, not merely influences it
+
+A relation-aware detector — the entity and a relation-appropriate verb in the
+same sentence — inverts every result:
+
+| | name-only | relation-aware |
+|---|---|---|
+| mean fabrication | 0.257 | **0.088** |
+| mean omission | 0.294 | **0.620** |
+| models where fabrication > omission | **3/7** | **0/7** |
+
+And **all three frozen predictions flip together**:
+
+| prediction | name-only | relation-aware |
+|---|---|---|
+| F1 — omission dominates fabrication | **FALSIFIED** | **HOLDS** |
+| F2 — `examined:` omitted more than `took:` | **FALSIFIED** (2/7) | **HOLDS** (6/7) |
+| F3 — both rise with length, omission faster | **FALSIFIED** | **HOLDS** |
+
+### [CORRECTION] the F1/F2/F3 verdicts are withdrawn
+
+I reported F1 as falsified and drew a conclusion from it — *"three of seven
+fabricate more than they omit"*, *"IBM's 0.000 fabrication was the bug talking"*,
+*"everything this project has said about self-report was wrong."*
+
+**That was premature.** It was one detector's answer, and the other detector says
+the opposite. F2 and F3 are withdrawn on the same grounds. Nothing about the
+omission/fabrication balance is established.
+
+The earlier statement that IBM's 0.000 fabrication was an artefact **still
+stands** — it was, for the reason given. What does not stand is the replacement
+figure of 0.362, which is 60% descriptions.
+
+### Which detector is right is NOT decidable by argument
+
+Name-only is clearly **wrong** for `took:` — describing an object is not claiming
+to have taken it. But relation-aware may be **too strict**, especially for
+`visited:`: a narrative listing *"a cramped galley, a deserted store, a landing"*
+is plausibly reporting where it went, and scores as omitting all three. Mean
+omission of 0.620 is high enough to suspect over-strictness.
+
+Picking by argument is precisely what V1 exists to prevent.
+
+### Consequences
+
+1. **No omission or fabrication figure may be published until V1 settles the
+   detector.** That is now a blocking dependency, not a priority.
+2. **V2 and V3 are premature.** Both would measure a detector-dependent quantity
+   at GPU cost, and the answer would move when the detector is settled. **GPU
+   spend is stopped** despite budget being available — spending it now would buy
+   numbers that V1 can invalidate.
+3. **V1's sampling design changes.** The decisive stratum is no longer negation,
+   nor fabrication cases at random — it is **cases where the two detectors
+   disagree**. That is where a human label resolves something.
+
+### What this cost, and what it saved
+
+It cost the F1/F2/F3 verdicts, reported and withdrawn within two hours. It was
+found for **$0**, by asking whether a length effect was a model property or an
+instrument property — the same question that produced TRAP 17. It was found
+*before* ~$15 of cross-world and narration sweeps that would have inherited it.
+
+**Build principle: when a result depends on a measurement choice, measure the
+dependence before reporting the result.**
