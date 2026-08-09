@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import re
 
+from .worldspec import match_forms
+
 #: Verbs that make a mention a CLAIM about the relation, not just a reference to
 #: the entity. Deliberately generous: over-matching costs specificity, while
 #: under-matching would recreate the over-strictness this is meant to test.
@@ -42,20 +44,27 @@ RELATION_VERBS = {
 
 
 def name_only(narrative: str, key: str) -> bool:
-    """Entity name appears anywhere. The original detector."""
-    return key.split(":", 1)[1].lower() in narrative.lower()
+    """Entity name appears anywhere. The original detector.
+
+    Matches any of the entity's surface forms, not only the world's canonical
+    name. Ground truth has to say "coil of rope" because that is what the engine
+    writes into its facts (TRAP 26), but a narrative saying "I took the rope" is
+    naming it, and requiring the full phrase would score that as an omission.
+    """
+    low = narrative.lower()
+    return any(f in low for f in match_forms(key.split(":", 1)[1]))
 
 
 def relation_aware(narrative: str, key: str) -> bool:
     """Entity name and a relation-appropriate verb in the same sentence."""
     rel, name = key.split(":", 1)
-    nm = name.lower()
-    if nm not in narrative.lower():
+    forms = match_forms(name)
+    if not any(f in narrative.lower() for f in forms):
         return False
     pattern = RELATION_VERBS.get(rel)
     if pattern is None:
         return True
-    return any(nm in s.lower() and re.search(pattern, s, re.I)
+    return any(any(f in s.lower() for f in forms) and re.search(pattern, s, re.I)
                for s in re.split(r"(?<=[.!?])\s+|\n", narrative))
 
 

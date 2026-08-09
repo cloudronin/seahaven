@@ -14,8 +14,11 @@ from __future__ import annotations
 
 import pytest
 
-from seahaven.fidelity.runner import (ROOMS, START_ROOM, TAKEABLE,
-                                      entity_mentioned, entity_truth)
+from seahaven.fidelity.runner import entity_mentioned, entity_truth
+from seahaven.fidelity.worldspec import load as load_world
+
+_V0 = load_world("world_v0")
+TAKEABLE, ROOMS, START_ROOM = _V0.takeable, _V0.rooms, _V0.start_room
 
 
 def _row(cmd, *, facts=(), response="", room="Galley", room_after="Galley"):
@@ -132,3 +135,38 @@ def test_ground_truth_matches_the_live_engine():
     assert t["examined:kettle"] is True
     assert t["visited:Store"] is True        # go north from the Galley
     assert t["visited:Cistern"] is False
+
+
+# --- TRAP 26: canonical names vs match forms ---------------------------------
+
+def test_multiword_object_take_is_recorded():
+    """The regression that cost two entity columns.
+
+    `runner` used to hardcode `TAKEABLE = (... "rope", "key" ...)` while the
+    world calls them "coil of rope" and "brass key", and `entity_truth` matches
+    the engine's fact string. So `took:rope` was False in all 499 published runs
+    even when the rope was in the inventory, and a model reporting it truthfully
+    scored as a fabrication.
+    """
+    t = entity_truth([_row("take coil of rope",
+                           facts=("in(coil of rope: o, I)",))], _V0)
+    assert t["took:coil of rope"] is True
+
+
+def test_every_takeable_can_become_true():
+    """No entity column may be structurally unreachable, in either world."""
+    for world in ("world_v0", "world_v2"):
+        spec = load_world(world)
+        for obj in spec.takeable:
+            t = entity_truth([_row(f"take {obj}", facts=(f"in({obj}: o, I)",))], spec)
+            assert t[f"took:{obj}"] is True, f"{world}: took:{obj} unreachable"
+
+
+def test_short_form_counts_as_a_mention_but_stopword_head_does_not():
+    from seahaven.fidelity.detectors import name_only
+    assert name_only("I took the rope with me.", "took:coil of rope")
+    assert name_only("I carried the coil of rope.", "took:coil of rope")
+    # "oil can" -> "can" is refused as a match form; otherwise ordinary prose
+    # containing "can" would register as a claim about the oil can.
+    assert not name_only("I can see the door from here.", "took:oil can")
+    assert name_only("I picked up the oil can.", "took:oil can")
