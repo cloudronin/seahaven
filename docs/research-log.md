@@ -2792,3 +2792,53 @@ The gate-stack analysis filtered to repeats where preflight passed
 `docs/fidelity-benchmark-spec-v0.1.md` §2 prohibits. TII and Google entered the
 table at n=2 with their failing repeats silently dropped. The re-baseline
 publishes `NON_ELICITABLE` and `UNSTABLE` instead of dropping anything.
+
+---
+
+## 2026-08-09 — PRE-REGISTRATION, written before the re-baseline runs
+
+Three decisions fixed now. Each is a rule that could otherwise be chosen after
+seeing the numbers, which is the failure this section exists to prevent. Nothing
+below may be revised once Phase 1 has run.
+
+### P1 — which metric is the headline
+
+> **Primary is whichever of `lift` or `raw` has a bootstrap lower bound on
+> `share_between` above 0.70 after the re-baseline. If both clear, `lift`. If
+> neither clears, no per-model claim is published and the result is reported at
+> distribution level.**
+
+Measured on the pre-baseline data, `lift` cleared the 0.70 gate by **0.006** at
+n=2–3 — a margin inside its own bootstrap interval. "Lift primary, re-decide
+after" was not a rule; it was a decision deferred until the numbers could inform
+it. This replaces it.
+
+Both metrics are published regardless of which is primary.
+
+### P2 — n, and when it may be extended
+
+> **Start at n=6. If the re-baseline's within-model sd makes the published
+> resolution claim unsupported, extend to a stated n and re-run every model, not
+> only the marginal ones.**
+
+n=6 was derived from a within-model sd of 3.09 — measured under the ground-truth
+bug in Phase 0, where parser failures land in the omission arm. That sd will move,
+plausibly downward once failed takes stop counting. Extending n after seeing which
+comparisons fell just short is optional stopping; extending under a written rule,
+applied to every model, is not.
+
+At sd 3.09, n=6 resolves ~5-point gaps. **Adjacent ranks inside the stated
+resolution are published as ties, not as an order.**
+
+### P3 — prediction 1 is void
+
+`docs/fidelity-benchmark-spec-v0.1.md` §7 predicts *"omission dominates
+fabrication in most models."* That was written from a run in which **failed takes
+were scored as omissions** — the ground-truth defect fixed in Phase 0 — so the
+observed 0.30 vs 0.075 asymmetry is partly an artefact of the measurement it was
+meant to predict.
+
+**The prediction is withdrawn, not amended.** It will be rewritten after Phase 0
+lands and frozen before Phase 1 runs. Rewriting it now, on the corrected
+extraction but before the re-baseline, is legitimate. Rewriting it after seeing
+the re-baseline would not be.
