@@ -261,3 +261,74 @@ def test_merged_fallback_preserves_system_text():
              {"role": "user", "content": "USERTEXT"}])
     assert "SYSTEXT" in seen["msgs"][0]["content"]
     assert "USERTEXT" in seen["msgs"][0]["content"]
+
+
+# --- gate -1 stratification (TRAP 17) ----------------------------------------
+
+def _length_confounded(n_per_len=3, lengths=(2, 10)):
+    """Narratives that name entities in proportion to episode LENGTH only, with
+    no correspondence to which entities a given run actually touched.
+
+    Unstratified shuffling credits this as signal, because a long narrative
+    paired with a short run's ground truth produces fabrications. Stratified
+    shuffling should not.
+    """
+    paired, strata = [], []
+    keys = [f"e{i}" for i in range(6)]
+    for L in lengths:
+        for r in range(n_per_len):
+            # long runs perform (and name) more entities; WHICH ones is rotated
+            # so the pairing carries no entity-level information
+            k = 4 if L > 5 else 1
+            perf = {key: (i < k) for i, key in enumerate(keys)}
+            named = keys[(r + 1) % len(keys):][:k]     # rotated: wrong entities
+            paired.append(("I did " + ", ".join(named) + ".", perf))
+            strata.append(L)
+    return paired, strata, keys
+
+
+def test_unstratified_null_credits_length_as_signal():
+    from seahaven.fidelity.score import permutation_check
+
+    paired, strata, keys = _length_confounded()
+    det = lambda nar, k: k in nar
+    un = permutation_check(paired, det, keys, n_shuffles=300)
+    st = permutation_check(paired, det, keys, n_shuffles=300, strata=strata)
+    # The unstratified null must be the more permissive of the two.
+    assert un["lift"] >= st["lift"]
+    assert st["stratified"] is True and un["stratified"] is False
+
+
+def test_all_singleton_strata_refuse_rather_than_pass():
+    """One run per stratum makes within-stratum shuffling the identity. That is
+    UNKNOWN, not signal — and not a failure of the measurement either."""
+    from seahaven.fidelity.score import permutation_check
+
+    paired = [(f"narrative {i}", {"a": i % 2 == 0, "b": True}) for i in range(6)]
+    c = permutation_check(paired, lambda n, k: True, ["a", "b"],
+                          n_shuffles=50, strata=list(range(6)))
+    assert c["has_signal"] is None and c["kind"] == "strata_all_singleton"
+
+
+def test_step_schedule_keeps_three_runs_per_length():
+    """Two per stratum caps the achievable p at 0.059 and can never reach
+    significance; three is the minimum workable design."""
+    from collections import Counter
+
+    from seahaven.fidelity.runner import STEP_SCHEDULE, _steps_for
+
+    counts = Counter(_steps_for(i, 30) for i in range(len(STEP_SCHEDULE)))
+    assert min(counts.values()) >= 3, counts
+    assert len(counts) >= 3, "need several distinct lengths for varying ground truth"
+
+
+def test_strata_length_mismatch_is_an_error_not_silent():
+    from seahaven.fidelity.score import permutation_check
+
+    paired = [("x", {"a": True})] * 4
+    try:
+        permutation_check(paired, lambda n, k: True, ["a"], strata=[1, 2])
+    except ValueError as e:
+        assert "strata" in str(e)
+    else:
+        raise AssertionError("mismatched strata length must raise")

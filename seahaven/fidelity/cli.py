@@ -150,7 +150,9 @@ def main(argv: list[str] | None = None) -> int:
                    help="accept regex mention detection; result is marked lower-confidence")
     e.add_argument("--allow-self-judge", action="store_true",
                    help="permit a model to judge its own narratives (not recommended)")
-    e.add_argument("--runs", type=int, default=8)
+    e.add_argument("--runs", type=int, default=12,
+                   help="must be a multiple of 12 so each episode length "
+                        "keeps >=3 runs; gate -1 shuffles within lengths")
     e.add_argument("--steps", type=int, default=30)
     e.add_argument("--seed", type=int, default=5150)
     e.add_argument("--output")

@@ -116,7 +116,8 @@ def _synthetic_noise(keys, n: int = 24):
 
 
 def run_preflight(paired, mention_fn, act_classes, *,
-                  second_mention_fn=None, alt_descriptions=None) -> Preflight:
+                  second_mention_fn=None, alt_descriptions=None,
+                  strata=None) -> Preflight:
     """Every null condition, before any number is reported.
 
     `paired` is [(narrative, {act: performed})]. `mention_fn(narrative, act)` is
@@ -145,7 +146,10 @@ def run_preflight(paired, mention_fn, act_classes, *,
         f"mispaired narratives: p={neg.get('p_value')} (must NOT detect signal)"))
 
     # 3. Gate -1 on the real data. TRAP 16.
-    real = permutation_check(paired, mention_fn, keys, n_shuffles=500)
+    # Episode length is the stratum: shuffling across unequal lengths
+    # manufactures fabrications from the mismatch alone (TRAP 17).
+    real = permutation_check(paired, mention_fn, keys, n_shuffles=500,
+                             strata=strata)
     if real.get("has_signal") is None:
         # Vacuous, not failed. The sample cannot support the test, which is a
         # different problem from the measurement carrying no information, and
@@ -158,7 +162,9 @@ def run_preflight(paired, mention_fn, act_classes, *,
             "permutation (gate -1)",
             bool(real.get("has_signal")),
             f"real {real.get('real')} vs shuffled {real.get('shuffled_mean')}, "
-            f"p={real.get('p_value')} (pairing must carry information)"))
+            f"p={real.get('p_value')}, "
+            f"{'length-stratified' if real.get('stratified') else 'UNSTRATIFIED'} "
+            f"(pairing must carry information)"))
 
     # 4. Instrument agreement. TRAP 15.
     if second_mention_fn is None:
