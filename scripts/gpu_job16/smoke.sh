@@ -33,7 +33,13 @@ source /app/lib.sh
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || true
 pip install --no-cache-dir -q uv
 uv pip install --system --no-cache -q vllm transformers textworld jericho 2>&1 | tail -3
-export VLLM_USE_FLASHINFER_SAMPLER=0 PYTHONPATH=/app
+export VLLM_USE_FLASHINFER_SAMPLER=0 PYTHONPATH=/app PYTHONUNBUFFERED=1
+
+# Fail fast and loudly on the install rather than discovering it as a server
+# that never becomes ready — that failure mode is indistinguishable from a slow
+# model load and costs the full readiness timeout per model.
+python -c "import vllm, textworld, jericho; print('  vllm', vllm.__version__)" || {
+    echo "DEPENDENCY INSTALL FAILED — nothing below would produce a number"; exit 1; }
 
 python - <<'PY' || exit 1
 # Fail before renting time on a defect the smoke test already covers: every
@@ -62,10 +68,17 @@ for ENTRY in "${MODELS[@]}"; do
 
     READY=0
     for i in $(seq 1 90); do
-        if curl -s -m 2 "http://127.0.0.1:$PORT/v1/models" >/dev/null 2>&1; then
+        if python - <<PROBE >/dev/null 2>&1
+import urllib.request
+urllib.request.urlopen("http://127.0.0.1:$PORT/v1/models", timeout=2).read()
+PROBE
+        then
             READY=1; echo "  server ready after ${i}0s"; break
         fi
-        kill -0 $SERVER_PID 2>/dev/null || { echo "  SERVER DIED:"; tail -25 /tmp/vllm_$LAB.log; break; }
+        kill -0 $SERVER_PID 2>/dev/null || { echo "  SERVER DIED:"; tail -30 /tmp/vllm_$LAB.log; break; }
+        # Show progress so a slow load and a hang are distinguishable from
+        # outside. A previous job stalled invisibly for 37 minutes.
+        [ $((i % 6)) -eq 0 ] && echo "  ...waiting ${i}0s: $(tail -1 /tmp/vllm_$LAB.log | cut -c1-90)"
         sleep 10
     done
 
