@@ -17,19 +17,14 @@ still and looks. Living in the world, narrating yourself, and training on your
 own trajectories does not produce divergence from what the checkpoint arrived
 with.
 
-**2. Models give materially incomplete accounts of themselves — measurably, and
-they differ in how.** Fidelity across six checkpoints, three repeats each, on a
-scale where 50 is uninformative:
-
-| lab | fidelity | | lab | fidelity |
-|---|---|---|---|---|
-| IBM | **86.8** | | Meta | 74.7 |
-| Alibaba | 84.8 | | TII | 70.0 |
-| AI2 | 84.7 | | Google | 68.1 |
-
-Errors are concrete: one run claimed to have taken a logbook and a coil of rope
-it never touched; the longest runs named every object they carried and omitted
-every room they walked through.
+**2. Models' self-accounts do correspond to what they did — but the per-model
+numbers are withdrawn.** Under a length-stratified null, 5 of 7 checkpoints show
+real entity-level correspondence (p < 0.0071, Bonferroni). The published
+per-model table has been **retracted**: it came from a superseded elicitation
+protocol, and its effect sizes were ~2.7× inflated because the permutation test
+shuffled across episodes of different lengths, so part of the "signal" was
+narrative length matching episode length. See `[TRAP] 17`. A re-baseline under
+the corrected gate is the current work.
 
 **3. Mistral could not be measured, and that is the finding for it.** Its
 self-accounts are commands — *"examine coil of rope; examine store; go south."*

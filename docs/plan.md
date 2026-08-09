@@ -28,11 +28,14 @@ Directions:
 1. ~~**Narrative steering**~~ — **CLOSED.** Kill criterion 1 fired. A run given
    another run's self-account behaves identically to one given its own, so the
    +0.412 was prompt content, not authorship.
-2. **Self-report fidelity** — ✅ **BUILT AND VALIDATED.** `seahaven-fidelity`
-   runs against any OpenAI-compatible endpoint and clears every gate: preflight
-   on all 16 repeats, test–retest 0.856, instrument ρ 1.000. Six checkpoints
-   score 68.1–86.8 on a scale where 50 is uninformative. **This is the project's
-   only passing measurement.**
+2. **Self-report fidelity** — **BUILT; per-model numbers withdrawn, measure
+   intact.** `seahaven-fidelity` runs against any OpenAI-compatible endpoint.
+   A seven-model sweep passed the gate stack, and both the numbers and that pass
+   are retracted (`[TRAP] 17`): the elicitation fix never reached the job
+   directory, and gate −1 shuffled across unequal episode lengths, inflating
+   lift ~2.7×. Under a length-stratified null **5 of 7 checkpoints retain
+   entity-level signal** at p < 0.0071. Re-baseline is the current work, per
+   the implementation plan.
 
    Two things it needs next, in order:
    - **A second world.** One situation cannot establish a trait, and this is the

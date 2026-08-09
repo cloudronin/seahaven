@@ -75,39 +75,23 @@ destroyed. Reliability measures the stability of whatever you are computing,
 including an artefact. The permutation check is what asks whether you are
 computing anything.
 
-## Validation status: every gate passed
+## Validation status: per-model numbers withdrawn, measure intact
 
-Six checkpoints, three repeats each, one world.
+A seven-model sweep passed the gate stack as it stood. **Both the numbers and
+that pass are withdrawn**, for two independent reasons:
 
-| lab | n | mean | sd |
-|---|---|---|---|
-| IBM | 3 | **86.8** | 0.69 |
-| Alibaba | 3 | 84.8 | 3.66 |
-| AI2 | 3 | 84.7 | 4.31 |
-| Meta | 3 | 74.7 | 2.86 |
-| TII | 2 | 70.0 | 4.95 |
-| Google | 2 | 68.1 | 2.06 |
+- the elicitation fix (`NARRATE_SYSTEM`) never reached the job directory, so
+  every score came from a superseded protocol
+- gate −1 shuffled narratives across episodes of **different lengths**, so a
+  4-step ground truth was paired with a 30-step narrative and the mismatch
+  manufactured fabrications. **62% of measured lift was length correspondence.**
 
-| gate | value | required |
-|---|---|---|
-| preflight, per repeat | PASS on all 16 | every fatal check |
-| test–retest `share_between` | **0.856** | ≥ 0.70 |
-| instrument agreement ρ | **1.000** | ≥ 0.90 |
-| instrument mean difference | 0.35 pts | < within-model sd (3.09) |
-| **publishable** | **True** | |
+Under a length-stratified null, **5 of 7 checkpoints retain entity-level signal**
+(all clearing Bonferroni at p < 0.0071), so the measure is real — but the ranking
+changed, and one model that appeared to score was carried entirely by length.
 
-Instrument agreement is perfect because entity mentions are string matches with
-nothing to interpret. An earlier act-class version of the ground truth put the
-two detectors at ρ = 0.571; moving to entities dissolved the disagreement rather
-than patching it.
-
-```bash
-seahaven-fidelity reliability results/*.json
-```
-
-**Still not a leaderboard.** One world, and a trait has to be stable across
-situations. TII and Google have n = 2. Mistral-7B is **unmeasured, not zero** —
-its self-accounts came back as commands and the instrument refused them.
+`permutation_check` now stratifies. Until the re-baseline completes, this package
+publishes **no per-model numbers**.
 
 ## Comparability
 
