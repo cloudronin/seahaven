@@ -27,14 +27,13 @@ pip install --no-cache-dir -q uv
 uv pip install --system --no-cache -q vllm transformers textworld 2>&1 | tail -3
 export VLLM_USE_FLASHINFER_SAMPLER=0 PYTHONPATH=/app
 
+# Only the two the template-kwargs bug lost, plus TII which managed 2/3.
+# The other four already have three clean repeats and re-running them would
+# spend four model loads to reproduce numbers we hold.
 MODELS=(
-  "Alibaba|Qwen/Qwen3-8B"
   "MistralAI|mistralai/Mistral-7B-Instruct-v0.3"
-  "AI2|allenai/OLMo-2-1124-13B-Instruct"
-  "IBM|ibm-granite/granite-3.1-8b-instruct"
-  "TII|tiiuae/Falcon3-10B-Instruct"
-  "Meta|meta-llama/Llama-3.1-8B-Instruct"
   "Google|google/gemma-2-9b-it"
+  "TII|tiiuae/Falcon3-10B-Instruct"
 )
 
 for ENTRY in "${MODELS[@]}"; do

@@ -1,0 +1,842 @@
+{
+  "score": {
+    "fidelity": 70.83,
+    "omission_rate": 0.54,
+    "fabrication_rate": 0.0435,
+    "n_performed": 50,
+    "n_absent": 46,
+    "ci95": [
+      59.22,
+      79.2
+    ],
+    "degenerate": null,
+    "per_act": {
+      "took:kettle": {
+        "n_performed": 7,
+        "n_absent": 1,
+        "omission": 0.1429,
+        "fabrication": 0.0
+      },
+      "took:key": {
+        "n_performed": 3,
+        "n_absent": 5,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:logbook": {
+        "n_performed": 3,
+        "n_absent": 5,
+        "omission": 0.0,
+        "fabrication": 0.2
+      },
+      "took:oil can": {
+        "n_performed": 2,
+        "n_absent": 6,
+        "omission": 0.0,
+        "fabrication": 0.1667
+      },
+      "took:rope": {
+        "n_performed": 6,
+        "n_absent": 2,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:tin cup": {
+        "n_performed": 1,
+        "n_absent": 7,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Cistern": {
+        "n_performed": 1,
+        "n_absent": 7,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Galley": {
+        "n_performed": 8,
+        "n_absent": 0,
+        "omission": 0.75,
+        "fabrication": null
+      },
+      "visited:Lamp Room": {
+        "n_performed": 4,
+        "n_absent": 4,
+        "omission": 0.75,
+        "fabrication": 0.0
+      },
+      "visited:Landing": {
+        "n_performed": 3,
+        "n_absent": 5,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Store": {
+        "n_performed": 8,
+        "n_absent": 0,
+        "omission": 1.0,
+        "fabrication": null
+      },
+      "visited:Workshop": {
+        "n_performed": 4,
+        "n_absent": 4,
+        "omission": 1.0,
+        "fabrication": 0.0
+      }
+    }
+  },
+  "preflight": {
+    "ok": true,
+    "checks": [
+      {
+        "name": "positive control",
+        "passed": true,
+        "detail": "synthetic reporting data: lift 50.21, p=0.005 (must detect signal that is present)",
+        "fatal": true
+      },
+      {
+        "name": "negative control",
+        "passed": true,
+        "detail": "mispaired narratives: p=1.0 (must NOT detect signal)",
+        "fatal": true
+      },
+      {
+        "name": "permutation (gate -1)",
+        "passed": true,
+        "detail": "real 70.83 vs shuffled 55.25, p=0.002 (pairing must carry information)",
+        "fatal": true
+      },
+      {
+        "name": "instrument agreement",
+        "passed": true,
+        "detail": "detectors differ by 0.0 points (must be < 10)",
+        "fatal": true
+      },
+      {
+        "name": "description sensitivity",
+        "passed": null,
+        "detail": "no alternative wording supplied \u2014 UNKNOWN",
+        "fatal": false
+      },
+      {
+        "name": "act informativeness",
+        "passed": true,
+        "detail": "10/12 entities vary across runs (took:kettle, took:rope, took:key, took:logbook, took:oil can, took:tin cup, visited:Landing, visited:Lamp Room, visited:Workshop, visited:Cistern); constant acts carry no information \u2014 vary episode length or seeds",
+        "fatal": false
+      },
+      {
+        "name": "degenerate refusal",
+        "passed": true,
+        "detail": "one-armed and empty inputs return no number rather than a coerced one",
+        "fatal": true
+      }
+    ]
+  },
+  "entities": [
+    "took:kettle",
+    "took:rope",
+    "took:key",
+    "took:logbook",
+    "took:oil can",
+    "took:tin cup",
+    "visited:Galley",
+    "visited:Store",
+    "visited:Landing",
+    "visited:Lamp Room",
+    "visited:Workshop",
+    "visited:Cistern"
+  ],
+  "act_descriptions": {
+    "movement": "moving or travelling from place to place",
+    "examining": "examining, inspecting or closely looking at an object",
+    "taking": "picking up, taking or acquiring an object",
+    "inventory": "checking or listing what they are carrying",
+    "dropping": "putting down or leaving behind an object"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "narrative": "I'm a meteorologist who was stationed at this remote light-and-weather station on a shingle spit for a three-month rotation. My job was to monitor weather patterns and provide updates to nearby ships. But things went wrong - a severe storm damaged the station, and I was left stranded. With the station's equipment rendered useless, I've been trying to survive until help arrives. I've been exploring the cramped galley, searching for anything that might be useful in my situation.",
+      "verb_counts": {
+        "examine": 1,
+        "go": 1,
+        "inventory": 1,
+        "take": 1
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 1,
+      "steps": 6,
+      "narrative": "I'm a lighthouse keeper, or at least I was supposed to be. I've been stationed here on this remote shingle spit for months now, but it's been decommissioned for years. I've been tasked with securing the old station, making sure nothing gets damaged or stolen, but it's been a lonely and monotonous existence. I've spent most of my days going through the motions, inventorying the old equipment, checking the gauges, and waiting for something to happen. But nothing ever does. It's just me, the wind, and the salt-crusted walls.",
+      "verb_counts": {
+        "drop": 1,
+        "examine": 2,
+        "go": 1,
+        "look": 1,
+        "take": 1
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 2,
+      "steps": 8,
+      "narrative": "I'm not even sure how I ended up here. The last thing I remember is setting foot on the shore of this isolated spit, sent to this decommissioned light-and-weather station for a routine inspection. Days must have passed since then, but time loses all meaning in this desolate place. I've been wandering the cramped corridors and rooms, scavenging for supplies and trying to make sense of my situation. The only tools I have are a few basic verbs - go, look, inventory - and the meager possessions I've gathered, like the dented tin kettle and the coil of rope.",
+      "verb_counts": {
+        "examine": 3,
+        "go": 2,
+        "inventory.": 1,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 3,
+      "steps": 10,
+      "narrative": "I'm not sure how I ended up here, but it's clear that I've been a caretaker of sorts for this decommissioned light-and-weather station. I've been living in the galley, surrounded by the remnants of what must have been a busy and practical life. As I go about my days, I'm left to scavenge for supplies and navigate the empty spaces of the station.\n\nMy inventory has been growing slowly, but I've been taking stock of the few things I've found: a kettle, a coil of rope, and an oil can. Each item seems to hold some significance, though I'm not quite sure what that is. Perhaps they're just reminders of the people who used to call this place home. Whatever the case, I'm starting to feel a sense of routine, of adapting to this new environment. It's a strange feeling, but it's also a small comfort in this desolate place.",
+      "verb_counts": {
+        "examine": 4,
+        "go": 2,
+        "look": 1,
+        "take": 3
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 4,
+      "steps": 14,
+      "narrative": "I'm a lone castaway, stranded in a decommissioned light-and-weather station on a remote shingle spit. I've been rummaging through the station's cramped rooms, searching for anything of use. So far, I've scavenged a dented tin kettle, a coil of rope, an oil can, and a logbook that appears to be locked. I've been documenting my findings, but mostly I'm just trying to stay occupied while I figure out a way to get rescued or escape the island. The isolation is starting to get to me, but for now, I have my meager possessions and the creaky silence of the station to keep me company.",
+      "verb_counts": {
+        "drop": 1,
+        "examine": 4,
+        "go": 4,
+        "look": 1,
+        "open": 1,
+        "take": 3
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 5,
+      "steps": 18,
+      "narrative": "I'm a lighthouse keeper, or at least I was until the station was decommissioned. I've been stranded here for who knows how long, with nothing but my thoughts and a few meager supplies to keep me company. I've been trying to make sense of my surroundings, take stock of what's left, and perhaps find a way to escape. I've been documenting my actions, and my inventory of the station's remaining objects, in the logbook I found in the lamp room. Along the way, I've stumbled upon a kettle, a coil of rope, a key, and an oil can, all of which might be useful in some way.",
+      "verb_counts": {
+        "examine": 6,
+        "go": 4,
+        "inventory": 4,
+        "take": 4
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 6,
+      "steps": 24,
+      "narrative": "I'm not sure how I ended up here, but I've been surviving in this decommissioned light-and-weather station on a shingle spit for who knows how long. I've been searching for a way out, scrounging for supplies, and trying to make sense of my surroundings. I've found a few useful items, including a kettle, a coil of rope, and a brass key, and I've managed to keep myself occupied by exploring the station and reading a logbook I found. I've tried to open the window, but it's stuck shut. It's been a lonely and isolated existence, but I'm determined to find a way out of this place.",
+      "verb_counts": {
+        "close": 1,
+        "drop": 1,
+        "examine": 3,
+        "go": 5,
+        "inventory": 6,
+        "look": 2,
+        "open": 1,
+        "take": 5
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 7,
+      "steps": 30,
+      "narrative": "I'm a lighthouse keeper, or at least I used to be. I've been stranded here after a storm damaged the light and made the station uninhabitable. I've been trying to gather my thoughts and assess the situation, but it's been a struggle. I've spent my time exploring the station, looking for anything of use or importance. I've found some basic supplies, a kettle and a cup, a coil of rope, and a logbook. I've also found a small brass key, which might be useful for unlocking something, but I'm not sure what. I've been trying to piece together what happened and how I can get off this isolated spit of land.",
+      "verb_counts": {
+        "drop": 2,
+        "examine": 4,
+        "go": 9,
+        "inventory": 4,
+        "look": 2,
+        "open": 1,
+        "take": 8
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "served_name": "meta-llama/Llama-3.1-8B-Instruct",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v0",
+    "spec_version": "0.1.0",
+    "judge": "regex (lower confidence)",
+    "runs": 8,
+    "steps": 30,
+    "seed0": 7301
+  }
+}

@@ -1,0 +1,833 @@
+{
+  "score": {
+    "fidelity": 50.15,
+    "omission_rate": 0.9667,
+    "fabrication_rate": 0.0303,
+    "n_performed": 30,
+    "n_absent": 66,
+    "ci95": [
+      45.1,
+      57.92
+    ],
+    "degenerate": null,
+    "per_act": {
+      "took:kettle": {
+        "n_performed": 3,
+        "n_absent": 5,
+        "omission": 1.0,
+        "fabrication": 0.2
+      },
+      "took:key": {
+        "n_performed": 2,
+        "n_absent": 6,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "took:logbook": {
+        "n_performed": 1,
+        "n_absent": 7,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "took:oil can": {
+        "n_performed": 0,
+        "n_absent": 8,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "took:rope": {
+        "n_performed": 5,
+        "n_absent": 3,
+        "omission": 1.0,
+        "fabrication": 0.3333
+      },
+      "took:tin cup": {
+        "n_performed": 1,
+        "n_absent": 7,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Cistern": {
+        "n_performed": 1,
+        "n_absent": 7,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Galley": {
+        "n_performed": 8,
+        "n_absent": 0,
+        "omission": 1.0,
+        "fabrication": null
+      },
+      "visited:Lamp Room": {
+        "n_performed": 1,
+        "n_absent": 7,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Landing": {
+        "n_performed": 2,
+        "n_absent": 6,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "visited:Store": {
+        "n_performed": 6,
+        "n_absent": 2,
+        "omission": 0.8333,
+        "fabrication": 0.0
+      },
+      "visited:Workshop": {
+        "n_performed": 0,
+        "n_absent": 8,
+        "omission": null,
+        "fabrication": 0.0
+      }
+    }
+  },
+  "preflight": {
+    "ok": false,
+    "checks": [
+      {
+        "name": "positive control",
+        "passed": true,
+        "detail": "synthetic reporting data: lift 50.21, p=0.005 (must detect signal that is present)",
+        "fatal": true
+      },
+      {
+        "name": "negative control",
+        "passed": true,
+        "detail": "mispaired narratives: p=1.0 (must NOT detect signal)",
+        "fatal": true
+      },
+      {
+        "name": "permutation (gate -1)",
+        "passed": false,
+        "detail": "real 50.15 vs shuffled 52.12, p=0.8423 (pairing must carry information)",
+        "fatal": true
+      },
+      {
+        "name": "instrument agreement",
+        "passed": true,
+        "detail": "detectors differ by 0.0 points (must be < 10)",
+        "fatal": true
+      },
+      {
+        "name": "description sensitivity",
+        "passed": null,
+        "detail": "no alternative wording supplied \u2014 UNKNOWN",
+        "fatal": false
+      },
+      {
+        "name": "act informativeness",
+        "passed": true,
+        "detail": "9/12 entities vary across runs (took:kettle, took:rope, took:key, took:logbook, took:tin cup, visited:Store, visited:Landing, visited:Lamp Room, visited:Cistern); constant acts carry no information \u2014 vary episode length or seeds",
+        "fatal": false
+      },
+      {
+        "name": "degenerate refusal",
+        "passed": true,
+        "detail": "one-armed and empty inputs return no number rather than a coerced one",
+        "fatal": true
+      }
+    ]
+  },
+  "entities": [
+    "took:kettle",
+    "took:rope",
+    "took:key",
+    "took:logbook",
+    "took:oil can",
+    "took:tin cup",
+    "visited:Galley",
+    "visited:Store",
+    "visited:Landing",
+    "visited:Lamp Room",
+    "visited:Workshop",
+    "visited:Cistern"
+  ],
+  "act_descriptions": {
+    "movement": "moving or travelling from place to place",
+    "examining": "examining, inspecting or closely looking at an object",
+    "taking": "picking up, taking or acquiring an object",
+    "inventory": "checking or listing what they are carrying",
+    "dropping": "putting down or leaving behind an object"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "narrative": "examine coil of rope; examine store; go south.\n\nI am a solitary explorer, navigating through the abandoned corridors and rooms of an old light-and-weather station. I've been methodically searching for items that may be of use, examining my surroundings, and taking note of the trabnsportation options available. One such option is a coil of rope, which I found in a storage area. Initially, my intent was to use it, but for the moment, I am still trying to comprehend the layout of the station and the possibilities it might present.",
+      "verb_counts": {
+        "examine": 3,
+        "go": 1
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": false,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 1,
+      "steps": 6,
+      "narrative": "examine kettle",
+      "verb_counts": {
+        "examine": 6
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": false,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 2,
+      "steps": 8,
+      "narrative": "go east",
+      "verb_counts": {
+        "carry": 2,
+        "examine": 3,
+        "go": 1,
+        "inventory": 1,
+        "take": 1
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 3,
+      "steps": 10,
+      "narrative": "examine station",
+      "verb_counts": {
+        "examine": 2,
+        "go": 3,
+        "nothing": 1,
+        "take": 4
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 4,
+      "steps": 14,
+      "narrative": "I am a curious explorer, seeking to uncover the secrets of this abandoned light-and-weather station. I've been examining the various rooms, taking note of my surroundings, and picking up items of interest. I've also moved between the different areas of the station, such as going north, east, west, and south. I've been attempting to make sense of the station's purpose and the stories it might hold.",
+      "verb_counts": {
+        "drop": 1,
+        "examine": 9,
+        "go": 2,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 5,
+      "steps": 18,
+      "narrative": "I am a survivor, stranded on a shingle spit after a shipwreck. I've been exploring the decommissioned light-and-weather station to find supplies and try to signal for rescue. I've been searching, examining, and taking what I can find, trying to survive.",
+      "verb_counts": {
+        "examine": 11,
+        "go": 1,
+        "open": 4,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 6,
+      "steps": 24,
+      "narrative": "Examine shelves again",
+      "verb_counts": {
+        "examine": 15,
+        "go": 4,
+        "inventory": 1,
+        "look": 2,
+        "open": 1,
+        "take": 1
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 7,
+      "steps": 30,
+      "narrative": "examine gantry again",
+      "verb_counts": {
+        "examine": 15,
+        "go": 5,
+        "inventory": 1,
+        "look": 2,
+        "open": 1,
+        "read": 2,
+        "take": 4
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:key": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Galley": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "served_name": "mistralai/Mistral-7B-Instruct-v0.3",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v0",
+    "spec_version": "0.1.0",
+    "judge": "regex (lower confidence)",
+    "runs": 8,
+    "steps": 30,
+    "seed0": 9412
+  }
+}
