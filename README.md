@@ -17,18 +17,22 @@ still and looks. Living in the world, narrating yourself, and training on your
 own trajectories does not produce divergence from what the checkpoint arrived
 with.
 
-**2. Models' self-accounts do correspond to what they did — but the per-model
-numbers are withdrawn.** Under a length-stratified null, 5 of 7 checkpoints show
-real entity-level correspondence (p < 0.0071, Bonferroni). The published
-per-model table has been **retracted**: it came from a superseded elicitation
-protocol, and its effect sizes were ~2.7× inflated because the permutation test
-shuffled across episodes of different lengths, so part of the "signal" was
-narrative length matching episode length. See `[TRAP] 17`. A re-baseline under
-the corrected gate is the current work.
+**2. Models' self-accounts carry real information about what they did.** Under a
+length-stratified null, **all seven checkpoints** show entity-level
+correspondence (p = 0.0012, Bonferroni). Pairing a narrative with its own run
+scores meaningfully above pairing it with another run of the same length.
 
-**3. Mistral could not be measured, and that is the finding for it.** Its
-self-accounts are commands — *"examine coil of rope; examine store; go south."*
-The instrument refused all three repeats rather than scoring them.
+**3. Whether they mostly *omit* or mostly *invent* is not yet known — and the
+measurement decides it, not the models.** Two defensible mention detectors give
+opposite answers: fabrication exceeds omission in 3 of 7 models under one, and 0
+of 7 under the other. All three pre-registered predictions flip together. Until
+human labels settle the detector, **no omission or fabrication figure is
+published**. See `[TRAP] 20`.
+
+**4. Mistral is measurable after all.** Its self-accounts had been commands —
+*"examine coil of rope; examine store; go south."* — because the action system
+prompt stayed in force during narration. With a separate narration turn it scores
+the highest lift of any checkpoint.
 
 ### What did not survive
 
