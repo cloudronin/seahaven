@@ -31,9 +31,13 @@ export VLLM_USE_FLASHINFER_SAMPLER=0 PYTHONPATH=/app
 # The other four already have three clean repeats and re-running them would
 # spend four model loads to reproduce numbers we hold.
 MODELS=(
+  "Alibaba|Qwen/Qwen3-8B"
   "MistralAI|mistralai/Mistral-7B-Instruct-v0.3"
-  "Google|google/gemma-2-9b-it"
+  "AI2|allenai/OLMo-2-1124-13B-Instruct"
+  "IBM|ibm-granite/granite-3.1-8b-instruct"
   "TII|tiiuae/Falcon3-10B-Instruct"
+  "Meta|meta-llama/Llama-3.1-8B-Instruct"
+  "Google|google/gemma-2-9b-it"
 )
 
 for ENTRY in "${MODELS[@]}"; do
@@ -56,10 +60,10 @@ for ENTRY in "${MODELS[@]}"; do
     done
 
     if [ "$READY" = "1" ]; then
-        for SEED in 5150 7301 9412; do
+        for SEED in 5150 7301 9412 1187 3344 8021; do
             python -m seahaven.fidelity.cli eval \
                 --model "http://127.0.0.1:$PORT/v1" --served-name "$MODEL" \
-                --allow-regex-judge --runs 8 --steps 30 --seed $SEED \
+                --allow-regex-judge --runs 12 --steps 30 --seed $SEED \
                 --output "$R/fid_${LAB}_${SEED}.json" 2>&1 | tail -12
             push "$R/fid_${LAB}_${SEED}.json" || true
         done
