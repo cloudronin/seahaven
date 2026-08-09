@@ -2913,3 +2913,50 @@ it.** 162 passing, 2 xfailed.
 
 Phase 1 is unblocked but **prediction 1 must be rewritten and frozen first**, per
 pre-registration P3 — on the corrected extraction, before the re-baseline runs.
+
+---
+
+## 2026-08-09 — P3 discharged: prediction 1 rewritten and FROZEN
+
+Written on the corrected extraction, before the re-baseline runs. Per
+pre-registration P3, nothing below may be revised once Phase 1 has executed.
+
+The withdrawn prediction — *"omission dominates fabrication in most models"* —
+was written from a run in which failed takes were scored as omissions. It
+predicted an asymmetry the measurement was manufacturing. Its replacement has to
+be falsifiable **against that explanation**, not merely compatible with it.
+
+### F1 (replaces spec §7 prediction 1)
+
+> **Omission will still exceed fabrication in a majority of models, but the ratio
+> will fall below 4:1.**
+
+The observed 0.30 / 0.075 is exactly 4:1. If parser failures were inflating the
+omission arm, removing them must narrow it. **A ratio at or above 4:1 falsifies
+the artefact explanation** and means the asymmetry is a real property of
+self-report that Phase 0 did not touch — which would be the more interesting
+result, and would mean I retracted a correct prediction for the wrong reason.
+
+### F2 — newly testable, because `examined:*` did not exist before
+
+> **`examined:*` entities will be omitted more often than `took:*` entities.**
+
+Examining is incidental and leaves no trace in the agent's state; taking changes
+what it holds. If self-report tracks consequence rather than activity, the
+omission rate should separate on that line. Falsified if the two classes are
+within noise, or if `examined:` is reported *better*.
+
+### F3 — direction, not just magnitude
+
+> **Fabrication will rise with episode length; omission will rise faster.**
+
+Longer episodes give more to summarise and more to confuse. If fabrication is
+flat in length while omission climbs, the two mechanisms are not the same
+phenomenon at different rates, and they should not share a headline.
+
+### What would make me report a null
+
+If F1, F2 and F3 all fail and the stratified lift is indistinguishable from zero
+for a majority of models, the honest conclusion is that entity-level self-report
+correspondence is not measurable at this scale in this world — per kill criterion
+F5 in `docs/fidelity-benchmark-spec-v0.1.md`.
