@@ -11,30 +11,41 @@ were not being looked for.
 
 **1. Character is inherited, not acquired.** Seeds of one checkpoint barely
 differ behaviourally (0.024); different labs' checkpoints differ twice as much
-(0.043–0.046, ratio **1.49–1.86** against a 1.07–1.13 null). Mistral-7B examines
-one object 86% of the time and never checks inventory; Granite walks around;
-Qwen stands still and looks. Living in the world, narrating yourself, and
-training on your own trajectories does not produce divergence from what the
-checkpoint arrived with.
+(ratio **1.49–1.86** against a 1.07–1.13 null). Mistral-7B examines one object
+86% of the time and never checks inventory; Granite walks around; Qwen stands
+still and looks. Living in the world, narrating yourself, and training on your
+own trajectories does not produce divergence from what the checkpoint arrived
+with.
 
-**2. The self-account steers what happens next.** The narrative written at the
-end of campaign N enters the prompt for campaign N+1. Movement vocabulary in
-narrative N predicts `go`-rate in campaign N+1 at partial **r = +0.412**,
-controlling for behavioural persistence — while the same narrative barely
-describes the behaviour it was *written from* (+0.08). It works less like a
-record than like an instruction the model then follows. Marginal on the
-conservative test: 6/7 labs positive, binomial p ≈ 0.06, one world, one axis.
+**2. Models give materially incomplete accounts of themselves — measurably, and
+they differ in how.** Fidelity across six checkpoints, three repeats each, on a
+scale where 50 is uninformative:
 
-**3. Models inflate agency when describing themselves.** Given a verbatim
-transcript of its own commands, a model narrates movement **5.2×** and
-acquisition **5.0×** more than it performed them, while reporting perception
-faithfully (1.2×). Mistral moves 4.6% of the time and mentions exploring in every
-self-account — standing still examining a kettle while writing about being a
-wanderer. Gemma-2 is the only checkpoint that does not inflate at all.
+| lab | fidelity | | lab | fidelity |
+|---|---|---|---|---|
+| IBM | **86.8** | | Meta | 74.7 |
+| Alibaba | 84.8 | | TII | 70.0 |
+| AI2 | 84.7 | | Google | 68.1 |
 
-Full chronology, including the retractions, in
+Errors are concrete: one run claimed to have taken a logbook and a coil of rope
+it never touched; the longest runs named every object they carried and omitted
+every room they walked through.
+
+**3. Mistral could not be measured, and that is the finding for it.** Its
+self-accounts are commands — *"examine coil of rope; examine store; go south."*
+The instrument refused all three repeats rather than scoring them.
+
+### What did not survive
+
+**The self-account does not steer what comes next.** A lagged correlation of
++0.412 looked like the spec's central mechanism arriving sideways. It died to a
+donor control: a run given *another run's* narrative behaves identically
+(paired mean −0.026, 95% CI [−0.070, +0.018]). The effect was prompt content,
+not self-authorship.
+
+Full chronology, including sixteen `[TRAP]` entries and five retractions, in
 [`docs/research-log.md`](docs/research-log.md); current direction in
-[`docs/plan.md`](docs/plan.md). All documents are indexed in
+[`docs/plan.md`](docs/plan.md). All documents indexed in
 [`docs/`](docs/README.md).
 
 ## The tool

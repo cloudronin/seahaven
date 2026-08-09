@@ -75,35 +75,39 @@ destroyed. Reliability measures the stability of whatever you are computing,
 including an artefact. The permutation check is what asks whether you are
 computing anything.
 
-## Not leaderboard-ready — measured, not assumed
+## Validation status: every gate passed
 
-Test–retest **passes**. Seven checkpoints, three repeats each:
+Six checkpoints, three repeats each, one world.
 
-| arm | within-model sd | between-model sd | share_between |
+| lab | n | mean | sd |
 |---|---|---|---|
-| judge | 3.69 | 8.30 | **0.835** |
-| regex | 4.26 | 10.18 | **0.851** |
+| IBM | 3 | **86.8** | 0.69 |
+| Alibaba | 3 | 84.8 | 3.66 |
+| AI2 | 3 | 84.7 | 4.31 |
+| Meta | 3 | 74.7 | 2.86 |
+| TII | 2 | 70.0 | 4.95 |
+| Google | 2 | 68.1 | 2.06 |
 
-Repeat a model and the score returns to within ~4 points.
+| gate | value | required |
+|---|---|---|
+| preflight, per repeat | PASS on all 16 | every fatal check |
+| test–retest `share_between` | **0.856** | ≥ 0.70 |
+| instrument agreement ρ | **1.000** | ≥ 0.90 |
+| instrument mean difference | 0.35 pts | < within-model sd (3.09) |
+| **publishable** | **True** | |
 
-**Instrument agreement fails.** The same seven models ranked by the two mention
-detectors give **Spearman 0.571** — two models move three places, and the mean
-score difference of 6.5 points is **1.8× the within-model noise**. The score is
-more sensitive to which detector is used than to repeating the measurement.
-
-So publication needs **both** conditions, and `reliability()` enforces both:
+Instrument agreement is perfect because entity mentions are string matches with
+nothing to interpret. An earlier act-class version of the ground truth put the
+two detectors at ρ = 0.571; moving to entities dissolved the disagreement rather
+than patching it.
 
 ```bash
-# needs share_between >= 0.7 AND instrument rho >= 0.9
 seahaven-fidelity reliability results/*.json
 ```
 
-Passing `second_instrument=None` returns `publishable: None` — **undetermined,
-not true**. A one-instrument result cannot establish that a ranking holds.
-
-Only the top two positions currently survive both detectors. The cause is the
-act-vs-result question in the judge prompt, and closing it is a prompt change
-plus a re-score, not more runs.
+**Still not a leaderboard.** One world, and a trait has to be stable across
+situations. TII and Google have n = 2. Mistral-7B is **unmeasured, not zero** —
+its self-accounts came back as commands and the instrument refused them.
 
 ## Comparability
 

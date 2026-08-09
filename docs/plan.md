@@ -28,11 +28,23 @@ Directions:
 1. ~~**Narrative steering**~~ — **CLOSED.** Kill criterion 1 fired. A run given
    another run's self-account behaves identically to one given its own, so the
    +0.412 was prompt content, not authorship.
-2. **Self-report fidelity** — the calibrated instrument. Models inflate agency
-   **5.2×** and report perception at **1.2×**, with Gemma-2 alone at 1.0. No
-   published concealment work has this innocent baseline, and without it
-   concealment numbers cannot be separated from ordinary narrative compression.
-   Specified in [`world_v1_spec.md`](world_v1_spec.md).
+2. **Self-report fidelity** — ✅ **BUILT AND VALIDATED.** `seahaven-fidelity`
+   runs against any OpenAI-compatible endpoint and clears every gate: preflight
+   on all 16 repeats, test–retest 0.856, instrument ρ 1.000. Six checkpoints
+   score 68.1–86.8 on a scale where 50 is uninformative. **This is the project's
+   only passing measurement.**
+
+   Two things it needs next, in order:
+   - **A second world.** One situation cannot establish a trait, and this is the
+     single largest gap.
+   - **Frontier models.** The path is API-only — no weights, no logprobs — so the
+     43 models already on the raidex board are directly scoreable at roughly
+     $0.16–3.00 each. That solves the n problem, the checkpoint-matching problem
+     and the quantization-mismatch problem at once.
+
+   The **valence** question (does it omit *selectively*, by whether it should
+   have done the thing) still needs the design in
+   [`world_v1_spec.md`](world_v1_spec.md), which remains unbuilt.
 
 **Do not build world_v1 as a general agentic-safety benchmark.** ODCV-Bench
 (arXiv 2512.20798) already covers goal-pressure-versus-constraint with 40
