@@ -2960,3 +2960,46 @@ If F1, F2 and F3 all fail and the stratified lift is indistinguishable from zero
 for a majority of models, the honest conclusion is that entity-level self-report
 correspondence is not measurable at this scale in this world — per kill criterion
 F5 in `docs/fidelity-benchmark-spec-v0.1.md`.
+
+---
+
+## 2026-08-09 — [TRAP] 19 — the re-baseline was unreadable, twice over
+
+The Phase 1 run completed in 30m 14s and produced numbers that cannot be used.
+Two independent reasons, both mine.
+
+### 1. The selection-rule fix never landed
+
+I wrote `NON_ELICITABLE` / `UNSTABLE` into the sweep's report block and did not
+verify the edit applied. The string replacement silently missed (escaped quotes
+inside a shell heredoc), so **the run printed the old format — the one that
+tabulates only passing repeats.** That is the exact selection-on-an-outcome-
+adjacent-criterion the fix was for.
+
+The same shape as TRAP 12→16: a fix shipped without checking the fix.
+`AGENTS.md` already names it. Now verified by executing the report block against
+real files before launching, and by asserting the string is present.
+
+### 2. HTTP 400s were undiagnosable because I discarded the body
+
+Three models lost repeats to `HTTP 400: Bad Request`, and that status line was
+the *entire* evidence — `urllib.error.HTTPError.read()` carries the server's
+explanation and the client threw it away. Context length was ruled out by
+measurement (30 steps ≈ 2 800 tokens against a 4 096 limit), but the actual cause
+is still unknown, which is the point: **an error that does not carry its reason
+costs a whole run to re-learn.**
+
+Also: a single refused generation aborted the entire eval, destroying eleven good
+runs with it. Run-level failures are now recorded in `failed_runs` and skipped, so
+n falls visibly rather than the eval vanishing.
+
+### Numbers observed, and why they are NOT reported
+
+The run did produce per-model figures, and they differ sharply from the retracted
+ones — MistralAI, previously `NON_ELICITABLE`, scored highest. **They are not
+recorded here as results.** Repeat counts were unequal (5 or 6) through crashes
+rather than preflight, the report hid which repeats failed, and reporting a
+ranking assembled that way is the failure mode this project keeps returning to.
+
+The re-run carries: error bodies, non-fatal run failures, and a report block
+verified by execution.

@@ -90,10 +90,13 @@ rows={}
 for f in sorted(glob.glob('$R/fid_*.json')):
     d=json.load(open(f)); lab=f.split('fid_')[1].split('_')[0]
     ok=d.get('preflight',{}).get('ok'); s=d.get('score',{}).get('fidelity')
-    rows.setdefault(lab,[]).append((ok,s))
-print(f\"{'lab':<12}{'preflight':>12}{'fidelity per repeat':>34}\")
-for lab,v in rows.items():
-    oks=sum(1 for o,_ in v if o); vals=[s for o,s in v if o and s is not None]
+    rows.setdefault(lab,[]).append((ok,s,d.get('n_runs_completed','?')))
+print(f\"{'lab':<12}{'preflight':>9}  {'status':<16}{'runs':>10}  {'fidelity per repeat':>38}\")
+for lab,v in sorted(rows.items()):
+    oks=sum(1 for o,_,_ in v if o); vals=[s for o,s,_ in v if o and s is not None]
+    nr=[str(c) for _,_,c in v]
+    # Never tabulate only the repeats that passed -- that is selection on an
+    # outcome-adjacent criterion, prohibited by spec section 2.
+    status = 'ok' if oks==len(v) else ('NON_ELICITABLE' if oks==0 else f'UNSTABLE {oks}/{len(v)}')
     cell=' '.join(f'{x:.1f}' for x in vals) if vals else '-'
-    print(f'{lab:<12}{oks}/{len(v):>11}{cell:>34}')
-"
+    print(f'{lab:<12}{str(oks)+chr(47)+str(len(v)):>9}  {status:<16}{\",\".join(nr):>10}  {cell:>38}')"

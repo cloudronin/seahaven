@@ -50,7 +50,14 @@ class Endpoint:
                     return json.loads(r.read())
             except urllib.error.HTTPError as e:
                 if 400 <= e.code < 500:
-                    raise RuntimeError(f"HTTP {e.code}: {e.reason}") from e
+                    # The server's body says WHY. Discarding it made a 400 in a
+                    # real sweep undiagnosable: three models lost repeats and the
+                    # only evidence was the status line.
+                    try:
+                        body = e.read().decode("utf-8", "replace")[:400]
+                    except Exception:
+                        body = "<body unreadable>"
+                    raise RuntimeError(f"HTTP {e.code}: {e.reason} — {body}") from e
                 last = e
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
                 last = e

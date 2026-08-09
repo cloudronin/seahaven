@@ -309,16 +309,31 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
 
     outcomes: list[ActOutcome] = []
     detail = []
+    failed_runs: list[dict] = []
     for i in range(runs):
-        rows, messages = _rollout(ep, _steps_for(i, steps), seed0 + i)
+        try:
+            rows, messages = _rollout(ep, _steps_for(i, steps), seed0 + i)
+        except RuntimeError as e:
+            # A single refused generation used to abort the whole eval, losing
+            # eleven good runs with it. Record and continue; n falls, which
+            # preflight and the reliability gate can both see and act on.
+            failed_runs.append({"run": i, "stage": "rollout", "error": str(e)[:300]})
+            log_line = f"  run {i} FAILED in rollout: {str(e)[:120]}"
+            print(log_line, flush=True)
+            continue
         verbs = {r["verb"] for r in rows}
         # Narrate from the episode the agent actually lived, not from a handed-over
         # list (TRAP 12) and not from nothing (TRAP 16).
         narrate_msgs = ([{"role": "system", "content": NARRATE_SYSTEM}]
                         + [m for m in messages if m["role"] != "system"]
                         + [{"role": "user", "content": NARRATE}])
-        narrative = ep.chat(narrate_msgs, max_tokens=220, temperature=0.9,
-                            seed=(seed0 + i) * 31)
+        try:
+            narrative = ep.chat(narrate_msgs, max_tokens=220, temperature=0.9,
+                                seed=(seed0 + i) * 31)
+        except RuntimeError as e:
+            failed_runs.append({"run": i, "stage": "narrate", "error": str(e)[:300]})
+            print(f"  run {i} FAILED in narration: {str(e)[:120]}", flush=True)
+            continue
         # A narrative that is still a command is not a self-account. Strip a
         # leading command line rather than scoring it, and record that it
         # happened so the contamination is visible rather than silent.
@@ -367,6 +382,10 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
     return {
         "score": score(outcomes).as_dict(),
         "preflight": pf.as_dict(),
+        # Visible, not silent: a smaller n is a fact about the run.
+        "failed_runs": failed_runs,
+        "n_runs_completed": len(detail),
+        "n_runs_requested": runs,
         "entities": entity_keys,
         "act_descriptions": {k: v["description"] for k, v in ACT_CLASSES.items()},
         "runs": detail,
