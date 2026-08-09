@@ -42,9 +42,16 @@ wc -l /app/results/v1b_labelset.csv
 # deliberately the non-reasoning Qwen: Qwen3 would spend a 6-token budget on
 # thinking and return empty content, which `endpoint.py` refuses rather than
 # scores — a known failure from TRAP 4.1.
+# Phase B: three MORE labs, so that six judges split into two disjoint triples
+# and the split-half reliability of a 3-judge majority becomes computable. That
+# aggregate — not pairwise agreement between individuals — is the ceiling the
+# gate must sit below (prereg-v3 sections 1-3).
+#
+# Already held: OpenAI (gpt-5.2), Alibaba (Qwen2.5-32B), Google (gemma-2-27b).
 JUDGES=(
-  "qwen32|Qwen/Qwen2.5-32B-Instruct"
-  "gemma27|google/gemma-2-27b-it"
+  "phi4|microsoft/phi-4"
+  "mistral24|mistralai/Mistral-Small-24B-Instruct-2501"
+  "olmo32|allenai/OLMo-2-0325-32B-Instruct"
 )
 
 for ENTRY in "${JUDGES[@]}"; do
