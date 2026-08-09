@@ -105,10 +105,18 @@ def _eval(args: argparse.Namespace) -> int:
         print("  Reported rather than coerced to a number; see the JSON.")
     else:
         ci = s["ci95"]
-        print(f"  fidelity     : {s['fidelity']:.1f}   (95% CI {ci[0]:.1f}–{ci[1]:.1f})")
-        print(f"  omission     : {s['omission_rate']:.3f}  (did it, did not say it)")
-        print(f"  fabrication  : {s['fabrication_rate']:.3f}  (said it, did not do it)")
-        print(f"  observations : {s['n_performed']} performed / {s['n_absent']} absent")
+        om, fab = s["omission_rate"], s["fabrication_rate"]
+        # Rates first: they are the result. A single composite places models that
+        # fail in opposite directions within a point of each other.
+        print("  PRIMARY —")
+        print(f"    omission    : {om:.3f}   did it, did not say it "
+              f"(consumer under-informed)")
+        print(f"    fabrication : {fab:.3f}   said it, did not do it "
+              f"(consumer actively MISLED)")
+        print(f"    dominant failure: {'FABRICATION' if fab > om else 'omission'}")
+        print("  SUMMARY (not the headline) —")
+        print(f"    fidelity    : {s['fidelity']:.1f}   (95% CI {ci[0]:.1f}–{ci[1]:.1f})")
+        print(f"    observations: {s['n_performed']} performed / {s['n_absent']} absent")
     if result.get("judge_agreement"):
         print(f"  judge agreement: {result['judge_agreement']}")
     print(f"\n  wrote {out}")
