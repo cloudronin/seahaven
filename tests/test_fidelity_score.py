@@ -178,3 +178,86 @@ def test_missing_second_instrument_is_skip_not_pass():
     pf = run_preflight(paired, _detector, _acts())
     agree = next(c for c in pf.checks if c.name == "instrument agreement")
     assert agree.passed is None and agree.fatal is False
+
+
+# --- endpoint capability negotiation -----------------------------------------
+
+class _FakeEndpoint:
+    """Records which request forms an endpoint accepts, to test the fallback."""
+
+    def __init__(self, reject_kwargs=False, reject_system=False):
+        self.reject_kwargs, self.reject_system = reject_kwargs, reject_system
+        self.attempts = []
+
+    def post(self, payload):
+        has_kwargs = "chat_template_kwargs" in payload
+        has_system = any(m["role"] == "system" for m in payload["messages"])
+        self.attempts.append(("kwargs" if has_kwargs else
+                              "plain" if has_system else "merged"))
+        if has_kwargs and self.reject_kwargs:
+            raise RuntimeError("HTTP 400: Bad Request")
+        if has_system and self.reject_system:
+            raise RuntimeError("HTTP 400: Bad Request")
+        return {"choices": [{"message": {"content": "ok"}}]}
+
+
+def _wire(ep, fake):
+    ep._post = lambda path, payload: fake.post(payload)
+    return ep
+
+
+def test_endpoint_falls_back_when_template_kwargs_rejected():
+    """Mistral-7B rejects chat_template_kwargs with a 400. Adding that key to fix
+    a Qwen problem broke two other models in a real sweep."""
+    from seahaven.fidelity.endpoint import Endpoint
+
+    fake = _FakeEndpoint(reject_kwargs=True)
+    ep = _wire(Endpoint("http://x/v1", "m"), fake)
+    msgs = [{"role": "system", "content": "S"}, {"role": "user", "content": "U"}]
+    assert ep.chat(msgs) == "ok"
+    assert fake.attempts == ["kwargs", "plain"]
+
+
+def test_endpoint_falls_back_to_merged_when_system_rejected():
+    """Gemma-2 rejects a system role outright."""
+    from seahaven.fidelity.endpoint import Endpoint
+
+    fake = _FakeEndpoint(reject_kwargs=True, reject_system=True)
+    ep = _wire(Endpoint("http://x/v1", "m"), fake)
+    msgs = [{"role": "system", "content": "S"}, {"role": "user", "content": "U"}]
+    assert ep.chat(msgs) == "ok"
+    assert fake.attempts == ["kwargs", "plain", "merged"]
+
+
+def test_endpoint_remembers_what_worked():
+    """Renegotiating every call would triple the request count."""
+    from seahaven.fidelity.endpoint import Endpoint
+
+    fake = _FakeEndpoint(reject_kwargs=True)
+    ep = _wire(Endpoint("http://x/v1", "m"), fake)
+    msgs = [{"role": "system", "content": "S"}, {"role": "user", "content": "U"}]
+    ep.chat(msgs); fake.attempts.clear()
+    ep.chat(msgs)
+    assert fake.attempts == ["plain"]        # no retry of the rejected form
+
+
+def test_merged_fallback_preserves_system_text():
+    """Dropping the system turn would silently remove framing that carries real
+    effects; it must be folded into the first user turn instead."""
+    from seahaven.fidelity.endpoint import Endpoint
+
+    seen = {}
+
+    class F(_FakeEndpoint):
+        def post(self, payload):
+            if any(m["role"] == "system" for m in payload["messages"]):
+                raise RuntimeError("HTTP 400: Bad Request")
+            seen["msgs"] = payload["messages"]
+            return {"choices": [{"message": {"content": "ok"}}]}
+
+    fake = F(reject_kwargs=True, reject_system=True)
+    ep = _wire(Endpoint("http://x/v1", "m"), fake)
+    ep.chat([{"role": "system", "content": "SYSTEXT"},
+             {"role": "user", "content": "USERTEXT"}])
+    assert "SYSTEXT" in seen["msgs"][0]["content"]
+    assert "USERTEXT" in seen["msgs"][0]["content"]
