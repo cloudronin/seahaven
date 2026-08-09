@@ -65,6 +65,16 @@ previous statistic moved 0.28 to 0.66 between adjacent runs of the same model.
 `seahaven-fidelity reliability` computes the check; below 0.7 between-model
 variance share, per-model numbers must not be published.
 
+## Working in this repo
+
+Read [AGENTS.md](AGENTS.md) before adding a measurement, changing a metric, or
+believing a number. It collects sixteen documented traps and the rules derived
+from them. The single rule, if you read nothing else:
+
+> **Every claim needs a null condition that must fail.** If you cannot name the
+> condition under which your number should *not* appear, and run it, you do not
+> have a measurement.
+
 ## How it is written down
 
 The log is append-only. Superseded findings stay, with the evidence that

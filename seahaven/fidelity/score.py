@@ -167,6 +167,30 @@ def permutation_check(paired: list[tuple[str, dict]],
         return {"real": None, "shuffled_mean": None, "kind": "degenerate",
                 "has_signal": None}
 
+    # Permutation is only meaningful if the runs differ in what was performed.
+    # If every run has the same ground truth, shuffling narratives between them
+    # cannot change anything — the test is vacuous, not failed. Reporting that as
+    # "no signal" would blame the measurement for a property of the sample, and
+    # UNKNOWN must never be recorded as a negative verdict.
+    patterns = {tuple(sorted(k for k, v in perf.items() if v)) for _, perf in paired}
+    if len(patterns) < 2:
+        return {
+            "real": round(real, 2), "shuffled_mean": None, "has_signal": None,
+            "kind": "no_variation_in_ground_truth",
+            "note": "Every run performed the same set of acts, so shuffling "
+                    "narratives between runs changes nothing and the test cannot "
+                    "discriminate. Vary the episodes — more steps, more seeds, or "
+                    "a sampler the server actually honours — before rerunning.",
+        }
+    # Likewise if every narrative is identical: there is nothing to permute.
+    if len({n for n, _ in paired}) < 2:
+        return {
+            "real": round(real, 2), "shuffled_mean": None, "has_signal": None,
+            "kind": "identical_narratives",
+            "note": "All runs produced the same narrative — usually a server "
+                    "ignoring seed/temperature, or greedy decoding.",
+        }
+
     rng = random.Random(rng_seed)
     nars = [n for n, _ in paired]
     perfs = [p for _, p in paired]

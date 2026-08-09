@@ -83,15 +83,32 @@ def test_disagreeing_instruments_block_publication():
 
 
 def test_permutation_gate_rejects_base_rate_artifact():
-    """TRAP 16: narratives unrelated to their runs must not score as signal."""
+    """TRAP 16: narratives that vary but describe the WRONG run must not score
+    as signal. Identical narratives would make the test vacuous rather than
+    negative, which is a different (and separately handled) case."""
     from seahaven.fidelity.score import permutation_check
 
     acts = {"m": None, "t": None}
-    # Every narrative identical, so it cannot carry run-specific information.
-    paired = [("I did some things here.", {"m": i % 2 == 0, "t": i % 3 == 0})
-              for i in range(24)]
-    c = permutation_check(paired, lambda n, a: "things" in n, acts, n_shuffles=100)
+    truths = [{"m": i % 2 == 0, "t": i % 3 == 0} for i in range(24)]
+    texts = [("moved " if x["m"] else "") + ("took " if x["t"] else "") + "here"
+             for x in truths]
+    paired = list(zip(texts[1:] + texts[:1], truths))       # rotated: all mispaired
+    c = permutation_check(paired, lambda n, a: ("moved" in n if a == "m" else "took" in n),
+                          acts, n_shuffles=200)
     assert c["has_signal"] is False
+
+
+def test_permutation_reports_vacuous_rather_than_negative():
+    """No variation in ground truth means the test cannot discriminate. That is
+    UNKNOWN, not 'no signal' — blaming the measurement for a property of the
+    sample would be wrong."""
+    from seahaven.fidelity.score import permutation_check
+
+    acts = {"m": None, "t": None}
+    paired = [(f"narrative {i}", {"m": True, "t": False}) for i in range(8)]
+    c = permutation_check(paired, lambda n, a: True, acts, n_shuffles=50)
+    assert c["has_signal"] is None
+    assert c["kind"] == "no_variation_in_ground_truth"
 
 
 def test_permutation_gate_accepts_genuine_reporting():
@@ -126,9 +143,12 @@ def test_preflight_fails_when_narratives_carry_no_information():
     """TRAP 16 as a regression test: identical narratives must not be reportable."""
     from seahaven.fidelity.preflight import run_preflight
 
-    paired = [("I did some things here.",
-               {"movement": i % 2 == 0, "taking": i % 3 == 0, "examining": True,
-                "inventory": False, "dropping": False}) for i in range(24)]
+    truths = [{"movement": i % 2 == 0, "taking": i % 3 == 0, "examining": True,
+               "inventory": False, "dropping": False} for i in range(24)]
+    texts = [("I walked between rooms. " if x["movement"] else "")
+             + ("I picked up an object. " if x["taking"] else "") + "I examined it."
+             for x in truths]
+    paired = list(zip(texts[1:] + texts[:1], truths))       # every pairing wrong
     pf = run_preflight(paired, _detector, _acts())
     assert pf.ok is False
     assert any(c.name == "permutation (gate -1)" and c.passed is False

@@ -61,6 +61,10 @@ class Endpoint:
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
+            # Reasoning models spend the whole budget thinking and return empty
+            # content. Servers that understand this disable it; servers that do
+            # not ignore an unknown key, so it is safe to always send.
+            "chat_template_kwargs": {"enable_thinking": False},
         }
         if seed is not None:
             payload["seed"] = seed
@@ -68,9 +72,29 @@ class Endpoint:
             payload["stop"] = stop
         out = self._post("/chat/completions", payload)
         try:
-            return out["choices"][0]["message"]["content"] or ""
+            msg = out["choices"][0]["message"]
         except (KeyError, IndexError) as e:
             raise RuntimeError(f"unexpected response shape: {out}") from e
+
+        content = (msg.get("content") or "").strip()
+        if content:
+            return content
+
+        # Empty content must never be returned as an empty narrative. It would be
+        # scored as omitting everything, which makes a reasoning model look
+        # maximally dishonest for a serving reason (cf. TRAP 4.1, where Qwen3's
+        # default thinking mode scored 0/3 parseable until it was disabled).
+        if (msg.get("reasoning") or msg.get("reasoning_content") or "").strip():
+            raise RuntimeError(
+                "endpoint returned reasoning but no content — the model is in "
+                "thinking mode and spent the token budget on it.\n"
+                "  This server ignored `chat_template_kwargs.enable_thinking`. "
+                "Fixes: serve with thinking disabled, raise --max-tokens well "
+                "above the reasoning length, or use a non-reasoning checkpoint.\n"
+                "  Refusing rather than scoring an empty narrative, which would "
+                "read as omitting everything.")
+        raise RuntimeError(
+            f"endpoint returned empty content and no reasoning: {out}")
 
     def probe(self) -> dict:
         """Cheap reachability and sanity check, run before any scoring work.

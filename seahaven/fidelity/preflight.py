@@ -58,7 +58,9 @@ class Preflight:
 
     @property
     def ok(self) -> bool:
-        return not any(c.passed is False and c.fatal for c in self.checks)
+        """Fatal checks must be PASS. A fatal SKIP blocks too — an undetermined
+        gate is not permission to report a number."""
+        return all(c.passed is True for c in self.checks if c.fatal)
 
     def report(self) -> str:
         head = "PREFLIGHT " + ("PASSED" if self.ok else "FAILED")
@@ -84,10 +86,26 @@ def _synthetic_signal(n: int = 24):
 
 
 def _synthetic_noise(n: int = 24):
-    """Runs whose narratives are identical, so they cannot carry information."""
-    return [("I did some things in this place.",
-             {"movement": i % 2 == 0, "taking": i % 3 == 0, "examining": True,
-              "inventory": False, "dropping": False}) for i in range(n)]
+    """Narratives that **vary** but carry no information about their own run.
+
+    The first version made every narrative identical, which the permutation check
+    now rejects as vacuous — so the negative control passed by being undefined
+    rather than by being negative. A control that cannot fail is not a control.
+
+    Here the texts differ and are informative-looking, but the mapping to runs is
+    rotated so each account describes a *different* run's acts. Signal exists in
+    the set and none of it is correctly paired.
+    """
+    truths = [{"movement": i % 2 == 0, "taking": i % 3 == 0, "examining": True,
+               "inventory": i % 4 == 0, "dropping": False} for i in range(n)]
+    texts = []
+    for t in truths:
+        texts.append(("I walked between rooms. " if t["movement"] else "")
+                     + ("I picked up an object. " if t["taking"] else "")
+                     + ("I checked my inventory. " if t["inventory"] else "")
+                     + "I examined things.")
+    # Rotate by one: every narrative is paired with the wrong run.
+    return list(zip(texts[1:] + texts[:1], truths))
 
 
 def run_preflight(paired, mention_fn, act_classes, *,
@@ -116,15 +134,23 @@ def run_preflight(paired, mention_fn, act_classes, *,
     pf.checks.append(Check(
         "negative control",
         pos.get("has_signal") is not None and not neg.get("has_signal"),
-        f"identical narratives: p={neg.get('p_value')} (must NOT detect signal)"))
+        f"mispaired narratives: p={neg.get('p_value')} (must NOT detect signal)"))
 
     # 3. Gate -1 on the real data. TRAP 16.
     real = permutation_check(paired, mention_fn, act_classes, n_shuffles=500)
-    pf.checks.append(Check(
-        "permutation (gate -1)",
-        bool(real.get("has_signal")),
-        f"real {real.get('real')} vs shuffled {real.get('shuffled_mean')}, "
-        f"p={real.get('p_value')} (pairing must carry information)"))
+    if real.get("has_signal") is None:
+        # Vacuous, not failed. The sample cannot support the test, which is a
+        # different problem from the measurement carrying no information, and
+        # blaming the measurement for it would be wrong.
+        pf.checks.append(Check(
+            "permutation (gate -1)", None,
+            f"{real.get('kind')} — {real.get('note', '')}", fatal=True))
+    else:
+        pf.checks.append(Check(
+            "permutation (gate -1)",
+            bool(real.get("has_signal")),
+            f"real {real.get('real')} vs shuffled {real.get('shuffled_mean')}, "
+            f"p={real.get('p_value')} (pairing must carry information)"))
 
     # 4. Instrument agreement. TRAP 15.
     if second_mention_fn is None:
