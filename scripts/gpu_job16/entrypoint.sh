@@ -52,8 +52,10 @@ for w in ("world_v0", "world_v2"):
     print(f"  {w}: {len(s.entity_keys)} keys, start={s.start_room}", flush=True)
 PY
 
+# Alibaba already completed all six evals in the sequential run before it was
+# cancelled; those files are held and merged at analysis time rather than paid
+# for twice.
 MODELS=(
-  "Alibaba|Qwen/Qwen3-8B"
   "MistralAI|mistralai/Mistral-7B-Instruct-v0.3"
   "AI2|allenai/OLMo-2-1124-13B-Instruct"
   "IBM|ibm-granite/granite-3.1-8b-instruct"
@@ -89,14 +91,29 @@ PROBE
     done
 
     if [ "$READY" = "1" ]; then
+        # All six evals for this model at once. Episodes are already 12-way
+        # concurrent inside an eval, but that is capped by the run count, and a
+        # single eval leaves the GPU mostly idle: sequentially one took ~35
+        # minutes against a warm H200 and the sweep projected to 24 GPU-hours.
+        # vLLM batches these happily; the models are 7-13B on 143 GB.
         for WORLD in world_v0 world_v2; do
             for SEED in 5150 7301 9412; do
-                python -m seahaven.fidelity.cli eval \
+                (
+                  python -m seahaven.fidelity.cli eval \
                     --model "http://127.0.0.1:$PORT/v1" --served-name "$MODEL" \
                     --allow-regex-judge --runs 12 --steps 30 --seed $SEED \
                     --world "$WORLD" \
-                    --output "$R/x_${LAB}_${WORLD}_${SEED}.json" 2>&1 | tail -10
-                push "$R/x_${LAB}_${WORLD}_${SEED}.json" || true
+                    --output "$R/x_${LAB}_${WORLD}_${SEED}.json" \
+                    > /tmp/eval_${LAB}_${WORLD}_${SEED}.log 2>&1
+                  push "$R/x_${LAB}_${WORLD}_${SEED}.json" || true
+                ) &
+            done
+        done
+        wait
+        for WORLD in world_v0 world_v2; do
+            for SEED in 5150 7301 9412; do
+                echo "--- $LAB $WORLD $SEED ---"
+                tail -6 /tmp/eval_${LAB}_${WORLD}_${SEED}.log
             done
         done
     else

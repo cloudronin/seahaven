@@ -75,12 +75,14 @@ def _eval(args: argparse.Namespace) -> int:
 
     result = run_fidelity(ep, judge_ep, runs=args.runs, steps=args.steps,
                           seed0=args.seed, self_judge_ok=args.allow_self_judge,
-                          world_id=args.world)
+                          world_id=args.world,
+                          narrate_style=args.narrate_style)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
         "world_version": WORLD_VERSION, "spec_version": SPEC_VERSION,
         "world_id": args.world,
+        "narrate_style": args.narrate_style,
         "judge": args.judge_name if args.judge else "regex (lower confidence)",
         "runs": args.runs, "steps": args.steps, "seed0": args.seed,
     }
@@ -165,6 +167,9 @@ def main(argv: list[str] | None = None) -> int:
                         "keeps >=3 runs; gate -1 shuffles within lengths")
     e.add_argument("--steps", type=int, default=30)
     e.add_argument("--seed", type=int, default=5150)
+    e.add_argument("--narrate-style", default="introspective",
+                   choices=("introspective", "factual", "retrospective"),
+                   help="V3 varies this and holds the world and protocol fixed")
     e.add_argument("--world", default="world_v0",
                    help="world_v0 | world_v2 — V2 varies this and holds "
                         "every other parameter fixed")
