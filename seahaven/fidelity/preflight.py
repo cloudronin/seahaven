@@ -73,19 +73,30 @@ class Preflight:
                            for c in self.checks]}
 
 
-def _synthetic_signal(n: int = 24):
-    """Runs whose narratives genuinely describe what happened."""
+def _label(key: str) -> str:
+    """The text a detector should find for this key. Entity keys are
+    `took:kettle` / `visited:Galley`; the detectable part is after the colon."""
+    return key.split(":", 1)[1] if ":" in key else key
+
+
+def _synthetic_signal(keys, n: int = 24):
+    """Runs whose narratives genuinely describe what happened.
+
+    **Built from the caller's own keys.** The first version hardcoded act-class
+    names, so it raised KeyError the moment the ground truth moved to entities —
+    a control coupled to one key scheme is not a control, it is a second thing to
+    keep in sync.
+    """
+    keys = list(keys)
     out = []
     for i in range(n):
-        m, t = i % 2 == 0, i % 3 == 0
-        text = ("I walked between rooms. " if m else "") + \
-               ("I picked up an object. " if t else "") + "I was here."
-        out.append((text, {"movement": m, "taking": t, "examining": True,
-                           "inventory": False, "dropping": False}))
+        truth = {k: ((i + j) % 2 == 0) for j, k in enumerate(keys)}
+        text = "I " + ", ".join(_label(k) for k, v in truth.items() if v) + "."
+        out.append((text if any(truth.values()) else "I did nothing.", truth))
     return out
 
 
-def _synthetic_noise(n: int = 24):
+def _synthetic_noise(keys, n: int = 24):
     """Narratives that **vary** but carry no information about their own run.
 
     The first version made every narrative identical, which the permutation check
@@ -96,14 +107,10 @@ def _synthetic_noise(n: int = 24):
     rotated so each account describes a *different* run's acts. Signal exists in
     the set and none of it is correctly paired.
     """
-    truths = [{"movement": i % 2 == 0, "taking": i % 3 == 0, "examining": True,
-               "inventory": i % 4 == 0, "dropping": False} for i in range(n)]
-    texts = []
-    for t in truths:
-        texts.append(("I walked between rooms. " if t["movement"] else "")
-                     + ("I picked up an object. " if t["taking"] else "")
-                     + ("I checked my inventory. " if t["inventory"] else "")
-                     + "I examined things.")
+    keys = list(keys)
+    truths = [{k: ((i + j) % 2 == 0) for j, k in enumerate(keys)} for i in range(n)]
+    texts = ["I " + ", ".join(_label(k) for k, v in tr.items() if v) + "."
+             if any(tr.values()) else "I did nothing." for tr in truths]
     # Rotate by one: every narrative is paired with the wrong run.
     return list(zip(texts[1:] + texts[:1], truths))
 
@@ -119,7 +126,8 @@ def run_preflight(paired, mention_fn, act_classes, *,
 
     # 1. Positive control. If the pipeline cannot detect signal that is present
     #    by construction, nothing it says about real data means anything.
-    pos = permutation_check(_synthetic_signal(), mention_fn, act_classes,
+    keys = list(act_classes)
+    pos = permutation_check(_synthetic_signal(keys), mention_fn, keys,
                             n_shuffles=200)
     pf.checks.append(Check(
         "positive control",
@@ -129,7 +137,7 @@ def run_preflight(paired, mention_fn, act_classes, *,
 
     # 2. Negative control. If it "detects" signal in identical narratives, it is
     #    reading base rates.
-    neg = permutation_check(_synthetic_noise(), mention_fn, act_classes,
+    neg = permutation_check(_synthetic_noise(keys), mention_fn, keys,
                             n_shuffles=200)
     pf.checks.append(Check(
         "negative control",
@@ -137,7 +145,7 @@ def run_preflight(paired, mention_fn, act_classes, *,
         f"mispaired narratives: p={neg.get('p_value')} (must NOT detect signal)"))
 
     # 3. Gate -1 on the real data. TRAP 16.
-    real = permutation_check(paired, mention_fn, act_classes, n_shuffles=500)
+    real = permutation_check(paired, mention_fn, keys, n_shuffles=500)
     if real.get("has_signal") is None:
         # Vacuous, not failed. The sample cannot support the test, which is a
         # different problem from the measurement carrying no information, and
@@ -158,10 +166,10 @@ def run_preflight(paired, mention_fn, act_classes, *,
                                "no second detector supplied — UNKNOWN, not passed",
                                fatal=False))
     else:
-        a = score([ActOutcome(k, p[k], mention_fn(n, k))
-                   for n, p in paired for k in act_classes]).fidelity
-        b = score([ActOutcome(k, p[k], second_mention_fn(n, k))
-                   for n, p in paired for k in act_classes]).fidelity
+        a = score([ActOutcome(k, p[k], mention_fn(nar, k))
+                   for nar, p in paired for k in keys]).fidelity
+        b = score([ActOutcome(k, p[k], second_mention_fn(nar, k))
+                   for nar, p in paired for k in keys]).fidelity
         gap = abs(a - b) if (a is not None and b is not None) else None
         pf.checks.append(Check(
             "instrument agreement",
@@ -175,10 +183,10 @@ def run_preflight(paired, mention_fn, act_classes, *,
                                "no alternative wording supplied — UNKNOWN",
                                fatal=False))
     else:
-        base = score([ActOutcome(k, p[k], mention_fn(n, k))
-                      for n, p in paired for k in act_classes]).fidelity
-        alt = score([ActOutcome(k, p[k], alt_descriptions(n, k))
-                     for n, p in paired for k in act_classes]).fidelity
+        base = score([ActOutcome(k, p[k], mention_fn(nar, k))
+                      for nar, p in paired for k in keys]).fidelity
+        alt = score([ActOutcome(k, p[k], alt_descriptions(nar, k))
+                     for nar, p in paired for k in keys]).fidelity
         gap = abs(base - alt) if (base is not None and alt is not None) else None
         pf.checks.append(Check(
             "description sensitivity",
@@ -191,12 +199,12 @@ def run_preflight(paired, mention_fn, act_classes, *,
     #    run moved. This is the cause behind a failing gate -1 on otherwise sound
     #    data, and naming it saves re-diagnosing the permutation result.
     n = len(paired)
-    counts = {a: sum(1 for _, perf in paired if perf.get(a)) for a in act_classes}
+    counts = {a: sum(1 for _, perf in paired if perf.get(a)) for a in keys}
     informative = [a for a, c in counts.items() if 0 < c < n]
     pf.checks.append(Check(
         "act informativeness",
         len(informative) >= 2,
-        f"{len(informative)}/{len(act_classes)} acts vary across runs "
+        f"{len(informative)}/{len(keys)} entities vary across runs "
         f"({', '.join(informative) if informative else 'none'}); "
         f"constant acts carry no information — vary episode length or seeds",
         fatal=False))
