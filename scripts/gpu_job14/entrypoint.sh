@@ -69,7 +69,15 @@ for c in pf.get('checks',[]):
 print()
 runs=d.get('runs',[])
 pats={tuple(sorted(k for k,v in r['acts'].items() if v['performed'])) for r in runs}
-print(f'  distinct act-patterns across runs: {len(pats)}  (permutation needs >= 2)')
+print(f'  distinct entity-patterns across runs: {len(pats)}/{len(runs)}  (permutation needs >= 2)')
+keys=list(runs[0]['acts'])
+varies=sum(1 for k in keys if 0 < sum(r['acts'][k]['performed'] for r in runs) < len(runs))
+print(f'  entities that vary: {varies}/{len(keys)}')
+for r in runs[:3]:
+    did=sorted(k for k,v in r['acts'].items() if v['performed'])
+    said=sorted(k for k,v in r['acts'].items() if v['mentioned'])
+    print(f\"    run {r['run']} ({r['steps']}st) DID {did}\")
+    print(f\"              SAID {said}\")
 print(f'  distinct narratives              : {len({r[\"narrative\"] for r in runs})}/{len(runs)}')
 for r in runs[:2]:
     print(f\"  sample narrative: {r['narrative'][:170]!r}\")
