@@ -3868,3 +3868,75 @@ V4 joins V1 as a blocker. The current standing of the battery:
 
 Nothing here is publishable as a per-model raidex column. The honest current
 claim remains distribution-level.
+
+## 2026-08-09 — V1 rebuilt: the gate is set above the reference standard's own reliability
+
+806 items drawn from the corrected runs across both worlds; fabrication stratum
+rebuilt on true ground truth (rope/key share 72% -> 20%). Three judges from
+three labs, each passing all eight planted controls, each dual-asked. 756 items
+labelled stably by all three.
+
+### Judge-to-judge agreement — the question the rebuild existed to answer
+
+| pair | kappa | 95% CI |
+|---|---|---|
+| GPT-5.2 vs Qwen2.5-32B | **0.853** | [+0.799, +0.898] |
+| gemma-2-27b vs Qwen2.5-32B | 0.682 | [+0.611, +0.747] |
+| gemma-2-27b vs GPT-5.2 | 0.672 | [+0.602, +0.738] |
+| **mean cross-lab** | **0.736** | |
+| *reference: gpt-4.1-mini vs GPT-5.2, same lab* | *0.864* | |
+
+**Same-lab inflation is real but small — not the whole story.** The worry was
+that 0.864 was OpenAI agreeing with itself. Against a *different* lab's judge
+the LLM detector scores 0.806, only 0.036 below its same-lab 0.842. What
+actually separates is not lab but judge: **gemma-2-27b is the outlier**,
+agreeing with both others at ~0.68 while they agree with each other at 0.853.
+The judges are unanimous on 88% of items.
+
+### The finding that matters more than any detector number
+
+**Mean cross-lab agreement between judges is 0.736. The gate the detector must
+clear is 0.80.** An instrument cannot be validated to a precision the reference
+standard does not itself possess. V1 as specified is not merely unmet — at this
+label quality it is **unsatisfiable**, and that is a property of the criterion,
+not of the detectors.
+
+This was invisible while V1 used one judge. A single judge has no measurable
+reliability; three make the ceiling explicit.
+
+### Detectors against the three-judge consensus
+
+| detector | vs consensus | main | disagreement | fabrication |
+|---|---|---|---|---|
+| name-only | 0.124 | 0.789 | **0.000** | **0.000** |
+| relation-aware | 0.427 | 0.789 | **0.000** | 0.404 |
+| parse | 0.434 | 0.592 | 0.285 | 0.494 |
+| majority of 3 | 0.523 | — | — | — |
+| **gpt-4.1-mini as detector** | **0.815** | **0.875** | 0.770 | **0.808** |
+
+The two regex detectors score **exactly 0.000 on the disagreement stratum**, and
+that is structural rather than unlucky: relation-aware is a strict subset of
+name-only, so on a disagreement item name-only always says claim and
+relation-aware always says not-claim. Each is a constant there, and a constant
+has no agreement with anything. **The decisive stratum cannot be scored by
+either string detector even in principle.**
+
+### V1 verdict: FAIL, but the failure has moved
+
+Gate is 0.80 on every stratum. Best per stratum: main 0.789 (regex) / 0.875
+(LLM), fabrication 0.808 (LLM), disagreement 0.770 (LLM). **The LLM detector
+passes two strata and misses the third by 0.030**, while every regex fails
+decisively.
+
+So the honest position has changed. It is no longer "no detector works". It is:
+
+1. an LLM detector is close to the gate and far ahead of every string method;
+2. it already **exceeds the mean agreement between judges** (0.815 vs 0.736), so
+   the remaining gap may be label noise rather than detector error;
+3. the gate cannot be met without better labels — more judges, adjudicated
+   disagreements, or the human labels the spec originally required.
+
+**What must not be done** is to lower the gate now that the numbers are known.
+0.80 was pre-registered. If it is revised it has to be revised on an argument
+about achievable inter-rater reliability, stated before the revised number is
+computed, and recorded as a change to the criterion rather than a result.
