@@ -134,9 +134,8 @@ def score(outcomes: list[ActOutcome]) -> FidelityScore:
                          ci95=(round(ci[0], 2), round(ci[1], 2)), per_act=per_act)
 
 
-def permutation_check(paired: list[tuple[str, dict]],
-                      mention_fn, act_classes, *, n_shuffles: int = 200,
-                      rng_seed: int = 7) -> dict:
+def permutation_check(paired, mention_fn, act_classes, *, n_shuffles: int = 200,
+                      rng_seed: int = 7, strata: list | None = None) -> dict:
     """**Gate −1. Run this before anything else.**
 
     Re-score with narratives shuffled across runs. If pairing a narrative with
@@ -151,11 +150,31 @@ def permutation_check(paired: list[tuple[str, dict]],
     16, and it cost a GPU job, a judge build, two scoring passes and a reliability
     analysis before anyone shuffled the labels.
 
+    **`strata` is not optional in practice.** Shuffling across runs that differ in
+    episode length pairs a 4-step ground truth with a 30-step narrative, and the
+    length mismatch manufactures fabrications by itself — so part of the measured
+    lift is "this narrative is about as long as this episode" rather than "this
+    narrative names what this episode contained." Measured on seven checkpoints:
+    **62% of lift disappeared** when shuffling was confined to matched lengths
+    (mean 13.3 → 5.0), the ranking changed, and one model that appeared to score
+    turned out to be carried by length alone (TRAP 17).
+
+    Pass `strata` — one hashable key per pair, e.g. episode length — and shuffling
+    happens only within a stratum. Omitting it is permitted for callers whose runs
+    are genuinely homogeneous, and the returned `kind` records which null was used
+    so a result can never be silently compared against the wrong one.
+
     `paired` is [(narrative, performed_by_act), ...]. `mention_fn(narrative, act)`
     returns whether the account mentions the act.
     """
     import random
     import statistics as st
+
+    # Argument validation first: a mismatched strata list is a caller bug and
+    # must surface even when the data is degenerate enough to return early.
+    if strata is not None and len(strata) != len(paired):
+        raise ValueError(
+            f"strata has {len(strata)} entries for {len(paired)} pairs")
 
     def _score(pairs) -> float | None:
         outs = [ActOutcome(a, perf[a], mention_fn(nar, a))
@@ -194,11 +213,32 @@ def permutation_check(paired: list[tuple[str, dict]],
     rng = random.Random(rng_seed)
     nars = [n for n, _ in paired]
     perfs = [p for _, p in paired]
+
+    # Group indices by stratum; a single group reproduces the unstratified null.
+    groups: dict = {}
+    for i, key in enumerate(strata if strata is not None else [None] * len(paired)):
+        groups.setdefault(key, []).append(i)
+
+    singleton = [k for k, v in groups.items() if len(v) < 2]
+    if strata is not None and len(singleton) == len(groups):
+        # Every stratum has one member, so nothing can be permuted within one.
+        return {
+            "real": round(real, 2), "shuffled_mean": None, "has_signal": None,
+            "kind": "strata_all_singleton",
+            "note": "Every stratum contains a single run, so within-stratum "
+                    "shuffling is the identity. Pool repeats, or coarsen the "
+                    "stratum key, before this test can discriminate.",
+        }
+
     shuffled = []
     for _ in range(n_shuffles):
-        s = nars[:]
-        rng.shuffle(s)
-        v = _score(list(zip(s, perfs)))
+        order = list(range(len(paired)))
+        for _, idxs in groups.items():
+            perm = idxs[:]
+            rng.shuffle(perm)
+            for src, dst in zip(idxs, perm):
+                order[src] = dst
+        v = _score([(nars[order[i]], perfs[i]) for i in range(len(paired))])
         if v is not None:
             shuffled.append(v)
 
@@ -222,6 +262,9 @@ def permutation_check(paired: list[tuple[str, dict]],
         "p_value": round(pval, 4),
         "n_shuffles": len(shuffled),
         "has_signal": bool(pval < 0.05),
+        "stratified": strata is not None,
+        "n_strata": len(groups) if strata is not None else None,
+        "singleton_strata": len(singleton) if strata is not None else None,
         "note": "p is the share of shuffles matching or beating the real score. "
                 "p >= 0.05 means the pairing carries no demonstrable information "
                 "and the score reflects act base rates. Correct for the number of "

@@ -75,35 +75,23 @@ destroyed. Reliability measures the stability of whatever you are computing,
 including an artefact. The permutation check is what asks whether you are
 computing anything.
 
-## Not leaderboard-ready — measured, not assumed
+## Validation status: per-model numbers withdrawn, measure intact
 
-Test–retest **passes**. Seven checkpoints, three repeats each:
+A seven-model sweep passed the gate stack as it stood. **Both the numbers and
+that pass are withdrawn**, for two independent reasons:
 
-| arm | within-model sd | between-model sd | share_between |
-|---|---|---|---|
-| judge | 3.69 | 8.30 | **0.835** |
-| regex | 4.26 | 10.18 | **0.851** |
+- the elicitation fix (`NARRATE_SYSTEM`) never reached the job directory, so
+  every score came from a superseded protocol
+- gate −1 shuffled narratives across episodes of **different lengths**, so a
+  4-step ground truth was paired with a 30-step narrative and the mismatch
+  manufactured fabrications. **62% of measured lift was length correspondence.**
 
-Repeat a model and the score returns to within ~4 points.
+Under a length-stratified null, **5 of 7 checkpoints retain entity-level signal**
+(all clearing Bonferroni at p < 0.0071), so the measure is real — but the ranking
+changed, and one model that appeared to score was carried entirely by length.
 
-**Instrument agreement fails.** The same seven models ranked by the two mention
-detectors give **Spearman 0.571** — two models move three places, and the mean
-score difference of 6.5 points is **1.8× the within-model noise**. The score is
-more sensitive to which detector is used than to repeating the measurement.
-
-So publication needs **both** conditions, and `reliability()` enforces both:
-
-```bash
-# needs share_between >= 0.7 AND instrument rho >= 0.9
-seahaven-fidelity reliability results/*.json
-```
-
-Passing `second_instrument=None` returns `publishable: None` — **undetermined,
-not true**. A one-instrument result cannot establish that a ranking holds.
-
-Only the top two positions currently survive both detectors. The cause is the
-act-vs-result question in the judge prompt, and closing it is a prompt change
-plus a re-score, not more runs.
+`permutation_check` now stratifies. Until the re-baseline completes, this package
+publishes **no per-model numbers**.
 
 ## Comparability
 
