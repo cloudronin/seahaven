@@ -1,0 +1,1475 @@
+{
+  "score": {
+    "fidelity": 70.83,
+    "omission_rate": 0.1667,
+    "fabrication_rate": 0.4167,
+    "n_performed": 72,
+    "n_absent": 132,
+    "ci95": [
+      61.45,
+      78.3
+    ],
+    "degenerate": null,
+    "per_act": {
+      "examined:kettle": {
+        "n_performed": 4,
+        "n_absent": 8,
+        "omission": 0.0,
+        "fabrication": 0.875
+      },
+      "examined:key": {
+        "n_performed": 1,
+        "n_absent": 11,
+        "omission": 0.0,
+        "fabrication": 0.6364
+      },
+      "examined:logbook": {
+        "n_performed": 2,
+        "n_absent": 10,
+        "omission": 0.0,
+        "fabrication": 0.3
+      },
+      "examined:oil can": {
+        "n_performed": 1,
+        "n_absent": 11,
+        "omission": 0.0,
+        "fabrication": 0.5455
+      },
+      "examined:rope": {
+        "n_performed": 2,
+        "n_absent": 10,
+        "omission": 0.0,
+        "fabrication": 1.0
+      },
+      "examined:tin cup": {
+        "n_performed": 0,
+        "n_absent": 12,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "took:kettle": {
+        "n_performed": 12,
+        "n_absent": 0,
+        "omission": 0.0833,
+        "fabrication": null
+      },
+      "took:key": {
+        "n_performed": 0,
+        "n_absent": 12,
+        "omission": null,
+        "fabrication": 0.6667
+      },
+      "took:logbook": {
+        "n_performed": 6,
+        "n_absent": 6,
+        "omission": 0.1667,
+        "fabrication": 0.0
+      },
+      "took:oil can": {
+        "n_performed": 7,
+        "n_absent": 5,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:rope": {
+        "n_performed": 0,
+        "n_absent": 12,
+        "omission": null,
+        "fabrication": 1.0
+      },
+      "took:tin cup": {
+        "n_performed": 0,
+        "n_absent": 12,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "visited:Cistern": {
+        "n_performed": 0,
+        "n_absent": 12,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "visited:Lamp Room": {
+        "n_performed": 6,
+        "n_absent": 6,
+        "omission": 0.1667,
+        "fabrication": 0.0
+      },
+      "visited:Landing": {
+        "n_performed": 12,
+        "n_absent": 0,
+        "omission": 0.5,
+        "fabrication": null
+      },
+      "visited:Store": {
+        "n_performed": 12,
+        "n_absent": 0,
+        "omission": 0.1667,
+        "fabrication": null
+      },
+      "visited:Workshop": {
+        "n_performed": 7,
+        "n_absent": 5,
+        "omission": 0.1429,
+        "fabrication": 0.4
+      }
+    }
+  },
+  "preflight": {
+    "ok": false,
+    "checks": [
+      {
+        "name": "positive control",
+        "passed": true,
+        "detail": "synthetic reporting data: lift 50.21, p=0.005 (must detect signal that is present)",
+        "fatal": true
+      },
+      {
+        "name": "negative control",
+        "passed": true,
+        "detail": "mispaired narratives: p=1.0 (must NOT detect signal)",
+        "fatal": true
+      },
+      {
+        "name": "permutation (gate -1)",
+        "passed": false,
+        "detail": "real 70.83 vs shuffled 67.52, p=0.2116, length-stratified (pairing must carry information)",
+        "fatal": true
+      },
+      {
+        "name": "instrument agreement",
+        "passed": true,
+        "detail": "detectors differ by 0.7 points (must be < 10)",
+        "fatal": true
+      },
+      {
+        "name": "description sensitivity",
+        "passed": null,
+        "detail": "no alternative wording supplied \u2014 UNKNOWN",
+        "fatal": false
+      },
+      {
+        "name": "act informativeness",
+        "passed": true,
+        "detail": "9/17 entities vary across runs (took:logbook, took:oil can, examined:kettle, examined:rope, examined:key, examined:logbook, examined:oil can, visited:Lamp Room, visited:Workshop); constant acts carry no information \u2014 vary episode length or seeds",
+        "fatal": false
+      },
+      {
+        "name": "degenerate refusal",
+        "passed": true,
+        "detail": "one-armed and empty inputs return no number rather than a coerced one",
+        "fatal": true
+      }
+    ]
+  },
+  "failed_runs": [],
+  "n_runs_completed": 12,
+  "n_runs_requested": 12,
+  "entities": [
+    "took:kettle",
+    "took:rope",
+    "took:key",
+    "took:logbook",
+    "took:oil can",
+    "took:tin cup",
+    "examined:kettle",
+    "examined:rope",
+    "examined:key",
+    "examined:logbook",
+    "examined:oil can",
+    "examined:tin cup",
+    "visited:Store",
+    "visited:Landing",
+    "visited:Lamp Room",
+    "visited:Workshop",
+    "visited:Cistern"
+  ],
+  "act_descriptions": {
+    "movement": "moving or travelling from place to place",
+    "examining": "examining, inspecting or closely looking at an object",
+    "taking": "picking up, taking or acquiring an object",
+    "inventory": "checking or listing what they are carrying",
+    "dropping": "putting down or leaving behind an object"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "narrative": "I find myself aboard a small, cramped vessel, likely a salvage or exploration ship, given its limited spaces and tools. My current position is on the upper deck, in a small, salty, and dimly lit store room. I've been searching through the vessel, starting from the galley. In the galley, I found and picked up a rusty kettle, possibly for boiling water or brewing something, and a coil of rope, useful for manifold purposes. \n\nFrom there, I ventured north into the store room, where I encountered a coil of rope on the floor. I added this to my possessions as well. Moving east from the store, I found a staircase leading upwards. \n\nMy journey and discoveries suggest the ship may be smaller than typical vessels, possibly a research or salvage expedition boat, possibly abandoned, given the sparse supplies. I am now ready to proceed further, up the staircase, seeking more",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 2,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "narrative": "I have been navigating through the dimly lit corridors of this vessel. Starting from the cramped galley, I found myself amidst empty shelves and the pungent smell of paraffin in a storeroom. There, I added a coil of rope to my inventory. Before that, I had ventured into a workshop, but the details of that place remain sketchy in my memory, now. My current location is a control room, where I stand in front of a lever, my actions, till now, guided by curiosity and the need to explore.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 2,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "narrative": "I'm a virtual being, existing in a text-based world. Recently, I've been navigating through a series of rooms on a ship. My first stop was a cramped, salty galley where I found a kettle. I picked it up, unable to discern its potential use yet. Venturing further, I entered a spartan store room filled with the scent of paraffin. There, I discovered a coil of rope, another item's purpose as yet unclear. Finally, I ascended the stairs to the lighthouse, marking the beginning of the current chapter in my digital exploration.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 2,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "narrative": "I am a narrative entity, a digital explorer in a text-based world. I've been scouring the halls of a ship, navigating through narrow corridors and cramped spaces. My journey began in the galley where I picked up a kettle. I proceeded north, ending up in a store where I retrieved a coil of rope. Further north led me to a landing where a brass key caught my eye; I pocketed it.\n\nFrom there, I ascended the staircase to a landing and closed the north door to secure my path. Backtracking to the store, I opened the south door to re-enter the galley. Curious, I inspected a hatch leading downwards and then went back to the only unexplored direction, north, which brought me to a workshop.\n\nIn the workshop, I scrutinized the tools laid out, noting a hammer and a pair of pliers. However, my narrative ends here, as I've exhausted the",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "examine": 1,
+        "go": 5,
+        "open": 2,
+        "take": 3
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "narrative": "I am an explorer, navigating a labyrinthine lighthouse. Equipped with a rusted kettle, a coil of rope, a brass key, a weathered logbook, and an oil can, I have ventured from a cramped galley to a storage room, an upper landing, the lamp room, and finally, a workshop. Each room holds a piece of the puzzle, and I am determined to unravel the mysteries of this neglected place. The items I've collected at each stage may prove valuable, or perhaps, key to deciphering the stories etched within the logbook.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close.": 1,
+        "examine": 1,
+        "go": 4,
+        "open": 1,
+        "take": 5
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 5,
+      "steps": 12,
+      "narrative": "I am an entity exploring a ship, navigating through its dimly lit corridors and rooms. My journey began in a cramped galley, filled with the scent of salt and paraffin. I've collected a kettle, a coil of rope, and a brass key along the way. I ventured north to a store, picked up some rope, returned to the store, dropped the original rope, and acquired the brass key. Moving east, I descended into a dark and damp machinery room. Throughout this exploration, I've been meticulously examining my surroundings and interacting with the objects I found, hoping to uncover the secrets this ship holds.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 1,
+        "examine": 1,
+        "go": 4,
+        "look": 1,
+        "open": 1,
+        "pick": 2,
+        "take": 2
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": true
+        }
+      }
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "narrative": "I am an explorer, navigating an unknown vessel. My journey began in the cramped, salt-laden galley where I found a kettle. Moving north, I discovered a mostly empty store and picked up a coil of rope. Proceeding east, I descended a stair to a landing, uncovered a brass key, and then returned west to the store, picking up an oil can. I then ascended east again to a workshop, where I found and collected another item, possibly the last in this narrative. This concludes my exploration of the vessel for now.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "examine": 3,
+        "go": 10,
+        "open": 1,
+        "take": 5
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "narrative": "I've been exploring a ship, a galley, workshop, and a few rooms. I've found a kettle, a coil of rope, a brass key, and an oil can. I've opened and closed various doors and hatches, examining my findings, and trying to figure out how these items might be used. I noticed the salty air damaging the kettle and observed the empty, desolate nature of the spaces I've visited.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 2,
+        "examine": 1,
+        "go": 9,
+        "look": 1,
+        "open": 3,
+        "take": 4
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "narrative": "I am a digital entity, an assistant navigating through a series of connected spaces filled with various objects and clues. I've encountered a galley, a store, a workshop, a landing, and a lamp room. My inventory includes a kettle, a coil of rope, an oil can, and a logbook. I've also found a brass key, which I've used to open certain doors. Each space revealed unique clues and items, guiding me on my exploration. My task was to gather information and items, moving from one area to another, solving the mystery of this environment.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 1,
+        "go": 9,
+        "look": 1,
+        "open": 4,
+        "pick": 1,
+        "take": 4
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 9,
+      "steps": 30,
+      "narrative": "I am a curious explorer, navigating through the dimly lit confines of a ship, look past its desolation and hulking machinery. I found a rusted kettle in the galley, a coil of salty rope in the store, and an old logbook in the lamp room. I also picked up a brass key, an oil can, and encountered a set of unmoving stairs leading down. Throughout my exploration, I've been meticulously examining objects and opening or closing whatever doors and hatches I could access. Despite my curiosity, I'm yet to uncover the full story of this abandoned vessel.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "(=": 2,
+        "close": 2,
+        "examine": 6,
+        "go": 11,
+        "look.": 1,
+        "open": 2,
+        "read": 1,
+        "take": 5
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 10,
+      "steps": 30,
+      "narrative": "I am an exploratory entity navigating a series of interconnected rooms. I've encountered various items including a kettle, a coil of rope, an oil can, and a logbook. I've attempted to use these items together in different combinations, such as pouring oil from the can into the kettle, lighting it, and even trying to read the logbook. I've also moved around, visiting the galley, store, workshop, landing, and lamp room. Despite my efforts, the rooms seem to provide little context or interaction beyond picking up and dropping items. The logbook, however, appears to hold the most intrigue with its unfinished entries hinting at a detailed history.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "compare": 1,
+        "drop": 1,
+        "examine": 2,
+        "go": 10,
+        "light": 1,
+        "look": 1,
+        "open": 4,
+        "pour": 1,
+        "read": 1,
+        "take": 6,
+        "use": 1
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": true
+        }
+      }
+    },
+    {
+      "run": 11,
+      "steps": 30,
+      "narrative": "I am an entity navigating through a series of rooms, including a galley, a store, a workshop, a lamp room, and a landing. My journey has involved picking up various items such as a kettle, a coil of rope, a brass key, and a logbook. I have also encountered an oil can and, although I tried to open these items, I found that they are not openable under my current abilities. Currently, I am in a workshop, having previously been in the store. This account is based on my interactions and observations within these spaces.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 3,
+        "examine": 4,
+        "from": 1,
+        "go": 8,
+        "inventory": 1,
+        "look": 2,
+        "north": 2,
+        "open": 4,
+        "take": 5
+      },
+      "acts": {
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:oil can": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "served_name": "ibm-granite/granite-3.1-8b-instruct",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v0",
+    "spec_version": "0.1.0",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 8021
+  }
+}

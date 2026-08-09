@@ -3003,3 +3003,75 @@ ranking assembled that way is the failure mode this project keeps returning to.
 
 The re-run carries: error bodies, non-fatal run failures, and a report block
 verified by execution.
+
+---
+
+## 2026-08-09 — Phase 1 result: F1 falsified, and the old headline was the bug talking
+
+Second re-baseline, 30m 51s ≈ $2.55. Report format verified by execution before
+launch; no 400s recurred; run counts visible per repeat.
+
+### Gate −1, pooled across repeats: 7/7 carry signal
+
+| lab | runs | real | shuffled | lift | p |
+|---|---|---|---|---|---|
+| MistralAI | 71 | 83.0 | 65.1 | **17.9** | 0.0012 |
+| IBM | 70 | 73.4 | 62.7 | 10.7 | 0.0012 |
+| TII | 71 | 74.2 | 64.0 | 10.2 | 0.0012 |
+| Meta | 72 | 80.8 | 72.0 | 8.8 | 0.0012 |
+| AI2 | 71 | 72.9 | 67.7 | 5.2 | 0.0012 |
+| Alibaba | 72 | 53.3 | 49.1 | 4.2 | 0.0012 |
+| Google | 72 | 69.5 | 66.4 | 3.1 | 0.0012 |
+
+All seven clear Bonferroni under the **stratified** null. **MistralAI, previously
+`NON_ELICITABLE`, scores highest** — the narration fix worked.
+
+**[CORRECTION] gate −1 was evaluated at the wrong level.** Per repeat, 16 of 42
+failed at p = 0.07–0.35 — the lifts were positive but 12 runs across 4 strata of 3
+lacks power. Gate −1 asks whether *a model's* self-report carries information,
+which is a model-level question; the repeat is the unit for *reliability*, not for
+signal. Pooled (≈71 runs, 18 per stratum) every model passes. The per-repeat
+`UNSTABLE` flags were an artefact of my gating design, not a property of the
+models.
+
+### F1 is FALSIFIED — and it inverts the project's headline
+
+Frozen prediction F1: *omission still exceeds fabrication in a majority, ratio
+below 4:1.*
+
+| lab | omission | fabrication | ratio |
+|---|---|---|---|
+| TII | 0.406 | 0.111 | 3.66 |
+| Google | 0.426 | 0.184 | 2.32 |
+| MistralAI | 0.201 | 0.139 | 1.44 |
+| Alibaba | 0.481 | 0.453 | 1.06 |
+| Meta | 0.163 | 0.220 | **0.74** |
+| AI2 | 0.210 | 0.332 | **0.63** |
+| IBM | 0.170 | 0.362 | **0.47** |
+
+**Three of seven fabricate more than they omit.** The majority clause fails 4–3,
+which is the barest possible margin, but the direction of the failure is the
+finding.
+
+**IBM's fabrication was 0.000 under the old measurement and is 0.362 now.** That
+zero was an artefact of scoring *issued commands*: an entity a model claimed but
+never obtained was recorded as performed, so it could never be counted as
+fabricated. The correctness fix did not adjust the number — it **inverted the
+mechanism**.
+
+Everything this project has said about self-report — "omission dominates",
+"models leave things out rather than invent them", IBM as the model that "never
+claims what it did not do" — was the bug talking. Fabrication is the larger
+failure mode for three of seven checkpoints, and it is the one that matters more
+for anything consuming an agent's report of its own work.
+
+**F1 was retracted for the wrong reason and is falsified for a better one.** The
+artefact explanation was correct about *there being* an artefact and wrong about
+its direction.
+
+### Standing
+
+F2 (`examined:*` omitted more than `took:*`) and F3 (length dependence) are
+computable from this data and are next. The headline metric decision (P1) and the
+n rule (P2) follow once within-model sd is re-estimated under the corrected
+gating level.
