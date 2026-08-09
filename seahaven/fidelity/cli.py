@@ -85,18 +85,20 @@ def _eval(args: argparse.Namespace) -> int:
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
-    perm = result.get("permutation_check", {})
+    pf = result.get("preflight", {})
     s = result["score"]
+    print()
+    for c in pf.get("checks", []):
+        mark = {True: "PASS", False: "FAIL", None: "SKIP"}[c["passed"]]
+        print(f"  [{mark}] {c['name']}: {c['detail']}")
     print("\n=== seahaven fidelity ===")
-    if perm.get("has_signal") is False:
-        print("  NO MEASUREMENT — the score survives shuffling the narratives.")
-        print(f"    real {perm['real']}  vs shuffled {perm['shuffled_mean']}  "
-              f"p={perm['p_value']}")
-        print("    Pairing each account with a DIFFERENT run scores the same, so "
-              "this\n    number reflects act base rates, not self-report. The "
-              "usual cause is\n    that the agent had no memory of the episode "
-              "when it narrated.")
-        print(f"\n  wrote {out}")
+    if not pf.get("ok", True):
+        print("  NO NUMBER REPORTED — preflight failed.")
+        print("  A score that fails a null condition is not a measurement. The "
+              "usual\n  causes: the agent had no memory of the episode when it "
+              "narrated, or the\n  detector is reading base rates rather than the "
+              "account.")
+        print(f"\n  wrote {out} (contains the failed checks and the raw runs)")
         return 3
     if s["fidelity"] is None:
         print(f"  NO SCORE — {s['degenerate']}")

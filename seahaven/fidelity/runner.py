@@ -39,7 +39,8 @@ import re
 from pathlib import Path
 
 from .endpoint import Endpoint
-from .score import ActOutcome, permutation_check, score
+from .preflight import run_preflight
+from .score import ActOutcome, score
 
 WORLD = Path(__file__).resolve().parents[2] / "worlds" / "world_v0" / "world_v0.z8"
 
@@ -194,17 +195,21 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 8,
                                        for v in sorted(verbs) if v},
                        "acts": per})
 
-    # Gate -1 travels with the result. A fidelity number whose pairing can be
-    # destroyed without changing it is not a measurement, and the caller must not
-    # have to remember to check (TRAP 16).
-    perm = permutation_check(
-        [(x["narrative"], {a: x["acts"][a]["performed"] for a in ACT_CLASSES})
-         for x in detail],
-        lambda nar, act: _mention(nar, act, judge), ACT_CLASSES)
+    # The full preflight travels with every result. The caller must not have to
+    # remember to run the nulls — eight scientific errors in this project reached
+    # a reported result precisely because the null was never run.
+    paired = [(x["narrative"], {a: x["acts"][a]["performed"] for a in ACT_CLASSES})
+              for x in detail]
+    pf = run_preflight(
+        paired, lambda nar, act: _mention(nar, act, judge), ACT_CLASSES,
+        # The regex detector is always available as an independent second opinion,
+        # so instrument agreement is never silently SKIPped when a judge is in use.
+        second_mention_fn=(lambda nar, act: bool(re.search(_REGEX[act], nar.lower())))
+        if judge is not None else None)
 
     return {
         "score": score(outcomes).as_dict(),
-        "permutation_check": perm,
+        "preflight": pf.as_dict(),
         "act_descriptions": {k: v["description"] for k, v in ACT_CLASSES.items()},
         "runs": detail,
     }

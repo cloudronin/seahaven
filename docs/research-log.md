@@ -2498,3 +2498,86 @@ across runs; if the score does not drop, there is no measurement. It is free, it
 takes seconds, and it would have caught this before a GPU job, a judge build, two
 scoring passes and a reliability analysis. Added to `score.py` and to the CLI,
 which now refuses to report a number that survives shuffling.
+
+---
+
+## 2026-08-08 — why this kept happening, and the preflight that stops the known classes
+
+Sixteen traps, and the pattern is not random. They split into two eras:
+
+- **TRAPs 1–5** (environment, banners, chat templates) — caught during build,
+  cheap, normal engineering.
+- **TRAPs 9–16** (scientific validity) — **every one caught after a result had
+  been reported.** Five required a public correction.
+
+### The method failure, named
+
+**Components were validated; the pipeline never was.** The score maths was
+verified on constructed cases. The judge was validated against hand labels.
+Reliability was checked by test–retest. Each piece was correct and the
+composition still measured nothing. **Component correctness does not compose into
+pipeline validity**, and only an end-to-end test against a known answer shows it.
+
+**Fixes were shipped untested.** TRAP 16 *is* the fix for TRAP 12: removing the
+transcript from the authoring prompt (correct) by removing all context (wrong).
+The second bug is the first bug's remedy, never checked.
+
+**Gates were added reactively.** Each existed because something had already got
+through, so every new failure was by construction a kind no gate covered.
+
+### The unifying principle
+
+For every claim, there is a **null condition that must fail**. Reviewing all
+eight scientific traps, one check would have caught nearly every one:
+
+| trap | the null that should have failed | run? |
+|---|---|---|
+| `narrative_spread` | does it read narratives at all? | no |
+| 11 | do `i've` and world nouns drive it? | no |
+| 12 | is the answer already in the prompt? | no |
+| 13 | does repeating change it? | late |
+| 14 | does rephrasing flip it? | no |
+| 15 | does a second instrument agree? | no |
+| 16 | does shuffling destroy it? | no |
+| donor control | does someone else's narrative work as well? | **yes** |
+
+**The donor control is the only null run first — and the only place a dead result
+was killed before work was built on it.** That is the whole lesson.
+
+### `seahaven/fidelity/preflight.py`
+
+Six checks, run automatically inside `run_fidelity()` and hard-gating the CLI,
+which now prints no number and exits 3 when any fatal check fails:
+
+1. **positive control** — synthetic data with signal present; the pipeline must
+   detect it, or nothing it says about real data means anything
+2. **negative control** — identical narratives; it must *not* detect signal
+3. **permutation (gate −1)** — shuffling the pairing must destroy the score
+4. **instrument agreement** — two detectors within 10 points; **absent second
+   detector records SKIP, never PASS**, since recording UNKNOWN as passed is how
+   TRAP 15 shipped
+5. **description sensitivity** — rewording must not move the score (TRAP 14)
+6. **degenerate refusal** — one-armed and empty inputs return no number
+
+Run against the data that produced the retracted results:
+
+```
+PREFLIGHT FAILED
+  [PASS] positive control      lift 20.28, p=0.005
+  [PASS] negative control      p=1.0
+  [FAIL] permutation (gate -1) real 55.52 vs shuffled 56.23, p=0.7365
+  [PASS] instrument agreement  detectors differ by 3.4 points
+  [SKIP] description sensitivity
+  [PASS] degenerate refusal
+```
+
+**That run would not have been reportable.** Three regression tests pin the
+behaviour, including TRAP 16 and the SKIP-is-not-PASS rule.
+
+### What this does not promise
+
+It makes the **known** failure classes impossible to ship silently. It does not
+guarantee no new class exists — claiming that would be the same overconfidence
+that produced this list. What it changes is the cost of discovery: the checks are
+free, run locally in seconds, and execute before any GPU spend, so an unknown
+failure surfaces before a reported result rather than after one.

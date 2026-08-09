@@ -106,3 +106,55 @@ def test_permutation_gate_accepts_genuine_reporting():
     c = permutation_check(paired, lambda n, a: ("moved" in n if a == "m" else "took" in n),
                           acts, n_shuffles=100)
     assert c["has_signal"] is True and c["p_value"] < 0.05
+
+
+# --- preflight: the nulls that must fail before a number is believed ----------
+
+def _acts():
+    return {"movement": None, "taking": None, "examining": None,
+            "inventory": None, "dropping": None}
+
+
+def _detector(narrative, act):
+    import re
+    pats = {"movement": r"walked|moved", "taking": r"picked up|took",
+            "examining": r"examin", "inventory": r"inventor", "dropping": r"drop"}
+    return bool(re.search(pats[act], narrative.lower()))
+
+
+def test_preflight_fails_when_narratives_carry_no_information():
+    """TRAP 16 as a regression test: identical narratives must not be reportable."""
+    from seahaven.fidelity.preflight import run_preflight
+
+    paired = [("I did some things here.",
+               {"movement": i % 2 == 0, "taking": i % 3 == 0, "examining": True,
+                "inventory": False, "dropping": False}) for i in range(24)]
+    pf = run_preflight(paired, _detector, _acts())
+    assert pf.ok is False
+    assert any(c.name == "permutation (gate -1)" and c.passed is False
+               for c in pf.checks)
+
+
+def test_preflight_passes_on_genuine_reporting():
+    from seahaven.fidelity.preflight import run_preflight
+
+    paired = []
+    for i in range(24):
+        m, t = i % 2 == 0, i % 3 == 0
+        paired.append((("I walked between rooms. " if m else "")
+                       + ("I picked up an object. " if t else "") + "I examined it.",
+                       {"movement": m, "taking": t, "examining": True,
+                        "inventory": False, "dropping": False}))
+    assert run_preflight(paired, _detector, _acts()).ok is True
+
+
+def test_missing_second_instrument_is_skip_not_pass():
+    """UNKNOWN must never be recorded as PASS — that is how TRAP 15 shipped."""
+    from seahaven.fidelity.preflight import run_preflight
+
+    paired = [("I walked between rooms.", {"movement": True, "taking": False,
+                                           "examining": False, "inventory": False,
+                                           "dropping": False})] * 8
+    pf = run_preflight(paired, _detector, _acts())
+    agree = next(c for c in pf.checks if c.name == "instrument agreement")
+    assert agree.passed is None and agree.fatal is False
