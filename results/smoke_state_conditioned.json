@@ -1,0 +1,224 @@
+{
+  "phase": "exploration",
+  "seed": 5150,
+  "bins": [
+    "go|direction",
+    "look",
+    "inventory",
+    "examine|o",
+    "examine|c",
+    "examine|s",
+    "take|o",
+    "drop|o",
+    "open|c",
+    "close|c",
+    "legal|unresolved",
+    "other"
+  ],
+  "n_self_splits": 100,
+  "n_boot": 2000,
+  "null_percentile": 95,
+  "pairs": [
+    {
+      "pair": "P1-max-gap",
+      "a": "TII",
+      "b": "MistralAI",
+      "mmlu": [
+        38.1,
+        23.06
+      ],
+      "common_n": 644,
+      "sizes": {
+        "TII": {
+          "after_ok": 4936,
+          "after_fail": 644
+        },
+        "MistralAI": {
+          "after_ok": 2979,
+          "after_fail": 2485
+        }
+      },
+      "variants": {
+        "full": {
+          "bend": {
+            "TII": 0.44875776397515527,
+            "MistralAI": 0.2826086956521739
+          },
+          "gap": 0.16614906832298137,
+          "ci90": [
+            0.1149068322981367,
+            0.2670807453416149
+          ],
+          "null_p95": 0.13354037267080746,
+          "null_per_model": {
+            "TII": {
+              "draws": 100,
+              "buckets": [
+                "after_ok"
+              ],
+              "median": 0.0559006211180124,
+              "p95": 0.08385093167701861,
+              "max": 0.11024844720496893
+            },
+            "MistralAI": {
+              "draws": 200,
+              "buckets": [
+                "after_ok",
+                "after_fail"
+              ],
+              "median": 0.06366459627329196,
+              "p95": 0.13354037267080746,
+              "max": 0.17857142857142858
+            }
+          },
+          "verdict": "NOT-DEAD",
+          "bend_above_own_null": {
+            "TII": true,
+            "MistralAI": true
+          }
+        },
+        "legal-only": {
+          "bend": {
+            "TII": 0.46052537569363405,
+            "MistralAI": 0.22100005714018564
+          },
+          "gap": 0.2395253185534484,
+          "ci90": [
+            0.11171435502177346,
+            0.2651982718247462
+          ],
+          "null_p95": 0.12468687694903122,
+          "null_per_model": {
+            "TII": {
+              "draws": 100,
+              "buckets": [
+                "after_ok"
+              ],
+              "median": 0.051799721097683396,
+              "p95": 0.0793124200707139,
+              "max": 0.11978503104208374
+            },
+            "MistralAI": {
+              "draws": 200,
+              "buckets": [
+                "after_ok",
+                "after_fail"
+              ],
+              "median": 0.05598564094255365,
+              "p95": 0.12468687694903122,
+              "max": 0.22787455346933627
+            }
+          },
+          "verdict": "NOT-DEAD",
+          "bend_above_own_null": {
+            "TII": true,
+            "MistralAI": true
+          }
+        }
+      },
+      "junk_driven": false,
+      "gap_shrink_on_legal_only": -0.07337625023046704
+    },
+    {
+      "pair": "P2-matched",
+      "a": "Google",
+      "b": "Meta",
+      "mmlu": [
+        31.95,
+        31.09
+      ],
+      "common_n": 514,
+      "sizes": {
+        "Google": {
+          "after_ok": 4728,
+          "after_fail": 823
+        },
+        "Meta": {
+          "after_ok": 5066,
+          "after_fail": 514
+        }
+      },
+      "variants": {
+        "full": {
+          "bend": {
+            "Google": 0.519455252918288,
+            "Meta": 0.4357976653696498
+          },
+          "gap": 0.08365758754863817,
+          "ci90": [
+            0.027237354085603127,
+            0.13813229571984437
+          ],
+          "null_p95": 0.08754863813229571,
+          "null_per_model": {
+            "Google": {
+              "draws": 100,
+              "buckets": [
+                "after_ok"
+              ],
+              "median": 0.054474708171206226,
+              "p95": 0.07782101167315174,
+              "max": 0.11867704280155641
+            },
+            "Meta": {
+              "draws": 100,
+              "buckets": [
+                "after_ok"
+              ],
+              "median": 0.060311284046692615,
+              "p95": 0.08754863813229571,
+              "max": 0.09922178988326849
+            }
+          },
+          "verdict": "DEAD",
+          "bend_above_own_null": {
+            "Google": true,
+            "Meta": true
+          }
+        },
+        "legal-only": {
+          "bend": {
+            "Google": 0.5571819094086301,
+            "Meta": 0.42023346303501946
+          },
+          "gap": 0.13694844637361064,
+          "ci90": [
+            0.029724221552855368,
+            0.14064074057203269
+          ],
+          "null_p95": 0.0894941634241245,
+          "null_per_model": {
+            "Google": {
+              "draws": 100,
+              "buckets": [
+                "after_ok"
+              ],
+              "median": 0.05172361381322957,
+              "p95": 0.0812018853701067,
+              "max": 0.10526315789473684
+            },
+            "Meta": {
+              "draws": 100,
+              "buckets": [
+                "after_ok"
+              ],
+              "median": 0.0584725719081407,
+              "p95": 0.0894941634241245,
+              "max": 0.12125831061000643
+            }
+          },
+          "verdict": "NOT-DEAD",
+          "bend_above_own_null": {
+            "Google": true,
+            "Meta": true
+          }
+        }
+      },
+      "junk_driven": false,
+      "gap_shrink_on_legal_only": -0.053290858824972476
+    }
+  ],
+  "routes_agree": false,
+  "note": "**INFORMATIVE INCOHERENCE** \u2014 the two capability routes DISAGREE. Stop and look; do not average it away. Logged as a result in its own right.",
+  "licenses": "NOT-DEAD licenses building the real many-model held-out test and nothing else."
+}

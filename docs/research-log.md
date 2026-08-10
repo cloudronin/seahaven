@@ -6549,3 +6549,104 @@ usability wall on base checkpoints across three families, a model-dependent
 determinism law with a clean size threshold, and a reframe of what the cohort is
 for. **None of these would have surfaced from writing the program spec first**,
 and two of them would have been discovered after the instrument was built.
+
+## 2026-08-10 — SMOKE TEST: the representation is not flat; between-model discrimination is weaker and junk-masked
+
+**Outcome first: NOT-DEAD on P1 (both variants) and on P2 legal-only; DEAD on P2
+full.** $0, existing corpus, constants pinned at `0ba1680` before the first bend
+was computed.
+
+**This can only kill.** Two models cannot distinguish signal from a lucky split.
+NOT-DEAD licenses building the real many-model held-out test and **nothing
+else** — not the cohort spend, not the axis enumeration, not the program spec.
+
+### The numbers
+
+Bucket = previous step's `ok`; 12-bin verb+object-class vocabulary; TVD; every
+bucket subsampled to the pair's common n; null = 100 self-splits.
+
+| pair | variant | bend A (× own null) | bend B (× own null) | gap vs null p95 | verdict |
+|---|---|---|---|---|---|
+| P1 TII vs MistralAI, n=644 | full | 0.449 (5.4×) | 0.283 (2.1×) | 1.24× | **NOT-DEAD** |
+| | legal-only | 0.461 (5.8×) | 0.221 (1.8×) | 1.92× | **NOT-DEAD** |
+| P2 Google vs Meta, n=514 | full | 0.520 (6.7×) | 0.436 (5.0×) | **0.96×** | **DEAD** |
+| | legal-only | 0.557 (6.9×) | 0.420 (4.7×) | 1.53× | **NOT-DEAD** |
+
+### The strongest result is the one the spec asked for
+
+**Every model bends far above its own sampling floor — 1.8× to 6.9×.** The
+question was *is the representation flat, or does it carry signal*, and at the
+crudest possible conditioning — one binary split, on data collected for another
+purpose — all four models change their action distribution after a failure
+versus after a success, by margins the self-split null does not come close to
+explaining. **The representation is not flat.**
+
+The between-model discrimination is the weaker half. P1 clears at 1.24× and
+1.92×; P2 clears only once junk is removed.
+
+### Junk MASKS the between-model signal — it does not drive it
+
+The pre-registered worry was the opposite: that a bend living in the `other` bin
+would mean capability leaking in through junk rate. **The data says the reverse.**
+Removing the junk bin *widens* both gaps, +0.073 on P1 and +0.053 on P2, and
+flips P2 from DEAD to NOT-DEAD.
+
+The mechanism is visible per model: the higher-bending model of each pair goes
+*up* on legal-only (TII 0.449→0.461, Google 0.520→0.557) while the lower-bending
+one goes *down* (MistralAI 0.283→0.221, Meta 0.436→0.420). **Part of
+MistralAI's and Meta's bend is a junk-rate shift; TII's and Google's is a shift
+among legal actions.** Those are different *kinds* of bend, and pooling them into
+one number makes two models look more alike than they are.
+
+### The pre-registered incoherence flag fired, and it resolves
+
+The frozen cross-check compares two independent routes to *is this capability?*
+Route 1 (matched pair, full bend) = **DEAD**. Route 2 (junk decomposition) =
+**not junk-driven**. Those disagree, so the flag fired as designed.
+
+**It resolves without averaging anything away.** Route 1 used P2's *full* bend,
+and P2-full is exactly the cell the junk bin suppresses. On legal-only — where
+the masking is removed — the matched pair reads NOT-DEAD and both routes agree:
+the signal survives, and it is not junk. **The disagreement was informative: it
+located the junk bin as the thing hiding the matched pair's contrast**, which
+neither route alone would have shown.
+
+Recorded rather than smoothed over, per the pre-registration.
+
+### [TRAP] 36 — a verdict decided by PYTHONHASHSEED, and then by 2.8e-17
+
+Two defects in my own probe, both caught before the write-up, both in the same
+comparison.
+
+**The threshold was nondeterministic.** The pair's null was recomputed under
+`random.Random(SEED + hash(model_name) % 1000)`, and **Python randomises string
+hashes per process**. The same data gave null p95 0.0837 in one run and 0.0875
+in the next, and P2-full's verdict flipped between them. The fix is that the
+threshold now uses the *same* null draws that get reported, rather than a
+second, differently seeded computation — which also removed a duplicate pass.
+Output is now byte-identical under `PYTHONHASHSEED` 1 and 99, pinned by a test.
+
+**And a tie was resolved by floating-point dust.** In the first run P2's gap and
+its null p95 both landed on **exactly 86 quanta** of TVD's 1/1028 grid at n=514,
+differing by 2.8e-17, and a bare `>` called it NOT-DEAD. TVD at n is quantised
+to multiples of 1/(2n), so a gap and a percentile landing on the same grid point
+is far likelier than it looks. The frozen rule says **above** the 95th
+percentile; equality is not above. A tie now reads DEAD.
+
+**Neither is a change to the pinned rule** — both make the implementation obey
+it. The rule was frozen at `0ba1680`; the code was wrong about it in two ways
+that a rounded print would have hidden. This is the same class as TRAP 32: a
+comparison presupposing a precision the machinery did not have.
+
+### What this licenses
+
+Only this: **the state-conditioned representation is worth building the full
+many-model, multi-split, held-out test on.** It does not license the cohort
+spend, the axis enumeration, or the program spec. Two models cannot validate
+anything, and the one binary split used here is the crudest conditioning
+available.
+
+Two things the full test must carry forward: **separate the junk-rate bend from
+the legal-action bend** rather than pooling them, since they are different
+behaviours and pooling cost P2 its signal; and **keep the common-n subsampling**,
+without which failure rate leaks into every comparison.

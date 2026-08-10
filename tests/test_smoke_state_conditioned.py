@@ -183,3 +183,46 @@ def test_bend_refuses_when_a_bucket_is_smaller_than_n():
     eps = episodes_from(FLAT, FLAT, n_eps=10, per_ep=4, seed=6)
     got = bend(eps, 10_000, random.Random(0))
     assert got != got, "expected NaN when a bucket cannot supply n"
+
+
+# --- determinism, which a per-process hash quietly broke once ----------------
+
+def test_null_does_not_depend_on_python_hash_seed():
+    """The threshold must not move between processes.
+
+    An earlier version seeded the pair's null with `hash(model_name)`, and
+    Python randomises string hashes per process — so the same data gave p95
+    0.0837 in one run and 0.0875 in the next, and a verdict flipped on it. This
+    pins the fix: the same episodes and the same explicit seed give the same
+    null, and nothing in the path consults `hash()` of a string.
+    """
+    import inspect
+
+    import smoke_state_conditioned as m
+
+    code = [ln.split("#", 1)[0] for ln in
+            inspect.getsource(m.run_pair).splitlines()]
+    assert not any("hash(" in ln for ln in code), (
+        "run_pair consults hash(); string hashing is per-process and would make "
+        "the threshold depend on PYTHONHASHSEED")
+
+    eps = episodes_from(FLAT, SKEWED, seed=7)
+    a = self_split_null(eps, 200, random.Random(11))
+    b = self_split_null(eps, 200, random.Random(11))
+    assert a == b, "same seed, same episodes, different null"
+
+
+def test_a_tie_reads_dead_not_alive():
+    """`above the 95th percentile` excludes equality.
+
+    TVD at n is quantised to multiples of 1/(2n), so a gap landing on exactly
+    the same grid point as the null percentile is far likelier than it looks —
+    it happened, at 86 quanta, with the two differing by 2.8e-17. A bare `>`
+    resolved that on floating-point dust.
+    """
+    from smoke_state_conditioned import TIE_TOL
+
+    gap = 0.08365758754863817
+    p95 = 0.08365758754863814
+    assert gap > p95, "the float dust is real; that is the point"
+    assert not (gap > p95 + TIE_TOL), "a tie must not read as NOT-DEAD"

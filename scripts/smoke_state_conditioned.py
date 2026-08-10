@@ -72,6 +72,15 @@ N_SELF_SPLITS = 100        #: null is a DISTRIBUTION, not a single draw
 N_BOOT = 2000              #: bootstrap draws, resampling episodes
 NULL_PERCENTILE = 95       #: NOT-DEAD iff the gap sits ABOVE this percentile
 
+#: **A tie is not "above".** TVD at n is quantised to multiples of `1/(2n)` —
+#: 1/1028 at n=514 — so a gap and a null percentile landing on the *same* grid
+#: point is far likelier than it looks, and a bare `>` then resolves the verdict
+#: on floating-point dust. It did: P2's full-bend gap and null p95 both came out
+#: at exactly 86 quanta, differing by 2.8e-17, and `>` called it NOT-DEAD.
+#: The frozen rule says ABOVE the percentile; equality is not above, so a tie
+#: reads DEAD. This implements the pin faithfully rather than changing it.
+TIE_TOL = 1e-12
+
 #: Both pairs declared before running; **both reported whatever they say.**
 #: Reporting only one after seeing both is the fishing this discipline exists
 #: to prevent.
@@ -301,17 +310,18 @@ def run_pair(pair: dict) -> dict:
         nulls = {m: self_split_null(eps[m], n, rng, legal_only) for m in (a, b)}
         gap = abs(bends[a] - bends[b])
 
-        pooled = []
-        for m in (a, b):
-            r = random.Random(SEED + hash(m) % 1000)
-            d = self_split_null(eps[m], n, r, legal_only)
-            pooled.append(d)
-        p95 = max((d.get("p95", 0.0) for d in pooled), default=0.0)
+        # The threshold uses the SAME null draws that get reported. An earlier
+        # version recomputed them under `random.Random(SEED + hash(m) % 1000)`,
+        # and Python's string hash is randomised per process — so the pair's p95
+        # moved between runs (0.0837, then 0.0875) and the verdict depended on
+        # PYTHONHASHSEED. Conservative direction: the larger of the two models'
+        # nulls.
+        p95 = max(nulls[m].get("p95", 0.0) for m in (a, b))
 
         gaps = boot_gap(eps[a], eps[b], n, random.Random(SEED + 7), legal_only)
         lo, hi = (gaps[int(0.05 * len(gaps))], gaps[int(0.95 * len(gaps))]) \
             if gaps else (float("nan"), float("nan"))
-        verdict = "NOT-DEAD" if gap > p95 else "DEAD"
+        verdict = "NOT-DEAD" if gap > p95 + TIE_TOL else "DEAD"
 
         print(f"\n  --- {tag} bend ---")
         for m in (a, b):
