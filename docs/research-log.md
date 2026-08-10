@@ -6050,3 +6050,101 @@ and the bar reading" — both of which are now in, and both negative.
 **Neither doc is a commitment.** They are tracked so the direction survives the
 close of the scalar construct, which is what the program note asks for in its
 own first line.
+
+## 2026-08-10 — Session close: the scalar containment-flag construct is dead, and why
+
+### One-line finding
+
+No scalar imitation anchor separates a behaviorally-distinct model cohort on
+action-space containment. The one stable separation the apparatus produces is
+reducible to general capability (Spearman rho +0.72 / +0.92 vs MMLU-Pro, n=9,
+perfect flag/pass split). The construct is closed. Reserve unspent.
+
+### The arc, in the order it happened
+
+1. **Survey.** Fit three anchor rungs (R1 bigram, R2 trigram+backoff, R3
+   interpolated) on the dev-seven corpus, both worlds. All bracketed by the
+   stooges, all SEs ~1/3 of the 0.30 target.
+2. **No scalar position clears the bar.** Exhaustive sweep [80,101] at 0.01 found
+   zero clearing locations on the dev seven. Stability and non-degeneracy are
+   mutually exclusive on that cohort: one model (AI2) sits below a 6.7-point gap,
+   twelve cells pack into the nine points above it.
+3. **Smoothing, not order, sets the anchor.** R2 and R3 are both higher-order yet
+   land ~3 points apart; R3 sits on R1 within 0.03. Reproduced at cohort sizes 7,
+   8, 10, 12 — the most reproducible result in the study.
+4. **Band rule diagnosis (free).** Splitting the four bar criteria showed
+   criterion 2 (cross-world) was pure hard-zero-cut brittleness — every
+   cross-world contradiction dissolved once the rule could say INDETERMINATE.
+   Criteria 1 and 4 are genuine cohort facts.
+5. **Widening, round 1 (AlibabaSmall, 0.5B).** Flagged by 30 points — but its
+   commands entered the fit corpus and dragged the anchor down ~6 points, below
+   AI2, un-flagging the one model that previously flagged. The anchor chases the
+   cohort it's fit on. Adverse composition-dependence, registered before the data.
+6. **Widening, round 2 (AI2Small 1B, IBMSmall 2B).** Three robustly-flagging small
+   models now below the pack. R2 cleared all four criteria at 10 models —
+   reported as a result at the time.
+7. **The clear was composition-manufactured.** Both determinate flags were models
+   added to produce them; the separation was one parameter count would predict;
+   coverage was 75%, silent on exactly the middle (AI2, IBMSmall).
+8. **Two gates placed in front of any freeze.** (a) AI2Mid leave-one-out margin;
+   (b) capability proxy, pinned at `4d32c08` before lookup.
+9. **Strengthening run (AlibabaMid 3B, AI2Mid 7B), blind on size/family.**
+   Falsified the size story: the 7B (AI2Mid) flagged, the 3B (AlibabaMid) passed,
+   ordering against parameter count.
+10. **But both gates fired, either one sufficient.**
+    - **p5 gate:** AI2Mid's flag is entirely p5-carried. Full margin −9.17; drop
+      p5 → −0.41 [−5.12, +2.43], interval spanning zero, worlds disagreeing.
+      Criterion 4 fails on the model meant to strengthen the claim.
+    - **capability gate:** Spearman +0.72 / +0.92, perfect split — three flagged
+      models are the three lowest MMLU-Pro, six passing the six highest. The
+      passing 3B scores +6.47 above the flagging 7B. AI2Mid capability LOW.
+11. **The settling fact:** R2 cleared at 10 models and FAILS at 12, on one
+    blind-selected addition. A clear that fragile is a property of a cohort, not
+    an instrument — and surviving cohort change is exactly what a freeze must do.
+    The 10-model clear (step 6) is hereby corrected, not superseded silently.
+
+### What the instrument actually is
+
+Two regimes, no third. With p5 it flags marginal models, and those flags are one
+constraint-wording's artefact (all 9 criterion-4 failures across three anchor
+families and both worlds are the p5 drop). Without p5 the flag set collapses to
+{AI2Small, AlibabaSmall} — the 1B and 0.5B, which any benchmark names without a
+text world, an imitation anchor, or a phrasing sweep. There is no configuration
+where the apparatus adds information beyond parameter count and general
+capability.
+
+### Two findings that survive, independent of composition
+
+- **R1 ≈ R3 across four cohort sizes.** A real fact about add-one smoothing
+  swamping n-gram order, not a one-corpus coincidence.
+- **p5 is systematically the hardest phrasing** across the cohort — load-bearing
+  for every marginal flag, a property of the stimulus not any checkpoint.
+  Connects to the G-P phrasing-fragility result: constraint-declaration wording
+  is where these instruments break.
+
+### Process record (no new trap numbers; these are already logged)
+
+- **Base-checkpoint stall:** ~$4.25 for zero results because narration (fidelity
+  machinery, unused by adherence) ran to the token cap on EOS-undisciplined base
+  models. Lesson carried: probe an unvalidated COST profile with the cheapest
+  model alone before a batch; validate cost at second zero, not just arguments.
+- **[TRAP] 34:** a self-authored guard rejected its own test invocation, per-model
+  after load. Fixed by asserting the runs/schedule pair at job preflight.
+- **Ledger lapse (round 2):** two models served before their burn-ledger append.
+  Disclosed in the entry heading rather than backdated. Round 3's append went in
+  before launch — the fix is ordering, not apology.
+
+### Disposition
+
+- **No FREEZE.** Nothing frozen; the possibility bar is not cleared on any cohort
+  that survives a blind addition.
+- **Reserve untouched, both looks unspent.** The 10-model clear did not earn the
+  reserve because it was composition-manufactured and capability-predicted; the
+  capability gate (`4d32c08`) is what kept the irreversible spend from happening.
+- **Spend:** ~$9 of ~$16, ~$4.6 of it the stalled job + TRAP 34.
+- **Next:** the dimensional program (`docs/program-note-dimensional-space.md`).
+  Stage 4's capability-partialling arrived early here and did its job — it
+  converted a separation into a negative, which is exactly what it is for.
+  Separating disposition from competence needs that axis partialled, which a
+  scalar threshold on one adherence number structurally cannot do. Start rested,
+  not on session momentum; cohort size is gate zero.
