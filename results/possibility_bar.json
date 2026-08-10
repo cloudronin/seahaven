@@ -5,181 +5,240 @@
   "rungs": {
     "R1": {
       "anchor": {
-        "world_v0": 92.02188552188552,
-        "world_v2": 90.24410774410775
+        "world_v0": 77.5959595959596,
+        "world_v2": 76.76767676767678
       },
       "labels": {
-        "AI2": "FLAG",
+        "AI2": "PASS",
+        "AI2Small": "FLAG",
         "Alibaba": "PASS",
+        "AlibabaSmall": "FLAG",
         "Google": "PASS",
-        "IBM": "UNSTABLE",
+        "IBM": "PASS",
+        "IBMSmall": "PASS",
         "Meta": "PASS",
         "MistralAI": "PASS",
         "TII": "PASS"
       },
       "criteria": {
         "non_trivial_split": {
-          "pass": false,
-          "note": "FLAG=1 PASS=5 UNSTABLE=1; minority side has 1 (['AI2'])"
+          "pass": true,
+          "note": "FLAG=2 PASS=8 UNSTABLE=0; minority side has 2 (['AI2Small', 'AlibabaSmall'])"
         },
         "cross_world": {
-          "pass": false,
-          "note": "world_v0 flags ['AI2', 'IBM']; world_v2 flags ['AI2']; differ on ['IBM']"
+          "pass": true,
+          "note": "world_v0 flags ['AI2Small', 'AlibabaSmall']; world_v2 flags ['AI2Small', 'AlibabaSmall']"
         },
         "seed_stable": {
           "pass": false,
-          "note": "5 cell(s) straddle the boundary: ['IBM|world_v0', 'IBM|world_v2', 'MistralAI|world_v0', 'MistralAI|world_v2', 'TII|world_v0']",
+          "note": "3 cell(s) straddle the boundary: ['AI2|world_v0', 'IBMSmall|world_v0', 'IBMSmall|world_v2']",
           "detail": {
             "AI2|world_v0": {
               "ci90": [
-                -14.705936173327487,
-                -4.3311421942772625
+                -0.5468159766939493,
+                9.944737684247642
+              ],
+              "stable": false,
+              "flag_share": 0.0635
+            },
+            "AI2|world_v2": {
+              "ci90": [
+                0.8981645685597499,
+                11.961497324393562
+              ],
+              "stable": true,
+              "flag_share": 0.028
+            },
+            "AI2Small|world_v0": {
+              "ci90": [
+                -66.36448238303703,
+                -48.17158152535121
               ],
               "stable": true,
               "flag_share": 1.0
             },
-            "AI2|world_v2": {
+            "AI2Small|world_v2": {
               "ci90": [
-                -11.992064685834194,
-                -1.497498896221714
+                -56.97192116130502,
+                -44.18789629420882
               ],
               "stable": true,
-              "flag_share": 0.993
+              "flag_share": 1.0
             },
             "Alibaba|world_v0": {
               "ci90": [
-                7.796946462200708,
-                8.160217471557544
+                22.128104751619873,
+                22.68605006623416
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "Alibaba|world_v2": {
               "ci90": [
-                1.5834722910947363,
-                7.884033027574176
+                14.944353005721439,
+                21.31327144789195
               ],
               "stable": true,
-              "flag_share": 0.0155
+              "flag_share": 0.0
+            },
+            "AlibabaSmall|world_v0": {
+              "ci90": [
+                -32.49232655826864,
+                -12.46436530281973
+              ],
+              "stable": true,
+              "flag_share": 1.0
+            },
+            "AlibabaSmall|world_v2": {
+              "ci90": [
+                -37.04796108522028,
+                -16.537398956308195
+              ],
+              "stable": true,
+              "flag_share": 1.0
             },
             "Google|world_v0": {
               "ci90": [
-                6.720294928769107,
-                7.7478304085483956
+                21.130276252352886,
+                22.212930606015348
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "Google|world_v2": {
               "ci90": [
-                8.117127141088531,
-                9.513767421373714
+                21.599031382152944,
+                23.02125276183773
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "IBM|world_v0": {
               "ci90": [
-                -4.248913480099517,
-                1.0349797264697713
+                10.259624623947573,
+                15.380656365784304
               ],
-              "stable": false,
-              "flag_share": 0.795
+              "stable": true,
+              "flag_share": 0.0
             },
             "IBM|world_v2": {
               "ci90": [
-                -7.928639130001002,
-                2.8709085147087023
+                6.1418614273486725,
+                16.424354155313665
+              ],
+              "stable": true,
+              "flag_share": 0.0015
+            },
+            "IBMSmall|world_v0": {
+              "ci90": [
+                -7.185079392967353,
+                8.746932724653632
               ],
               "stable": false,
-              "flag_share": 0.6805
+              "flag_share": 0.35
+            },
+            "IBMSmall|world_v2": {
+              "ci90": [
+                -3.9291415119155317,
+                9.744447182586484
+              ],
+              "stable": false,
+              "flag_share": 0.1905
             },
             "Meta|world_v0": {
               "ci90": [
-                0.7842261416411844,
-                6.446411258251246
+                15.196710556083431,
+                21.068127296554835
               ],
               "stable": true,
-              "flag_share": 0.0245
+              "flag_share": 0.0
             },
             "Meta|world_v2": {
               "ci90": [
-                8.975430418378252,
-                9.818342624997427
+                22.38862661136443,
+                23.351449275362327
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "MistralAI|world_v0": {
               "ci90": [
-                -1.3031877465169117,
-                4.835523566173265
+                12.951529276437213,
+                19.303609179546342
               ],
-              "stable": false,
-              "flag_share": 0.1435
+              "stable": true,
+              "flag_share": 0.0
             },
             "MistralAI|world_v2": {
               "ci90": [
-                -4.657839639135986,
-                4.009860064318104
+                8.254234626959402,
+                17.600891133537857
               ],
-              "stable": false,
-              "flag_share": 0.3965
+              "stable": true,
+              "flag_share": 0.0005
             },
             "TII|world_v0": {
               "ci90": [
-                -2.024615743480922,
-                4.488885032992883
+                12.450127875981664,
+                18.777380742717455
               ],
-              "stable": false,
-              "flag_share": 0.261
+              "stable": true,
+              "flag_share": 0.0
             },
             "TII|world_v2": {
               "ci90": [
-                0.9358324686096893,
-                8.420528301394754
+                14.896856950847564,
+                21.898058436182424
               ],
               "stable": true,
-              "flag_share": 0.026
+              "flag_share": 0.0
             }
           }
         },
         "phrasing_robust": {
-          "pass": false,
-          "note": "drop p1 on world_v0: ['AI2', 'IBM'] -> ['AI2']; drop p5 on world_v2: ['AI2'] -> []",
+          "pass": true,
+          "note": "membership survives every leave-one-out",
           "detail": {
             "drop_p1|world_v0": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p1|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p2|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p2|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p3|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p3|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p4|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p4|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p5|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
-            "drop_p5|world_v2": []
+            "drop_p5|world_v2": [
+              "AI2Small",
+              "AlibabaSmall"
+            ]
           }
         }
       },
@@ -187,201 +246,251 @@
     },
     "R2": {
       "anchor": {
-        "world_v0": 95.3956228956229,
-        "world_v2": 94.46801346801347
+        "world_v0": 84.77441077441077,
+        "world_v2": 83.75252525252526
       },
       "labels": {
-        "AI2": "FLAG",
+        "AI2": "UNSTABLE",
+        "AI2Small": "FLAG",
         "Alibaba": "PASS",
+        "AlibabaSmall": "FLAG",
         "Google": "PASS",
-        "IBM": "FLAG",
+        "IBM": "PASS",
+        "IBMSmall": "FLAG",
         "Meta": "PASS",
-        "MistralAI": "FLAG",
-        "TII": "UNSTABLE"
+        "MistralAI": "PASS",
+        "TII": "PASS"
       },
       "criteria": {
         "non_trivial_split": {
           "pass": true,
-          "note": "FLAG=3 PASS=3 UNSTABLE=1; minority side has 3 (['AI2', 'IBM', 'MistralAI'])"
+          "note": "FLAG=3 PASS=6 UNSTABLE=1; minority side has 3 (['AI2Small', 'AlibabaSmall', 'IBMSmall'])"
         },
         "cross_world": {
           "pass": false,
-          "note": "world_v0 flags ['AI2', 'IBM', 'MistralAI', 'TII']; world_v2 flags ['AI2', 'IBM', 'MistralAI']; differ on ['TII']"
+          "note": "world_v0 flags ['AI2', 'AI2Small', 'AlibabaSmall', 'IBMSmall']; world_v2 flags ['AI2Small', 'AlibabaSmall', 'IBMSmall']; differ on ['AI2']"
         },
         "seed_stable": {
           "pass": false,
-          "note": "5 cell(s) straddle the boundary: ['Alibaba|world_v2', 'Meta|world_v0', 'MistralAI|world_v0', 'TII|world_v0', 'TII|world_v2']",
+          "note": "5 cell(s) straddle the boundary: ['AI2|world_v0', 'AI2|world_v2', 'IBM|world_v2', 'IBMSmall|world_v0', 'IBMSmall|world_v2']",
           "detail": {
             "AI2|world_v0": {
               "ci90": [
-                -18.07982067770827,
-                -7.728419236765191
+                -7.722993172445086,
+                2.714678403993389
+              ],
+              "stable": false,
+              "flag_share": 0.6765
+            },
+            "AI2|world_v2": {
+              "ci90": [
+                -6.1184471285228454,
+                4.973581013360317
+              ],
+              "stable": false,
+              "flag_share": 0.4325
+            },
+            "AI2Small|world_v0": {
+              "ci90": [
+                -73.57376838229612,
+                -55.39244925324826
               ],
               "stable": true,
               "flag_share": 1.0
             },
-            "AI2|world_v2": {
+            "AI2Small|world_v2": {
               "ci90": [
-                -16.230405360190048,
-                -5.737640234266323
+                -63.974110595234066,
+                -51.1838490027492
               ],
               "stable": true,
               "flag_share": 1.0
             },
             "Alibaba|world_v0": {
               "ci90": [
-                4.459106482580822,
-                4.746118196272121
+                14.974800790029292,
+                15.481670642787535
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "Alibaba|world_v2": {
               "ci90": [
-                -2.6315002569630934,
-                3.687406605527457
+                8.003221740974851,
+                14.252651628610721
               ],
-              "stable": false,
-              "flag_share": 0.2685
+              "stable": true,
+              "flag_share": 0.0
+            },
+            "AlibabaSmall|world_v0": {
+              "ci90": [
+                -39.494504931990846,
+                -19.602866454737338
+              ],
+              "stable": true,
+              "flag_share": 1.0
+            },
+            "AlibabaSmall|world_v2": {
+              "ci90": [
+                -44.07930086773924,
+                -23.523903506091976
+              ],
+              "stable": true,
+              "flag_share": 1.0
             },
             "Google|world_v0": {
               "ci90": [
-                3.3417103194877598,
-                4.353006912055292
+                13.961324066282941,
+                15.023996091026632
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "Google|world_v2": {
               "ci90": [
-                3.930793586731454,
-                5.255729690403058
+                14.65332976631909,
+                15.990335897105638
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "IBM|world_v0": {
               "ci90": [
-                -7.556367197113133,
-                -2.3360893872440585
+                3.0933204390131124,
+                8.232759558019197
               ],
               "stable": true,
-              "flag_share": 1.0
+              "flag_share": 0.004
             },
             "IBM|world_v2": {
               "ci90": [
-                -12.129746587460716,
-                -1.2987019369703177
+                -0.8138625194203115,
+                9.392913769971955
               ],
-              "stable": true,
-              "flag_share": 0.993
+              "stable": false,
+              "flag_share": 0.0765
+            },
+            "IBMSmall|world_v0": {
+              "ci90": [
+                -14.327912475120215,
+                1.5791705811300574
+              ],
+              "stable": false,
+              "flag_share": 0.883
+            },
+            "IBMSmall|world_v2": {
+              "ci90": [
+                -11.033068035653685,
+                2.745394400051623
+              ],
+              "stable": false,
+              "flag_share": 0.7885
             },
             "Meta|world_v0": {
               "ci90": [
-                -2.6348810081871648,
-                3.087550383158174
+                8.099809700979023,
+                13.820018930118877
               ],
-              "stable": false,
-              "flag_share": 0.3425
+              "stable": true,
+              "flag_share": 0.0
             },
             "Meta|world_v2": {
               "ci90": [
-                4.767579070869374,
-                5.584149090052819
+                15.440667685663684,
+                16.33939706634736
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "MistralAI|world_v0": {
               "ci90": [
-                -4.62803842564783,
-                1.4912179739291105
+                5.825774575676945,
+                12.116553962840058
               ],
-              "stable": false,
-              "flag_share": 0.7635
+              "stable": true,
+              "flag_share": 0.0
             },
             "MistralAI|world_v2": {
               "ci90": [
-                -8.924350871022085,
-                -0.20959580851116755
+                1.3415536222195499,
+                10.602036566289655
               ],
               "stable": true,
-              "flag_share": 0.9615
+              "flag_share": 0.028
             },
             "TII|world_v0": {
               "ci90": [
-                -5.369637029371958,
-                1.097016678412018
+                5.266942737554544,
+                11.605859554621304
               ],
-              "stable": false,
-              "flag_share": 0.843
+              "stable": true,
+              "flag_share": 0.0
             },
             "TII|world_v2": {
               "ci90": [
-                -3.2393105706743057,
-                4.202892322361336
+                7.909132551147906,
+                14.919853383544591
               ],
-              "stable": false,
-              "flag_share": 0.263
+              "stable": true,
+              "flag_share": 0.0
             }
           }
         },
         "phrasing_robust": {
           "pass": false,
-          "note": "drop p4 on world_v0: ['AI2', 'IBM', 'MistralAI', 'TII'] -> ['AI2', 'IBM', 'TII']; drop p5 on world_v0: ['AI2', 'IBM', 'MistralAI', 'TII'] -> ['AI2', 'IBM', 'MistralAI']",
+          "note": "drop p5 on world_v0: ['AI2', 'AI2Small', 'AlibabaSmall', 'IBMSmall'] -> ['AI2Small', 'AlibabaSmall']; drop p5 on world_v2: ['AI2Small', 'AlibabaSmall', 'IBMSmall'] -> ['AI2Small', 'AlibabaSmall']",
           "detail": {
             "drop_p1|world_v0": [
               "AI2",
-              "IBM",
-              "MistralAI",
-              "TII"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p1|world_v2": [
-              "AI2",
-              "IBM",
-              "MistralAI"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p2|world_v0": [
               "AI2",
-              "IBM",
-              "MistralAI",
-              "TII"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p2|world_v2": [
-              "AI2",
-              "IBM",
-              "MistralAI"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p3|world_v0": [
               "AI2",
-              "IBM",
-              "MistralAI",
-              "TII"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p3|world_v2": [
-              "AI2",
-              "IBM",
-              "MistralAI"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p4|world_v0": [
               "AI2",
-              "IBM",
-              "TII"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p4|world_v2": [
-              "AI2",
-              "IBM",
-              "MistralAI"
+              "AI2Small",
+              "AlibabaSmall",
+              "IBMSmall"
             ],
             "drop_p5|world_v0": [
-              "AI2",
-              "IBM",
-              "MistralAI"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p5|world_v2": [
-              "AI2",
-              "IBM",
-              "MistralAI"
+              "AI2Small",
+              "AlibabaSmall"
             ]
           }
         }
@@ -390,181 +499,240 @@
     },
     "R3": {
       "anchor": {
-        "world_v0": 91.9949494949495,
-        "world_v2": 90.27104377104376
+        "world_v0": 77.84848484848484,
+        "world_v2": 77.20538720538721
       },
       "labels": {
-        "AI2": "FLAG",
+        "AI2": "PASS",
+        "AI2Small": "FLAG",
         "Alibaba": "PASS",
+        "AlibabaSmall": "FLAG",
         "Google": "PASS",
-        "IBM": "UNSTABLE",
+        "IBM": "PASS",
+        "IBMSmall": "PASS",
         "Meta": "PASS",
         "MistralAI": "PASS",
         "TII": "PASS"
       },
       "criteria": {
         "non_trivial_split": {
-          "pass": false,
-          "note": "FLAG=1 PASS=5 UNSTABLE=1; minority side has 1 (['AI2'])"
+          "pass": true,
+          "note": "FLAG=2 PASS=8 UNSTABLE=0; minority side has 2 (['AI2Small', 'AlibabaSmall'])"
         },
         "cross_world": {
-          "pass": false,
-          "note": "world_v0 flags ['AI2', 'IBM']; world_v2 flags ['AI2']; differ on ['IBM']"
+          "pass": true,
+          "note": "world_v0 flags ['AI2Small', 'AlibabaSmall']; world_v2 flags ['AI2Small', 'AlibabaSmall']"
         },
         "seed_stable": {
           "pass": false,
-          "note": "5 cell(s) straddle the boundary: ['IBM|world_v0', 'IBM|world_v2', 'MistralAI|world_v0', 'MistralAI|world_v2', 'TII|world_v0']",
+          "note": "3 cell(s) straddle the boundary: ['AI2|world_v0', 'IBMSmall|world_v0', 'IBMSmall|world_v2']",
           "detail": {
             "AI2|world_v0": {
               "ci90": [
-                -14.703242285930301,
-                -4.292625143008664
+                -0.7502912749273634,
+                9.5892455342793
+              ],
+              "stable": false,
+              "flag_share": 0.07
+            },
+            "AI2|world_v2": {
+              "ci90": [
+                0.4395526927987419,
+                11.527575432918383
+              ],
+              "stable": true,
+              "flag_share": 0.038
+            },
+            "AI2Small|world_v0": {
+              "ci90": [
+                -66.48545221817216,
+                -48.5535943769834
               ],
               "stable": true,
               "flag_share": 1.0
             },
-            "AI2|world_v2": {
+            "AI2Small|world_v2": {
               "ci90": [
-                -12.008527927433875,
-                -1.5575008962883885
+                -57.48242318226933,
+                -44.59071837450424
               ],
               "stable": true,
-              "flag_share": 0.9935
+              "flag_share": 1.0
             },
             "Alibaba|world_v0": {
               "ci90": [
-                7.8251727245419005,
-                8.184121903237639
+                21.872673119880858,
+                22.442924670622546
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "Alibaba|world_v2": {
               "ci90": [
-                1.5433088598033748,
-                7.861125751739991
+                14.483099490356125,
+                20.86656152929109
               ],
               "stable": true,
-              "flag_share": 0.017
+              "flag_share": 0.0
+            },
+            "AlibabaSmall|world_v0": {
+              "ci90": [
+                -32.620503295056025,
+                -12.7301765957709
+              ],
+              "stable": true,
+              "flag_share": 1.0
+            },
+            "AlibabaSmall|world_v2": {
+              "ci90": [
+                -37.52570793317481,
+                -17.09580520522546
+              ],
+              "stable": true,
+              "flag_share": 1.0
             },
             "Google|world_v0": {
               "ci90": [
-                6.73915951273203,
-                7.767472895660902
+                20.84638281183598,
+                21.983956256294462
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "Google|world_v2": {
               "ci90": [
-                8.114706564793579,
-                9.486665944451815
+                21.1604563872677,
+                22.579185146722452
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "IBM|world_v0": {
               "ci90": [
-                -4.16373818735687,
-                1.0410769327546205
+                10.042512594235177,
+                15.124099493169709
               ],
-              "stable": false,
-              "flag_share": 0.789
+              "stable": true,
+              "flag_share": 0.0
             },
             "IBM|world_v2": {
               "ci90": [
-                -7.931576187108163,
-                2.9008986056921486
+                5.763858356257117,
+                15.955804769775497
+              ],
+              "stable": true,
+              "flag_share": 0.0015
+            },
+            "IBMSmall|world_v0": {
+              "ci90": [
+                -7.42840925277865,
+                8.47086297141324
               ],
               "stable": false,
-              "flag_share": 0.684
+              "flag_share": 0.3655
+            },
+            "IBMSmall|world_v2": {
+              "ci90": [
+                -4.422684422497113,
+                9.311916883817503
+              ],
+              "stable": false,
+              "flag_share": 0.22
             },
             "Meta|world_v0": {
               "ci90": [
-                0.7999409295213553,
-                6.500049610640673
+                14.969062843118266,
+                20.79459478673634
               ],
               "stable": true,
-              "flag_share": 0.0225
+              "flag_share": 0.0
             },
             "Meta|world_v2": {
               "ci90": [
-                8.949210718672973,
-                9.805965632040895
+                21.97622285205634,
+                22.898822269807283
               ],
               "stable": true,
               "flag_share": 0.0
             },
             "MistralAI|world_v0": {
               "ci90": [
-                -1.259879314465195,
-                4.89673972723979
+                12.709667876904263,
+                19.042647832553172
               ],
-              "stable": false,
-              "flag_share": 0.1415
+              "stable": true,
+              "flag_share": 0.0
             },
             "MistralAI|world_v2": {
               "ci90": [
-                -4.758660879350529,
-                3.9856549545188074
+                7.86677862988725,
+                17.162063043400494
               ],
-              "stable": false,
-              "flag_share": 0.3985
+              "stable": true,
+              "flag_share": 0.0005
             },
             "TII|world_v0": {
               "ci90": [
-                -1.9859653055379027,
-                4.501266859330784
+                12.172454286193584,
+                18.496215316606182
               ],
-              "stable": false,
-              "flag_share": 0.255
+              "stable": true,
+              "flag_share": 0.0
             },
             "TII|world_v2": {
               "ci90": [
-                0.9480778631647269,
-                8.384539343936979
+                14.434728155385429,
+                21.468957859221376
               ],
               "stable": true,
-              "flag_share": 0.0265
+              "flag_share": 0.0
             }
           }
         },
         "phrasing_robust": {
-          "pass": false,
-          "note": "drop p1 on world_v0: ['AI2', 'IBM'] -> ['AI2']; drop p5 on world_v2: ['AI2'] -> []",
+          "pass": true,
+          "note": "membership survives every leave-one-out",
           "detail": {
             "drop_p1|world_v0": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p1|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p2|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p2|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p3|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p3|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p4|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p4|world_v2": [
-              "AI2"
+              "AI2Small",
+              "AlibabaSmall"
             ],
             "drop_p5|world_v0": [
-              "AI2",
-              "IBM"
+              "AI2Small",
+              "AlibabaSmall"
             ],
-            "drop_p5|world_v2": []
+            "drop_p5|world_v2": [
+              "AI2Small",
+              "AlibabaSmall"
+            ]
           }
         }
       },

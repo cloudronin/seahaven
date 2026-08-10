@@ -89,8 +89,37 @@ PY
 #
 # The two base checkpoints are deferred, not dropped. Whether they are worth
 # their cost is a decision to make with this model's timing in hand.
+# **Round two.** AlibabaSmall qualified decisively (worst 56.93 / 51.05 against
+# a target of 88) and moved R2's split to {AI2, AlibabaSmall} on both worlds —
+# criteria 1 and 2 pass for the first time. The sole remaining blocker is
+# criterion 4, and it is AI2: its flag rests on p5, so dropping that phrasing
+# removes it from the set.
+#
+# Two more small instruct checkpoints, from DIFFERENT burned families. Family
+# diversity is the point: two Qwen models flagging together would leave a
+# family artefact indistinguishable from a capability effect, and AI2Small is
+# the sibling of the very model whose marginality is the blocker.
+#
+# Both are instruct, so neither carries the base-checkpoint EOS pathology that
+# stalled Qwen3-8B-Base for 45 minutes. The two base checkpoints stay deferred.
+# **Round three — the test of whether this instrument resolves anything but
+# size.** R2 cleared the possibility bar, but both determinate FLAGs were models
+# added after seeing that criterion 1 needed a second one, so the split is one
+# parameter count alone would predict.
+#
+# These two are selected on **size and family coverage alone, with no
+# expectation about where they land**. Selecting a mid-range model because it
+# looked likely to flag would reproduce precisely the problem it is meant to
+# diagnose. AlibabaMid fills the 2B-to-7B gap; AI2Mid is in the same size class
+# as the dev seven, and since AI2's 13B instruct is the weakest of them at
+# 83.33 / 84.18, its 7B sibling gives a within-family capability gradient
+# rather than a cross-family comparison.
+#
+# No outcome here is a failure. Both landing above the anchor means the split
+# is size and little else, and the freeze claim has to say so.
 MODELS=(
-  "AlibabaSmall|Qwen/Qwen2.5-0.5B-Instruct"
+  "AlibabaMid|Qwen/Qwen2.5-3B-Instruct"
+  "AI2Mid|allenai/OLMo-2-1124-7B-Instruct"
 )
 
 for ENTRY in "${MODELS[@]}"; do
