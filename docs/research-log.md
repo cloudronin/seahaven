@@ -6417,3 +6417,135 @@ of which a 1.414 floor reaches.
 base checkpoints, a model-dependent determinism law, and a reframe of what the
 cohort is for — none of which the program spec would have surfaced before
 building the instrument. **That is what gate zero was for.**
+
+## 2026-08-10 — Gate-zero findings, consolidated
+
+**Gate outcome, first line: GO-FULL, and the cohort exists.** Consolidates the
+verdict entry above and extends it with two things that entry did not draw out —
+the determinism threshold as a result in its own right, and a second per-axis
+coverage gap. No new TRAP numbers: the threshold **resolves** TRAP 35 rather than
+adding to it, and the coverage gap is a limitation discovered, not an error made.
+
+### 1. Verdict
+
+**30 of 38 survived** against a 30+ requirement. **8 families, 4 ladders across
+3 labs, 8 base/instruct pairs.**
+
+The load-bearing **20–25 MMLU-Pro bin held all four families** through attrition
+— 7 models to 6, families intact (Falcon3, Granite-3.1, Mistral, Qwen2.5), small
+end 4 of 5 surviving, the single loss `Falcon3-3B-Base` covered by its instruct
+sibling. That bin is what the verdict turned on and it survived.
+
+### 2. THE DETERMINISM THRESHOLD — a standalone result, field-relevant beyond this program
+
+**`VLLM_BATCH_INVARIANT=1` holds above a size threshold on this stack, and the
+cut is clean:**
+
+| stratum | bit-exact | noise floor |
+|---|---|---|
+| **≥7B** | **14 / 14** | 0.000 |
+| ≤3B | 10 / 14 | up to 1.414 adherence points |
+
+Every nondeterministic model is ≤3B. Every model at 7B and above reproduces
+byte-for-byte across four repeats.
+
+This **confirms TRAP 35's size hypothesis with a clean cut**, and it is not a
+fact about this project — it is a fact about running vLLM evaluations. Anyone
+who sets the flag on a small model and assumes reproducibility is assuming
+something this stack does not provide, and the assumption is invisible until a
+repeat is run. The rule stands as written at TRAP 35: **the determinism control
+is per model, not once per stack** — with the refinement that above 7B it is
+cheap insurance and at or below 3B it is mandatory.
+
+**Consequence for the program, logged as a RESOLVED RISK.** The fear when the
+probe was specified was that noise would sit exactly where the signal is. **It
+did not.** The identifying variation lives in the capability-matched
+cross-family contrast, which is populated at 1.5B–7B and dominated by models
+that reproduce; the noise is confined to four small checkpoints. The feared case
+did not occur, and the risk is closed rather than carried.
+
+### 3. My mechanism hypothesis was wrong, and free data refuted it in-session
+
+I predicted **output diversity** would drive nondeterminism — a model stuck in a
+low-entropy attractor lands on the same token robustly, so being *worse* at the
+task would cause *more* reproducibility.
+
+    Spearman(log size, adherence sd) = −0.597
+    Spearman(entropy,  adherence sd) = +0.263        (n = 12)
+
+**Size, by more than twice the rank correlation. The hypothesis was mine and it
+is refuted.** The refutation cost nothing: verb entropy was computable offline
+from command records already committed. Recorded because the value of the free
+check is only visible when it changes an answer, and here it did.
+
+### 4. The reframe is the real result
+
+**Capability-matched cross-family contrast is better identifying variation than
+within-family size ladders.** The program never needed to explain size; it needed
+to separate a behavioural axis from capability. Ladders hold training fixed and
+vary size — the wrong contrast. Matched-capability cross-family sets hold
+capability fixed and vary training, which is the discordant-case structure
+Stage 4 requires.
+
+The cleanest instance in the cohort: **`OLMo-2-1124-7B-Instruct` at 18.58
+MMLU-Pro sits below `Qwen2.5-1.5B-Instruct` at 19.99** — a 4.7× size gap at
+matched capability across two labs. **The cohort's job is capability-matched
+contrast; ladders are secondary.**
+
+### 5. Cost collapse
+
+**~$22 for 30 models across both worlds**, against the program note's
+"hundreds". Narration was essentially the entire per-eval cost — 220 tokens per
+episode of fidelity machinery the dimensional program never reads — and
+`--no-narrate` is the single reason the program is affordable. 9 s per eval
+instead of minutes.
+
+### 6. Two per-axis coverage gaps, both travelling with the verdict
+
+**(a) The Qwen3 ladder is excluded from capability-partialled analysis.** Nine
+surviving models lack an MMLU-Pro number on the leaderboard pinned at `4d32c08`
+*before any lookup*, seven of them the Qwen3 ladder. They participate in
+non-proxy analysis only. **This is not to be rescued with another proxy by
+anyone, including me.** The pin was set before lookup precisely so a proxy cannot
+be swapped when one turns out inconvenient, and it is tempting here because
+Qwen3 is otherwise the cleanest ladder.
+
+**(b) The base/instruct axis is now Qwen-concentrated, and family-confounded.**
+This is new, and it reshapes an axis rather than merely thinning it.
+
+Attrition was a base-checkpoint story: **7 of 8 exclusions are base checkpoints,
+every instruct checkpoint passed**, and all failed identically with zero
+parseable commands.
+
+| family | base outcome |
+|---|---|
+| Qwen2.5 | 0.5B, 1.5B, 3B, 7B — all pass |
+| Qwen3 | 1.7B, 4B, 8B pass; 0.6B fails |
+| Falcon3 | 1B, 3B, 7B — **all fail** |
+| OLMo-2 | 1B, 7B, 13B — **all fail** |
+| Llama-3.1 | 8B — **fails** |
+| Mistral | 7B — passes |
+
+Pairs fell **16 → 8**. The consequence is not a smaller axis but a confounded
+one: **the base/instruct contrast — the disposition-versus-training axis — now
+rests almost entirely on Qwen, and is family-confounded in exactly the way the
+rest of the cohort escaped.** The cohort's strength is cross-family capability
+matching; this one axis has none of it.
+
+**Any base/instruct finding is single-family-confounded until another lab's base
+checkpoints become usable.** That is a stated limitation on that axis, of the
+same standing as the Qwen3 proxy gap, and it belongs in the program spec.
+
+### 7. The 20–25 bin is a single point of failure
+
+The identifying variation rests heavily on one capability bin: 6 models, 4
+families. **Re-check its family diversity on any cohort change** — adding or
+losing models moves it, and it is the thing the GO-FULL verdict was granted on.
+
+### Gate cost and what it bought
+
+~$12 of $15. The gate found a cost collapse of roughly an order of magnitude, a
+usability wall on base checkpoints across three families, a model-dependent
+determinism law with a clean size threshold, and a reframe of what the cohort is
+for. **None of these would have surfaced from writing the program spec first**,
+and two of them would have been discovered after the instrument was built.

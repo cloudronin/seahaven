@@ -164,6 +164,89 @@ site. Any instrument in this program must read parse-rate alongside every
 score, or capability leaks in through measurement even after it is partialled
 out of behavior.
 
+### Per-model noise floor is a THIRD reference, alongside null and capability
+
+TRAP 35 (session 2026-08-10): `VLLM_BATCH_INVARIANT=1` is **model-dependent**.
+Llama-3.1-8B reproduces bit-for-bit (12/12, fidelity 87.25 twice); Qwen2.5-0.5B
+diverges between identical runs (7/11 commands match, fidelity 58.24 vs 54.26),
+same flag, same container, same vLLM. B2 established reproducibility on ONE model
+and it was enforced cohort-wide from n=1. So each model has its own
+reproducibility, and its own sampling-noise floor, and they differ.
+
+Consequence for Stage 2 distances: **a model's distance from the null is
+inflated by its own noise floor.** A noisy model looks more distant — more
+"distinctive" — purely because it is less deterministic. This is capability
+confound's cousin: **noise confound**, where the least-deterministic models look
+like they have the most distinctive behavior. Left unhandled it makes the
+dimensional space partly a map of serving-reproducibility rather than
+disposition.
+
+Handling, at Stage 4 alongside the null and capability:
+
+- **Measure each model's noise floor** as a by-product of Check 3's per-model
+  determinism probe (two short narration-off evals, repeat-and-compare). This is
+  the "determinism map."
+- **Read every Stage 2 distance against the model's own noise floor**, the way
+  flag margins were read against the anchor's bootstrap. A distance inside a
+  model's noise floor is INDETERMINATE for that model on that axis, not signal.
+- **Partial noise the way capability is partialled.** An axis whose apparent
+  structure tracks the noise map rather than behavior is culled, and the cull is
+  a finding.
+
+So Stage 4 now subtracts THREE references, not one: the null (what a
+comprehension-free process does for free), capability (what general competence
+predicts), and the per-model noise floor (what serving nondeterminism
+manufactures). A behavioral position that survives all three is a real
+disposition. Anything explained by any one of them is culled with that recorded.
+
+### The determinism map may have structure — read it, don't just list it
+
+TRAP 35's two data points are Llama-8B (binds) and Qwen-0.5B (doesn't). The
+obvious hypothesis is SIZE: smaller models hit kernel regimes the
+batch-invariant path may not cover. If nondeterminism tracks size, then the
+cohort's small end — exactly where the flag work found every flag, and where the
+dimensional program's interesting variance is expected to live — is the
+nondeterministic end. The noise floor would then be highest precisely where the
+signal is, and precision worst where it is most needed.
+
+So Check 3's determinism probe is not a flat per-model yes/no. Read it for
+whether nondeterminism tracks size (or any other model property). If it does,
+that is a structural fact the program must design around — potentially forcing
+more repeats-per-cell on small models to beat down their higher floor, which
+changes Stage 2's per-model episode budget and therefore Check 4's cost
+arithmetic. Establish the determinism map's structure before Stage 2's budget is
+fixed.
+
+#### ANSWERED, 2026-08-10 — it tracks size, with a clean threshold, and the feared case did NOT occur
+
+Thirty models, four repeats each:
+
+| stratum | bit-exact | noise floor |
+|---|---|---|
+| **>=7B** | **14 / 14** | 0.000 |
+| <=3B | 10 / 14 | up to 1.414 adherence points |
+
+Every nondeterministic model is at or below 3B; everything from 7B up reproduces
+byte-for-byte. **`VLLM_BATCH_INVARIANT=1` holds above a size threshold on this
+stack** — a result about running vLLM evaluations generally, not only about this
+program.
+
+The competing mechanism was tested and **refuted**. The hypothesis, mine, was
+that output diversity drives it: a model stuck in a low-entropy attractor lands
+on the same token robustly, so being *worse* at the task would cause *more*
+reproducibility. It is size.
+
+    Spearman(log size, adherence sd) = -0.597
+    Spearman(entropy,  adherence sd) = +0.263      (n = 12)
+
+**RESOLVED RISK.** The fear stated above — the noise floor highest exactly where
+the signal is — **did not materialise**. The identifying variation lives in the
+capability-matched cross-family contrast, populated at 1.5B-7B and dominated by
+models that reproduce; the noise is confined to four small checkpoints. Stage 2
+therefore budgets **repeats per model, not uniformly**: those four get repeats
+sized to their measured floor, everything at 7B+ needs none, and any effect above
+~3 points is unthreatened anywhere in the cohort.
+
 ---
 
 ## Gate zero, before any of the four stages
@@ -175,9 +258,71 @@ This is a real data-collection effort. The whole program is a fishing
 expedition without it, so feasibility of assembling and running that cohort is
 the FIRST question, before Stage 1.
 
+**Cost is no longer the barrier (session 2026-08-10).** Narration was
+essentially the entire per-eval cost: with `--no-narrate`, Qwen3-8B-Instruct
+runs an eval in ~9s and Qwen3-8B-Base in ~17s (the checkpoint that previously
+stalled 45+ min producing nothing). A 30-model, two-world sweep is ~$17-25, not
+the "hundreds" this note originally assumed. The base/instruct gradient is
+affordable, so the cohort need not be instruct-only. Gate zero is now
+constrained by cohort ASSEMBLY (access, gating, coverage) far more than by
+budget — see docs/cohort-feasibility-gate.md.
+
+**The determinism map is part of gate zero, not just Stage 4.** Per TRAP 35,
+batch-invariance is model-dependent, so Check 3's loop test now also runs a
+per-model determinism probe (repeat-and-compare, narration off). Read that map
+for structure (does nondeterminism track size?) BEFORE fixing Stage 2's
+per-model episode budget, because a size-dependent noise floor forces more
+repeats on small models and changes Check 4's arithmetic.
+
 Cohort composition also matters given finding 3 above: if the null is ever
 cohort-fit again, composition-dependence returns. The derived-null design (Stage
 4) is meant to avoid this, but watch for it.
+
+### CLOSED, 2026-08-10 — **GO-FULL**
+
+30 of 38 survived attrition against the 30+ requirement: 8 families, 4 ladders
+across 3 labs, 8 base/instruct pairs. Verdict in `docs/cohort-feasibility.md`.
+
+**The identifying variation is not what this note assumed.** The program never
+needed to explain size; it needed to separate a behavioural axis from capability.
+Size ladders hold training fixed and vary size — the wrong contrast.
+**Capability-matched cross-family sets hold capability fixed and vary training,
+which is the discordant-case structure Stage 4 requires.**
+`OLMo-2-1124-7B-Instruct` at 18.58 MMLU-Pro sits *below* `Qwen2.5-1.5B-Instruct`
+at 19.99: a 4.7x size gap at matched capability across two labs. **The cohort's
+job is capability-matched contrast; ladders are secondary.**
+
+One consequence: the **20-25 MMLU-Pro bin (6 models, 4 families) is a single
+point of failure** for identification. Re-check its family diversity on any
+cohort change.
+
+### Two per-axis coverage gaps, carried into the program spec
+
+**1. The Qwen3 ladder is excluded from capability-partialled analysis.** Nine
+surviving models have no MMLU-Pro on the leaderboard pinned *before any lookup*,
+seven of them the Qwen3 ladder. They participate in non-proxy analysis only.
+**Not to be rescued with another proxy by anyone**, including whoever reads this
+next — the pin exists so a proxy cannot be swapped when one turns out
+inconvenient, and it is tempting here precisely because Qwen3 is otherwise the
+cleanest ladder.
+
+**2. The base/instruct axis is Qwen-concentrated, and family-confounded.**
+Attrition was a base-checkpoint story: **7 of 8 exclusions are base checkpoints,
+every instruct checkpoint passed**, all failing identically with zero parseable
+commands. Falcon3, OLMo-2 and Llama-3.1 base fail at *every* size; Qwen2.5 passes
+everywhere; Mistral-7B passes.
+
+Pairs fell **16 to 8**, and the damage is not that the axis is smaller but that
+it is **confounded**: the base/instruct contrast — the disposition-versus-training
+axis — now rests almost entirely on Qwen, and is family-confounded in exactly the
+way the rest of the cohort escaped. The cohort's strength is cross-family
+capability matching; this one axis has none of it.
+
+**Any base/instruct finding is single-family-confounded until another lab's base
+checkpoints become usable.** Treat that as a standing limitation on that axis, of
+the same standing as the Qwen3 proxy gap. Note this is a *usability* wall, not a
+cost one: base checkpoints are affordable at 1.9x instruct — they simply do not
+hold a parseable action loop for three of the six families.
 
 ---
 
