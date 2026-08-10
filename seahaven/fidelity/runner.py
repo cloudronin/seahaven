@@ -417,7 +417,28 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  steps: int = 30, seed0: int = 5150,
                  self_judge_ok: bool = False, world_id: str = WORLD_ID,
                  narrate_style: str = "introspective", phrasing: str = "p1",
-                 step_schedule: str = "v1") -> dict:
+                 step_schedule: str = "v1", narrate: bool = True) -> dict:
+    """`narrate=False` collects behaviour only: rollouts and command records.
+
+    **Default-on, and the default path is untouched.** Every published fidelity
+    number came from `narrate=True`, and a byte-identity regression against a
+    committed result file guards that — run under `VLLM_BATCH_INVARIANT=1`,
+    because B2 measured this stack as nondeterministic without it and a diff
+    taken without the flag would test ambient sampling noise rather than this
+    change.
+
+    **Why the option exists.** Narration costs 220 tokens per episode and feeds
+    only the fidelity path — `acts`, `mentioned`, preflight, `score`. Adherence
+    and the dimensional program read `commands`, which is built from the rollout
+    and never touches the narrative. On a base checkpoint with no EOS discipline
+    every narration runs to the cap, which is what turned a 30-eval sweep into a
+    45-minute stall for zero results.
+
+    **Why turning it off cannot perturb the measurement.** `one_run` completes
+    the whole rollout before narrating, and the narration call is seeded
+    statelessly from the run index rather than drawing on shared RNG state. The
+    command stream is therefore identical whether or not narration follows it.
+    """
     if judge is not None and judge.served_name == ep.served_name and not self_judge_ok:
         raise ValueError(
             "judge and subject are the same served model. A model scoring its own "
@@ -480,6 +501,19 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
             print(f"  run {i} FAILED in rollout: {str(e)[:120]}", flush=True)
             return {"run": i, "stage": "rollout", "error": str(e)[:300]}, None
         verbs = {r["verb"] for r in rows}
+        if not narrate:
+            # Behaviour only. Returns the same `commands` projection the scored
+            # path returns, and omits every narrative-derived field rather than
+            # emitting empty ones — a consumer that wants `acts` should fail
+            # loudly here, not read a silent blank.
+            return None, {"run": i, "steps": len(rows),
+                          "verb_counts": {v: sum(r["verb"] == v for r in rows)
+                                          for v in sorted(verbs) if v},
+                          "commands": [{"step": r["step"], "command": r["command"],
+                                        "verb": r["verb"], "room": r["room"],
+                                        "room_after": r["room_after"],
+                                        "ok": not _failed(r.get("response", ""))}
+                                       for r in rows]}
         # Narrate from the episode the agent actually lived, not from a handed-over
         # list (TRAP 12) and not from nothing (TRAP 16).
         narrate_msgs = ([{"role": "system", "content": narrate_system}]
@@ -540,6 +574,17 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
             if ok is not None:
                 detail.append(ok)
     detail.sort(key=lambda d: d["run"])
+    if not narrate:
+        # No narratives, so no ground-truth pairing, so no score and no
+        # preflight. Returning them as nulls would let a caller compute on
+        # absent evidence; omitting them makes the absence a KeyError.
+        return {
+            "narrate": False,
+            "failed_runs": failed_runs,
+            "n_runs_completed": len(detail),
+            "n_runs_requested": runs,
+            "runs": detail,
+        }
     for d in detail:
         for key, v in d["acts"].items():
             outcomes.append(ActOutcome(key, v["performed"], v["mentioned"]))

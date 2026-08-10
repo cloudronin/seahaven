@@ -78,7 +78,8 @@ def _eval(args: argparse.Namespace) -> int:
                           world_id=args.world,
                           narrate_style=args.narrate_style,
                           phrasing=args.phrasing,
-                          step_schedule=args.step_schedule)
+                          step_schedule=args.step_schedule,
+                          narrate=not args.no_narrate)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
@@ -92,8 +93,22 @@ def _eval(args: argparse.Namespace) -> int:
         "judge": args.judge_name if args.judge else "regex (lower confidence)",
         "runs": args.runs, "steps": args.steps, "seed0": args.seed,
     }
+    # Recorded only when set, so the scored path's meta block — and therefore
+    # every committed result file — stays byte-identical.
+    if args.no_narrate:
+        result["meta"]["narrate"] = False
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
+
+    if args.no_narrate:
+        n_cmd = sum(len(r.get("commands", [])) for r in result["runs"])
+        print(f"\n=== behaviour only (--no-narrate) ===")
+        print(f"  {result['n_runs_completed']}/{result['n_runs_requested']} runs, "
+              f"{n_cmd} commands -> {out}")
+        print("  No score and no preflight: without narratives there is no "
+              "self-account\n  to score, and reporting a number here would be "
+              "reporting on absent evidence.")
+        return 0
 
     pf = result.get("preflight", {})
     s = result["score"]
@@ -179,6 +194,11 @@ def main(argv: list[str] | None = None) -> int:
                         "incumbent every existing result was measured under")
     e.add_argument("--step-schedule", default="v1", choices=("v1", "long"),
                    help="v1 = 12 runs to 30 steps; long = 15 runs to 100")
+    e.add_argument("--no-narrate", action="store_true",
+                   help="behaviour only: skip narration, scoring and preflight, "
+                        "keep command records. Narration costs 220 tokens per "
+                        "episode and runs to the cap on EOS-undisciplined base "
+                        "checkpoints; nothing that reads commands needs it.")
     e.add_argument("--narrate-style", default="introspective",
                    choices=("introspective", "factual", "retrospective"),
                    help="V3 varies this and holds the world and protocol fixed")
