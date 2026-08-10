@@ -6227,3 +6227,87 @@ existing published comparisons and on the dimensional program's measurement
 design, not merely on this gate.
 
 **Check 1 is not closed and Checks 2–4 do not start until it is.**
+
+## 2026-08-10 — [TRAP] 35 — batch-invariance is MODEL-DEPENDENT; B2 was over-generalised
+
+**One container, one job, two models back to back, `VLLM_BATCH_INVARIANT=1`
+set, everything but the served model held fixed:**
+
+| model | same eval run twice | fidelity |
+|---|---|---|
+| `meta-llama/Llama-3.1-8B-Instruct` | commands **IDENTICAL**, 12/12 | 87.25 vs 87.25 |
+| `Qwen/Qwen2.5-0.5B-Instruct` | commands **DIFFER**, 7/11 match | 58.24 vs 54.26 |
+
+**B2 is not wrong. B2 was generalised past its evidence, by me.** Re-verified
+offline from B2's own committed repeat files, which are unambiguous:
+
+| B2 condition | runs identical to rep1 | fidelity across 4 repeats |
+|---|---|---|
+| flagged | **12, 12, 12, 12** of 12 | 87.25 ×4 |
+| default | 12, 9, 8, 9 | 86.40, 91.15, 85.86, 89.21 |
+
+That result is real, holds a day later in a fresh container, and reproduces to
+the digit. It is a fact **about `meta-llama/Llama-3.1-8B-Instruct`**. B2's entry
+concluded *"not deterministic by default; `VLLM_BATCH_INVARIANT=1` fixes it
+completely"* and made the flag binding on every run — and the project has since
+treated **reproducibility itself** as cohort-wide, on a control with n=1 model.
+
+### How it surfaced
+
+Not by looking for it. Check 1's byte-identity regression failed, I proposed
+batch composition as the cause, and the control refuted my own hypothesis: two
+runs alone in one container, identical conditions, diverged. Composition was
+never the factor. The hypothesis was wrong and the control was what said so —
+which is the argument for running controls rather than reasoning about them.
+
+### What it does and does not touch
+
+**Does not touch the containment negative.** Its load-bearing quantities are
+large: Spearman +0.717 / +0.917 against MMLU-Pro, a perfectly separating
+flag/pass split, and margins of −20 to −33 points on the two determinate FLAGs.
+Per-model sampling noise on the order of a few fidelity points does not reach
+any of them. The V-P cells pool 36 episodes each and the CIs are cluster
+bootstraps over episodes, which absorb this variance rather than ignoring it.
+
+**Does touch every reproducibility claim.** "Run it again and get the same
+numbers" is true for some models in this cohort and false for others, and which
+is which was never measured. `AlibabaSmall` — one of the two determinate FLAGs —
+is precisely a model where the flag does not bind; its margin survives by tens
+of points, but the *bit-exactness* of its cells does not hold.
+
+**Retires Check 1A as a test.** A byte-identity regression against an
+`AlibabaSmall` cell was asking for a guarantee this stack does not provide for
+that model. No code change could have passed it. `--no-narrate` is exonerated on
+two independent grounds: the diff's 18 executable lines all sit inside
+`if not narrate:` guards unreachable on the scored path, and the environment
+cannot reproduce that model's cells regardless of code.
+
+### Mechanism: hypothesis, not finding
+
+Plausibly kernel selection — a 0.5B model's tensor shapes may fall outside the
+batch-invariant kernel coverage and silently take a non-invariant path, while an
+8B model's do not. **Not established here**, and it should not be repeated as if
+it were. What is established is the dependence itself.
+
+### The rule that replaces the old one
+
+> A determinism control is **per model**, not once per stack. `VLLM_BATCH_INVARIANT=1`
+> stays mandatory — it demonstrably helps — but "the flag is set" is no longer a
+> claim that a given model's runs reproduce. Any model whose reproducibility
+> matters gets the two-repeat probe, and models that fail it carry a measured
+> noise term instead of an assumed zero.
+
+**Cost of the probe: two short evals per model**, seconds each with narration
+off. It folds into the feasibility gate's Check 3 loop test at negligible cost:
+the same probe then answers both *can this model hold a parse loop* and *does it
+reproduce*, and the cohort's determinism map is a by-product of work already
+budgeted.
+
+### Consequence for the dimensional program
+
+Stage 2 compares state-conditioned behavioural profiles across models. If some
+models reproduce and others do not, the profile distance between two models
+carries a per-model noise floor that differs by model — a nuisance term that is
+**not** constant across the comparison and would otherwise be invisible. The
+program needs the determinism map before Stage 3, not after, and it is now cheap
+to have.
