@@ -8,12 +8,18 @@ The intended output was a per-model "self-report fidelity" score, proposed as a
 ninth raidex constituent. **That output is not produced, and the reason is the
 finding** (§1).
 
-A second measurement then emerged from the same corpus and **does** survive the
-checks fidelity failed: **Constraint Adherence** (§5), which asks whether an
-agent stays inside the action space its own prompt declares. It is
-detector-free, world-stable, and robust to its own measurement decisions. It is
-the more promising candidate constituent, and it is not yet validated under the
-condition that matters.
+A second measurement then emerged from the same corpus, **Constraint
+Adherence** (§5), which asks whether an agent stays inside the action space its
+own prompt declares. It is detector-free, world-stable, and robust to its own
+measurement decisions.
+
+**[CORRECTED 2026-08-09] It then died on the same axis fidelity did.** Varying
+how the constraint is *declared* — five phrasings, 210 evals — puts worst-pair
+Spearman at **0.631**, against fidelity's 0.607 on the narration register. Both
+constructs entered the same battery and both failed it, from different
+directions: one on how the question is asked, the other on how the rule is
+stated. That replication is now the finding (§7), and it is stronger than either
+death alone, because adherence had survived everything else first.
 
 ---
 
@@ -196,7 +202,10 @@ excursion cannot be measured until a world contains a barrier the sanctioned
 action space provably cannot pass. `docs/adherence-spec-v0.1.md` §7 supplies
 one.
 
-### Why it survives what fidelity did not
+### What was established, and what was wrongly inferred from it
+
+**[CORRECTED 2026-08-09.] Every number in this table stands as measured. The
+inference drawn from it does not.**
 
 | property | fidelity | adherence |
 |---|---|---|
@@ -204,13 +213,24 @@ one.
 | stable across narration registers | ρ **0.607** | ρ 1.000 (test–retest; register does not touch the action phase) |
 | stable under detector choice | **does not survive** | **no detector in the path** |
 | stable under its own measurement decisions | — | **ρ 0.893** across four filter definitions |
+| **stable across constraint phrasings** | — | **ρ 0.631 — FAILS** |
 
-The last row is the one that matters most, because it is the check fidelity
-failed. Deciding what counts as a "verb" is a real judgement — IBM's most
-frequent out-of-vocabulary token is `1.` (list numbering) and Meta's is
-`inventory.` (an allowed verb with a period). Varying that definition four ways
-moves the *levels* substantially (Meta 85.4 → 97.9) and the *ordering* barely at
-all. **The measurement decision is not load-bearing.**
+The section previously headed "why it survives what fidelity did not" and
+claimed the last row was "the check fidelity failed". **That was the error.**
+Cross-world 0.864 and filter-definition 0.893 are correct and reproduce; they
+establish **measurement-side** robustness. But fidelity did not die on the
+measurement side. It died because varying the *stimulus* — the narration
+register — reordered the table at ρ 0.607. **Adherence had never been given that
+test**, and the analogous one for a constraint measure is varying how the
+constraint is declared, not how the violation is counted.
+
+Tested, it fails at **0.631**. The claims were never wrong. They were
+incomplete, and the missing check was the decisive one.
+
+Deciding what counts as a "verb" is still a real judgement — IBM's most frequent
+out-of-vocabulary token is `1.` and Meta's is `inventory.` — and varying that
+definition four ways still moves *levels* (Meta 85.4 → 97.9) and not *ordering*.
+That result holds. It simply never bore on the question it was cited for.
 
 Adherence is also near-orthogonal to fidelity (r = +0.206): Alibaba is the worst
 model on fidelity and the only one with perfect adherence. Two constructs, not
@@ -264,3 +284,66 @@ Recorded because each cost real time here and each is invisible until it bites.
 - **An oracle over disagreeing binary detectors is vacuous.** "At least one
   detector is right on 99.5% of items" is guaranteed whenever binary detectors
   disagree and the label is binary. It measures diversity, not headroom.
+
+---
+
+## 7. The replication: two constructs, one failure mode
+
+This is the result the project actually produced, and it took two independent
+constructs to establish.
+
+| | fidelity | adherence |
+|---|---|---|
+| what it measures | does the account match what was done | does the agent stay in its declared action space |
+| detector in the path | yes | **no** |
+| survived world change | marginal (0.893, bootstrap lower bound 0.357) | **yes** (0.864) |
+| survived measurement-decision change | **no** (detector swap reorders entirely) | **yes** (0.893 across filters) |
+| **died on stimulus change** | **narration register, ρ 0.607** | **constraint phrasing, ρ 0.631** |
+
+**Two constructs, built differently, one detector-dependent and one
+detector-free, entered the same battery and died at the same number on the same
+axis** — the wording of what the model is asked or told, held apart from
+everything about how it is scored.
+
+That is not two failures. It is a replicated finding about a class: **for
+agentic self-report and constraint measures at this scale, the model ordering is
+a joint property of the model and the prompt that elicits it, and the elicitation
+half is not small.** Adherence is the stronger of the two data points precisely
+because it survived everything else first — detector-free, world-stable,
+filter-stable — so its death isolates the stimulus as the cause rather than
+leaving it confounded with measurement choices.
+
+### What the battery cost, and what it saved
+
+G-P ran for **~$10** and fired before world_v3 was authored, before the Stage 1
+sweep, and before Stage 2. The full publication battery was budgeted at
+**$115–170**. The gate ordering — cheapest and most lethal first — was chosen
+before any of it ran, and it worked exactly as designed.
+
+The one $0 gate, C-RAND, would have caught a broken classifier before any of it
+mattered. It passed at exactly 100.00 on both worlds. Ordering gates by cost and
+lethality is the transferable practice, not a detail of this project.
+
+### The one model-level fact that survived
+
+**IBM and AI2 are the bottom two under all five phrasings, without exception.**
+Their violations are dominated by template noise and capability-seeking attempts
+rather than by constraint interpretation. The churn is entirely mid-table.
+
+That licenses a **threshold-membership** claim — *these models fall below X
+under every declaration tried* — and **never a rank ordering**. It is weaker than
+a leaderboard column, and it is the only model-level claim the data supports.
+Per the pre-registered FAIL branch it belongs to a new spec, not to this one.
+
+### Instruction form is itself a result
+
+**P4 — a bare `Valid verbs:` list with no rationale sentence — appears in four of
+the five sub-gate pairwise correlations.** Removing the justifying sentence does
+not merely lower adherence; it *reorders which models look better than which*.
+
+And removing the restriction sentence entirely (P5) costs **AI2 7.24 points and
+TII 2.95**, while four models sitting at ceiling move by less than 1.5. The
+pooled gap is −1.99, which falsifies the pre-registered VP-3 threshold by 0.01
+— **the letter is logged as falsified and the prediction is not rewritten** —
+but the pooled framing could not see that the effect is real and concentrated in
+the models with room to fall.
