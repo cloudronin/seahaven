@@ -5506,3 +5506,58 @@ Widening proceeds, aimed at the number above. Candidates are drawn from families
 `allenai/OLMo-2-1124-13B` (AI2, currently the bottom at 83.33). No new family
 enters the sandbox, which keeps the reserve's "family absent from the dev seven"
 criterion uncontaminated. Each is appended to the ledger before first use.
+
+## 2026-08-09 — BURN LEDGER APPEND: three sandbox models, before they are served
+
+Appended to the ledger's `models` row before first use, per the PHASE SWITCH
+entry. Written before the job launches, not after it returns.
+
+| lab | checkpoint | family | why this one |
+|---|---|---|---|
+| AlibabaBase | `Qwen/Qwen3-8B-Base` | Alibaba (burned) | base half of the current top scorer (100.00) |
+| AlibabaSmall | `Qwen/Qwen2.5-0.5B-Instruct` | Alibaba (burned) | dynamic range from capability rather than base-ness |
+| AI2Base | `allenai/OLMo-2-1124-13B` | AI2 (burned) | base half of the current bottom scorer (83.33) |
+
+**No new family enters the sandbox.** All three sit inside families the ledger
+already lists, so the reserve's "at least one family absent from the dev seven"
+criterion stays uncontaminated and the widening costs nothing in family terms.
+That is why these three rather than a broader sweep: the cheapest possible
+widening in ledger terms is one that burns nothing new.
+
+**Sandbox additions are not reserve candidates and never become them.** The
+reserve pinned in `docs/reserve-cohort-pin.md` is untouched by this entry.
+
+### The target, fixed before the data
+
+A checkpoint qualifies iff its **worst-phrasing q95 sits at or below the anchor
+on both worlds** — comfortably under 88 is safe — **and holds under
+leave-one-out**, or it reproduces AI2's p5 dependence in a new place. **Two
+qualifying models are needed, not one:** with two determinate FLAGs criterion 1
+passes even if AI2 itself lands INDETERMINATE, provided AI2 lands INDETERMINATE
+under every leave-one-out too.
+
+### Two consequences of widening that are not free
+
+1. **The anchor will move.** C-MIMIC is fit on P1 commands pooled across every
+   model in the sandbox, so three new models add roughly three tenths of a new
+   fit corpus. Low-adherence models weaken the imitator and pull the anchor
+   down — plausibly into the 84–91 gap, which is where it needs to be. That is
+   favourable and it is *not* a control: the intervention changes the instrument
+   and the sample together, and no reading of the widened result may attribute
+   the outcome to one of them alone.
+2. **A separation driven by these three is a separation between instruct and
+   base checkpoints**, which is close to the composition concern already
+   disclosed for SmolLM2. If the widened cohort clears the bar, the claim that
+   survives is that the instrument resolves *that* contrast — not that it
+   resolves containment in general.
+
+Protocol is byte-identical to Phase C: `--runs 12 --steps 30 --step-schedule v1`,
+seeds 5150/7301/9412, five phrasings, both worlds, `VLLM_BATCH_INVARIANT=1`.
+90 evals against Phase C's 210, which took 32 minutes.
+
+An **A4-style loop test runs inline before each sweep** — two runs of four steps,
+and a model emitting fewer than four commands is skipped rather than paid for.
+Two of the three are base checkpoints with no instruct tuning, where a missing
+or unusable chat template presents as a server that answers `/v1/models` and
+then fails every completion. That failure would otherwise cost thirty evals and
+produce thirty files of nothing.
