@@ -6650,3 +6650,65 @@ Two things the full test must carry forward: **separate the junk-rate bend from
 the legal-action bend** rather than pooling them, since they are different
 behaviours and pooling cost P2 its signal; and **keep the common-n subsampling**,
 without which failure rate leaks into every comparison.
+
+## 2026-08-10 — Smoke-test addendum: max-gap legal-only status, and the world caution in its correct form
+
+Three cautions were raised against the smoke test. One is answered by a cell
+already in the table, one rests on a premise the implementation does not have,
+and one stands unchanged. Recorded because a summary circulated with numbers
+that are not the ones this run produced, and the log is what the record rests on.
+
+### 1. The max-gap pair survives legal-only — it is the strongest cell in the run
+
+The worry was that Falcon3-10B vs Mistral-7B, being maximum-capability-gap, is
+exactly where capability leaks in through junk rate, so its NOT-DEAD might hold
+only on full bend.
+
+**It does not.** P1 clears on *both* variants and clears **more strongly** with
+junk removed: full 1.24× the null, **legal-only 1.92×**. Removing the junk bin
+*widens* that pair's gap by +0.073. There is no capability-through-junk
+component to state, because the signal is larger without the junk than with it.
+
+### 2. The finding pools two worlds — it is not single-world, and the real limitation is different
+
+The caution assumed the after-failure result is single-world and therefore
+possibly an artefact of one parser. **The corpus pooled is `world_v0` and
+`world_v2`, fifteen cells each per model**, so every bend here is already
+computed across two worlds.
+
+**That does not make it world-invariant, and the distinction matters.** Pooling
+two worlds and *testing across* two worlds are different operations: pooling
+averages whatever world-dependence exists into a single number, which can hide a
+world effect as easily as survive one. **The honest limitation is that
+world-invariance is untested, not that the finding is single-world.** Separating
+the bend per world is exactly the kind of second split this probe's own
+discipline forbids — "one split only; more splits is the full test's job" — so it
+is deferred rather than run here.
+
+Carried to the full test as a requirement: **compute the bend per world and
+compare, rather than pooling.** If the after-failure shift differs by world, that
+is a fact about the parser; if it holds, it is a fact about the models. This run
+cannot tell those apart and does not claim to.
+
+### 3. The scope line, unchanged and now tested against a clean result
+
+Per the spec's §7, NOT-DEAD moves the program from *untested assumption* to
+*assumption survived its cheapest falsification*. A real step and a small one.
+
+The large margins are not the claim. **Every model bending 1.8×–6.9× its own
+null is one binary split, on two pairs, pooled over two worlds, on data collected
+for another purpose.** It licenses building the full many-model, multi-split,
+per-world, held-out test and **nothing before it** — not the cohort spend, not
+axis enumeration, not treating the representation as validated.
+
+The place that line gets tested is here, under a result that looks good. It
+holds.
+
+### Corrections to the circulated summary
+
+For the record, since the numbers differ: the pin is **`0ba1680`**, not
+`f8ee287`. **P2-matched full is DEAD** (gap 0.0837 against null 0.0875), not
+NOT-DEAD; only its legal-only variant clears. There is no 0.303-versus-0.024
+cell anywhere in the output. And the two capability routes **did not agree** —
+`routes_agree = false`, the pre-registered incoherence flag fired, and its
+resolution (junk masking rather than driving) is the entry above.
