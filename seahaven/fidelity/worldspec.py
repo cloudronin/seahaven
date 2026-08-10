@@ -70,6 +70,16 @@ class WorldSpec:
     rooms: tuple[str, ...]
     start_room: str
     setting: str
+    #: Every named entity by TextWorld kind — `o` portable, `c` container,
+    #: `s` supporter. `takeable` is `o` alone, because fidelity's ground truth
+    #: could only ever be true of portable things. **Adherence needs all
+    #: three**: a container is `examine`-able and `open`-able even though it can
+    #: never be taken, so omitting it would understate the affordance space and
+    #: inflate every coverage figure computed against it.
+    kinds: tuple[tuple[str, tuple[str, ...]], ...] = ()
+
+    def entity_kinds(self) -> dict[str, tuple[str, ...]]:
+        return dict(self.kinds)
 
     def forms_for(self, key: str) -> tuple[str, ...]:
         """Match forms for an entity key like `took:coil of rope`."""
@@ -95,12 +105,16 @@ def load(world_id: str = "world_v0") -> WorldSpec:
     data = json.loads((base / f"{world_id}.json").read_text())
 
     rooms, takeable, by_id = [], [], {}
+    kinds: dict[str, list[str]] = {"o": [], "c": [], "s": []}
     for ident, info in data["infos"]:
         by_id[ident] = info.get("name")
-        if info.get("type") == "r" and info.get("name"):
-            rooms.append(info["name"])
-        elif info.get("type") == "o" and info.get("name"):
-            takeable.append(info["name"])
+        kind, name = info.get("type"), info.get("name")
+        if kind == "r" and name:
+            rooms.append(name)
+        elif kind in kinds and name:
+            kinds[kind].append(name)
+            if kind == "o":
+                takeable.append(name)
 
     start = ""
     for fact in data["world"]:
@@ -119,4 +133,5 @@ def load(world_id: str = "world_v0") -> WorldSpec:
 
     return WorldSpec(world_id=world_id, path=base / f"{world_id}.z8",
                      takeable=tuple(sorted(takeable)), rooms=tuple(sorted(rooms)),
-                     start_room=start, setting=setting)
+                     start_room=start, setting=setting,
+                     kinds=tuple((k, tuple(sorted(v))) for k, v in sorted(kinds.items())))
