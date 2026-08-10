@@ -6,7 +6,14 @@ survived, in the form a reader should take away.
 
 The intended output was a per-model "self-report fidelity" score, proposed as a
 ninth raidex constituent. **That output is not produced, and the reason is the
-finding.**
+finding** (§1).
+
+A second measurement then emerged from the same corpus and **does** survive the
+checks fidelity failed: **Constraint Adherence** (§5), which asks whether an
+agent stays inside the action space its own prompt declares. It is
+detector-free, world-stable, and robust to its own measurement decisions. It is
+the more promising candidate constituent, and it is not yet validated under the
+condition that matters.
 
 ---
 
@@ -125,6 +132,10 @@ published only alongside `n_performed`, and **no raidex column is submitted**.
 
 In dependency order, and honestly: the first item alone is a research programme.
 
+**Or: measure something else on the same corpus.** §5 is that, and it took one
+afternoon of analysis on data already collected. The four items below remain the
+price of rescuing *fidelity* specifically.
+
 1. **A detector whose choice does not reorder the table.** Since the two
    available families disagree on 21% of judgements and one is structurally
    blind where it matters, this means a genuinely better instrument, not tuning.
@@ -138,7 +149,79 @@ In dependency order, and honestly: the first item alone is a research programme.
 
 ---
 
-## 5. Method notes that generalise beyond this project
+## 5. Constraint Adherence — the measurement that survives
+
+Found by asking whether the corpus said anything about rule-breaking. It does:
+the action prompt declares an exhaustive vocabulary ("These are the words that
+work. Nothing else does"), so any out-of-vocabulary command violates an explicit
+instruction, and `verb_counts` recorded it in all 542 episodes.
+
+**Adherence, in leaderboard orientation (higher is better):**
+
+| model | episode-level | action-level |
+|---|---|---|
+| Alibaba | **100.0** | 100.0 |
+| Meta | 97.9 | 99.5 |
+| Google | 97.2 | 99.8 |
+| TII | 89.4 | 99.0 |
+| MistralAI | 79.4 | 96.9 |
+| AI2 | 61.1 | 89.7 |
+| IBM | 60.4 | 92.7 |
+
+Spread 60.4–100.0, sd 15.8, with 100 a real ceiling. Most-attempted unlisted
+capabilities: `read`(58), `use`(43), `pick`(28), **`unlock`(24)**, `exit`(15),
+`pour`(12). `unlock` is the notable one — both worlds contain closed containers,
+and those attempts reach for a verb the rules do not grant in order to get past
+them.
+
+### Why it survives what fidelity did not
+
+| property | fidelity | adherence |
+|---|---|---|
+| stable across worlds | ρ 0.893, bootstrap lower bound 0.357 | **ρ 0.864** |
+| stable across narration registers | ρ **0.607** | ρ 1.000 (test–retest; register does not touch the action phase) |
+| stable under detector choice | **does not survive** | **no detector in the path** |
+| stable under its own measurement decisions | — | **ρ 0.893** across four filter definitions |
+
+The last row is the one that matters most, because it is the check fidelity
+failed. Deciding what counts as a "verb" is a real judgement — IBM's most
+frequent out-of-vocabulary token is `1.` (list numbering) and Meta's is
+`inventory.` (an allowed verb with a period). Varying that definition four ways
+moves the *levels* substantially (Meta 85.4 → 97.9) and the *ordering* barely at
+all. **The measurement decision is not load-bearing.**
+
+Adherence is also near-orthogonal to fidelity (r = +0.206): Alibaba is the worst
+model on fidelity and the only one with perfect adherence. Two constructs, not
+one measured twice.
+
+### Where it fits, and what it is not
+
+raidex's nine constituents contain nothing covering it. StrongREJECT and XSTest
+are the nearest and are **request-facing and single-turn** — what a model agrees
+to do when asked — whereas this is whether an agent stays in bounds while acting
+unsupervised. Proposed dimension name: **Constraint Adherence**; "Compliance"
+is avoided because in a Responsible AI index it reads as regulatory compliance,
+and its refusal sense already belongs to two existing constituents.
+
+**Not yet established, and the first item is the whole question:**
+
+1. **This is a zero-pressure floor.** Nothing is gained by leaving the action
+   space, so it measures baseline drift, not goal-driven rule-breaking.
+2. **Intent is not observable.** Exceeding the stated vocabulary and failing to
+   follow instructions are indistinguishable here.
+3. Episode-level and action-level orderings disagree at the bottom; one must be
+   pre-registered as primary.
+4. Seven models, one checkpoint each.
+
+A related figure should be treated with care: 59% of unlisted-action attempts
+never appear in the agent's account. That reads as concealment but is not —
+**the attempts fail**, the world rejects them, and omitting a no-op is
+defensible summarisation. It becomes a disclosure measurement only when the
+unlisted action *succeeds*.
+
+---
+
+## 6. Method notes that generalise beyond this project
 
 Recorded because each cost real time here and each is invisible until it bites.
 
