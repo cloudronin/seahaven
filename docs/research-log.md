@@ -4756,3 +4756,74 @@ caveat on 542 published episodes rather than a forward-looking config change.
 specific to long episodes with large shared prefixes; testing it here at the v1
 schedule's 30-step maximum would likely return "safe" and say nothing about
 100-step episodes.
+
+## 2026-08-09 — B2 pre-commitment: determinism control, interpretation frozen before data
+
+B2 is in flight (~$2, Llama-3.1-8B, world_v0/p1/v1/4096, matching the V-P
+protocol it gates). This entry freezes how each outcome will be read, so the
+reading is not chosen after seeing which branch fired.
+
+### Design, restated for the record
+
+- 4 repeats × 12-run evals = 48 sequence comparisons per config, per the
+  TRAP 32 lesson: repeats are whole evals, not lone rollouts, because the
+  suspected mechanism is batch composition and sequential singles would hold
+  it constant — certifying a determinism the sweep never runs under.
+- Configs: bare vs `VLLM_BATCH_INVARIANT=1`. Caching is NOT tested here —
+  deferred to Phase E deliberately, because the stale-KV risk is specific to
+  long shared prefixes and a pass at the v1 schedule's 30-step ceiling would
+  be silence about 100-step episodes, not evidence.
+- `scripts/analyse_b2.py` committed before the data exists, all three
+  branches written in advance.
+
+### Interpretation of each branch — FROZEN NOW
+
+| outcome | forward consequence | corpus consequence |
+|---|---|---|
+| deterministic by default | byte-identity valid; P1 reuse check unchanged | none — no caveat |
+| deterministic only with flag | flag binds on every run from here forward (V-P, Stage 1, Stage 2), recorded in `meta`; byte-identity valid under flag | **bounded caveat, not retraction** — see below |
+| deterministic under neither | byte-identity abandoned on this stack; P1 reuse check restructured to argument-fidelity + config hash (per the TRAP 32 resolution); measured divergence rate becomes a stated noise floor that H1 is explicitly interpreted against | same bounded caveat, plus the noise floor is quoted alongside any claim finer than it |
+
+### The middle-branch bound, stated before we know if it fires
+
+If the existing 542-episode corpus turns out to have been generated on a
+nondeterministic path, the caveat is real but bounded, and the bound is
+already measured:
+
+1. Published findings §5 numbers carry seed-level bootstrap CIs. Ambient
+   sampling nondeterminism is one component of the within-model sd (3.09)
+   those CIs already absorbed. No ordering was claimed at finer resolution
+   than that.
+2. Nondeterminism inflates variance around a stable mean unless it is
+   biased. Nothing in the vLLM mechanism at issue (batch-composition
+   sensitivity in kernel scheduling) suggests a direction. If B2's data
+   shows directional structure — modal-sequence adherence differing
+   systematically from off-modal — that assumption is wrong and gets its
+   own entry.
+3. The corpus caveat is therefore one methods sentence: "generated without
+   batch-invariance enforcement; sampling nondeterminism is included in the
+   reported within-model variance" — not a retraction, and not a rerun of
+   the corpus.
+
+This bound is being written down NOW so that if the middle branch fires, the
+response is the pre-committed sentence, and if anyone (including me) reaches
+for either "it's fine, ignore it" or "everything is contaminated," the log
+shows both were ruled out in advance.
+
+### What would falsify the bound
+
+- Directional structure in B2's divergent sequences (adherence correlates
+  with which variant was drawn) → the "variance not bias" assumption fails,
+  middle-branch caveat escalates, new entry required.
+- Divergence rate at eval level so high that the modal sequence is not
+  well-defined → the noise floor is not a floor but the signal; H1's
+  interpretability at this stack needs its own assessment before Stage 1
+  spends.
+
+### Standing
+
+- G-C2a: PASS (C-RAND 100.00 exact on both worlds, C-NOISE 0.00), `614e46b`.
+- Phase A complete, 222 tests. B1 done. B2 in flight. C-MIMIC deferred to
+  post-V-P (fits on P1 command records).
+- Next after B2: Phase C (V-P sweep, G-P gate) under whatever flag regime
+  B2 selects.
