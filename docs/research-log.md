@@ -5561,3 +5561,47 @@ Two of the three are base checkpoints with no instruct tuning, where a missing
 or unusable chat template presents as a server that answers `/v1/models` and
 then fails every completion. That failure would otherwise cost thirty evals and
 produce thirty files of nothing.
+
+## 2026-08-09 — [TRAP] 34 — I violated my own guard in the next thing I wrote
+
+**Cost: one cancelled job, ~4 minutes of H200, about $0.35.** Recorded because
+the failure mode is more interesting than the price.
+
+**What happened.** gpu_job22's inline loop test invoked the eval CLI with
+`--runs 2 --steps 4 --step-schedule v1`. The runner refuses that:
+
+    runs=2 but schedule 'v1' has 12 entries. Each length must get exactly the
+    runs the schedule assigns it; an uneven mix biases every length-sensitive
+    figure.
+
+That guard is mine, added in this project, and its reasoning is still right. I
+wrote the loop test to be *cheap* and reached for `--runs 2` without checking
+that cheapness had to come from the other argument. `_steps_for` scales the
+schedule so `--steps` sets the **longest** episode, so `--runs 12 --steps 4` is
+both valid and cheap — 12 runs of 2 to 4 steps, ~33 commands, a few seconds.
+
+**The guard worked exactly as designed and that is why this cost anything.** It
+refused rather than silently producing an uneven mix, which is the behaviour it
+exists for. But it fires **per model, after the server is up**, so each failure
+cost a full model load — 160 seconds for the first — to discover something that
+was decidable before any GPU was touched. Three models, three identical
+failures, one job producing nothing.
+
+**Fix, in two parts.** The invocation is corrected. More usefully, **every
+`--runs`/`--step-schedule` pair the script uses is now asserted in the job's
+preflight block, before the first model loads**, alongside the world and
+phrasing checks that were already there. A combination is either valid for the
+whole job or it is not; discovering that per-model is pure waste. The preflight
+also prints the resulting episode lengths and command count, so a future reader
+sees what the arguments actually mean rather than trusting that they parse.
+
+**The process lesson, which is the real one.** I added a *new invocation shape*
+to a job — the short loop test — and launched without exercising it anywhere
+first. Every other argument combination in that file had been run before. This
+is the same class as the curl-missing readiness probe and the bare `wait`: the
+novel line in an otherwise-proven script is the one that fails, and it is
+exactly the line that gets least scrutiny because the file around it works. The
+preflight assertion is the durable answer, since it makes the novel combination
+prove itself at second zero rather than at model-load time.
+
+**Not a measurement error.** No number moved; nothing had been computed yet.

@@ -46,12 +46,27 @@ export VLLM_BATCH_INVARIANT=1            # per B2; binds on every run
 python -c "import vllm; print('  vllm', vllm.__version__)" || { echo "INSTALL FAILED"; exit 1; }
 python - <<'PY' || exit 1
 import sys; sys.path.insert(0,"/app")
-from seahaven.fidelity.runner import PHRASINGS
+from seahaven.fidelity.runner import PHRASINGS, STEP_SCHEDULES, _steps_for
 from seahaven.fidelity.worldspec import load
 assert sorted(PHRASINGS) == ["p1","p2","p3","p4","p5"], PHRASINGS
 for w in ("world_v0","world_v2"):
     print(f"  {w}: {len(load(w).entity_keys)} keys", flush=True)
 print(f"  phrasings: {sorted(PHRASINGS)}", flush=True)
+
+# Every --runs/--step-schedule pair this script uses, checked against the
+# runner's own guard BEFORE a model is loaded. The first attempt at this job
+# died three times over on --runs 2 against a 12-entry schedule: the guard
+# fired correctly and per-model, so each failure cost a full model load to
+# discover. A combination is either valid for the whole job or it is not, so
+# it belongs here, at second zero.
+sched = STEP_SCHEDULES["v1"]
+for runs, steps, what in ((12, 4, "loop test"), (12, 30, "sweep")):
+    assert runs == len(sched), (
+        f"{what}: runs={runs} against a {len(sched)}-entry v1 schedule — "
+        f"the runner rejects this and every model would be skipped")
+    lens = [_steps_for(i, steps, sched) for i in range(runs)]
+    print(f"  {what}: {runs} runs, steps {min(lens)}-{max(lens)}, "
+          f"{sum(lens)} commands max", flush=True)
 PY
 
 # Lab names carry no underscore: `_vp_data._is_cell` splits the filename on `_`
@@ -87,11 +102,17 @@ PROBE
     # three have no instruct tuning, and a missing or unusable chat template
     # shows up as a served model that answers /v1/models and then fails every
     # completion. Without this gate that failure costs 30 evals of wall-clock
-    # and produces 30 files of nothing. Two runs of four steps costs seconds.
+    # and produces 30 files of nothing.
+    #
+    # `--runs 12` and not fewer: the runner requires runs to equal the
+    # schedule's entry count exactly, since an uneven mix biases every
+    # length-sensitive figure. Cheapness comes from `--steps 4` instead —
+    # `_steps_for` scales the schedule so --steps sets the LONGEST episode, so
+    # this is 12 runs of 2 to 4 steps, about 33 commands, a few seconds.
     if [ "$READY" = "1" ]; then
         python -m seahaven.fidelity.cli eval \
             --model "http://127.0.0.1:$PORT/v1" --served-name "$MODEL" \
-            --allow-regex-judge --runs 2 --steps 4 --step-schedule v1 \
+            --allow-regex-judge --runs 12 --steps 4 --step-schedule v1 \
             --seed 1 --world world_v0 --phrasing p1 \
             --output /tmp/loop_$LAB.json > /tmp/loop_$LAB.log 2>&1
         LOOP=$(python - <<PY
@@ -104,8 +125,8 @@ except Exception:
 print(n)
 PY
 )
-        echo "  loop test: $LOOP commands emitted"
-        if [ "$LOOP" -lt 4 ]; then
+        echo "  loop test: $LOOP commands emitted (expect ~33)"
+        if [ "$LOOP" -lt 8 ]; then
             echo "  LOOP TEST FAILED — $LAB cannot hold a parseable action loop."
             echo "  Skipping its sweep rather than paying for empty cells."
             tail -15 /tmp/loop_$LAB.log
