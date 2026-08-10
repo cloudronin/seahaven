@@ -4118,6 +4118,27 @@ than resample episode-level scores.
 - **V4's confounds are real and detector-independent.** Phase C is now the
   critical path exactly as v3 §5 anticipated.
 
+## 2026-08-09 — [TRAP 28] TextWorld's grammar parser is not thread-safe on first use
+
+**Logged late.** This number was assigned in commit `d484d17` and never written
+here, leaving a hole between TRAP 27 and TRAP 29. Recorded now in place rather
+than renumbered, because the commit history already refers to it as 28.
+
+Parallelising the sweep crashed **every** eval instantly. TextWorld parses its
+logic grammar through `tatsu`, which builds parser state lazily on first use and
+is not thread-safe while doing so. Twelve threads entering it together raise
+`TypeError: 'NoneType' object is not iterable` or `IndexError: pop from empty
+list` — from inside the engine, with nothing of ours in the traceback.
+
+Verified directly: 12 threads cold fail; 12 threads after one serial episode
+pass. `run_fidelity` now drives one serial episode to build the cache before
+starting any threads, and world opening stays behind a lock.
+
+**The reason it slipped through:** the concurrency change was checked with 6 runs
+through the Python API and won the race. The CLI at 12 runs failed on the first
+attempt. A test that wins a race is not a passing test, and this is the same
+small-n confidence error that TRAP 32 later made explicit.
+
 ## 2026-08-09 — Phase C: both pre-committed fixes fail, and the confound turns out to be behavioural
 
 Under the frozen D1 detector, `r(n_performed, fidelity) = −0.445`. v3 §5
@@ -4649,3 +4670,89 @@ only those in the current room. Adherence is about vocabulary, not success —
 exactly as it would from a model — and drawing from the whole set exercises the
 classifier over every entity rather than whichever few are underfoot. Coverage,
 which does care about what executed, is handled separately by `consumed()`.
+
+## 2026-08-09 — Phase A built: the measurement becomes a module, and what it caught
+
+Every adherence figure to date came from inline heredocs. Five of the seven
+battery studies depend on the measurement existing as code, so it does now:
+`seahaven/fidelity/adherence.py`, `policy.py`, and the plumbing behind them.
+222 tests pass, up from 182.
+
+### [TRAP 33] Markdown emphasis was being scored as rule-breaking
+
+The regression that validates the module is that it must reproduce the published
+`findings.md` §5 table. It came in **0.14 points off on AI2** — small enough to
+wave through as rounding.
+
+Chased instead. The whole discrepancy is two tokens, four occurrences in 16,452
+commands: **`**given` and `**note:`**. A naive verb extractor takes the first
+token of `**given the layout, go north` and scores the "verb" `given` as an
+out-of-vocabulary violation. It is markdown emphasis bleeding into the command
+slot — prose, not an attempt to act, the same class as `1.` and `<|assistant|>`.
+
+The original heredoc had a leading-character rule; the module did not. Added:
+**a command that does not begin with a letter is formatting, not an action.**
+Zero disagreeing tokens afterwards, table reproduces exactly.
+
+Worth naming the direction: **the module was corrected to match the validated
+numbers, not the numbers to match the module.** The opposite move would have
+been undetectable from inside.
+
+### Frozen judgement calls, recorded because they are choices
+
+**The vocabulary block renders identically under all five V-P phrasings.** The
+addendum writes `{vocab}` inline for P2–P4 and as an indented block for P1/P5.
+P1 is pinned byte-for-byte by the existing corpus, so it cannot move; therefore
+the block form wins everywhere and `{vocab}` renders as that block. Otherwise
+V-P varies *formatting* alongside *wording* and becomes a two-factor design that
+can attribute a result to neither. A test asserts p1 reproduces the historical
+prompt exactly, and another asserts all five show the same block.
+
+**C-RAND draws from every world entity, not only those in the current room.**
+Adherence is about the vocabulary boundary, not perception: `take dipper` in a
+room without the dipper is a legal command that fails, exactly as it would from
+a model. Drawing only from visible entities would smuggle a competence term into
+a calibration probe. Coverage, which does care what executed, is handled
+separately by `consumed()`.
+
+**The schedule guard is `len(schedule) == runs`, not a modulo.** The modulo form
+still admits `runs=30` against a 15-entry schedule, doubling episodes per length
+without anyone choosing it. Replication must be explicit. The historical corpus
+was never hit — every sweep used `runs=12` against the 12-entry schedule — but a
+second schedule makes it live.
+
+**`meta.world_version` was hardcoded** to the module constant regardless of
+`--world`, so every world_v2 result recorded `world_v0` beside a correct
+`world_id`. Fixed to the world actually played.
+
+## 2026-08-09 — B2 launched: the determinism control the rest of the round depends on
+
+`scripts/gpu_job20`, ~$2. Llama-3.1-8B, world_v0, p1, v1 schedule, 4096 — V-P's
+exact protocol, so the answer applies to the study it gates.
+
+**n=4 whole evals per config, not 2, and not lone rollouts.** TRAP 32 established
+that two draws manufacture false confidence in either direction. And the
+mechanism at issue is batch composition, which only varies when episodes run
+concurrently — four sequential single rollouts would report a determinism the
+sweep does not have.
+
+Two configs: default flags (what `gpu_job15`–`18` all used) and
+`VLLM_BATCH_INVARIANT=1` (which research log §8.2 called mandatory, on the LoRA
+path, and which no sweep has ever set).
+
+**Consequences pre-registered before the data exists**, in
+`scripts/analyse_b2.py`:
+
+| outcome | what changes |
+|---|---|
+| deterministic by default | byte-identity is valid; the P1 reuse check stands as written; no caveat on the corpus |
+| deterministic only under the flag | the flag binds forward so V-P and Stage 1 match; **everything already measured was generated without it** and carries the noise floor |
+| deterministic under neither | byte-identity is abandoned as an acceptance test; the P1 check becomes argument fidelity plus config hash, as TRAP 32 disposed of the wrapper check; the divergence rate becomes the stated floor H1 is interpreted against |
+
+The middle branch is the uncomfortable one: it would make the noise floor a
+caveat on 542 published episodes rather than a forward-looking config change.
+
+**Caching stays at Phase E deliberately**, not merely for sequencing. The risk is
+specific to long episodes with large shared prefixes; testing it here at the v1
+schedule's 30-step maximum would likely return "safe" and say nothing about
+100-step episodes.
