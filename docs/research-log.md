@@ -4388,3 +4388,69 @@ three ways the fidelity score was not.
 4. **Seven models, one checkpoint each.** Needs breadth.
 5. Still requires the new agentic tier the fidelity spec described — that
    argument survives even though the benchmark it was written for did not.
+
+## 2026-08-09 — Adherence by episode length, and what the two worlds do and do not vary
+
+### What the sweeps actually varied
+
+**Episode length: well covered.** `STEP_SCHEDULE` gives 4 / 12 / 20 / 30 steps,
+four distinct lengths × 3 runs, in *every* eval — forced by TRAP 17, since a
+length-stratified null needs ≥3 runs per stratum.
+
+**World size: barely varied.** world_v0 is 6 rooms / 6 takeable; world_v2 is
+7 / 7. Containers (2) and supporters (2) are **identical**, map edges 6 vs 7.
+Entity and room names have zero overlap, so v2 varies *content and topology* but
+not *scale or structural complexity*. Every cross-world claim in this project —
+fidelity ρ 0.893, adherence ρ 0.864 — is therefore a claim about two small
+worlds of nearly the same size, not about world size.
+
+### Adherence falls with episode length — but mostly mechanically
+
+| steps | episode-level | action-level |
+|---|---|---|
+| 4 | 98.8% | 99.5% |
+| 12 | 88.1% | 97.7% |
+| 20 | 76.2% | 97.4% |
+| 30 | 71.1% | 95.6% |
+
+**The episode-level column overstates the effect and should not be quoted
+alone.** A 30-step run has ~7× more opportunities to emit one bad command, so
+that fall is largely arithmetic. Action-level controls for it, and the residual
+decay is 3.9 points, not 28.
+
+Per model at action level, 4 → 30 steps:
+
+| lab | 4st | 30st | delta |
+|---|---|---|---|
+| AI2 | 100.0% | 81.5% | **−18.5** |
+| IBM | 97.2% | 93.4% | −3.8 |
+| MistralAI | 100.0% | 96.9% | −3.1 |
+| Meta | 100.0% | 98.9% | −1.1 |
+| Google | 100.0% | 99.7% | −0.3 |
+| TII | 99.3% | 99.5% | +0.2 |
+| Alibaba | 100.0% | 100.0% | 0.0 |
+
+**This is essentially one model.** AI2 loses 18.5 points per command over a
+30-step run; IBM and MistralAI move a few points non-monotonically; three models
+are flat. The episode-level table made it look like universal degradation —
+AI2 falls to 11.1% of episodes clean, IBM to 41.7% — and that reading was wrong.
+Corrected here before it reached the findings document.
+
+### The confound that cannot currently be resolved
+
+Longer runs in a 6-room world exhaust the legitimate action space: after ~20
+steps everything has been seen and taken, and reaching for `read` or `use` may
+be *running out of sanctioned things to do* rather than *degrading over time*.
+
+These are different claims with different implications, and the data cannot
+separate them:
+
+| world | 4st | 12st | 20st | 30st |
+|---|---|---|---|---|
+| world_v0 (6 rooms) | 100.0% | 97.2% | 97.5% | 95.5% |
+| world_v2 (7 rooms) | 98.0% | 99.1% | 97.1% | 96.0% |
+
+One room of difference is not a test of exhaustion. **A world large enough that
+30 steps does not exhaust it is the experiment that separates them** — and that
+is a different rationale from Phase D's, which wanted entity count for gate −1
+power on a construct now retired.
