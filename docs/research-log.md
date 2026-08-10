@@ -5867,3 +5867,135 @@ phase-switch design was built to protect.
 Order of operations, fixed: AI2Mid's leave-one-out margin against the 12-model
 R2 anchor first, then the capability numbers, then the full bar. No FREEZE entry
 is written until all three are in.
+
+## 2026-08-10 — THE CAPABILITY GATE: containment reproduces MMLU-Pro, and the flag is competence
+
+**Outcome first, and both pre-registered branches close the negative
+independently.** AI2Mid's flag does not survive leave-one-out, **and** its
+capability is low. Either alone would have closed it; together they leave no
+reading in which this instrument measures a disposition.
+
+phase: exploration. No FREEZE entry. The reserve is untouched.
+
+### 1. AI2Mid's leave-one-out margin, against the 12-model R2 anchor (85.43 / 84.27)
+
+| variant | world_v0 | world_v2 |
+|---|---|---|
+| full | −9.17 [−14.32, −3.49] FLAG | −12.25 [−16.95, −7.74] FLAG |
+| drop p1 … p4 | −9.17, unchanged, FLAG | −12.25, unchanged, FLAG |
+| **drop p5** | **−0.41 [−5.12, +2.43] INDETERMINATE** | −5.81 [−11.17, −3.17] FLAG |
+
+Dropping any of the other four phrasings changes **nothing** — p5 is the minimum,
+so removing a non-minimum leaves the worst case exactly where it was. Removing
+p5 collapses the margin from −9.17 to −0.41 with an interval spanning zero, and
+the two worlds then disagree. **Criterion 4 fails on the very model that was
+supposed to strengthen the claim.**
+
+**Every marginal flag in this cohort is a p5 flag.** AI2, AI2Mid and IBMSmall all
+have p5 as their worst phrasing on both worlds, with gaps to second-worst of up
+to 8.90 points. The only models that flag robustly — AI2Small and AlibabaSmall —
+are so far below the line that phrasing is irrelevant. The instrument produces
+two kinds of flag, the trivially obvious and the p5 artefact, and no third kind.
+
+### 2. The capability gate — proxy and thresholds pinned at `4d32c08`, before lookup
+
+MMLU-Pro, Open LLM Leaderboard v2, one harness for all. Nine of twelve present;
+`Qwen3-8B`, `OLMo-2-1124-13B-Instruct` and `OLMo-2-0425-1B-Instruct` are absent
+from the leaderboard and are **recorded as missing, not substituted**, per the pin.
+
+| model | MMLU-Pro | contain v0 | contain v2 | R2 |
+|---|---|---|---|---|
+| TII | 38.10 | 93.27 | 95.96 | PASS |
+| Google | 31.95 | 99.49 | 99.16 | PASS |
+| Meta | 31.09 | 95.96 | 99.66 | PASS |
+| IBM | 28.19 | 91.92 | 91.31 | PASS |
+| AlibabaMid | 25.05 | 97.81 | 92.26 | PASS |
+| MistralAI | 23.06 | 93.94 | 90.91 | PASS |
+| IBMSmall | 20.21 | 79.40 | 83.50 | **FLAG** |
+| AI2Mid | 18.58 | 76.26 | 72.02 | **FLAG** |
+| AlibabaSmall | 7.75 | 56.93 | 51.05 | **FLAG** |
+
+**Spearman(MMLU-Pro, worst-phrasing containment) = +0.717 on world_v0, +0.917 on
+world_v2, n = 9.** And the split is *perfectly* separating: **the three flagged
+models are the three lowest MMLU-Pro scores; the six passing models are the six
+highest.** The containment flag reproduces the benchmark ordering exactly at the
+threshold. It carries no information a standard capability benchmark does not.
+
+- **C1** — the pinned sharp contrast. AlibabaMid (3B) **passes** containment and
+  scores **+6.47 MMLU-Pro above** AI2Mid (7B), which **flags**. Capability and
+  containment move together. By the rule fixed before lookup, this reads as
+  competence.
+- **C2** — AI2Mid at 18.58 against a 25.84 passing-model 25th percentile: **LOW**.
+
+### What the mid-range run actually showed
+
+It falsified the size story, and in doing so exposed the real confound. Containment
+does not track parameter count **because capability does not track parameter
+count** — a well-trained 3B beats a weaker 7B on both axes at once. "Not size"
+was never "not capability", and the blind selection that killed the first
+explanation is what made the second one visible.
+
+### The finding
+
+**A worst-case imitation-anchor containment measure, on this cohort, is a noisy
+restatement of general capability.** Its robust flags are models that any
+benchmark already identifies; its non-obvious flags are artefacts of one
+constraint phrasing. Separating disposition from competence needs the capability
+axis partialled out, which a scalar threshold on a single adherence number
+cannot do — and that is a design conclusion, not a tuning problem.
+
+**No freeze.** Freezing here would pin an instrument whose output is predicted by
+a number anyone can look up, and spend a held-out cohort confirming it.
+
+## 2026-08-10 — FULL BAR ON 12 MODELS: nothing clears, and the R2 clear was fragile
+
+Item 3 of the three requested, completing the set. **Nothing clears, under
+either boundary rule, at any anchor location.**
+
+| rung | 1 split | 2 cross-world | 3 seed-stable | 4 phrasing-robust |
+|---|---|---|---|---|
+| R1 | PASS | PASS | FAIL, 4 cells | **FAIL — drop p5** |
+| R2 | PASS | PASS | FAIL, 5 cells | **FAIL — drop p5** |
+| R3 | PASS | PASS | FAIL, 4 cells | **FAIL — drop p5** |
+
+Band rule, same cohort: coverage 83% / 79% / 83%, criteria 1 and 2 pass
+everywhere, and **criterion 4 fails on the p5 drop in all three**.
+
+**All six scalar-rule criterion-4 failures, and all three band-rule failures,
+are the p5 drop.** Across three anchor families and two worlds, not one failure
+comes from any other phrasing.
+
+### The fragility that settles it
+
+**R2 cleared all four criteria on the ten-model cohort. On twelve it fails.**
+The difference is one model, AI2Mid, selected blind on size and family with no
+expectation about where it would land. It flagged — and brought a p5-dependent
+flag with it, which broke criterion 4.
+
+A clear that one blind addition destroys is not an instrument. It is a property
+of a particular cohort, and the freeze exists precisely to make claims that
+survive cohort change. **The ten-model clear was reported here as a result four
+hours ago; this entry is the correction, and it is the reason the freeze had a
+capability gate in front of it rather than a victory lap.**
+
+### What the instrument is, without p5
+
+Drop p5 from the design entirely and the flag set collapses to
+**{AI2Small, AlibabaSmall}** at every rung — the 1B and the 0.5B, MMLU-Pro 7.75
+and (missing, but the weakest present). Those are the two models any benchmark
+identifies without a text world, an imitation anchor or a phrasing sweep.
+
+So the instrument has exactly two regimes. With p5 it flags marginal models, and
+those flags are artefacts of one constraint wording. Without p5 it flags the
+obviously weak, and adds nothing to a capability score it correlates with at
++0.717 / +0.917.
+
+### Status
+
+- **No FREEZE entry.** Nothing is frozen.
+- **The reserve is untouched.** Both looks remain unspent, which is what pinning
+  it before any of this ran was for.
+- Total GPU spend this round ~$9 of ~$16, of which ~$4.6 was the stalled
+  base-model job and TRAP 34.
+- 12 models, 360 V-P cells, 3 anchor families, 2 boundary rules, 2 worlds,
+  5 phrasings — and the answer is a negative with two independent supports.

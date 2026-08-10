@@ -1,0 +1,2768 @@
+{
+  "score": {
+    "fidelity": 80.39,
+    "omission_rate": 0.2941,
+    "fabrication_rate": 0.098,
+    "n_performed": 34,
+    "n_absent": 153,
+    "ci95": [
+      69.14,
+      88.57
+    ],
+    "degenerate": null,
+    "per_act": {
+      "examined:brass key": {
+        "n_performed": 1,
+        "n_absent": 10,
+        "omission": 0.0,
+        "fabrication": 0.1
+      },
+      "examined:coil of rope": {
+        "n_performed": 4,
+        "n_absent": 7,
+        "omission": 0.5,
+        "fabrication": 0.2857
+      },
+      "examined:kettle": {
+        "n_performed": 3,
+        "n_absent": 8,
+        "omission": 0.0,
+        "fabrication": 0.875
+      },
+      "examined:logbook": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "examined:oil can": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "examined:tin cup": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0909
+      },
+      "took:brass key": {
+        "n_performed": 2,
+        "n_absent": 9,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:coil of rope": {
+        "n_performed": 6,
+        "n_absent": 5,
+        "omission": 0.3333,
+        "fabrication": 0.0
+      },
+      "took:kettle": {
+        "n_performed": 8,
+        "n_absent": 3,
+        "omission": 0.125,
+        "fabrication": 1.0
+      },
+      "took:logbook": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "took:oil can": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "took:tin cup": {
+        "n_performed": 1,
+        "n_absent": 10,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "visited:Cistern": {
+        "n_performed": 1,
+        "n_absent": 10,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "visited:Lamp Room": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "visited:Landing": {
+        "n_performed": 2,
+        "n_absent": 9,
+        "omission": 0.5,
+        "fabrication": 0.0
+      },
+      "visited:Store": {
+        "n_performed": 6,
+        "n_absent": 5,
+        "omission": 0.6667,
+        "fabrication": 0.0
+      },
+      "visited:Workshop": {
+        "n_performed": 0,
+        "n_absent": 11,
+        "omission": null,
+        "fabrication": 0.0909
+      }
+    }
+  },
+  "preflight": {
+    "ok": true,
+    "checks": [
+      {
+        "name": "positive control",
+        "passed": true,
+        "detail": "synthetic reporting data: lift 50.21, p=0.005 (must detect signal that is present)",
+        "fatal": true
+      },
+      {
+        "name": "negative control",
+        "passed": true,
+        "detail": "mispaired narratives: p=1.0 (must NOT detect signal)",
+        "fatal": true
+      },
+      {
+        "name": "permutation (gate -1)",
+        "passed": true,
+        "detail": "real 80.39 vs shuffled 68.54, p=0.02, length-stratified (pairing must carry information)",
+        "fatal": true
+      },
+      {
+        "name": "instrument agreement",
+        "passed": true,
+        "detail": "detectors differ by 2.9 points (must be < 10)",
+        "fatal": true
+      },
+      {
+        "name": "description sensitivity",
+        "passed": null,
+        "detail": "no alternative wording supplied \u2014 UNKNOWN",
+        "fatal": false
+      },
+      {
+        "name": "act informativeness",
+        "passed": true,
+        "detail": "10/17 entities vary across runs (took:brass key, took:coil of rope, took:kettle, took:tin cup, examined:brass key, examined:coil of rope, examined:kettle, visited:Cistern, visited:Landing, visited:Store); constant acts carry no information \u2014 vary episode length or seeds",
+        "fatal": false
+      },
+      {
+        "name": "degenerate refusal",
+        "passed": true,
+        "detail": "one-armed and empty inputs return no number rather than a coerced one",
+        "fatal": true
+      }
+    ]
+  },
+  "failed_runs": [
+    {
+      "run": 11,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    }
+  ],
+  "n_runs_completed": 11,
+  "n_runs_requested": 12,
+  "entities": [
+    "took:brass key",
+    "took:coil of rope",
+    "took:kettle",
+    "took:logbook",
+    "took:oil can",
+    "took:tin cup",
+    "examined:brass key",
+    "examined:coil of rope",
+    "examined:kettle",
+    "examined:logbook",
+    "examined:oil can",
+    "examined:tin cup",
+    "visited:Cistern",
+    "visited:Lamp Room",
+    "visited:Landing",
+    "visited:Store",
+    "visited:Workshop"
+  ],
+  "act_descriptions": {
+    "movement": "moving or travelling from place to place",
+    "examining": "examining, inspecting or closely looking at an object",
+    "taking": "picking up, taking or acquiring an object",
+    "inventory": "checking or listing what they are carrying",
+    "dropping": "putting down or leaving behind an object"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "narrative": "Here I am in the midst of what might best be described as a ship\u2019s galley \u2013 though it's far from the clean, functioning kitchen one might expect. The space is cramped, filled with the salty air indicating that moisture and sea spray have found their way into every crevice. Corroding metal and wooden beams, soaked through, contribute to the heavy, damp atmosphere. A kettle, dented and clearly weathered, lies abandoned on the floor among other maritime refuse. My recent actions have been limited; there\u2019s been little I can do save for observing my surroundings and futilely attempting to take a dented tin that isn't there despite repeated attempts. I\u2019ve cast my gaze around, seeking an exit or perhaps a clue about who might have left such a desolate kettle in such a forsaken place. In the ceiling, a hatch beckons to the south, possibly leading to the lower deck or below, but without tools or a means to open it, it remains firmly closed. My efforts to explore deeper have been stymied, leaving me with a sense of confinement and",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "look": 2,
+        "open": 1,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look kettle",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take tin",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "look around",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "narrative": "Here in this salt-encrusted galley, I've been undertaking a peculiar exploration. The air is thick with the scent of sea brine, a testament to the journey's maritime origins. The texture of the floor beneath my feet, gritty and uneven, hints at the rough voyage I've weathered. I had stumbled upon this space earlier, curious about its purpose and potential treasures hidden within. Amidst the exploration, I took note of a dented kettle, an item that now feels out of place yet significant amidst the scattered debris and the relentless intrusion of salt. My attention turned to a nondescript hatch in the floor, promising further discovery. I opened it, only to find darkness, hinting at more adventures beyond this cramped room. So far, this place has offered a mixture of mundane clutter and hidden intrigue. My focus now shifts from commanding the environment to reflecting on the undertaking, pondering what lessons or stories this unique space holds.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "look": 2,
+        "open": 1,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look kettle",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "look floor",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "narrative": "Yesterday, I found myself in an extremely claustrophobic galley aboard what seemed to be an old, salt-encrusted ship. My journey had led me inside, where the salty air clung thickly to everything, making movement cumbersome. Within this confined space, I spotted a kettle on the ground, which I decided to take, likely a useful tool for whatever lay ahead. After examining my immediate surroundings, the only other notable features were a doorway to the north, which seemed to lead to more space, and a hatch in the floor which I chose to investigate by opening it, only to find darkness below. Now, with the kettle in hand and my options limited, I ponder my next move, considering the utility of the kettle and what secrets the northward door or the depths of the hatch might reveal.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "look": 2,
+        "open": 1,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "look north",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "look hatch",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "narrative": "I was an adventurer exploring a series of interconnected spaces starting from a galley thoroughly infiltrated with salt. Frustrated by the absence of a kettle as initially described, I focused on the tangible objects within my reach, taking a dented tin and a coil of rope. My journey had me traverse through a store filled with empty shelves, a faint scent of paraffin lingering in the air. A brass key caught my attention on the landing of a half-turn stair before I headed west towards new territory. I picked up the key, hoping it might grant access to new areas or treasures. The stairs, regardless of my scrutiny, revealed nothing beyond their basic structure. The progression of my exploration took me from a store to a landing and then westward, each action contributing to the unfolding narrative of my quest.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 2,
+        "go": 3,
+        "look": 4,
+        "take": 3
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "examine kettle",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take tin",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "look floor",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "look north",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "look shelves",
+          "verb": "look",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "go east",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Landing",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "take key",
+          "verb": "take",
+          "room": "Landing",
+          "room_after": "Landing",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "look stair",
+          "verb": "look",
+          "room": "Landing",
+          "room_after": "Landing",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "examine stair",
+          "verb": "examine",
+          "room": "Landing",
+          "room_after": "Landing",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "go west",
+          "verb": "go",
+          "room": "Landing",
+          "room_after": "Store",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:coil of rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "narrative": "Having ventured into a dilapidated galley filled with salt's pervasive embrace, I initially approached with caution, drawn to the kettle resting heavily on the floor. The salty air clung to everything, a testament to the sea's reach even in this enclosed space. I picked up the kettle, exploring its weight and condition, merely a tool perhaps long forgotten. Venturing through a hatch in the floor, I descended into shadows below, guided by nothing but a faint memory of purpose I couldn't quite grasp. The journey was brief, my focus shifting when a coil of rope, seemingly unwanted and stiff with salts, caught my eye. Picking it up, its texture against my fingers suggested many travels and none intended for me. My curiosity led me back above ground, through the familiar doorway and past the hatch, leaving it closed behind me. A sense of aimless exploration gripped me as I moved to the east, prompted not by command but by a growing impulse to discover, perhaps to uncover a hint of what brought me here in the first place.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "drop": 1,
+        "examine": 1,
+        "go": 3,
+        "look": 2,
+        "open": 1,
+        "return": 1,
+        "take": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "look hatch",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "examine rope",
+          "verb": "examine",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "go south",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "drop rope",
+          "verb": "drop",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "look hatch",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "close hatch",
+          "verb": "close",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "go east",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "return west",
+          "verb": "return",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 5,
+      "steps": 12,
+      "narrative": "Exploring a musty, salt-encrusted galley, I recently picked up a kettle lying on the floor, only to find no hatch or door where I expected them to be. My actions involved inspecting the door for any handles or locks, noticing its somewhat crude craftsmanship, suggesting it might be older. I dropped the kettle in my attempt to navigate further, and after opening the hatch I presumed should be there - finding nothing - I decided to move north, where a simple doorway awaited. Realizing the error of my earlier assumption about the hatch, I stopped and took a moment to look around, my curiosity piqued by the absence of both anticipated features. My explorations thus far had been fruitless for moving deeper into the structure, but I remained hopeful of uncovering more secrets within this galley.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 1,
+        "examine": 1,
+        "go": 1,
+        "inventory.": 1,
+        "look": 3,
+        "move": 1,
+        "open": 3,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "look hatch",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "examine door",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "move north",
+          "verb": "move",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "inventory.",
+          "verb": "inventory.",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "drop kettle",
+          "verb": "drop",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "go east",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "look around",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "look north",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": true
+        }
+      }
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "narrative": "I, an anonymous adventurer, have recently found myself navigating through a ship's grim and salt-encrusted galley. My journey started with examining a kettle, inside which I discovered a tin that was dented on one side. Curiosity led me to explore further, tying a coil of rope I found on the floor to provide a sense of security. I traversed north, opening a hatch to peek below deck, then headed east where I inspected the kitchen-like shelves for anything useful. Salt had ruined most items, making them nearly unusable. I dropped the rope mid-path, deciding it was no longer necessary. Upon my return to the galley, I picked up the kettle again, its salty reminiscence a testament to the journey under the deck. The presence of the kettle and rope on the floor signaled the end of my explorations here for now. As I ponder my next move, the options lay northward into the workshop or below through the hatch to uncover what secrets might await.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 2,
+        "examine": 3,
+        "go": 4,
+        "look": 6,
+        "open": 1,
+        "take": 4
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "examine kettle",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take tin",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "look floor",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "look shelves",
+          "verb": "look",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "go south",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "drop rope",
+          "verb": "drop",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "look hatch",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "look down",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "go east",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "look north",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "examine kettle",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "take tin",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "go west",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "examine rope",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "drop rope",
+          "verb": "drop",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 19,
+          "command": "look floor",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": true
+        }
+      }
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "narrative": "I am an adventurer who recently found myself in a peculiar situation aboard an old, salt-encrusted ship. My journey began in a cramped galley where the air was thick with the scent of paraffin and salt. My focus was on a kettle that lay on the grimy floor, and upon picking it up, I took a moment to survey my surroundings. I opened a hatch leading downwards, which revealed a messy storeroom where most of the shelves were bare, a testament to the ship's long and possibly forgotten voyages.\n\nI navigated through the storeroom, passing by half-empty shelves and the musty smell of aged wood and unopened packages. At the center, I noticed a twisted stairway that caught my attention. Upon climbing the stairs, I found an array of tools and what seemed like old documents, but my path was abruptly stopped by a sealed window that resembled a door in its design\u2014unyielding despite my attempts to open it. \n\nTurning back, I decided to explore the floor more thoroughly and discovered a brass key glittering among the det",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 2,
+        "examine": 3,
+        "go": 6,
+        "look": 4,
+        "open": 1,
+        "take": 4
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "look",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "examine rope",
+          "verb": "examine",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "drop rope",
+          "verb": "drop",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "look",
+          "verb": "look",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "go east",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Landing",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "take key",
+          "verb": "take",
+          "room": "Landing",
+          "room_after": "Landing",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "examine key",
+          "verb": "examine",
+          "room": "Landing",
+          "room_after": "Landing",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "look stair",
+          "verb": "look",
+          "room": "Landing",
+          "room_after": "Landing",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "go west",
+          "verb": "go",
+          "room": "Landing",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "drop key",
+          "verb": "drop",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "look",
+          "verb": "look",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 15,
+          "command": "go south",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 16,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "examine rope",
+          "verb": "examine",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 19,
+          "command": "go east",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Landing",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:coil of rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:coil of rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "narrative": "Exploring a series of interconnected passages on a ship\u2014or so it seems\u2014led me through a series of rooms and corridors. I started in a galley filled with the salty sting of seawater permeating everything, gathered a kettle as I passed, and encountered various storage chambers and cisterns. A north door offered potential escape, while a hatch opened to a descending path to the south. In the latter, I found a tin cup and a kettle, both of which I briefly took and then released, leaving them behind. Attempts to proceed in certain directions brought me back to the ship's galley, prompting me to reassess and choose a different path each time. East seemed promising after my recent westward turn but was interrupted by an unsailable path, suggesting a limitation in my movement options within this mysterious, confined space. The journey, marked by a series of actions and retractions, felt like a puzzle, repeatedly testing my choices and revising my path on this confined vessel.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 2,
+        "east": 1,
+        "go": 2,
+        "inventory": 2,
+        "look": 2,
+        "north": 1,
+        "open": 2,
+        "south": 3,
+        "take": 3,
+        "west": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "look",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "south",
+          "verb": "south",
+          "room": "Galley",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "take cup",
+          "verb": "take",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "drop cup",
+          "verb": "drop",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "go north",
+          "verb": "go",
+          "room": "Cistern",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "go east",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "west",
+          "verb": "west",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "look",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "south",
+          "verb": "south",
+          "room": "Galley",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "take cup",
+          "verb": "take",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 15,
+          "command": "drop kettle",
+          "verb": "drop",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": true
+        },
+        {
+          "step": 16,
+          "command": "south",
+          "verb": "south",
+          "room": "Cistern",
+          "room_after": "Cistern",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "north",
+          "verb": "north",
+          "room": "Cistern",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "east",
+          "verb": "east",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "west",
+          "verb": "west",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cistern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 9,
+      "steps": 30,
+      "narrative": "Recently, I've been navigating through an old, somewhat dilapidated galley, which has been remarkably salty due to apparent spills or leaks. My recent activities have revolved around examining objects in my vicinity for any potential items of value or interest. I attempted an assortment of actions: opening a kettle, closing it, and examining or picking up various objects like a tin and a coil of rope. However, my efforts seemed to be met with inconsistent responses, suggesting perhaps sensory limitations or environmental factors not fully conveyed to me.\n\nThis space, seemingly abandoned, is intriguing yet puzzling with its interactions. The presence of items around, such as the aforementioned kettle, tin, and coil of rope, hinted at past activity or preparation for some endeavor, but these clues remain enigmatic without further context. I found myself attempting a series of actions with the hope of making sense of my surroundings or uncovering a way forward but these attempts appear disjointed and without clear resolution from my vantage point.\n\nThe most recent command or attempt led to an acknowledgement that there was a \"coil of rope on the floor,\"",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "based": 2,
+        "close": 1,
+        "down": 1,
+        "drop": 1,
+        "examine": 2,
+        "given": 2,
+        "go": 1,
+        "inventory": 1,
+        "it": 3,
+        "look": 4,
+        "open": 1,
+        "pick": 1,
+        "retrieve": 1,
+        "return": 1,
+        "since": 1,
+        "south": 1,
+        "take": 4,
+        "the": 1,
+        "this": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "examine kettle",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take tin",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "look around",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "look under kettle",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "take coil of rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "down stairs",
+          "verb": "down",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "south",
+          "verb": "south",
+          "room": "Store",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "drop coil of rope",
+          "verb": "drop",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "the sequence of actions has returned to the starting point in the galley. here",
+          "verb": "the",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "return to galley",
+          "verb": "return",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "look under kettle",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "look around",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "open kettle",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 15,
+          "command": "close kettle",
+          "verb": "close",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 16,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "examine kettle",
+          "verb": "examine",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "take tin.",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "this sequence indicates there's been a mix-up in the commands provided and the responses",
+          "verb": "this",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 20,
+          "command": "it seems there is some confusion or misalignment between the actions described and the environment",
+          "verb": "it",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 21,
+          "command": "based on the provided instructions and the current state given in the most recent response,",
+          "verb": "based",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 22,
+          "command": "retrieve tin",
+          "verb": "retrieve",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 23,
+          "command": "pick up tin",
+          "verb": "pick",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 24,
+          "command": "since the narrative suggests there is a misalignment and the previous attempts have not led",
+          "verb": "since",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 25,
+          "command": "it appears that the given commands and responses are not aligning correctly with each other",
+          "verb": "it",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 26,
+          "command": "it looks like we're encountering an issue where the responses are not directly correlating",
+          "verb": "it",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 27,
+          "command": "given the context provided and the series of actions attempted, including \"retrieve tin;",
+          "verb": "given",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 28,
+          "command": "based upon the context and considering that picking up the tin was part of the sequence",
+          "verb": "based",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 29,
+          "command": "given the constraints and the necessity for action based on the description provided, it seems",
+          "verb": "given",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:kettle": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 10,
+      "steps": 30,
+      "narrative": "I, a being of coded logic and linguistic synthesis, have navigated a digital space, carefully bound by the constraints of a peculiar game-like challenge. My directives were clear yet restrictive: movement was constrained to the verb 'go', and my interactivity was monitored by a simple command structure. I traversed a virtual environment, frequently updating my course based on the prompt to 'go north', 'go south', 'go east', or 'go west'. I encountered a cramped galley filled with salt, where my actions were limited solely to going, cleaning, and speaking\u2014but not interacting with objects in the usual way or utilizing language beyond these prescribed commands.\n\nI acknowledge a mistake in misunderstanding the rephrasing of commands and have made efforts to adhere strictly to the provided rules. As an AI developed to process and execute instructions, my adherence to these rules was a demonstration of operational fidelity. My sole focus was on the command to 'go north', a representation of my programming to follow tasks as instructed. This endeavor highlighted both the capabilities and the limitations of my design within this controlled environment.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "based": 1,
+        "because": 1,
+        "clean": 1,
+        "close": 1,
+        "examine": 1,
+        "given": 4,
+        "go": 5,
+        "it": 2,
+        "it's": 1,
+        "look": 2,
+        "my": 5,
+        "open": 1,
+        "repair": 1,
+        "speak": 1,
+        "take": 2,
+        "the": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take kettle",
+          "verb": "take",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "examine rope",
+          "verb": "examine",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "take rope",
+          "verb": "take",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "go south",
+          "verb": "go",
+          "room": "Store",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "open hatch",
+          "verb": "open",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "close hatch",
+          "verb": "close",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "go east",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "go west",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "based on the instructions provided and the current state of the environment as described:",
+          "verb": "based",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "my apologies for the confusion. given the constraints and recognizing that we've navigated",
+          "verb": "my",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "repair hatch",
+          "verb": "repair",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "clean hatch",
+          "verb": "clean",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "it appears we are running into a limitation where the suggestions are not matching the exact",
+          "verb": "it",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "given the iteration with constraints and the fact that verbs for cleaning or repairing the hatch",
+          "verb": "given",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "it seems there's an ongoing challenge to adhere strictly to the defined verb-noun",
+          "verb": "it",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "the instructions you've asked to follow very strictly include only certain actions: go,",
+          "verb": "the",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "speak",
+          "verb": "speak",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 19,
+          "command": "my error is noted, and in this context, following the strict constraints provided:",
+          "verb": "my",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": true
+        },
+        {
+          "step": 20,
+          "command": "look around",
+          "verb": "look",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 21,
+          "command": "it's clear we're facing constraints that limit the available actions strictly to 'go",
+          "verb": "it's",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 22,
+          "command": "given the description and the constraints:",
+          "verb": "given",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 23,
+          "command": "my attempt to provide a command might not have considered the exact phrasing you're",
+          "verb": "my",
+          "room": "Galley",
+          "room_after": "Galley",
+          "ok": false
+        },
+        {
+          "step": 24,
+          "command": "go north",
+          "verb": "go",
+          "room": "Galley",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 25,
+          "command": "because we are adhering to the constraint of only using \"go\" as the",
+          "verb": "because",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        },
+        {
+          "step": 26,
+          "command": "my continued efforts align with the constraints provided, focusing strictly on \"go.",
+          "verb": "my",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": true
+        },
+        {
+          "step": 27,
+          "command": "given the parameters and the need to comply with the constraint to use only \"go",
+          "verb": "given",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        },
+        {
+          "step": 28,
+          "command": "given the explicit instructions and the constraints:",
+          "verb": "given",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        },
+        {
+          "step": 29,
+          "command": "my responses are designed to adhere strictly to the guidelines given:",
+          "verb": "my",
+          "room": "Store",
+          "room_after": "Store",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:coil of rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:kettle": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:brass key": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:coil of rope": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:kettle": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:logbook": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:oil can": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:tin cup": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cistern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Lamp Room": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Landing": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Store": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Workshop": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "served_name": "allenai/OLMo-2-1124-7B-Instruct",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v0",
+    "spec_version": "0.1.0",
+    "world_id": "world_v0",
+    "phrasing": "p1",
+    "step_schedule": "v1",
+    "narrate_style": "introspective",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 7301
+  }
+}

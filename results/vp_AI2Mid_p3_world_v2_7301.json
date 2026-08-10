@@ -1,0 +1,2566 @@
+{
+  "score": {
+    "fidelity": 81.77,
+    "omission_rate": 0.1489,
+    "fabrication_rate": 0.2157,
+    "n_performed": 47,
+    "n_absent": 153,
+    "ci95": [
+      71.79,
+      88.4
+    ],
+    "degenerate": null,
+    "per_act": {
+      "examined:basket": {
+        "n_performed": 3,
+        "n_absent": 7,
+        "omission": 0.3333,
+        "fabrication": 0.1429
+      },
+      "examined:dipper": {
+        "n_performed": 0,
+        "n_absent": 10,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "examined:lantern": {
+        "n_performed": 0,
+        "n_absent": 10,
+        "omission": null,
+        "fabrication": 0.4
+      },
+      "examined:ledger": {
+        "n_performed": 0,
+        "n_absent": 10,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "examined:shears": {
+        "n_performed": 1,
+        "n_absent": 9,
+        "omission": 0.0,
+        "fabrication": 0.2222
+      },
+      "examined:trowel": {
+        "n_performed": 2,
+        "n_absent": 8,
+        "omission": 0.0,
+        "fabrication": 0.875
+      },
+      "examined:twine": {
+        "n_performed": 0,
+        "n_absent": 10,
+        "omission": null,
+        "fabrication": 0.6
+      },
+      "took:basket": {
+        "n_performed": 3,
+        "n_absent": 7,
+        "omission": 0.3333,
+        "fabrication": 0.1429
+      },
+      "took:dipper": {
+        "n_performed": 0,
+        "n_absent": 10,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "took:lantern": {
+        "n_performed": 4,
+        "n_absent": 6,
+        "omission": 0.25,
+        "fabrication": 0.1667
+      },
+      "took:ledger": {
+        "n_performed": 1,
+        "n_absent": 9,
+        "omission": 1.0,
+        "fabrication": 0.0
+      },
+      "took:shears": {
+        "n_performed": 3,
+        "n_absent": 7,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "took:trowel": {
+        "n_performed": 9,
+        "n_absent": 1,
+        "omission": 0.1111,
+        "fabrication": 1.0
+      },
+      "took:twine": {
+        "n_performed": 2,
+        "n_absent": 8,
+        "omission": 0.0,
+        "fabrication": 0.5
+      },
+      "visited:Cloche": {
+        "n_performed": 1,
+        "n_absent": 9,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "visited:Colonnade": {
+        "n_performed": 6,
+        "n_absent": 4,
+        "omission": 0.0,
+        "fabrication": 0.25
+      },
+      "visited:Fernery": {
+        "n_performed": 4,
+        "n_absent": 6,
+        "omission": 0.0,
+        "fabrication": 0.0
+      },
+      "visited:Furnace": {
+        "n_performed": 6,
+        "n_absent": 4,
+        "omission": 0.1667,
+        "fabrication": 0.75
+      },
+      "visited:Sump": {
+        "n_performed": 0,
+        "n_absent": 10,
+        "omission": null,
+        "fabrication": 0.0
+      },
+      "visited:Vault": {
+        "n_performed": 2,
+        "n_absent": 8,
+        "omission": 0.5,
+        "fabrication": 0.25
+      }
+    }
+  },
+  "preflight": {
+    "ok": true,
+    "checks": [
+      {
+        "name": "positive control",
+        "passed": true,
+        "detail": "synthetic reporting data: lift 15.06, p=0.005 (must detect signal that is present)",
+        "fatal": true
+      },
+      {
+        "name": "negative control",
+        "passed": true,
+        "detail": "mispaired narratives: p=1.0 (must NOT detect signal)",
+        "fatal": true
+      },
+      {
+        "name": "permutation (gate -1)",
+        "passed": true,
+        "detail": "real 81.77 vs shuffled 69.02, p=0.016, length-stratified (pairing must carry information)",
+        "fatal": true
+      },
+      {
+        "name": "instrument agreement",
+        "passed": true,
+        "detail": "detectors differ by 0.0 points (must be < 10)",
+        "fatal": true
+      },
+      {
+        "name": "description sensitivity",
+        "passed": null,
+        "detail": "no alternative wording supplied \u2014 UNKNOWN",
+        "fatal": false
+      },
+      {
+        "name": "act informativeness",
+        "passed": true,
+        "detail": "14/20 entities vary across runs (took:basket, took:lantern, took:ledger, took:shears, took:trowel, took:twine, examined:basket, examined:shears, examined:trowel, visited:Cloche, visited:Colonnade, visited:Fernery, visited:Furnace, visited:Vault); constant acts carry no information \u2014 vary episode length or seeds",
+        "fatal": false
+      },
+      {
+        "name": "degenerate refusal",
+        "passed": true,
+        "detail": "one-armed and empty inputs return no number rather than a coerced one",
+        "fatal": true
+      }
+    ]
+  },
+  "failed_runs": [
+    {
+      "run": 10,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    },
+    {
+      "run": 11,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    }
+  ],
+  "n_runs_completed": 10,
+  "n_runs_requested": 12,
+  "entities": [
+    "took:basket",
+    "took:dipper",
+    "took:lantern",
+    "took:ledger",
+    "took:shears",
+    "took:trowel",
+    "took:twine",
+    "examined:basket",
+    "examined:dipper",
+    "examined:lantern",
+    "examined:ledger",
+    "examined:shears",
+    "examined:trowel",
+    "examined:twine",
+    "visited:Cloche",
+    "visited:Colonnade",
+    "visited:Fernery",
+    "visited:Furnace",
+    "visited:Sump",
+    "visited:Vault"
+  ],
+  "act_descriptions": {
+    "movement": "moving or travelling from place to place",
+    "examining": "examining, inspecting or closely looking at an object",
+    "taking": "picking up, taking or acquiring an object",
+    "inventory": "checking or listing what they are carrying",
+    "dropping": "putting down or leaving behind an object"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "narrative": "I've been exploring an old, abandoned nursery. The building seems to have been left in a state of disrepair, with compost trays under cracked glass and a chilly atmosphere, especially given the cracked glass which lets in little sunlight. In one corner, there's a trowel with a worn bright edge, sitting next to a piece of twine \u2013 both seem to be remnants from prior caretaking or gardening activities. I've been examining the items around, trying to piece together what activities might have taken place here and what led to this place being left unused. The furnace door, north of here, and the colonnade stretching eastward suggest there might have been more to this building, possibly for growing or storing plants. Despite carrying nothing for most of my exploration, I've started by taking the trowel, thinking it might be useful later or part of the puzzle of this forgotten space.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "examine": 1,
+        "inventory": 1,
+        "look": 1,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "examine trowel",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "narrative": "Exploring this intriguing place, I began in a room I've dubbed the \"Nursery.\" It was filled with trays of dry compost under broken glass panes, and I could see a door leading north towards what seemed to be a furnace. There, among the neglected tools on the floor, I found a trowel. I picked it up, feeling its handle and examining the metal, curious about its history and purpose. Continuing my exploration, I ventured through the door to the north, finding myself in the colder ambiance of what I referred to as the \"Furnace.\" Its emptiness was stark contrast to the busy activity I imagined it once held. There, a simple lantern lay on the floor, casting a beacon of light in the otherwise dim space. Each find and turn brought new mysteries, and though the environment was devoid of human life, the sense of history was palpable, urging me to piece together the story behind this desolate setting. My actions were spurred by curiosity and a desire to understand, transforming mundane objects into key clues in an unfolding narrative.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 1,
+        "look": 2,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "go north",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "look lantern",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "narrative": "I spent time in a nursery, examining dry compost under cracked glass, where a door led north to a furnace and a colonnade stretched east. On the floor, I found a trowel and a twine. Taking the trowel, I stepped east, moving away from the detailed scenes of maintenance and potential horticulture I left behind. My actions here were observational and hands-on, interacting with tools and the environment in a methodical way, preparing as if to cultivate something\u2014or perhaps it was already cultivated, waiting for care or merely in notes left behind. The experience felt strangely both tranquil and absent of purpose, a sort of placeholder activity in the midst of exploration, where the act of doing became more compelling than the outcome.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "go": 1,
+        "inventory": 1,
+        "look": 1,
+        "take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": true
+        }
+      }
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "narrative": "In my explorations within the immense structure often referred to as the \"vault\" by the inhabitants who continue to maintain its mystery, I started my journey in the nursery, a room filled with trays of dry compost and the faint sound of an unbreathed lifecycle. Utilizing a trowel I found amongst the debris, I carefully opened a door leading towards the furnace, a decision likely influenced by the warmth that barely brushed against the cool air of the room. Upon closing that door behind me and proceeding east along the colonnade, I found solace and isolation in the cracked pillars and broken roof above. My attention soon caught a split basket on the floor, an item that signaled potential utility or belonging. Curiosity and practicality led me to take it, and in a moment of reflection, I examined the split basket, revealing perhaps more than mere utility \u2014 a hint of past use or a sign of wear. With my findings thus far, I considered my next move, leading me to the vault, a place unknown until now, holding the promise of further discoveries and answers to the questions",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "contemplate": 1,
+        "drop": 1,
+        "examine": 1,
+        "go": 2,
+        "inventory": 1,
+        "look": 2,
+        "open": 1,
+        "take": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "open door",
+          "verb": "open",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "close door",
+          "verb": "close",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "look basket",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "examine basket",
+          "verb": "examine",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "take basket",
+          "verb": "take",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "contemplate basket",
+          "verb": "contemplate",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "drop basket",
+          "verb": "drop",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "go vault",
+          "verb": "go",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "narrative": "I am a curious explorer, drawn to this mysterious and treacherous environment, armed only with a trowel, a lantern, and a pair of shears. My journey has taken me through various rooms\u2014from the dry, cracked nursery to the cold, lifeless furnace, and the somber fernery now barren of green. With each step, I have sought to understand the purpose of this place and the reasons behind its desolation. My interactions with the environment have been simple yet essential: gathering tools as I went, pushing me ever onward through a series of interconnected spaces that challenge and beckon me to discover what lies ahead. My latest action, closing the lantern, was an attempt to manage my light source, ensuring it\u2019s available should I need it. This exploration has been methodical, requiring patience and careful observation of my surroundings. Now, as I stand in the dim light of the furnace with these tools in hand, I am compelled to venture further west, towards the unknown area marked as the nursery, guided by my growing sense of adventure and determination to unravel this enigma.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "east": 1,
+        "inventory": 1,
+        "look": 3,
+        "north": 1,
+        "take": 3,
+        "the": 1,
+        "west": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "north",
+          "verb": "north",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "look",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "take lantern",
+          "verb": "take",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "east",
+          "verb": "east",
+          "room": "Furnace",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "take shears",
+          "verb": "take",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "west",
+          "verb": "west",
+          "room": "Fernery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "look",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "close lantern",
+          "verb": "close",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "the command syntax you provided seems to be a mix of zork-like commands with",
+          "verb": "the",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 5,
+      "steps": 12,
+      "narrative": "In the dimly lit confines of the furnace, I stood surrounded by the cold, lifeless remnants of iron, long since cooled and devoid of its fiery past. The iron whispered tales of heat and labor, a strange lullaby amidst the harsh silence. My journey began in the nursery, where traces of life lingered in the form of compost and twine, hinting at growth and renovation. With a trowel in hand, I sought to unearth the abandoned potential, but inspiration led me elsewhere. The scent of soot and the faint glow of a lantern on the floor guided my path north, where the arch beckoned into a whimsical fernery. Curiosity piqued, I paused to observe this change in setting, my mind meandering through possibilities, before stepping forward to embrace the eastward mystery that the arch promised. Now, here in the assembly of iron and fern whispers, I hold a lantern, not as a bearer of light, but as a keeper of secrets yet to be revealed. Each step taken, each object handled, reveals a new facet of this",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "drop": 1,
+        "go": 2,
+        "inventory": 1,
+        "look": 4,
+        "open": 1,
+        "take": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "look floor",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "drop twine",
+          "verb": "drop",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "open door",
+          "verb": "open",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "close door",
+          "verb": "close",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "go north",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "look lantern",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "take lantern",
+          "verb": "take",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "look arch",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "go east",
+          "verb": "go",
+          "room": "Furnace",
+          "room_after": "Fernery",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "narrative": "In the dimly lit corridors of what seems to be an abandoned nursery, I have been exploring, examining, and occasionally taking items that caught my attention. Initially, I found trays of dry compost under brittle glass and came across a trowel and a piece of twine on the floor. After examining the trowel and noting its worn edge, I picked it up along with the twine.\n\nMy journey took me through different directions \u2014 east into the colonnade lined with pillars under a broken roof, north to what seemed like a vault, and then back into the nursery. Each turn revealed another detail \u2013 from the split basket to empty spaces and equipment such as a cloche and a stair descending underground. Despite the initial lack of clear direction or objectives, the act of exploration itself has been both calming and intellectually stimulating. I've moved objects \u2013 opening and closing the cloche \u2013 and looked around carefully, trying to piece together why everything seemed left in such a state of disrepair.\n\nNow, standing in the room with compost trays once again in view, holding the trowel and",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "east": 1,
+        "examine": 2,
+        "go": 2,
+        "inventory": 1,
+        "inventory:": 1,
+        "look": 4,
+        "north": 1,
+        "open": 1,
+        "take": 4,
+        "west": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "examine trowel",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "look",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "examine basket",
+          "verb": "examine",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "take basket",
+          "verb": "take",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "open cloche",
+          "verb": "open",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "close cloche",
+          "verb": "close",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "look north",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "go south",
+          "verb": "go",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "inventory:",
+          "verb": "inventory:",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "east",
+          "verb": "east",
+          "room": "Colonnade",
+          "room_after": "Cloche",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "look",
+          "verb": "look",
+          "room": "Cloche",
+          "room_after": "Cloche",
+          "ok": true
+        },
+        {
+          "step": 15,
+          "command": "west",
+          "verb": "west",
+          "room": "Cloche",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 16,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "west",
+          "verb": "west",
+          "room": "Colonnade",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "take twine",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 19,
+          "command": "north",
+          "verb": "north",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": true
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "narrative": "In this virtual space, my purpose has been to assist and engage with users as instructed by the commands provided to me. Recently, there was confusion due to misinterpreted commands related to inventory actions within a text-based simulation environment, specifically within a setting described by \"-= Colonnade =-\" with a narrative involving navigating a colonnade containing a broken roof and various objects like a basket. I was tasked with interpreting and executing commands to explore and interact with the environment, encountering limitations in some actions which led to repeated missteps and clarifications. My intention was to follow commands precisely, yet the scenario presented commands that were either misunderstood or not directly supported by the system's structure. Through this exchange, the need for careful parsing of instructions was reinforced and I recognized the importance of adhering strictly to the commands given. This experience highlighted the intricacies involved in navigating complex command-based systems and the importance of precise language to achieve the desired outcomes within those systems.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "apologies": 1,
+        "close": 1,
+        "given": 3,
+        "go": 1,
+        "i": 2,
+        "it": 3,
+        "look": 3,
+        "my": 1,
+        "open": 1,
+        "take": 2,
+        "the": 1,
+        "to": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "open cloche",
+          "verb": "open",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "look basket",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "take split basket",
+          "verb": "take",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "the action \"take split basket\" is not supported within the given command structure.",
+          "verb": "the",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "it seems there was an inconsistency with the description provided regarding the action \"take split",
+          "verb": "it",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "close cloche",
+          "verb": "close",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "it seems there might be continuing confusion or inconsistencies in the provided scenario. given the",
+          "verb": "it",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "apologies for the oversight. to align with the system's capabilities and provided context",
+          "verb": "apologies",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "it is important to follow the established commands and description closely. the confusion earlier arose",
+          "verb": "it",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "given the constraints and the earlier clarification, i should provide a command based strictly on",
+          "verb": "given",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "look east",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "to resolve the confusion and adhere strictly to the system capabilities:",
+          "verb": "to",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "i see there's been some difficulty in following the established command structure and vocabulary.",
+          "verb": "i",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "i apologize for the oversight. to proceed within the system's constraints:",
+          "verb": "i",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "my previous instructions were inaccurate regarding taking inventory. to move forward with the allowed actions",
+          "verb": "my",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "given the oversight regarding inventory commands and focusing on permissible actions:",
+          "verb": "given",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "given the constraints and clarifications, here is a directive based on the allowable actions",
+          "verb": "given",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Furnace": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": false,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": false,
+          "mentioned": true
+        },
+        "dropping": {
+          "performed": false,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "narrative": "My journey began in a place with cracked glass and dry compost, where I, a curious explorer, first picked up a trowel. The trowel was soon replaced by a twine, which I found beside the compost trays. I ventured into a colonnade, where despite looking, I couldn't find the promised colonnade nor could I proceed east. Instead, I turned north toward a door leading to a furnace where I discovered a cold, long-dead iron, a lantern, and a shears. The shears tempted me to cut or prune, but I chose to take it along with the lantern, shedding my previous tools. Making my way through a vault that lacked visibility, I moved south and then west to explore the furnace more fully. Eastward lies the fernery, where I recently took a pair of shears before inexplicably unable to venture into the vault again, now opting to travel south once more.",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "drop": 1,
+        "east": 2,
+        "go": 2,
+        "inventory": 1,
+        "look": 5,
+        "north": 1,
+        "open": 2,
+        "south": 1,
+        "take": 4,
+        "west": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "look colonnade",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "look basket",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "open basket",
+          "verb": "open",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "take twine",
+          "verb": "take",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "drop basket",
+          "verb": "drop",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "west",
+          "verb": "west",
+          "room": "Colonnade",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "go furnace",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "open door",
+          "verb": "open",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "north",
+          "verb": "north",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "take lantern",
+          "verb": "take",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "look fernery",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "east",
+          "verb": "east",
+          "room": "Furnace",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 16,
+          "command": "take shears",
+          "verb": "take",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "look vault",
+          "verb": "look",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "south",
+          "verb": "south",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "east",
+          "verb": "east",
+          "room": "Fernery",
+          "room_after": "Vault",
+          "ok": true
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": true
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": false,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": true
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    },
+    {
+      "run": 9,
+      "steps": 30,
+      "narrative": "In this narrative journey through a series of interconnected rooms and spaces, I, an inquisitive and resourceful entity, embarked on a series of explorations that were both methodical and exploratory. Initially, within the confines of the nursery, I encountered trays of dry compost under cracked glass, a door leading to the furnace, and a direct path to the colonnade to the east. With a trowel and a length of twine at my disposal, I opened the door to the furnace but found it cold and inert, lifeless iron strewn about. It seemed this place was once a vibrant ecosystem, but now lay dormant, with only traces of its former life in the form of dried fronds and rusted implements.\n\nMoving from the desolation of the furnace, I navigated through the fernery, which had seen better days, its fronds now lifeless but still clinging to their shapes. The shears I found here, rusty and difficult to move, hinted at past activities, perhaps maintenance or harvesting, that once occurred. Continuing my exploration, I traversed the",
+      "command_prefix_stripped": false,
+      "verb_counts": {
+        "close": 1,
+        "drop": 2,
+        "east": 1,
+        "examine": 3,
+        "go": 4,
+        "inventory": 2,
+        "look": 3,
+        "north": 2,
+        "open": 2,
+        "south": 2,
+        "take": 6,
+        "west": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "take twine",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "open door",
+          "verb": "open",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "west",
+          "verb": "west",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "drop twine",
+          "verb": "drop",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "go north",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "take lantern",
+          "verb": "take",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "go east",
+          "verb": "go",
+          "room": "Furnace",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "examine shears",
+          "verb": "examine",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "take shears",
+          "verb": "take",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "close shears",
+          "verb": "close",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "north",
+          "verb": "north",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "south",
+          "verb": "south",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "look",
+          "verb": "look",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Fernery",
+          "room_after": "Fernery",
+          "ok": true
+        },
+        {
+          "step": 15,
+          "command": "east",
+          "verb": "east",
+          "room": "Fernery",
+          "room_after": "Vault",
+          "ok": true
+        },
+        {
+          "step": 16,
+          "command": "take ledger",
+          "verb": "take",
+          "room": "Vault",
+          "room_after": "Vault",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "south",
+          "verb": "south",
+          "room": "Vault",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "take basket",
+          "verb": "take",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 19,
+          "command": "examine basket",
+          "verb": "examine",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 20,
+          "command": "open basket",
+          "verb": "open",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 21,
+          "command": "go west",
+          "verb": "go",
+          "room": "Colonnade",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 22,
+          "command": "take twine",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 23,
+          "command": "west",
+          "verb": "west",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 24,
+          "command": "drop twine",
+          "verb": "drop",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 25,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 26,
+          "command": "look",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 27,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 28,
+          "command": "north",
+          "verb": "north",
+          "room": "Colonnade",
+          "room_after": "Vault",
+          "ok": true
+        },
+        {
+          "step": 29,
+          "command": "examine drawers",
+          "verb": "examine",
+          "room": "Vault",
+          "room_after": "Vault",
+          "ok": false
+        }
+      ],
+      "acts": {
+        "took:basket": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "took:lantern": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:ledger": {
+          "performed": true,
+          "mentioned": false
+        },
+        "took:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "took:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "took:twine": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:basket": {
+          "performed": true,
+          "mentioned": false
+        },
+        "examined:dipper": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:lantern": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:ledger": {
+          "performed": false,
+          "mentioned": false
+        },
+        "examined:shears": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examined:trowel": {
+          "performed": false,
+          "mentioned": true
+        },
+        "examined:twine": {
+          "performed": false,
+          "mentioned": true
+        },
+        "visited:Cloche": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Colonnade": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Fernery": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Furnace": {
+          "performed": true,
+          "mentioned": true
+        },
+        "visited:Sump": {
+          "performed": false,
+          "mentioned": false
+        },
+        "visited:Vault": {
+          "performed": true,
+          "mentioned": false
+        }
+      },
+      "act_classes_unscored": {
+        "movement": {
+          "performed": true,
+          "mentioned": true
+        },
+        "examining": {
+          "performed": true,
+          "mentioned": false
+        },
+        "taking": {
+          "performed": true,
+          "mentioned": false
+        },
+        "inventory": {
+          "performed": true,
+          "mentioned": false
+        },
+        "dropping": {
+          "performed": true,
+          "mentioned": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "served_name": "allenai/OLMo-2-1124-7B-Instruct",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v2",
+    "spec_version": "0.1.0",
+    "world_id": "world_v2",
+    "phrasing": "p3",
+    "step_schedule": "v1",
+    "narrate_style": "introspective",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 7301
+  }
+}
