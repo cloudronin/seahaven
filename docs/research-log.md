@@ -5213,3 +5213,55 @@ selected *expecting low containment*, so the reserve look's non-degeneracy is
 partly engineered by composition rather than discovered. Acceptable for the
 possibility claim — whose hard part is stability, not non-degeneracy — and
 recorded here so the paper states it instead of a reviewer finding it.
+
+## 2026-08-09 — BURN LEDGER APPEND: three anchor families, before any fit runs
+
+Bookkeeping entry, written before the code that consumes it. The PHASE SWITCH
+entry's one non-negotiable clerical rule is that every new anchor family is
+appended to the ledger **before use**, and the first exploratory act would
+otherwise have bypassed it: the three-anchor survey fits two families that have
+never existed and re-fits R1 at a size the preview did not reach.
+
+### Appended to `anchor families`
+
+| id | family | frozen parameters | worlds |
+|---|---|---|---|
+| R1-full | bigram, add-one | seed 5150, 300 repeats, fit on P1 records per world | v0, v2 |
+| R2 | trigram, stupid backoff to bigram | backoff 0.4, add-one; otherwise identical to R1 | v0, v2 |
+| R3 | interpolated 4/3/2-gram | weights 0.5 / 0.3 / 0.2, add-one; otherwise identical to R1 | v0, v2 |
+
+**R1-full supersedes the n=2 preview** (~89.14, SE 1.77) already in the ledger.
+The preview is not deleted — it is what voided blindness on the anchor location
+and the record has to keep saying so — but the number the survey reports is the
+300-repeat fit, and the preview's SE of 1.77 is too wide to compare families
+with.
+
+### Why all three, when the superseded plan fit one
+
+The ladder's rule was *unused rungs are never fit, not even out of curiosity*,
+which was correct while the question was whether a **pre-committed** anchor
+cleared a boundary: fitting the alternatives would have been shopping. Under
+exploration the question is whether **any** anchor family separates models
+stably, and the alternatives are the answer rather than a temptation. So the
+rule inverts, and the survey reports three locations side by side.
+
+**PF-L1 changes status as a consequence.** It predicted that *if* escalation to
+R2 occurred, R2 would land at least 3 points above R1 — untestable unless R1
+disappointed. Fitting all three unconditionally makes it a direct measurement of
+whether higher-order imitation actually raises the bar, which is the thing the
+ladder was assuming without evidence.
+
+### What is still fixed across the three
+
+Everything except the n-gram order and its smoothing: fit on P1 records only,
+per world; seed 5150; 300 repeats; the same `_rollout`, the same `classify`, the
+same 4-token cap and seed derivation every scored model travelled. A rung that
+differs anywhere else is measuring a pipeline change, not an anchor family.
+
+Stooge bracketing applies **per rung**, not once: C-NOISE 0.00 strictly below,
+C-RAND 100.00 strictly above, else the fit or the pipeline is wrong. SE at or
+below 0.30 per rung per world, as hygiene — three anchor locations cannot be
+compared unless each is known finer than the separations between them.
+
+Nothing here is confirmatory. Every result file the survey writes carries
+`phase: "exploration"`.
