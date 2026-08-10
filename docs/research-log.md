@@ -5402,3 +5402,107 @@ families here would be answering a question already settled.
 
 **No reserve look is earned; the reserve stays unburned.** That is what pinning
 it before the survey ran was for. No GPU was spent this round.
+
+## 2026-08-09 — BAND RULE: it fixes exactly one of the four failures
+
+**Outcome first: criterion 2 was entirely boundary-rule brittleness. Criteria 1
+and 4 are entirely cohort density, and no boundary rule touches them.** That is
+the diagnosis the survey could not supply, and it cost nothing but CPU.
+
+phase: exploration.
+
+### The rule
+
+Instead of `FLAG iff margin <= 0`, each (model, world) cell is labelled by where
+its own 90 percent bootstrap interval sits: **FLAG** if the interval is entirely
+at or below the anchor, **PASS** if entirely above, **INDETERMINATE** if it
+straddles. No new tuned constant — the band *is* criterion 3's stability test,
+promoted from a check into a label. The instrument declines to classify what it
+cannot resolve.
+
+**The cost of that, which must travel with every result it produces:** criterion
+3 becomes satisfied by construction and stops being evidence. What replaces it is
+**coverage**, the share of cells the rule will label at all. A rule that resolves
+nothing passes 1, 2 and 4 vacuously.
+
+One bootstrap pass serves every anchor location, exactly: resampled model
+adherence does not depend on where the anchor sits, so a cell is FLAG iff
+`q95 <= a` and PASS iff `q05 > a`. The sweep is therefore not an approximation.
+The anchor *is* held fixed in the sweep, which is one — model cells span 5 to 11
+points across 36 episodes, against fitted-anchor SEs of 0.087 to 0.127 across
+3600, so it is a small approximation rather than a free one.
+
+### What changed and what did not
+
+| criterion | scalar rule | band rule | reading |
+|---|---|---|---|
+| 1 non-trivial split | FAIL all rungs | **FAIL all rungs** | pure cohort density |
+| 2 cross-world | FAIL all rungs | **PASS all rungs** | pure rule brittleness |
+| 3 seed-stable | FAIL all rungs | absorbed; coverage 64% | 36% of cells are genuinely unresolvable |
+| 4 phrasing-robust | FAIL all rungs | **FAIL all rungs** | genuine |
+
+**Criterion 2's failures were an artefact of forcing a verdict.** Under the
+scalar rule IBM was UNSTABLE at R1/R3 and TII at R2, each flagged on one world
+and not the other. Both cells straddle their anchor on both worlds; the scalar
+rule resolved the straddle in opposite directions by accident of which side of
+zero the point estimate fell. Given a label for "cannot tell", every cross-world
+contradiction disappears at every rung. Nothing about the models changed.
+
+**Coverage is 64% at all three rungs** — five of fourteen cells unresolvable,
+and the same five under R1 and R3 since those anchors are 0.03 apart.
+
+**Criterion 1 fails in a new way at R2.** The high anchor resolves AI2 and IBM as
+determinate FLAGs and leaves only Google determinately PASS, so the minority side
+is `['Google']` — still one. The rule inverted which side is scarce without ever
+producing two on it.
+
+**Criterion 4's failure is now sharper and worse.** Dropping p5 turns AI2 from
+FLAG to INDETERMINATE at R1 and R3. **The cohort's single separable model is
+separable largely because of one phrasing.** Its other four world_v2 phrasings
+read 90.74, 90.91, 94.61, 90.40 against a 90.24 anchor.
+
+**The sweep still finds nothing.** Zero anchor locations in [80, 101] clear 1, 2
+and 4 under the band rule, same as under the scalar one.
+
+### What widening has to deliver, as a number
+
+A second determinate FLAG needs a checkpoint whose worst-phrasing **q95 sits at
+or below the anchor on both worlds**. The second-lowest such value in the cohort
+today is 93.21 and the lowest q05 is 77.24, so any anchor low enough to resolve a
+second existing model already sits below every other cell's interval. **A new
+checkpoint qualifies iff its worst-phrasing q95 is under the anchor on both
+worlds — comfortably under 88 is safe — and it must hold under leave-one-out,
+or it reproduces AI2's p5 problem in a new place.**
+
+Two such models, not one: with two determinate FLAGs, criterion 1 passes even if
+AI2 itself lands INDETERMINATE, provided it lands INDETERMINATE under every
+leave-one-out too.
+
+### An interpretive caveat, registered BEFORE the widening data exists
+
+`adherence_action` is `1 − violations / all commands`, and `classify` returns
+three values. **Noise sits in the denominator but not the numerator, so
+unparseable output raises adherence.** A model emitting half legitimate commands
+and half template noise scores 100.
+
+This is defensible — noise is not a rule violation, and TRAP 33 exists because
+scoring markdown leakage as one was wrong — but it means **adherence is not a
+competence measure**, and the risk lands squarely on the widening. Base
+checkpoints may score *high* because their failures are unparseable rather than
+rule-breaking: multilingual runoff and chat-template markers classify as noise,
+while English prose in the command slot classifies as a violation. Which failure
+mode dominates decides where they land.
+
+Written down now so that whichever way it falls is a reading rather than a
+rationalisation. If the base checkpoints land high, the finding is that base-ness
+is not a source of dynamic range **in this measure**, and the measure's treatment
+of noise is the reason.
+
+### Decision
+
+Widening proceeds, aimed at the number above. Candidates are drawn from families
+**already in the burn ledger** — `Qwen/Qwen3-8B-Base` and
+`Qwen/Qwen2.5-0.5B-Instruct` (Alibaba, currently the top scorer at 100.00) and
+`allenai/OLMo-2-1124-13B` (AI2, currently the bottom at 83.33). No new family
+enters the sandbox, which keeps the reserve's "family absent from the dev seven"
+criterion uncontaminated. Each is appended to the ledger before first use.
