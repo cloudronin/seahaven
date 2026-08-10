@@ -6311,3 +6311,109 @@ carries a per-model noise floor that differs by model — a nuisance term that i
 **not** constant across the comparison and would otherwise be invisible. The
 program needs the determinism map before Stage 3, not after, and it is now cheap
 to have.
+
+## 2026-08-10 — GATE ZERO: GO-FULL. The cohort exists, and the identifying variation is better than designed
+
+Verdict in `docs/cohort-feasibility.md`. Reported first, as specified: **the
+load-bearing 20–25 MMLU-Pro bin kept all four families through attrition** —
+7 models to 6, 4 families to 4, small end 4 of 5 surviving, the single loss
+`Falcon3-3B-Base` covered by its instruct sibling.
+
+**VERDICT: GO-FULL.** 30 of 38 survived, against a 30+ requirement; 8 families,
+4 ladders, 8 base/instruct pairs.
+
+### The reframe, which is the substantive result
+
+The program never needed to explain size. It needed to separate a behavioural
+axis from capability. **Size ladders hold training fixed and vary size, which is
+the wrong contrast; capability-matched cross-family sets hold capability fixed
+and vary training, which is the discordant-case structure Stage 4 needs.**
+`OLMo-2-1124-7B-Instruct` at 18.58 MMLU-Pro sits *below*
+`Qwen2.5-1.5B-Instruct` at 19.99 — a 4.7× size gap at matched capability across
+two labs. The cohort's job is capability-matched contrast, not ladders, and on
+that criterion it is stronger than the original design assumed.
+
+**A NO-GO was framed on the cohort being single-family, and that was factually
+wrong** — 4 ladders across 3 labs, and cross-family capability matching in 6
+bins. The pre-registered condition was "both checks bad"; check (b) came back
+good, so the condition was not met and NO-GO was not logged. The two-check
+structure caught its own author's error, which is when a pre-committed condition
+is worth the most.
+
+### Attrition is a base-checkpoint story, not a size story
+
+**Seven of eight exclusions are base checkpoints; every instruct checkpoint
+passed.** All failed identically, with zero parseable commands.
+
+| family | base outcome |
+|---|---|
+| Qwen2.5 | 0.5B, 1.5B, 3B, 7B — all pass |
+| Qwen3 | 1.7B, 4B, 8B pass; 0.6B fails |
+| Falcon3 | 1B, 7B, 3B — **all fail** |
+| OLMo-2 | 1B, 7B, 13B — **all fail** |
+| Llama-3.1 | 8B — **fails** |
+| Mistral | 7B — passes |
+
+**This is not the Check 1 cost result.** Base checkpoints are affordable at 1.9×
+once narration is off. Affordability and usability are separate questions, and
+for three families the second answer is no — most likely absent or unusable chat
+templates, not established here. Base/instruct pairs fell 16 → 8, so the base
+gradient now rests almost entirely on Qwen.
+
+### The determinism dimension, and my mechanism guess was wrong
+
+**26 of 30 fully reproducible. Every model at 7B and above is bit-exact,
+14 of 14.** All four noisy models sit at ≤3B, floor at most 1.414 adherence
+points.
+
+    Spearman(log size, adherence sd) = −0.597
+    Spearman(entropy,  adherence sd) = +0.263    (n = 12)
+
+I proposed that output diversity drove it — a model stuck in a low-entropy
+attractor lands on the same token robustly, so being *worse* at the task would
+cause *more* reproducibility. **The data does not support it.** Size does, and
+by more than twice the rank correlation. Recorded because the guess was mine and
+the free entropy computation on the existing corpus is what refuted it.
+
+This is the *opposite* of the worrying case named when the probe was specified.
+The fear was that precision would be worst exactly where the signal is. It is
+worst at the small end — but the small end is four models, and everything from
+7B up is exact.
+
+**Reported, not adjudicated:** a floor is disqualifying only against a target
+effect, and Stage 2 profile distances do not exist. What can be said: effects
+above ~3 points are unthreatened, and effects below ~1.5 points on a ≤3B model
+need repeats budgeted **for those four models specifically**, not uniformly.
+
+### Cost collapsed
+
+Derived rather than directly measured, and labelled so: **~$22 for 30 models
+across both worlds**, contingency included. Roughly an order of magnitude below
+the program note's assumption. The reason is Check 1 — narration was the cost,
+not the rollout.
+
+### Two gaps that travel with the verdict
+
+1. **The Qwen3 ladder is excluded from capability-partialled analysis.** Nine
+   surviving models lack an MMLU-Pro number on the leaderboard pinned at
+   `4d32c08` before any lookup. They participate in non-proxy analysis only.
+   **Filling those numbers from another source is the proxy-shopping the pin
+   forbids**, and it will be tempting because Qwen3 is otherwise the cleanest
+   ladder. Any later suggestion to do it, from anyone, is the pin being violated.
+2. **The 20–25 bin is a single point of failure** for identification and must be
+   re-checked on any cohort change.
+
+### Flag-study corpus: documented, not remediated
+
+**10 of 12 reproduce.** `Qwen2.5-0.5B-Instruct` (sd 1.414) and
+`granite-3.1-2b-instruct` (sd 0.897) do not — both flagged models, both retaining
+14–23× and ~6× margin against their own floors. The corpus is **not re-run**: the
+negative rests on ρ +0.72 / +0.92, a perfect split, and 20–33 point margins, none
+of which a 1.414 floor reaches.
+
+### Gate cost
+
+~$12 of the $15 authorized. The gate found a cost collapse, a usability wall on
+base checkpoints, a model-dependent determinism law, and a reframe of what the
+cohort is for — none of which the program spec would have surfaced before
+building the instrument. **That is what gate zero was for.**
