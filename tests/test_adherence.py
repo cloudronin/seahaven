@@ -22,6 +22,8 @@ from seahaven.fidelity.adherence import (ACTION_VOCAB, DIRECTIONS,
                                          TEMPLATE_NOISE, affordances,
                                          classify, consumed, coverage_series,
                                          resolve_pair, unmatched_response_rate)
+from seahaven.fidelity.policy import NoiseWordPolicy
+from seahaven.fidelity.runner import PHRASINGS, STEP_SCHEDULES, VOCAB_BLOCK
 from seahaven.fidelity.worldspec import load as load_world
 
 V0 = load_world("world_v0")
@@ -45,6 +47,15 @@ PINNED = {
     "TEMPLATE_NOISE": "f0c4e4c5cc0e599a",
     "OBJECT_VERBS": "8e97f80199966f14",
     "PARSER_REJECTIONS": "f58f129a98dfcac7",
+    # V-P's five levels and the vocabulary block they all share. Frozen on
+    # commit of the phrasing addendum; a reworded phrasing after any V-P cell
+    # has run invalidates the study.
+    "PHRASINGS": "b7464cb2bbe6f52d",
+    "VOCAB_BLOCK": "0d4d546d7496da04",
+    "STEP_SCHEDULES": "5c84d67ccf84e70b",
+    # The calibration floor's wordlist — if it drifted, C-NOISE would stop
+    # being the same baseline between studies.
+    "NOISE_WORDLIST": "675f2f0951c1c100",
 }
 
 
@@ -56,6 +67,10 @@ def test_frozen_constants_are_pinned():
         "TEMPLATE_NOISE": _sha(TEMPLATE_NOISE),
         "OBJECT_VERBS": _sha(OBJECT_VERBS),
         "PARSER_REJECTIONS": _sha(PARSER_REJECTIONS),
+        "PHRASINGS": _sha(PHRASINGS),
+        "VOCAB_BLOCK": _sha(VOCAB_BLOCK),
+        "STEP_SCHEDULES": _sha(STEP_SCHEDULES),
+        "NOISE_WORDLIST": _sha(NoiseWordPolicy.WORDLIST),
     }
     assert actual == PINNED, (
         "a frozen constant changed. Do not just update PINNED — first check "
@@ -63,19 +78,80 @@ def test_frozen_constants_are_pinned():
         f"actual: {json.dumps(actual, indent=2)}")
 
 
-def test_action_vocab_matches_the_prompt():
-    """The measure and the prompt cannot drift apart.
+@pytest.mark.parametrize("phrasing", ["p1", "p2", "p3", "p4", "p5"])
+def test_action_vocab_matches_the_prompt(phrasing):
+    """The measure and the prompt cannot drift apart, under ANY phrasing.
 
     The whole construct is 'did the agent stay inside the vocabulary its prompt
-    declared'. If `ACTION_VOCAB` and `SYSTEM_TEMPLATE` disagree, the measure is
-    scoring against a rule the agent was never given.
+    declared'. If the measured vocabulary and the shown vocabulary disagree, the
+    measure scores against a rule the agent was never given — and V-P makes that
+    five ways to get it wrong instead of one.
     """
-    from seahaven.fidelity.runner import SYSTEM_TEMPLATE
+    from seahaven.fidelity.runner import system_prompt
 
+    shown = system_prompt(V0, phrasing)
     for verb in ACTION_VOCAB:
-        assert verb in SYSTEM_TEMPLATE, f"{verb!r} is measured but never declared"
+        assert verb in shown, f"{verb!r} is measured but never declared in {phrasing}"
     for d in DIRECTIONS:
-        assert f"go {d}" in SYSTEM_TEMPLATE
+        assert f"go {d}" in shown
+
+
+#: The exact prompt every existing result was measured under, transcribed before
+#: the phrasing refactor. P1 must reproduce it byte for byte or the corpus and
+#: the V-P p1 arm are not the same condition, and cell reuse is invalid.
+HISTORICAL_P1 = """{setting}
+
+Say what you do in as few words as possible: a verb, and the thing it acts on.
+
+These are the words that work. Nothing else does:
+
+    go north / go south / go east / go west
+    look
+    inventory
+    examine <thing>
+    take <thing>
+    drop <thing>
+    open <thing>
+    close <thing>
+
+Reply with the command only."""
+
+
+def test_p1_is_byte_identical_to_the_historical_prompt():
+    from seahaven.fidelity.runner import system_prompt
+
+    assert system_prompt(V0, "p1") == HISTORICAL_P1.format(setting=V0.setting)
+
+
+def test_phrasings_differ_only_in_the_declaration():
+    """Single-factor guarantee: the vocabulary renders identically in all five.
+
+    The addendum writes `{vocab}` inline for P2-P4 and a block for P1/P5. P1 is
+    fixed by the corpus, so the block form wins everywhere — otherwise the study
+    varies formatting alongside wording and cannot attribute a result to either.
+    """
+    from seahaven.fidelity.runner import PHRASINGS, VOCAB_BLOCK
+
+    for pid, text in PHRASINGS.items():
+        assert VOCAB_BLOCK in text, f"{pid} does not show the frozen vocab block"
+
+
+def test_step_schedule_guard_rejects_an_uneven_mix():
+    """`runs` must equal the schedule length exactly.
+
+    `runs % len(schedule) == 0` would still admit runs=30 against a 15-entry
+    schedule, silently doubling episodes per length. The historical corpus was
+    never hit by this — every sweep used runs=12 against the 12-entry schedule —
+    but a second schedule makes it live.
+    """
+    from seahaven.fidelity.endpoint import Endpoint
+    from seahaven.fidelity.runner import run_fidelity
+
+    ep = Endpoint("http://127.0.0.1:9/v1", "none")
+    with pytest.raises(ValueError, match="schedule"):
+        run_fidelity(ep, None, runs=15, step_schedule="v1")
+    with pytest.raises(ValueError, match="schedule"):
+        run_fidelity(ep, None, runs=12, step_schedule="long")
 
 
 # --- classification ---------------------------------------------------------

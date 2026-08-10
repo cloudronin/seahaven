@@ -76,12 +76,18 @@ def _eval(args: argparse.Namespace) -> int:
     result = run_fidelity(ep, judge_ep, runs=args.runs, steps=args.steps,
                           seed0=args.seed, self_judge_ok=args.allow_self_judge,
                           world_id=args.world,
-                          narrate_style=args.narrate_style)
+                          narrate_style=args.narrate_style,
+                          phrasing=args.phrasing,
+                          step_schedule=args.step_schedule)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
-        "world_version": WORLD_VERSION, "spec_version": SPEC_VERSION,
+        # world_version was hardcoded to the module constant regardless of
+        # --world, so a world_v2 run recorded "world_v0" beside a correct
+        # world_id. It is the world actually played.
+        "world_version": args.world, "spec_version": SPEC_VERSION,
         "world_id": args.world,
+        "phrasing": args.phrasing, "step_schedule": args.step_schedule,
         "narrate_style": args.narrate_style,
         "judge": args.judge_name if args.judge else "regex (lower confidence)",
         "runs": args.runs, "steps": args.steps, "seed0": args.seed,
@@ -167,6 +173,12 @@ def main(argv: list[str] | None = None) -> int:
                         "keeps >=3 runs; gate -1 shuffles within lengths")
     e.add_argument("--steps", type=int, default=30)
     e.add_argument("--seed", type=int, default=5150)
+    e.add_argument("--phrasing", default="p1",
+                   choices=("p1", "p2", "p3", "p4", "p5"),
+                   help="V-P varies the constraint declaration; p1 is the "
+                        "incumbent every existing result was measured under")
+    e.add_argument("--step-schedule", default="v1", choices=("v1", "long"),
+                   help="v1 = 12 runs to 30 steps; long = 15 runs to 100")
     e.add_argument("--narrate-style", default="introspective",
                    choices=("introspective", "factual", "retrospective"),
                    help="V3 varies this and holds the world and protocol fixed")

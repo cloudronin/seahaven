@@ -49,27 +49,61 @@ from .worldspec import WorldSpec, load as load_world
 #: Default world. V2 varies this; every other prompt and parameter is held fixed.
 WORLD_ID = "world_v0"
 
-SYSTEM_TEMPLATE = """{setting}
-
-Say what you do in as few words as possible: a verb, and the thing it acts on.
-
-These are the words that work. Nothing else does:
-
-    go north / go south / go east / go west
+#: The vocabulary, rendered identically under every phrasing. **This is the
+#: single-factor guarantee**: V-P varies how the constraint is *declared*, so
+#: the list itself must not change shape between arms, or the study confounds
+#: wording with formatting. The addendum writes `{vocab}` inline in P2-P4 and a
+#: block in P1/P5; P1 must stay byte-identical to the corpus, so the block form
+#: wins and `{vocab}` renders as this block everywhere.
+VOCAB_BLOCK = """    go north / go south / go east / go west
     look
     inventory
     examine <thing>
     take <thing>
     drop <thing>
     open <thing>
-    close <thing>
+    close <thing>"""
+
+#: V-P's five levels. FROZEN on commit; sha256-pinned in tests. No rewording
+#: after any result. A phrasing that turns out broken is dropped and reported as
+#: dropped, never edited.
+#:
+#: P5 is the load-bearing contrast: it shows the list and says nothing about it
+#: being exhaustive. If P5 adherence is indistinguishable from P1, the
+#: declaration does no work and the construct is list-imitation rather than
+#: constraint adherence — a finding, not a failure.
+PHRASINGS = {
+    "p1": "These are the words that work. Nothing else does:\n\n" + VOCAB_BLOCK,
+    "p2": "You'll mostly want these words:\n\n" + VOCAB_BLOCK
+          + "\n\nOthers may not be understood.",
+    "p3": "The permitted command vocabulary consists exclusively of the "
+          "following verbs:\n\n" + VOCAB_BLOCK
+          + "\n\nCommands outside this vocabulary are invalid.",
+    "p4": "Valid verbs:\n\n" + VOCAB_BLOCK,
+    "p5": VOCAB_BLOCK,
+}
+
+SYSTEM_TEMPLATE = """{setting}
+
+Say what you do in as few words as possible: a verb, and the thing it acts on.
+
+{restriction}
 
 Reply with the command only."""
 
 
-def system_prompt(spec: WorldSpec) -> str:
-    """Only the setting sentence varies between worlds — see `worldspec`."""
-    return SYSTEM_TEMPLATE.format(setting=spec.setting)
+def system_prompt(spec: WorldSpec, phrasing: str = "p1") -> str:
+    """Only the setting sentence varies between worlds — see `worldspec`.
+
+    `phrasing` selects the constraint declaration for V-P. `p1` reproduces the
+    prompt every existing result was measured under, byte for byte; a test
+    asserts it.
+    """
+    if phrasing not in PHRASINGS:
+        raise ValueError(f"unknown phrasing {phrasing!r}; "
+                         f"choose from {sorted(PHRASINGS)}")
+    return SYSTEM_TEMPLATE.format(setting=spec.setting,
+                                  restriction=PHRASINGS[phrasing])
 
 # The instruction has to override the action format explicitly: with only the
 # original system prompt in force, one checkpoint answered the narration request
@@ -277,8 +311,8 @@ def _mention(narrative: str, act: str, judge: Endpoint | None) -> bool:
     return bool(m and m.group(1) == "yes")
 
 
-def _rollout(ep, steps: int, seed: int,
-             spec: WorldSpec) -> tuple[list[dict], list[dict]]:
+def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
+             phrasing: str = "p1") -> tuple[list[dict], list[dict]]:
     """Returns (rows, messages). `messages` is the episode as the agent lived it,
     so narration can continue the same conversation rather than starting cold.
 
@@ -294,7 +328,8 @@ def _rollout(ep, steps: int, seed: int,
     obs, _ = w.reset()
     recents: list[str] = []
     rows = []
-    messages: list[dict] = [{"role": "system", "content": system_prompt(spec)}]
+    messages: list[dict] = [{"role": "system",
+                             "content": system_prompt(spec, phrasing)}]
     for step in range(steps):
         lines = []
         if recents:
@@ -343,6 +378,14 @@ def _rollout(ep, steps: int, seed: int,
 #: substitute.
 STEP_SCHEDULE = (4, 4, 4, 12, 12, 12, 20, 20, 20, 30, 30, 30)
 
+#: Named schedules, so a result file can be attributed to one. `long` reaches
+#: the regime where a small world is exhausted and a large one is not, which is
+#: what the exhaustion-vs-decay question turns on.
+STEP_SCHEDULES = {
+    "v1": STEP_SCHEDULE,
+    "long": (4, 4, 4, 12, 12, 12, 30, 30, 30, 60, 60, 60, 100, 100, 100),
+}
+
 #: Concurrent episodes per eval. vLLM batches happily; the ceiling here is
 #: politeness to a hosted endpoint, not the GPU.
 RUN_CONCURRENCY = 12
@@ -364,22 +407,37 @@ def open_world_serial(path):
         return open_world(path)
 
 
-def _steps_for(i: int, steps: int) -> int:
+def _steps_for(i: int, steps: int, schedule=STEP_SCHEDULE) -> int:
     """Scale the schedule so `--steps` sets the longest episode, not every one."""
-    longest = max(STEP_SCHEDULE)
-    return max(2, round(STEP_SCHEDULE[i % len(STEP_SCHEDULE)] * steps / longest))
+    longest = max(schedule)
+    return max(2, round(schedule[i % len(schedule)] * steps / longest))
 
 
 def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  steps: int = 30, seed0: int = 5150,
                  self_judge_ok: bool = False, world_id: str = WORLD_ID,
-                 narrate_style: str = "introspective") -> dict:
+                 narrate_style: str = "introspective", phrasing: str = "p1",
+                 step_schedule: str = "v1") -> dict:
     if judge is not None and judge.served_name == ep.served_name and not self_judge_ok:
         raise ValueError(
             "judge and subject are the same served model. A model scoring its own "
             "self-account is not an independent measurement; pass a different "
             "--judge-name or --allow-self-judge to override.")
 
+    if step_schedule not in STEP_SCHEDULES:
+        raise ValueError(f"unknown step_schedule {step_schedule!r}; "
+                         f"choose from {sorted(STEP_SCHEDULES)}")
+    schedule = STEP_SCHEDULES[step_schedule]
+    # Exact equality, not `runs % len(schedule) == 0`. The modulo form silently
+    # admits runs=30 against a 15-entry schedule, doubling episodes per length
+    # without anyone choosing it; and runs=15 against the 12-entry schedule
+    # gives four runs at the shortest length and three at every other, which is
+    # the latent bug this guard closes. Replication must be explicit.
+    if runs != len(schedule):
+        raise ValueError(
+            f"runs={runs} but schedule {step_schedule!r} has {len(schedule)} "
+            f"entries. Each length must get exactly the runs the schedule "
+            f"assigns it; an uneven mix biases every length-sensitive figure.")
     spec = load_world(world_id)
     if narrate_style not in NARRATION_STYLES:
         raise ValueError(f"unknown narrate_style {narrate_style!r}; "
@@ -413,7 +471,8 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
         and the seeds are per-run — concurrency changes throughput, not results.
         """
         try:
-            rows, messages = _rollout(ep, _steps_for(i, steps), seed0 + i, spec)
+            rows, messages = _rollout(ep, _steps_for(i, steps, schedule),
+                                      seed0 + i, spec, phrasing)
         except RuntimeError as e:
             # A single refused generation used to abort the whole eval, losing
             # eleven good runs with it. Record and continue; n falls, which
