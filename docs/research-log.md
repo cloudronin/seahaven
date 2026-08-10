@@ -4981,3 +4981,95 @@ because that is the exact selection this entry exists to prevent.
   bound: ~21% of published within-model sd).
 - Next: Phase C, V-P sweep, G-P — which can render this entry moot. That
   is fine. A dead letter is cheaper than a shopped metric.
+
+## 2026-08-09 — G-P FAILS: adherence is phrasing-dependent, at almost exactly fidelity's number
+
+**Gate outcome, first line as required: G-P FAILS.** Worst-pair Spearman
+**0.631** against a gate of 0.80, bootstrapped over seeds to **0.673
+[0.518, 0.823]**. 210 evals, 7 models × 5 phrasings × 2 worlds × 3 seeds, all
+under `VLLM_BATCH_INVARIANT=1`, 41,370 commands.
+
+**Fidelity's narration-register sweep failed at 0.607. Adherence fails at
+0.631.** The construct that survived every measurement-side check dies on the
+stimulus-side axis, at the same number, in the same way.
+
+### Action-level adherence by phrasing, pooled over both worlds
+
+| model | p1 | p2 | p3 | p4 | p5 | range |
+|---|---|---|---|---|---|---|
+| AI2 | 90.99 | 90.49 | 95.12 | 89.23 | 83.75 | **11.36** |
+| Alibaba | 100.00 | 98.91 | 100.00 | 98.48 | 98.57 | 1.52 |
+| Google | 99.83 | 100.00 | 100.00 | 99.66 | 99.33 | 0.67 |
+| IBM | 92.17 | 94.19 | 95.54 | 93.87 | 91.71 | 3.83 |
+| Meta | 99.92 | 100.00 | 100.00 | 97.98 | 99.83 | 2.02 |
+| MistralAI | 96.03 | 99.24 | 99.64 | 95.54 | 94.61 | 5.02 |
+| TII | 98.82 | 96.80 | 98.99 | 99.24 | 95.88 | 3.37 |
+
+All ten pairwise correlations: 0.631 to 0.927. Four of ten fall below the gate
+(p2/p4 0.631, p2/p5 — no, 0.883; the sub-0.80 pairs are p2·p4 0.631, p1·p2
+0.703, p3·p4 0.704, p1·p4 0.714, p4·p5 0.750). **P4 is in four of the five
+failing pairs**: the terse phrasing reorders the table relative to everything
+else.
+
+### The pre-registered predictions
+
+**VP-1 — FALSIFIED.** It predicted the ordering survives at ≥0.80, and the
+prereg said in as many words that this was "the prediction this project's
+history says is most likely to be WRONG, and it is stated anyway." It was wrong.
+
+**VP-2 — FALSIFIED.** P4 was predicted lowest; P5 is (94.81 against P4's 96.29).
+
+**VP-3 — FALSIFIED, but by 0.01 and the letter overstates it.** The prediction
+was that P5 trails P1 by more than 2 points pooled. The gap is **−1.99**. Calling
+that "the declaration does no measurable work" would be wrong: **AI2 loses 7.24
+points and TII 2.95** when the restriction sentence is removed. The pooled figure
+is diluted by four models sitting at or near ceiling under both phrasings
+(Meta −0.08, IBM −0.46, Google −0.50, Alibaba −1.43). The honest statement is
+that **removing the declaration measurably reduces adherence in the models that
+have room to fall, and the pooled number hides that behind ceiling effects.**
+
+**VP-4 — CONFIRMED.** IBM and AI2 are the bottom two under all five phrasings,
+without exception. The churn is entirely mid-table.
+
+### Consequence, per the pre-registered FAIL branch
+
+Frozen before the data and applied without amendment:
+
+- **world_v3 is not authored.**
+- **Stage 1 does not run. Stage 2 does not run.**
+- The result is reported as **the same class of death fidelity suffered —
+  apparatus, not model.**
+- Salvage is **a new spec, not a patch to this one.**
+- The Stage 2 constituent-metric entry (`d669b37`) becomes a **dead letter**,
+  exactly as it anticipated: *"a dead letter is cheaper than a shopped metric."*
+
+This is what the gate ordering bought. G-P cost ~$10 and fired before any
+world-authoring effort, before the Stage 1 sweep, and before Stage 2 — the
+$100–170 the full battery would have spent on a construct that does not survive
+its cheapest lethal test.
+
+### What survives, and is the honest salvage direction
+
+**VP-4 is not nothing.** The bottom of the table is phrasing-invariant across all
+five declarations: whatever separates IBM and AI2 from the rest is not an
+artefact of wording. Their violations are dominated by template noise and
+capability-seeking attempts rather than by constraint interpretation, which is
+precisely what VP-4 predicted and what the data shows.
+
+That suggests a **phrasing-stratified or threshold claim** — "these models fall
+below X under every declaration we tried" — rather than a rank ordering. It is a
+weaker claim than a leaderboard column and it is the only one the data supports.
+**It belongs in a new spec**, per the FAIL branch, and must not be reverse-
+engineered into this one.
+
+### What this does to the earlier findings
+
+`findings.md` §5 reported adherence as the measurement that survives what
+fidelity did not, on the strength of cross-world ρ 0.864 and filter-definition
+ρ 0.893. **Both of those still hold. Neither tested the stimulus.** The section
+needs the correction: adherence is robust to how it is *measured* and not to how
+the constraint is *declared*, and the second is the axis that matters.
+
+The three instability sources found for fidelity — detector, register, world —
+now have a fourth sibling for adherence: **phrasing**. Same disease, different
+construct, and it was found by the test designed to look for it.

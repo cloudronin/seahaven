@@ -46,6 +46,11 @@ def load():
     per_seed = defaultdict(lambda: defaultdict(lambda: [0, 0]))
     for f in sorted(glob.glob("results/vp_*.json")):
         parts = Path(f).stem.split("_")
+        # This script's own output lands in the same directory and matches the
+        # glob. Same trap as v3_narration.json; skip anything not shaped
+        # vp_<lab>_<phrasing>_world_<v>_<seed>.
+        if len(parts) < 6 or not parts[-1].isdigit():
+            continue
         lab, ph = parts[1], parts[2]
         seed = parts[-1]
         d = json.loads(Path(f).read_text())
