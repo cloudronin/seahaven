@@ -67,6 +67,35 @@ def commands_for(world: str, phrasing: str = "p1",
     return out
 
 
+def episodes_for(pattern: str = "results/vp_*.json"):
+    """(lab, phrasing, world) -> [[violations, commands], ...], one per episode.
+
+    The cluster unit for the possibility bar's seed-stability criterion, which
+    the phase entry specifies as an **episode** bootstrap. Commands within an
+    episode share room, inventory and conversation state and are not independent
+    draws — the same dependence the design-effect sizing refused to assume away.
+
+    Kept beside `load_cells` rather than derived from it: cells are already
+    summed over episodes, and re-splitting a sum is not possible.
+    """
+    from seahaven.fidelity.adherence import classify
+
+    out = defaultdict(list)
+    for f in sorted(glob.glob(pattern)):
+        parts = Path(f).stem.split("_")
+        if not _is_cell(parts):
+            continue
+        lab, ph, world = parts[1], parts[2], f"{parts[3]}_{parts[4]}"
+        d = json.loads(Path(f).read_text())
+        for run in d["runs"]:
+            cmds = run.get("commands", [])
+            if cmds:
+                out[(lab, ph, world)].append(
+                    [sum(classify(c["command"]) == "violation" for c in cmds),
+                     len(cmds)])
+    return out
+
+
 def pooled(counts) -> float:
     bad, n = counts
     return 100.0 * (1 - bad / n) if n else float("nan")

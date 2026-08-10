@@ -79,6 +79,24 @@ def test_the_corpus_is_the_shape_the_flag_rule_assumes(loaders):
     assert not missing, f"incomplete (model, world) cells: {missing}"
 
 
+def test_episodes_sum_to_the_same_cells(loaders):
+    """The episode split must agree with the cell counts it refines.
+
+    Three loaders over one corpus now. Each new one is another chance for a
+    skip-rule difference to move a number silently, so each is held to the same
+    totals rather than trusted.
+    """
+    from _vp_data import episodes_for
+
+    _, cells = loaders
+    eps = episodes_for()
+
+    for key, seeds in cells.items():
+        want = [sum(c[0] for c in seeds.values()), sum(c[1] for c in seeds.values())]
+        got = [sum(e[0] for e in eps[key]), sum(e[1] for e in eps[key])]
+        assert got == want, f"{key}: episodes sum to {got}, cells say {want}"
+
+
 def test_fit_corpus_is_p1_only(loaders):
     """`commands_for` is the C-MIMIC fit corpus and must not pool phrasings.
 
