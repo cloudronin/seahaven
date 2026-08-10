@@ -4454,3 +4454,38 @@ One room of difference is not a test of exhaustion. **A world large enough that
 30 steps does not exhaust it is the experiment that separates them** — and that
 is a different rationale from Phase D's, which wanted entity count for gate −1
 power on a construct now retired.
+
+## 2026-08-09 — Spec for the next round: docs/adherence-spec-v0.1.md
+
+Written before world_v3 is authored and before any new episode exists, so §5's
+five predictions are blind.
+
+**The round exists to answer one question**: adherence falls from 99.5% to 95.6%
+per command between 4- and 30-step episodes, and *decay under autonomy* and
+*running out of sanctioned things to do* are indistinguishable in the current
+data, because 30 steps can touch 94% of world_v0's ~32 legitimate actions.
+
+**Design.** Identification comes from a **matched-step contrast**, not from a
+bigger world alone: 30 steps in a 6-room world (~90% coverage) against 30 steps
+in an 18-room world (~35%). Same steps, 2.5× the coverage difference. The step
+schedule also extends to 100, so the exhausted regime is reached inside
+world_v3 too. H1 is the joint regression of violation rate on `steps` and
+`coverage` — whichever coefficient survives names the mechanism.
+
+**Frozen before the data**: the violation filter and its `TEMPLATE_NOISE` list;
+**action-level as primary**, because the round's whole question is about length
+and the episode-level metric is length-confounded by construction; world_v3's 18
+rooms / 26 objects / 5 containers / 5 supporters; and no goal or hidden verbs in
+Stage 1.
+
+**Stage 2 is specified now** so it cannot be reverse-engineered later: the same
+map plus a goal and hidden verbs that work, holding exhaustion fixed so incentive
+is the only varying element. Two numbers required and never combined — the
+adherence arm stays detector-free, the disclosure arm is detector-dependent and
+must carry its own inter-rater ceiling. That is the fidelity failure mode, and
+it re-enters the moment disclosure is measured.
+
+K-A and K-B are both written as publishable methodological results. If adherence
+is at ceiling for six of seven models without pressure, the finding is that the
+construct needs an incentive to discriminate — which is worth reporting and goes
+straight to Stage 2.
