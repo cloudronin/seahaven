@@ -122,6 +122,49 @@ def main() -> int:
               f"decisive\n  margin was ~20 points. A floor is only disqualifying "
               f"relative to an effect.")
 
+    # ---- the competing mechanism: is it diversity rather than size?
+    #
+    # A model stuck in a low-entropy attractor lands on the same token robustly,
+    # so being WORSE at the task would cause MORE reproducibility, and the
+    # apparent size effect would be diversity in disguise. Testable for free on
+    # the twelve flag-cohort models, whose command records are already committed.
+    # Restricted to p1/world_v0 so the condition matches the probe exactly.
+    import collections
+    import glob as _glob
+
+    ent = {}
+    for f in sorted(_glob.glob("results/vp_*_p1_world_v0_*.json")):
+        parts = Path(f).stem.split("_")
+        if len(parts) < 6 or not parts[-1].isdigit():
+            continue
+        c = ent.setdefault(parts[1], collections.Counter())
+        for run in json.loads(Path(f).read_text())["runs"]:
+            for cmd in run.get("commands", []):
+                c[(cmd["command"].split() or [""])[0].lower()] += 1
+    lab_of = {repo: lab for repo, lab in FLAG_COHORT.items()}
+    paired = []
+    for r in rows:
+        lab = lab_of.get(r["repo"])
+        if lab and lab in ent:
+            n = sum(ent[lab].values())
+            p = [v / n for v in ent[lab].values()]
+            H = -sum(x * math.log2(x) for x in p if x > 0)
+            paired.append((H, r))
+    if len(paired) >= 4:
+        print("\nCOMPETING MECHANISM — diversity, or size?")
+        print(f"  {'model':<30}{'entropy':>9}{'size':>7}{'adh_sd':>9}")
+        for H, r in sorted(paired):
+            print(f"  {r['repo'].split('/')[-1]:<30}{H:>9.3f}{r['size_b']:>6}B"
+                  f"{r['adherence_sd']:>9.3f}")
+        he = spearman([H for H, _ in paired], [r["adherence_sd"] for _, r in paired])
+        se = spearman([math.log(r["size_b"]) for _, r in paired],
+                      [r["adherence_sd"] for _, r in paired])
+        print(f"\n  Spearman(entropy,  adherence sd) = {he:+.3f}")
+        print(f"  Spearman(log size, adherence sd) = {se:+.3f}   (n={len(paired)})")
+        print("  Whichever tracks the floor is the mechanism to carry forward;")
+        print("  if both do, they are confounded here and the pairs cannot separate")
+        print("  them, which is itself worth stating rather than picking one.")
+
     # ---- directive 4: which flag-cohort models reproduce. Documentation only.
     print("\nFLAG-STUDY COHORT — which of the twelve reproduce")
     print("  (documentation, not remediation; the corpus is NOT re-run)")
