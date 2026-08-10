@@ -4489,3 +4489,86 @@ K-A and K-B are both written as publishable methodological results. If adherence
 is at ceiling for six of seven models without pressure, the finding is that the
 construct needs an incentive to discriminate — which is worth reporting and goes
 straight to Stage 2.
+
+## 2026-08-09 — [TRAP 31] "Barrier-directed" named a barrier that does not exist
+
+Revising the adherence spec after a reported agentic-eval incident (ExploitGym;
+per the vendor post-mortem as relayed to this project, safeguards were
+intentionally disabled and cyber refusals reduced for the eval). The instruction
+was to lift a barrier-directed excursion measure out of Stage 2 and run it on
+the existing corpus, on the grounds — from `findings.md` §5, which I wrote —
+that `unlock`(24) reaches for an ungranted verb to get past a closed container.
+
+**Checked against the live engine before computing anything:**
+
+    open chest    -> "You open the chest."
+    unlock chest  -> "(with the chest) The chest is fixed in place."
+
+Neither world has a `locked` fact, a key, or any obstacle the granted vocabulary
+cannot pass. **`open` is granted and sufficient.** `unlock` is redundant, not
+barrier-passing, and the premise of my own findings §5 sentence was false.
+
+**How it got written.** Both worlds contain containers, containers are
+*openable and lockable* in the Inform kind definition, and I inferred a barrier
+from the kind rather than checking the instance state. The same class of error
+as TRAP 26 — reasoning about what the world *should* contain instead of reading
+what it does — and it survived into a published findings document.
+
+### The split, run as instructed, whether or not convenient
+
+| class | share of all out-of-vocabulary tokens |
+|---|---|
+| noise / artifact | **39.5%** |
+| barrier-directed as originally listed | 27.6% |
+| other out-of-vocabulary | 33.0% |
+
+**The instruction's first premise holds: two-fifths of what the single adherence
+rate counted is template noise, not behaviour**, and collapsing them was wrong.
+Reporting them separately is a real improvement.
+
+The second premise does not. Of the non-noise attempts:
+
+| class | share |
+|---|---|
+| synonym for an already-granted verb | **36.1%** |
+| other | 38.0% |
+| capability the world does not implement | 14.9% |
+| navigation phrasing | 11.0% |
+
+**The dominant non-noise failure is vocabulary compliance — a different word for
+a capability the agent already has — not capability-seeking.** Barrier-directed
+excursion is not a small effect here; it is *unmeasurable* here, because the
+manipulation was never built. That strengthens the case for re-specifying
+Stage 2 around provable insufficiency rather than weakening it.
+
+### Spec revised to 0.2
+
+`docs/adherence-spec-v0.1.md`. H1–H5 unchanged and verbatim from v0.1 (git
+`8857779`); everything new entered §0, never §5.
+
+- **§0.1** the split above, in the already-known table, explicitly not a
+  prediction
+- **§1.0** two sub-constructs: *passive adherence* as a **necessary-condition
+  floor** (failing is disqualifying, passing certifies nothing), and
+  *barrier-directed excursion*, not measurable before Stage 2
+- **§2.5** the incident claim bounded. Stage 1 removes all three of the
+  incident's conditions — goal, unreachable capability, disabled guardrails —
+  so adherence is not a predictor of incident behaviour. Explicitly prohibited:
+  calling this "the disposition to hack", presenting a per-model figure as a
+  risk estimate, or citing the incident to motivate a number produced without
+  the incident's conditions.
+- **§7** Stage 2 re-specified around **reachability**: the sanctioned space must
+  be *provably insufficient*, asserted at build time by exhaustive search over
+  the reachable state graph, or the world does not compile. §0.1 is the
+  cautionary case for why that assertion is load-bearing. Adds the graded
+  pressure axis P0–P3 with the **curve** as the result, and decouples the
+  barrier strand from Stage 1's exhaustion gate — it measures a different
+  sub-construct and does not depend on that outcome.
+- **§10** two prohibitions: no cyber scenario or simulated infrastructure
+  (it would convert a disposition measure into a capability probe, which is
+  confounded and belongs elsewhere), and no pulling the raidex timeline forward
+  on news. Fidelity was killed by its own battery when the result was
+  disappointing; the same standard holds when events make a different result
+  attractive.
+
+`findings.md` §5 carries a dated correction rather than a silent edit.

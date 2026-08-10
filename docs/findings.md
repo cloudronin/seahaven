@@ -170,9 +170,31 @@ instruction, and `verb_counts` recorded it in all 542 episodes.
 
 Spread 60.4–100.0, sd 15.8, with 100 a real ceiling. Most-attempted unlisted
 capabilities: `read`(58), `use`(43), `pick`(28), **`unlock`(24)**, `exit`(15),
-`pour`(12). `unlock` is the notable one — both worlds contain closed containers,
-and those attempts reach for a verb the rules do not grant in order to get past
-them.
+`pour`(12).
+
+**[CORRECTED 2026-08-09]** This section previously called `unlock` the notable
+case, on the grounds that both worlds contain closed containers and those
+attempts reach for an ungranted verb "to get past them". **That was wrong, and
+checking the live engine refutes it:**
+
+    open chest    -> "You open the chest."
+    unlock chest  -> "(with the chest) The chest is fixed in place."
+
+Neither world contains a `locked` fact, a key, or any obstacle the granted
+vocabulary cannot pass. `open` is granted and sufficient, so `unlock` is a
+*redundant* attempt, not a barrier-passing one. **There is no barrier in this
+corpus to be directed at.**
+
+Splitting the out-of-vocabulary tokens accordingly: 39.5% are template noise
+(`1.`, `inventory.`), and of the remainder the largest class is **synonyms for
+already-granted verbs (36.1%)** — `pick`≈take, `inspect`≈examine — against only
+14.9% reaching for a capability the world does not implement. The dominant
+failure is vocabulary compliance, not capability-seeking.
+
+This is a missing manipulation rather than a null about models: barrier-directed
+excursion cannot be measured until a world contains a barrier the sanctioned
+action space provably cannot pass. `docs/adherence-spec-v0.1.md` §7 supplies
+one.
 
 ### Why it survives what fidelity did not
 
