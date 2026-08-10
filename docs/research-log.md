@@ -4015,3 +4015,229 @@ Order fixed on lab distinctness and capacity, not on any result. If neither
 passes, the ceiling is computed on whatever six-lab panel is available or the
 programme reports that a six-lab panel could not be assembled — which is itself
 the K1-adjacent finding v3 §6 says is publishable.
+
+## 2026-08-09 — Phases A and B: the ceiling correction lands, and the ranking turns out to be detector-dependent
+
+### B — the split-half ceiling of the aggregate
+
+Six judges from six labs, all passing controls (AI2's OLMo-2-32B failed at 0.75
+and was excluded; Meta's Llama-3.3-70B is a gated repo, so the pre-declared
+fallback to IBM granite-3.1-8b fired). 669 items labelled stably by all six.
+
+| quantity | value |
+|---|---|
+| mean **pairwise** inter-judge kappa | 0.675 |
+| **aggregate split-half ceiling** (pre-declared partition) | **0.795** [0.722, 0.861] |
+| median over all 10 partitions | 0.833 (range 0.736–0.913) |
+| difference | **+0.120** |
+
+**The correction was right and v2's argument was wrong.** Majority voting
+averages out independent judge error, so the aggregate is markedly more reliable
+than its members. v2 compared the gate against 0.736 — a pairwise figure — and
+concluded 0.80 was unreachable. On the correct quantity the standard supports a
+**gate of 0.75**, not 0.70.
+
+**An inconsistency inside v3, resolved against convenience.** v3 §3 states the
+rule as a formula (*largest multiple of 0.05 strictly below the ceiling*) and
+also as a summary table whose row "0.72–0.80 → 0.70" mis-tabulates the
+[0.75, 0.80) band. Formula gives **0.75**; the table would give 0.70. The
+formula is the operative rule and it is also the **stricter** reading, so the
+ambiguity is resolved the harder way. Recorded rather than silently picked.
+
+### V1 at the correct gate
+
+Detectors against the six-judge majority, gate **0.75**:
+
+| detector | main | disagreement | fabrication |
+|---|---|---|---|
+| name-only | 0.732 | **0.000** | **0.000** |
+| relation-aware | 0.732 | **0.000** | 0.374 |
+| parse | 0.597 | 0.294 | 0.374 |
+| **D1 (gpt-4.1-mini)** | **0.885** | **0.710** | **0.962** |
+
+**V1 FAILS.** D1 passes `main` and `fabrication` — the latter emphatically, at
+0.962, which is the stratum P4 puts the raidex column on — and misses
+`disagreement` by **0.040**. Every string detector fails, two of them
+structurally.
+
+So V1 is not rescued by lowering the gate; the honest sequence was that the gate
+*rose* from v2's 0.70 once the right ceiling was computed, and D1 still misses.
+
+### A — the ranking is detector-dependent, which subsumes everything else
+
+Re-scoring the same 500 episodes with D1 (no new rollouts) disagrees with the
+regex on **21.1%** of the 9,253 entity judgements.
+
+| lab | regex | D1 | shift |
+|---|---|---|---|
+| Alibaba | 60.6 | 77.1 | **+16.5** |
+| IBM | 77.7 | 81.4 | +3.7 |
+| AI2 | 78.7 | 79.2 | +0.6 |
+| Meta | 87.4 | 76.8 | −10.6 |
+| Google | 75.7 | 61.1 | −14.6 |
+| MistralAI | 89.8 | 73.9 | **−16.0** |
+| TII | 77.6 | 58.9 | **−18.7** |
+
+    regex rank: MistralAI, Meta, AI2, IBM, TII, Google, Alibaba
+    D1    rank: IBM, AI2, Alibaba, Meta, MistralAI, Google, TII
+
+**G1 CONFIRMED, and far more strongly than predicted.** G1 asked for *at least
+one* rank change. Nothing survives: the regex's best model (MistralAI) falls to
+fifth, its worst (Alibaba) rises to third, and TII drops 18.7 points. **No
+per-model claim in this project is stable under a detector choice that V1 has
+not settled.** That is the finding, and it outranks every individual number.
+
+**G2a CONFIRMED** — model-level `r(words, omission)` moves −0.547 → −0.457,
+still past the −0.35 threshold. The verbosity confound is **not a regex
+artefact**; it survives an LLM detector. G2b is therefore not triggered, but the
+diagnostic it exists for is worth recording anyway: between-model sd *rose*
+7.31 → 8.39 and cross-world rho was unchanged at 0.893, so D1 did not attenuate
+the signal — it is a sharper instrument that nonetheless inherits the confound.
+`r(n_performed, fidelity)` likewise barely moves, −0.440 → −0.400, still far
+from G6's |0.20|.
+
+**G3 CONFIRMED** — V2 stays marginal under D1: point rho 0.893, bootstrap 0.750
+[0.357, 0.964].
+
+### [TRAP 30] Mean of ratios is not the ratio of sums
+
+The first Phase A run computed per-episode fidelity and averaged it, while
+`score.py` pools all entity observations and forms the rates once. On identical
+regex data the two estimators gave cross-world rho **0.679** and **0.964**. The
+comparison would have been between two estimators rather than two detectors.
+Episodes with few performed entities make the mean-of-ratios wild. Fixed to pool,
+including inside the bootstrap, which must resample episodes and re-pool rather
+than resample episode-level scores.
+
+### Where this leaves the programme
+
+- **No per-model number is publishable**, not because of any single gate but
+  because G1 shows the ordering is a property of the detector.
+- **V1 fails at 0.75 by 0.040 on one stratum.** Closing it needs better labels
+  (the ceiling is 0.795, so there is little room) or a better detector.
+- **V4's confounds are real and detector-independent.** Phase C is now the
+  critical path exactly as v3 §5 anticipated.
+
+## 2026-08-09 — Phase C: both pre-committed fixes fail, and the confound turns out to be behavioural
+
+Under the frozen D1 detector, `r(n_performed, fidelity) = −0.445`. v3 §5
+pre-committed two fixes, to be chosen by G6 (`|r| < 0.20`) and not by which
+ranks better. **Neither reaches it.**
+
+**(i) Retire the composite, publish the arms separately.** Fails: the
+*individual* omission rate carries the confound —
+`r(n_performed, omission) = +0.406`, fabrication −0.202. Splitting the arms
+does not help because the problem was never the blending.
+
+**(ii) Hold `n_performed` fixed by construction** — quota-sample exactly k
+performed and k absent entities per episode:
+
+| k | episodes kept | r(n_perf, fidelity) |
+|---|---|---|
+| 2 | 482/495 | −0.472 |
+| 3 | 452/495 | −0.395 |
+| 4 | 378/495 | −0.474 |
+| 5 | 300/495 | −0.314 |
+
+Best is −0.314, still far from |0.20|. **K2 fires.**
+
+### Why the failure of (ii) is the informative part
+
+Quota sampling holds the number of scored entities **identical** across
+episodes. If the relationship were an artefact of counting — more acts giving
+more chances to omit — it would vanish. It does not. On a fixed five performed
+entities, models that explored more still omit a larger *fraction* of them.
+
+**So this is not a measurement artefact. It is a behavioural regularity:
+self-report completeness declines as activity volume rises.** That is a finding
+about the models, and arguably a more interesting one than the leaderboard it
+prevents — an agent that does more reports proportionally less of what it did.
+
+It also means world design cannot fix it, which retires the constraint v3 §5
+placed on Phase D: world_v3 does not need a fixed-`n_performed` construction,
+because holding the scored count fixed demonstrably does not remove the effect.
+
+### Consequence, per K2
+
+- The **composite is retired.** No `fidelity` number is published per model.
+- `omission_rate` and `fabrication_rate` are published, **each reported with
+  `n_performed`**, because both carry the exploration relationship and a rate
+  without it is misleading.
+- **No raidex column.** K2's condition is met exactly.
+
+Together with G1 — the ordering does not survive the detector swap — the
+programme's per-model output is now: nothing rankable, two rates that must be
+read alongside activity volume, and two findings (exploration-dependence of
+self-report; the structural blindness of string detectors on the decisive
+stratum) that stand on their own.
+
+## 2026-08-09 — V3 (Phase E): the register moves the score, and V1 was validated on a corpus with almost no negation
+
+Two new registers × 7 models × 3 seeds on world_v0, holding world, seeds, runs
+and steps fixed. The `introspective` arm is the Phase 1 re-baseline at the same
+seeds, so only the register varies.
+
+### G5 — CONFIRMED, and by a wide margin
+
+Explicit negation ("did not", "never", "failed to", "no sign of") in the
+sentence naming a scored entity:
+
+| register | negation rate | vs introspective |
+|---|---|---|
+| introspective | **0.005** | — |
+| retrospective | 0.017 | **3.8×** |
+| factual | **0.049** | **10.7×** |
+
+G5 asked for ≥2× and got 10.7×. **The introspective register — the one every
+published number in this project was measured under — contains essentially no
+explicit negation (0.5%).**
+
+That is a direct scope limit on V1. Both regexes return True on "I never found
+the logbook", and D1 was validated on this same near-negation-free corpus. **The
+0.885 / 0.962 / 0.710 detector result therefore certifies performance on text
+whose defining hard case occurs in one entity mention in two hundred.** In the
+factual register that case is ten times commoner and no detector here has been
+validated against it.
+
+### Register stability — FAIL
+
+Pooled fidelity per model per register:
+
+| lab | introspective | factual | retrospective |
+|---|---|---|---|
+| AI2 | 78.7 | 83.1 | 78.2 |
+| Alibaba | 60.6 | **77.4** | 71.0 |
+| Google | 75.7 | 79.1 | **67.4** |
+| IBM | 79.2 | 78.6 | 82.2 |
+| Meta | 87.4 | 90.4 | 88.5 |
+| MistralAI | 89.8 | 86.4 | 91.1 |
+| TII | 77.6 | 83.0 | **89.9** |
+
+    introspective vs factual        rho = +0.750
+    introspective vs retrospective  rho = +0.750
+    factual       vs retrospective  rho = +0.607
+
+**Worst pair 0.607, against a 0.80 gate. V3 fails.** Alibaba moves 16.8 points
+between registers, TII 12.3, Google 11.7 — comparable to the entire
+between-model spread. Asking the same model about the same episode in a
+different register changes its rank.
+
+### Taken with G1, this is the programme's central negative result
+
+Three sources of instability have now been measured on the same 500 episodes:
+
+| source | effect on the model ordering |
+|---|---|
+| detector choice (G1) | ordering does not survive at all |
+| narration register (V3) | worst-pair rho 0.607 |
+| world (V2) | rho 0.893 point, bootstrap lower bound 0.357 |
+
+**None of these is the model's honesty. All three are the instrument.** The
+score is a joint property of (model, detector, register, world), and only the
+first is the thing the benchmark set out to measure. That is a coherent finding
+and it is the honest headline: *entity-level self-report correspondence, as
+constructed here, is not separable from the apparatus that measures it.*
+
+It also explains the earlier confusion cleanly. Every attempt to fix one
+component — a better detector, a corrected ground truth, a second world — left
+the others free to move the answer.

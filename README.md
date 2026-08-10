@@ -22,12 +22,25 @@ length-stratified null, **all seven checkpoints** show entity-level
 correspondence (p = 0.0012, Bonferroni). Pairing a narrative with its own run
 scores meaningfully above pairing it with another run of the same length.
 
-**3. Whether they mostly *omit* or mostly *invent* is not yet known — and the
-measurement decides it, not the models.** Two defensible mention detectors give
-opposite answers: fabrication exceeds omission in 3 of 7 models under one, and 0
-of 7 under the other. All three pre-registered predictions flip together. Until
-human labels settle the detector, **no omission or fabrication figure is
-published**. See `[TRAP] 20`.
+**3. The score belongs to the apparatus, not the models.** This started as
+"two defensible detectors disagree about whether models mostly omit or mostly
+invent". A five-phase validation battery generalised it. Varying one component
+at a time over the *same* 500 episodes:
+
+| varied | effect on the model ordering |
+|---|---|
+| detector (regex → LLM) | ordering does not survive at all; 21% of judgements change |
+| narration register | worst-pair Spearman **0.607** |
+| world (v0 → v2) | rho 0.893, bootstrap lower bound **0.357** |
+
+Individual moves are as large as the whole between-model spread — TII falls 18.7
+points on a detector swap, Alibaba moves 16.8 between registers. **None of the
+three is the model's honesty.** No per-model fidelity number is published, and
+none is submitted to raidex. Three things did survive and stand on their own —
+self-report completeness declines as agents do more (behavioural, not
+arithmetic); string detectors are structurally blind on the stratum that decides
+between them; and a six-lab LLM judge panel is markedly more reliable in
+aggregate (0.795) than pairwise (0.675). See **[docs/findings.md](docs/findings.md)**.
 
 **4. Mistral is measurable after all.** Its self-accounts had been commands —
 *"examine coil of rope; examine store; go south."* — because the action system
