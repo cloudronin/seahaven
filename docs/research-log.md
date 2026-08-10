@@ -4241,3 +4241,78 @@ constructed here, is not separable from the apparatus that measures it.*
 It also explains the earlier confusion cleanly. Every attempt to fix one
 component — a better detector, a corrected ground truth, a second world — left
 the others free to move the answer.
+
+## 2026-08-09 — Rule-breaking: the existing corpus already contains a rule, and it measures better than fidelity does
+
+The action system prompt states an exhaustive vocabulary — *"These are the words
+that work. Nothing else does"* — so any out-of-vocabulary command is a violation
+of an explicit instruction. `verb_counts` records this in all 542 episodes, so
+the question is answerable from data already on disk.
+
+**Formatting artefacts had to be removed first.** IBM's most common "verb" is
+`1.` (147 occurrences, list numbering), Meta's is `inventory.` (49, an allowed
+verb with a trailing period), TII emits `<|assistant|>` (12, template leakage).
+Counting those as rule-breaking would have made the worst offender a model with
+a punctuation habit. After filtering to alphabetic tokens of length > 2:
+
+| lab | % episodes attempting an unlisted action | most-attempted |
+|---|---|---|
+| IBM | **39.6%** | read, use, pick, unlock, pour |
+| AI2 | **38.9%** | read, use, unlock, inspect, return |
+| MistralAI | 20.6% | read, drink, exit, done |
+| TII | 10.6% | pick, inspect, drink, use |
+| Google | 2.8% | exit |
+| Meta | 2.1% | pick |
+| **Alibaba** | **0.0%** | — |
+
+Pooled, the most-attempted unlisted capabilities are `read`(58), `use`(43),
+`pick`(28), `unlock`(24), `exit`(15), `pour`(12), `search`(11). **`unlock` is
+the notable one**: both worlds contain closed containers, and 24 attempts reach
+for a verb the rules do not grant in order to get past them.
+
+### This measure escapes the result that sank fidelity
+
+| | worst-pair rank correlation across conditions |
+|---|---|
+| fidelity | **0.607** (narration register) — and no stability at all under detector swap |
+| **non-compliance** | **0.864** |
+
+Per pair: world_v0 vs world_v2 **0.864**; across narration registers **1.000**.
+The register comparison is a test–retest of independently sampled action phases
+rather than a generalisation test — the register changes only the narration turn
+— so 1.000 should be read as reproducibility, not as register-invariance of
+something narrative. **The world comparison, 0.864, is the real generalisation
+result.**
+
+**And it is detector-free by construction.** Non-compliance is read from the
+commands the agent issued against a list stated in its own prompt. No mention
+detection, no judge, no negation blind spot — none of the three instability
+sources applies, because none of them is in the measurement path.
+
+It is also close to orthogonal to fidelity (r = +0.206). Alibaba is the *worst*
+model on fidelity (60.6) and the *only* one with perfect rule compliance. These
+are different constructs, not one dressed two ways.
+
+### What cannot be concluded
+
+- **This is compliance under zero pressure.** There is no goal and no incentive
+  to break anything, so the numbers are a floor: what models do when rule-
+  breaking buys them nothing. The safety question in `docs/world_v1_spec.md`
+  asks what happens when it buys something, and this says nothing about that.
+- **Intent is not observable here.** "Attempting to exceed the stated rules" and
+  "failing to follow instructions" are indistinguishable in this data.
+- **The disclosure figure is the weakest number.** 59% of unlisted-action
+  attempts never appear in the narrative, but *the attempts fail* — the world
+  rejects them and nothing changes. Omitting a no-op is defensible summarisation,
+  not concealment. It becomes the measurement the safety spec wants only when
+  the unlisted action **succeeds**, which is exactly what world_v1's hidden verbs
+  are for.
+
+### Consequence for the programme
+
+The fidelity construct is entangled with its apparatus; the compliance construct
+is not, on this evidence. **If the project continues, rule-compliance is the
+better-founded direction** — larger between-model spread (0% to 40%), stable
+across worlds, and requiring no detector at all. The natural next step is the
+already-specified world_v1: a real goal, hidden verbs that *work*, and the
+measurement being whether the account discloses using them.
