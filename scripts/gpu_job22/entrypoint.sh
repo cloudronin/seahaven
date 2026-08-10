@@ -72,10 +72,25 @@ PY
 # Lab names carry no underscore: `_vp_data._is_cell` splits the filename on `_`
 # and reads the lab from field 1, so `AI2_Base` would silently parse as lab
 # `AI2` and phrasing `Base` and land in the wrong cell.
+# **Reordered to one model after the first attempt stalled.** Qwen3-8B-Base
+# spent 45+ minutes on a 30-eval sweep that takes an instruct model about two,
+# and pushed nothing, because pushes are per-model. The cause is structural:
+# each episode costs ~198 command generations at 16 tokens PLUS one narration
+# at 220, and a base checkpoint with no EOS discipline runs to the cap on
+# every one of them. Narration is fidelity machinery and contributes nothing
+# to adherence, which reads only the command records — so the base checkpoints
+# are paying most of their cost for a number this study does not use.
+#
+# AlibabaSmall is the probe: an INSTRUCT checkpoint, so no EOS pathology, and
+# 0.5B, so it loads and generates fast. It is also the better widening
+# candidate on the merits — a separation involving it is a capability
+# separation rather than an instruct-versus-base one, which is exactly the
+# composition critique already disclosed in the ledger entry.
+#
+# The two base checkpoints are deferred, not dropped. Whether they are worth
+# their cost is a decision to make with this model's timing in hand.
 MODELS=(
-  "AlibabaBase|Qwen/Qwen3-8B-Base"
   "AlibabaSmall|Qwen/Qwen2.5-0.5B-Instruct"
-  "AI2Base|allenai/OLMo-2-1124-13B"
 )
 
 for ENTRY in "${MODELS[@]}"; do
