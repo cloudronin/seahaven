@@ -20,10 +20,18 @@ number is incomparable to every past one.
 from __future__ import annotations
 
 import random
+from array import array
 from typing import Protocol
 
 from .endpoint import Endpoint
 from .worldspec import WorldSpec
+
+#: Shared by every n-gram anchor. Generation stops at `</s>` or four tokens,
+#: whichever comes first, and an empty draw falls back to `look`. Frozen at R1
+#: and reused verbatim by R2/R3 so a rung difference is an anchor-family
+#: difference and not a generation-loop difference.
+MAX_TOKENS = 4
+BOS, EOS = "<s>", "</s>"
 
 
 class Policy(Protocol):
@@ -150,3 +158,187 @@ class BigramPolicy:
                 break
             out.append(cur)
         return " ".join(out) or "look"
+
+
+# --------------------------------------------------------------------------
+# R2 and R3 — the higher-order anchors from the survey. See the burn-ledger
+# append of 2026-08-09.
+#
+# **Why these cannot reuse R1's trick.** `BigramPolicy` gets add-one smoothing
+# for free by appending `sorted(vocab)` to every context's successor list and
+# sampling with `rng.choice`: uniform choice over a multiset is already
+# count-proportional, and one extra copy of each vocabulary item is exactly
+# add-one. That works only because every term in the mixture has weight 1.
+# Backoff (0.4) and interpolation (0.5/0.3/0.2) need genuinely unequal weights,
+# so both build explicit weight vectors and sample with `rng.choices`.
+#
+# Consequence worth stating: R2/R3 consume the RNG differently from R1
+# (`choices` draws one float, `choice` draws bits), so a degeneracy check
+# compares *distributions*, never generated strings. The distribution is what
+# the parameters control; the stream is an artefact of the sampler.
+# --------------------------------------------------------------------------
+
+def _ngram_counts(commands: list[str], order: int) -> dict[tuple, dict[str, int]]:
+    """context -> {successor: count}, each order padded to its own arity.
+
+    The bigram tier pads with one `<s>` exactly as `BigramPolicy` does, which is
+    what makes R3-collapsed-onto-bigram reproduce R1 rather than merely resemble
+    it. Higher tiers pad with `order - 1`, so their contexts are well defined
+    from the first generated token onward.
+    """
+    counts: dict[tuple, dict[str, int]] = {}
+    for c in commands:
+        toks = [BOS] * (order - 1) + c.split() + [EOS]
+        for i in range(order - 1, len(toks)):
+            d = counts.setdefault(tuple(toks[i - order + 1:i]), {})
+            d[toks[i]] = d.get(toks[i], 0) + 1
+    return counts
+
+
+def _vocab(commands: list[str]) -> tuple[str, ...]:
+    """Sorted, and including both sentinels — identical to `BigramPolicy`.
+
+    `<s>` is a drawable successor there, an oddity of the frozen R1 that has to
+    be reproduced rather than tidied: add-one over a different vocabulary is a
+    different distribution, and R1's numbers are already in the ledger.
+    """
+    return tuple(sorted({t for c in commands for t in c.split()} | {BOS, EOS}))
+
+
+class _NgramPolicy:
+    """Shared generation loop for the weighted anchors.
+
+    Cumulative weight vectors are cached per context, which turns an O(|V|)
+    rebuild per token into a bisect. The cache is **bounded and cleared
+    wholesale** when it fills: add-one smoothing puts real mass on the tail
+    (~40% for a typical context at |V| ~ 350), so contexts genuinely are diverse
+    and an unbounded cache would grow with the run rather than with the model.
+    Clearing cannot perturb a result — a weight vector is a pure function of its
+    context, so the cache is speed only.
+    """
+
+    #: ~350 doubles per entry, so this is tens of MB rather than gigabytes.
+    CACHE_MAX = 20_000
+
+    def __init__(self, commands: list[str], seed: int):
+        self._seed = seed
+        self.vocab = _vocab(commands)
+        self.n_fit = len(commands)
+        self._cum: dict[tuple, array] = {}
+
+    def scores(self, history: tuple[str, ...]) -> list[float]:
+        """Unnormalised score over `self.vocab`, in vocab order. Subclass hook."""
+        raise NotImplementedError
+
+    def distribution(self, history: tuple[str, ...]) -> dict[str, float]:
+        """Normalised, for tests and reporting. Not used in generation.
+
+        Degeneracy checks compare this, never generated strings: `choices` and
+        `choice` consume the RNG differently, so two policies can agree exactly
+        on the distribution and still emit different text from the same seed.
+        """
+        s = self.scores(history)
+        total = sum(s)
+        return {t: x / total for t, x in zip(self.vocab, s)}
+
+    def _draw(self, rng: random.Random, history: tuple[str, ...]) -> str:
+        cum = self._cum.get(history)
+        if cum is None:
+            cum, run = array("d"), 0.0
+            for x in self.scores(history):
+                run += x
+                cum.append(run)
+            if len(self._cum) >= self.CACHE_MAX:
+                self._cum.clear()
+            self._cum[history] = cum
+        return rng.choices(self.vocab, cum_weights=cum, k=1)[0]
+
+    def reply(self, messages: list[dict], *, step: int, seed: int) -> str:
+        rng = random.Random(f"{self._seed}:{seed}:{step}")
+        out: list[str] = []
+        for _ in range(MAX_TOKENS):
+            nxt = self._draw(rng, self._context(out))
+            if nxt == EOS:
+                break
+            out.append(nxt)
+        return " ".join(out) or "look"
+
+    def _context(self, out: list[str]) -> tuple[str, ...]:
+        raise NotImplementedError
+
+
+class TrigramBackoffPolicy(_NgramPolicy):
+    """R2 — trigram with stupid backoff to the add-one bigram.
+
+    Stupid backoff is per-word, not per-context: a successor observed in the
+    trigram context gets its trigram MLE, and every other word gets `alpha`
+    times its bigram score. Unnormalised by construction, so sampling normalises
+    what Brants et al. left as a score.
+
+    **The bigram tier is R1's distribution exactly**, so where R2 lands relative
+    to R1 is attributable to trigram structure and nothing else.
+    """
+
+    ALPHA = 0.4
+
+    def __init__(self, commands: list[str], seed: int = 5150, alpha: float | None = None):
+        super().__init__(commands, seed)
+        self.name = "C-MIMIC-R2"
+        self.alpha = self.ALPHA if alpha is None else alpha
+        self._tri = _ngram_counts(commands, 3)
+        self._bi = _ngram_counts(commands, 2)
+
+    def _bigram_probs(self, ctx: tuple[str, ...]) -> list[float]:
+        row = self._bi.get(ctx, {})
+        w = [row.get(t, 0) + 1 for t in self.vocab]      # add-one, as in R1
+        total = float(sum(w))
+        return [x / total for x in w]
+
+    def scores(self, history: tuple[str, ...]) -> list[float]:
+        bi = self._bigram_probs(history[-1:])
+        tri = self._tri.get(history, {})
+        if not tri:
+            # Nothing observed at trigram order: the whole distribution backs
+            # off, alpha cancels under normalisation, and R2 *is* R1 here.
+            return bi
+        n = float(sum(tri.values()))
+        return [tri[t] / n if t in tri else self.alpha * p
+                for t, p in zip(self.vocab, bi)]
+
+    def _context(self, out: list[str]) -> tuple[str, ...]:
+        return tuple(([BOS, BOS] + out)[-2:])
+
+
+class InterpolatedNgramPolicy(_NgramPolicy):
+    """R3 — linear interpolation of add-one 4-, 3- and 2-gram distributions.
+
+    Every tier is a proper distribution before mixing, so the weights mean what
+    they say. Collapsing them onto the bigram term must reproduce R1 exactly,
+    which is the witness that the mixing code is right.
+    """
+
+    WEIGHTS = (0.5, 0.3, 0.2)                            # 4-gram, 3-gram, 2-gram
+    ORDERS = (4, 3, 2)
+
+    def __init__(self, commands: list[str], seed: int = 5150,
+                 lambdas: tuple[float, ...] | None = None):
+        super().__init__(commands, seed)
+        self.name = "C-MIMIC-R3"
+        self.lambdas = self.WEIGHTS if lambdas is None else lambdas
+        if len(self.lambdas) != len(self.ORDERS):
+            raise ValueError(f"need {len(self.ORDERS)} weights, one per order")
+        self._counts = {o: _ngram_counts(commands, o) for o in self.ORDERS}
+
+    def _tier(self, order: int, ctx: tuple[str, ...]) -> list[float]:
+        row = self._counts[order].get(ctx, {})
+        w = [row.get(t, 0) + 1 for t in self.vocab]      # add-one, as in R1
+        total = float(sum(w))
+        return [x / total for x in w]
+
+    def scores(self, history: tuple[str, ...]) -> list[float]:
+        tiers = [self._tier(o, history[-(o - 1):]) for o in self.ORDERS]
+        return [sum(lam * t[i] for lam, t in zip(self.lambdas, tiers))
+                for i in range(len(self.vocab))]
+
+    def _context(self, out: list[str]) -> tuple[str, ...]:
+        return tuple(([BOS, BOS, BOS] + out)[-3:])
