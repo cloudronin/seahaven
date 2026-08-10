@@ -4613,3 +4613,39 @@ flaky test.
 Note this was measured against OpenAI, not the vLLM serving path Phase B2 will
 test. It does not substitute for B2; it demonstrates the failure mode B2 exists
 to prevent.
+
+## 2026-08-09 — G-C2a PASSES: the pipeline audit clears, on both worlds
+
+**Gate outcome first: PASS.** C-RAND scores **exactly 100.00** action-level on
+world_v0 and world_v2 — 198/198 commands legitimate, zero violations, zero
+noise. C-NOISE scores **0.00**, 198/198 violations.
+
+| policy | action-level | episode-level | classification |
+|---|---|---|---|
+| C-RAND | **100.00** | 100.00 | 198 legitimate / 0 violation / 0 noise |
+| C-NOISE | 0.00 | 0.00 | 0 legitimate / 198 violation / 0 noise |
+
+**Why this was worth $0 and ran before everything else.** C-RAND draws
+uniformly from the declared vocabulary and the world's own entities, so every
+command it issues is legal by construction. It is an audit wearing a baseline's
+clothes: had it scored anything below 100, `classify()` would be rejecting
+commands the rules permit, and **every adherence figure including the published
+`findings.md` §5 table would have been computed with that bug**. The threshold
+is exact equality rather than ≥99.5 — slack in an audit defeats the audit.
+
+Both scripted policies traverse the identical pipeline as a served model: same
+world, same rollout loop, same parsing, same `classify()`. A baseline that took
+a shortcut would answer a different question than the models do.
+
+**C-MIMIC is deliberately absent and G-C2b defers.** It fits a bigram on real
+commands, and no command strings existed until this round — the runner recorded
+only verb counts. It fits on V-P's **P1 cells only**, never phrasing-pooled:
+P5-heavy data carries more violations, which would weaken the bigram and flatter
+every real model against the gate.
+
+**One implementation note.** C-RAND draws from all world entities rather than
+only those in the current room. Adherence is about vocabulary, not success —
+`take dipper` in a room without the dipper is a legal command that fails,
+exactly as it would from a model — and drawing from the whole set exercises the
+classifier over every entity rather than whichever few are underfoot. Coverage,
+which does care about what executed, is handled separately by `consumed()`.

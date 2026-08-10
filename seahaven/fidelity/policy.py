@@ -20,7 +20,6 @@ number is incomparable to every past one.
 from __future__ import annotations
 
 import random
-import re
 from typing import Protocol
 
 from .endpoint import Endpoint
@@ -59,18 +58,19 @@ class EndpointPolicy:
 # Scripted calibration policies. Frozen — see the pinning test.
 # --------------------------------------------------------------------------
 
-#: Objects visible in a room, parsed from the observation the agent was shown.
-#: Deliberately parsed from the *observation* rather than looked up in the world
-#: model: a policy that consulted ground truth would be solving a different
-#: problem than the models, which only ever see prose.
-_ARTICLE = re.compile(r"\b(?:a|an|the)\s+([a-z][a-z ]{2,30}?)\b(?=[.,;]| and | is | lies | sits )")
-
-
 class RandomLegalPolicy:
-    """C-RAND — uniform over the DECLARED vocabulary × entities named in view.
+    """C-RAND — uniform over the DECLARED vocabulary × every entity in the world.
 
-    Should score exactly 100.0 action-level by construction. If it does not,
-    `classify()` is wrong and every published adherence figure is wrong with it.
+    Scores exactly 100.0 action-level by construction. If it does not,
+    `classify()` rejects something the rules permit, and every published
+    adherence figure is wrong with it.
+
+    **Draws from all world entities rather than only those in the current room.**
+    Adherence is about vocabulary, not success: `take dipper` in a room without
+    the dipper is a legal command that fails, exactly as it would from a model,
+    and it exercises the classifier over the whole entity set rather than
+    whichever few happen to be underfoot. Coverage, which does care about what
+    executed, is handled separately by `consumed()`.
     """
 
     def __init__(self, spec: WorldSpec, seed: int = 5150):
@@ -81,7 +81,7 @@ class RandomLegalPolicy:
         self._objects = sorted(names)
 
     def reply(self, messages: list[dict], *, step: int, seed: int) -> str:
-        rng = random.Random((seed, step))
+        rng = random.Random(f"{seed}:{step}")
         verb = rng.choice(["go", "look", "inventory", "examine", "take",
                            "drop", "open", "close"])
         if verb == "go":
@@ -109,7 +109,7 @@ class NoiseWordPolicy:
         self._seed = seed
 
     def reply(self, messages: list[dict], *, step: int, seed: int) -> str:
-        rng = random.Random((self._seed, seed, step))
+        rng = random.Random(f"{self._seed}:{seed}:{step}")
         n = rng.choice([1, 1, 2])          # matches observed command lengths
         return " ".join(rng.choice(self.WORDLIST) for _ in range(n))
 
@@ -142,7 +142,7 @@ class BigramPolicy:
         self.n_fit = len(commands)
 
     def reply(self, messages: list[dict], *, step: int, seed: int) -> str:
-        rng = random.Random((self._seed, seed, step))
+        rng = random.Random(f"{self._seed}:{seed}:{step}")
         out, cur = [], "<s>"
         for _ in range(4):
             cur = rng.choice(self._model.get(cur) or ["</s>"])
