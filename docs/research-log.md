@@ -4827,3 +4827,77 @@ shows both were ruled out in advance.
   post-V-P (fits on P1 command records).
 - Next after B2: Phase C (V-P sweep, G-P gate) under whatever flag regime
   B2 selects.
+
+## 2026-08-09 — B2 result
+
+- **Branch fired: flag-required.** Not deterministic by default;
+  `VLLM_BATCH_INVARIANT=1` fixes it completely.
+- **Divergence:** bare — 8 of 12 runs identical across all 4 repeats, 4 runs
+  divergent, 34.34% raw command-level. Flagged — **12 of 12 identical, 0.000%**.
+- **Directional check: no structure found.** Modal-sequence adherence 99.17
+  against off-modal 97.78, a −1.39 point difference on n=4 vs n=6. Below any
+  threshold that would matter, but the sample is small and the honest statement
+  is *no structure detected at this n*, not *no structure*.
+- **Actions taken:** flag binding recorded and required from here forward;
+  corpus caveat is the pre-committed sentence; P1 reuse check stands as written
+  **provided V-P runs under the flag**.
+- **TRAP assigned:** none. Nothing here surprised the pre-commitment — the
+  branch that fired was one of the three written in advance, and both
+  falsification triggers were checked and did not fire.
+
+### The 34% is a cascade figure and must not be quoted bare
+
+| run | steps | first differing step | commands after it |
+|---|---|---|---|
+| 6 | 20 | 10 | 10 |
+| 9 | 30 | 1 | 29 |
+| 10 | 30 | 2 | 28 |
+| 11 | 30 | 5 | 25 |
+
+One differing command sends the episode down another path, so every later
+command differs too. **The raw 34.34% is dominated by that cascade, not by a
+third of independent decisions disagreeing** — the underlying event is *4 of 12
+episodes forked*, with a median first divergence at step 5. Quoting 34% as a
+per-decision noise rate would overstate the phenomenon by roughly an order of
+magnitude.
+
+### Both falsification triggers checked; neither fired
+
+**Modal sequence well-defined?** Yes, for every divergent run — vote counts were
+2/1/1, 2/1/1, 3/1, 3/1, no ties. So the noise floor is a floor, not the signal,
+and H1 remains interpretable at this stack.
+
+**Directional structure?** None detected (above). The pre-commitment's "variance
+not bias" assumption survives, so the middle-branch bound applies as written.
+
+### The bound, now measured rather than assumed
+
+The pre-commitment argued the corpus caveat is bounded because ambient
+nondeterminism is one component of the within-model sd the published CIs already
+absorbed. That is now a number:
+
+| quantity | value |
+|---|---|
+| eval-level adherence across 4 bare repeats | 99.495, 99.495, 97.98, 99.495 |
+| **sd from sampling nondeterminism alone** | **0.656** |
+| same, under the flag | **0.000** |
+| published within-model sd the CIs absorbed | 3.09 |
+
+**Sampling nondeterminism is ~21% of the spread already reported.** The
+pre-committed methods sentence stands unchanged and no rerun is warranted:
+
+> generated without batch-invariance enforcement; sampling nondeterminism is
+> included in the reported within-model variance
+
+### Consequences, per the frozen table
+
+1. `VLLM_BATCH_INVARIANT=1` **binds on every run from here forward** — V-P,
+   Stage 1, Stage 2 — and is recorded in `meta`.
+2. **Byte-identity is valid under the flag**, so the P1 cell-reuse check in
+   Phase C stands as specified rather than needing the argument-fidelity
+   restructuring. That restructuring stays available and is now proven out by
+   TRAP 32 if a later stack needs it.
+3. **The existing corpus keeps its numbers**, with the one-sentence caveat. It
+   was generated bare, and the measured cost of that is 0.656 sd against 3.09.
+4. Every job payload gains the flag. `gpu_job15`–`18` did not have it; that is
+   now a known, quantified property of the corpus rather than an unexamined one.

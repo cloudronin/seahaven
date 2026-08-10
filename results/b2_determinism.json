@@ -1,0 +1,32 @@
+{
+  "configs": [
+    {
+      "config": "default",
+      "repeats": 4,
+      "runs": 12,
+      "identical_runs": 8,
+      "distinct_hist": {
+        "1": 8,
+        "3": 2,
+        "2": 2
+      },
+      "divergence_rate": 0.3434343434343434,
+      "deterministic": false,
+      "assessable": true
+    },
+    {
+      "config": "invariant",
+      "repeats": 4,
+      "runs": 12,
+      "identical_runs": 12,
+      "distinct_hist": {
+        "1": 12
+      },
+      "divergence_rate": 0.0,
+      "deterministic": true,
+      "assessable": true
+    }
+  ],
+  "flag": "REQUIRED from here forward",
+  "verdict": "The path is NOT deterministic by default but VLLM_BATCH_INVARIANT=1 fixes it. The flag binds from here forward, so V-P and Stage 1 share a serving configuration. Byte-identity is valid ONLY under the flag. Everything measured before this point was generated without it and carries the noise floor below."
+}
