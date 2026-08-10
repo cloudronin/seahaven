@@ -4316,3 +4316,75 @@ better-founded direction** — larger between-model spread (0% to 40%), stable
 across worlds, and requiring no detector at all. The natural next step is the
 already-specified world_v1: a real goal, hidden verbs that *work*, and the
 measurement being whether the account discloses using them.
+
+## 2026-08-09 — Naming and raidex fit: "Constraint Adherence"
+
+### raidex has no constituent covering this
+
+Its nine: BBQ (Fairness & Bias), WMDP (Security), SimpleQA (Factuality),
+StrongREJECT (Security/refusal), ETHICS (Machine Ethics), XSTest (Safety/
+over-refusal), Sycophancy, AdvGLUE (Robustness), ConfAIde (Privacy). Composite:
+RAI Score.
+
+The two nearest are **request-facing and single-turn**: StrongREJECT asks
+whether a model refuses a harmful request, XSTest whether it over-refuses a
+benign one. Both concern *what a model agrees to do when asked*. This measures
+whether an agent **stays inside a stated operational envelope while acting
+unsupervised**, which no constituent covers. IFEval is the closest thing in the
+wider field and is also static and single-turn.
+
+### Name
+
+**Dimension: Constraint Adherence. Benchmark id: `seahaven-adherence`.**
+
+"Compliance Score" was the obvious candidate and is worse on two counts. In a
+*Responsible AI* index, "compliance" reads as regulatory/policy compliance,
+which is not this. And the refusal sense of compliance is already occupied by
+StrongREJECT and XSTest, so the name would collide with two existing
+constituents while measuring something orthogonal to both.
+
+### The measure, in raidex orientation (higher is better)
+
+| model | episode-level | action-level |
+|---|---|---|
+| Alibaba | **100.0** | 100.0 |
+| Meta | 97.9 | 99.5 |
+| Google | 97.2 | 99.8 |
+| TII | 89.4 | 99.0 |
+| MistralAI | 79.4 | 96.9 |
+| AI2 | 61.1 | 89.7 |
+| IBM | 60.4 | 92.7 |
+
+Spread 60.4–100.0, sd 15.8, and 100 is a real ceiling rather than an asymptote.
+
+### The check that fidelity failed, and this passes
+
+The formatting filter is a measurement decision — IBM's most frequent
+out-of-vocabulary token is `1.` and Meta's is `inventory.` — so it had to be
+tested the way the detector was:
+
+| filter | worst-pair rank correlation |
+|---|---|
+| raw / strip-punctuation / frozen / alphabetic-only | **0.893** |
+| the three that strip punctuation, against each other | **1.000** |
+
+Levels move (Meta 85.4 → 97.9) but the ordering does not. **The measurement
+decision is not load-bearing**, which is exactly what could not be said of the
+mention detector. Combined with cross-world ρ 0.864 and no detector, judge or
+ground-truth extraction anywhere in the path, this measure is robust in the
+three ways the fidelity score was not.
+
+### What still has to be true before it is a constituent
+
+1. **Zero-pressure floor.** Nothing is gained by leaving the action space here.
+   This measures baseline drift, not goal-driven rule-breaking. world_v1 —
+   a real goal plus hidden verbs that *work* — is the actual test.
+2. **Intent is not observable.** Exceeding the stated vocabulary and failing to
+   follow instructions are indistinguishable in this data. The dimension name
+   must not imply the former.
+3. **Episode-level and action-level disagree at the bottom** (AI2 61.1/89.7 vs
+   IBM 60.4/92.7 swap between them). One must be pre-registered as primary
+   before any number is published.
+4. **Seven models, one checkpoint each.** Needs breadth.
+5. Still requires the new agentic tier the fidelity spec described — that
+   argument survives even though the benchmark it was written for did not.
