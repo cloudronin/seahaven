@@ -4572,3 +4572,44 @@ Stage 2 around provable insufficiency rather than weakening it.
   attractive.
 
 `findings.md` §5 carries a dated correction rather than a silent edit.
+
+## 2026-08-09 — [TRAP 32] The byte-identity check presupposed the determinism it was meant to run after
+
+Building the `Policy` interface (plan item A2), the required regression is that
+`EndpointPolicy` reproduces the pre-existing rollout exactly, since the loop is
+shared with a 542-episode corpus and a published table.
+
+**First attempt, n=1 each:** bare endpoint and wrapped endpoint gave different
+command sequences at the same seed. That reads as code drift.
+
+**Control, n=2:** bare vs bare was identical. That reads as *confirming* code
+drift — the wrapper looked guilty.
+
+**Both readings were wrong, and n=4 shows why:**
+
+| path | distinct sequences over 4 runs at one seed |
+|---|---|
+| bare endpoint | 2 (3× modal, 1× variant) |
+| `EndpointPolicy` | 2 (3× **the same modal**, 1× different variant) |
+
+**Both paths are individually nondeterministic and share the modal outcome.**
+The wrapper is not the source of variation; the endpoint is, under its own seed.
+At n=2 the control happened to draw the same sample twice and manufactured a
+false conclusion in the opposite direction.
+
+**This is the sequencing error the plan review caught, arriving in practice
+before the phase that was supposed to expose it.** A byte-identity acceptance
+test cannot separate code drift from ambient noise on a nondeterministic path,
+which is exactly why the determinism control must precede every identity check
+rather than follow them.
+
+**Resolution.** The wrapper's real invariant is *argument fidelity* — that it
+calls `chat` with the same `max_tokens`, `temperature` and seed derivation as
+the original inline call. That is deterministic, free, and directly tests what
+matters, so it is asserted against a recording fake instead of a live endpoint.
+The live distributional evidence is recorded here rather than turned into a
+flaky test.
+
+Note this was measured against OpenAI, not the vLLM serving path Phase B2 will
+test. It does not substitute for B2; it demonstrates the failure mode B2 exists
+to prevent.

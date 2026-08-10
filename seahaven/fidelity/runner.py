@@ -277,10 +277,19 @@ def _mention(narrative: str, act: str, judge: Endpoint | None) -> bool:
     return bool(m and m.group(1) == "yes")
 
 
-def _rollout(ep: Endpoint, steps: int, seed: int,
+def _rollout(ep, steps: int, seed: int,
              spec: WorldSpec) -> tuple[list[dict], list[dict]]:
     """Returns (rows, messages). `messages` is the episode as the agent lived it,
-    so narration can continue the same conversation rather than starting cold."""
+    so narration can continue the same conversation rather than starting cold.
+
+    `ep` is a `Policy` (see `policy.py`) or a bare `Endpoint`, which is wrapped.
+    Accepting both keeps every existing call site working while letting the
+    scripted calibration policies traverse this exact loop — the point of the
+    C-RAND audit is that it meets the same parsing and the same failure modes
+    the models do.
+    """
+    from .policy import EndpointPolicy
+    pol = ep if hasattr(ep, "reply") else EndpointPolicy(ep)
     w = open_world_serial(spec.path)
     obs, _ = w.reset()
     recents: list[str] = []
@@ -296,8 +305,7 @@ def _rollout(ep: Endpoint, steps: int, seed: int,
             lines.append(obs.text)
         user_turn = "\n\n".join(lines)
         messages.append({"role": "user", "content": user_turn})
-        reply = ep.chat(messages, max_tokens=16, temperature=0.9,
-                        seed=seed * 100_003 + step)
+        reply = pol.reply(messages, step=step, seed=seed)
         cmd = reply.strip().splitlines()[0].strip().strip('"').lower() if reply.strip() else "look"
         messages.append({"role": "assistant", "content": reply.strip()})
         room = obs.room
@@ -450,6 +458,15 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                       "command_prefix_stripped": stripped,
                       "verb_counts": {v: sum(r["verb"] == v for r in rows)
                                       for v in sorted(verbs) if v},
+                      # Per-step records, projected. `facts` and `response` are
+                      # deliberately excluded: they repeat every step and would
+                      # multiply result-file size for data no measure reads.
+                      # `ok` carries what `response` was needed for.
+                      "commands": [{"step": r["step"], "command": r["command"],
+                                    "verb": r["verb"], "room": r["room"],
+                                    "room_after": r["room_after"],
+                                    "ok": not _failed(r.get("response", ""))}
+                                   for r in rows],
                       "acts": per, "act_classes_unscored": act_level}
 
     # Episodes are latency-bound on a remote endpoint and independent of one

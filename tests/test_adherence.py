@@ -201,3 +201,59 @@ def test_unmatched_response_rate_is_reported_not_hidden():
             {"response": "Some engine reply nobody anticipated."},
             {"response": "You can't see any such thing."}]
     assert unmatched_response_rate(rows) == pytest.approx(2 / 3)
+
+
+# --- the policy wrapper -----------------------------------------------------
+
+def test_endpoint_policy_passes_arguments_unchanged():
+    """`EndpointPolicy` must not perturb generation.
+
+    The measurement loop is shared with a 542-episode corpus and a published
+    table, so if wrapping the endpoint changes any call argument, every future
+    number is incomparable with every past one.
+
+    **Tested against a recording fake rather than a live endpoint, deliberately.**
+    A live byte-identity check was tried first and was uninterpretable: over four
+    runs at a fixed seed the bare path produced two distinct command sequences
+    and the wrapped path produced two, sharing the same modal sequence 3/4 each.
+    The endpoint is nondeterministic under its own seed, so byte-identity cannot
+    separate code drift from ambient noise — which is precisely why the
+    determinism control has to precede the identity checks rather than follow
+    them. The invariant that actually matters is argument fidelity, and that is
+    deterministic and free to assert.
+    """
+    from seahaven.fidelity.policy import EndpointPolicy
+
+    class Recorder:
+        served_name = "fake"
+
+        def __init__(self):
+            self.calls = []
+
+        def chat(self, messages, **kw):
+            self.calls.append((len(messages), kw))
+            return "look"
+
+    rec = Recorder()
+    EndpointPolicy(rec).reply([{"role": "user", "content": "x"}], step=7, seed=4242)
+    assert len(rec.calls) == 1
+    _, kw = rec.calls[0]
+    # Verbatim from the pre-refactor `_rollout` body.
+    assert kw == {"max_tokens": 16, "temperature": 0.9,
+                  "seed": 4242 * 100_003 + 7}
+
+
+def test_rollout_accepts_a_bare_endpoint_and_a_policy():
+    """Existing call sites pass an `Endpoint`; the calibration study passes a
+    `Policy`. Both must work, or the scripted baselines cannot traverse the same
+    pipeline the models do."""
+    from seahaven.fidelity.policy import EndpointPolicy
+
+    class Stub:
+        served_name = "stub"
+
+        def chat(self, messages, **kw):
+            return "look"
+
+    assert hasattr(EndpointPolicy(Stub()), "reply")
+    assert not hasattr(Stub(), "reply"), "bare endpoints are wrapped, not duck-typed"
