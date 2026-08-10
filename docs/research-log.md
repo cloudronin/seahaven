@@ -5806,3 +5806,64 @@ the sandbox. Two mid-range models with ordinary adherence will push it **up**,
 partly reversing the drop the three small models caused — R1 has already gone
 92.02 → 86.13 → 77.60 across two widenings. The instrument and the sample move
 together, always, and the re-read must not attribute the result to either alone.
+
+## 2026-08-10 — CAPABILITY PROXY PINNED, before any value is looked up
+
+AI2Mid (OLMo-2-7B-Instruct) flags while AlibabaMid (Qwen2.5-3B-Instruct) passes,
+which falsifies the size story. It does **not** falsify the broader competing
+explanation: that OLMo's post-training is simply weaker than Qwen's, so it lands
+low on containment the way it would land low on instruction-following generally.
+Size is one proxy for capability; general post-training quality is another, and
+neither is a disposition. Only a capability number separates *poorly contained*
+from *poorly post-trained*.
+
+**This entry is written before any capability figure has been retrieved.** The
+proxy, the source, the fallback and the decision thresholds are all fixed here,
+because every one of them could otherwise be chosen after seeing which way the
+answer fell.
+
+### The proxy
+
+- **Primary: MMLU-Pro**, taken from the **Open LLM Leaderboard v2**, so every
+  model is measured by one harness. Self-reported model-card figures are **not**
+  admissible: they use different harnesses, shot counts and prompt formats, and
+  mixing them would manufacture differences that are pure methodology.
+- **Fallback, applied uniformly or not at all: MMLU (5-shot)** from the same
+  leaderboard, used only if MMLU-Pro is missing for one or more cohort models.
+- **A model with no comparable number is recorded as missing**, never
+  substituted from another source.
+
+### The two comparisons, defined before the data
+
+**C1 — the sharp contrast.** AI2Mid (7B, flags) against AlibabaMid (3B, passes).
+These two were selected blind on size and family, and they split on containment
+in the direction opposite to size.
+
+- If AlibabaMid's capability is **also clearly higher**, capability and
+  containment move together and the flag is plausibly competence.
+- If AlibabaMid's capability is **similar or lower** while its containment is far
+  higher, that is a dissociation, and it is the strongest single fact this study
+  could produce.
+
+**C2 — against the pack.** AI2Mid's proxy against the cohort's containment-
+PASSING instruct models.
+
+- **"Near the pack"** = at or above the **25th percentile** of passing models.
+- **"Low"** = below it.
+
+### What each outcome licenses, fixed now
+
+| AI2Mid LOO flag | AI2Mid capability | reading |
+|---|---|---|
+| survives | near the pack | **dissociation** — containment low while capability is not; earns the freeze and one reserve look |
+| survives | low | the flag is competence, not disposition; close the negative — the axis is general capability, which a scalar cannot partial out from disposition |
+| straddles | — | size story dies, phrasing story lives; close the negative with both footnotes |
+
+**The reserve is not touched until this number exists.** Burning a held-out
+cohort to confirm a separation that cannot yet be attributed is the one
+irreversible error still available, and it would spend the thing the whole
+phase-switch design was built to protect.
+
+Order of operations, fixed: AI2Mid's leave-one-out margin against the 12-model
+R2 anchor first, then the capability numbers, then the full bar. No FREEZE entry
+is written until all three are in.
