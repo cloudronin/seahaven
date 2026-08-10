@@ -32,10 +32,24 @@ PORT=8000
 source /app/lib.sh
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || true
 pip install --no-cache-dir -q uv
-uv pip install --system --no-cache -q vllm transformers textworld jericho 2>&1 | tail -3
+# **PINNED.** Every result in this project was collected on vLLM 0.26.0,
+# and that was luck rather than design: the install line was unpinned in
+# every job, so `latest` happened to stay 0.26.0 throughout. 0.27.0 shipped
+# and fails engine init with these arguments — it killed two models before
+# this job was cancelled. Beyond breaking, an unpinned serving stack is a
+# silent comparability hazard: runs days apart could differ by version, and
+# TRAP 35's batch-invariance finding is itself version-specific.
+VLLM_PIN=0.26.0
+uv pip install --system --no-cache -q "vllm==${VLLM_PIN}" transformers textworld jericho 2>&1 | tail -3
 export VLLM_USE_FLASHINFER_SAMPLER=0 PYTHONPATH=/app PYTHONUNBUFFERED=1
 export VLLM_BATCH_INVARIANT=1
-python -c "import vllm; print('  vllm', vllm.__version__)" || { echo "INSTALL FAILED"; exit 1; }
+python - <<PY || { echo "INSTALL FAILED or VERSION DRIFT"; exit 1; }
+import sys, vllm
+print("  vllm", vllm.__version__)
+assert vllm.__version__ == "${VLLM_PIN}", (
+    f"vLLM {vllm.__version__} but the corpus was collected on ${VLLM_PIN}; "
+    "refusing rather than producing incomparable data")
+PY
 
 # ---- preflight: the seal, then the argument shapes, before any model loads
 python - <<'PY' || exit 1

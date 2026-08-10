@@ -6712,3 +6712,50 @@ NOT-DEAD; only its legal-only variant clears. There is no 0.303-versus-0.024
 cell anywhere in the output. And the two capability routes **did not agree** —
 `routes_agree = false`, the pre-registered incoherence flag fired, and its
 resolution (junk masking rather than driving) is the entry above.
+
+## 2026-08-10 — [TRAP] 37 — the serving stack was never pinned, and 0.27.0 broke it
+
+**Phase 1a died on its first two models and was cancelled after ~6 minutes
+(~$0.50).** Cause: `uv pip install ... vllm` has been **unpinned in every job
+this project has ever run**, and vLLM 0.27.0 shipped. Engine init fails with our
+arguments — `RuntimeError: Engine core initialization failed` — identically on
+`Qwen2.5-3B` and `Qwen2.5-3B-Instruct`, so all 18 would have failed.
+
+| job | vLLM |
+|---|---|
+| B2 determinism control | 0.26.0 |
+| V-P phrasing sweep | 0.26.0 |
+| Check 3 determinism map | 0.26.0 |
+| **Phase 1a** | **0.27.0** |
+
+**The whole corpus was collected on 0.26.0 by luck, not by design.** Ten job
+directories carry the same unpinned line. `latest` simply happened to stay
+0.26.0 for the duration.
+
+### The breakage is the smaller half
+
+An unpinned serving stack is a **silent comparability hazard** even when it
+works. Two sweeps days apart could differ by version with nothing in the record
+to say so, and the difference would land inside every cross-model comparison as
+an uncontrolled factor — the same shape as the serving-regime confound that
+ruled Together AI out of the cohort.
+
+It also bounds an earlier finding: **TRAP 35's batch-invariance result is
+version-specific.** "`VLLM_BATCH_INVARIANT=1` binds above ~7B and not below" is a
+fact about vLLM 0.26.0 on H200, not about vLLM. The determinism map inherits that
+scope, and any future re-run on a different version must re-measure rather than
+assume.
+
+### Fix
+
+`vllm==0.26.0` pinned, plus a **preflight assertion** that the installed version
+matches — so drift fails at second zero with a message naming the corpus's
+version, rather than per-model after a server load. Same shape as the fix for
+TRAP 34: a whole-job property belongs in preflight, not in the per-model loop.
+
+The pin is a *comparability* decision, not a preference for an old release.
+Moving to a newer vLLM is allowed; what is not allowed is moving silently, or
+comparing across the move.
+
+**Not a measurement error.** No number moved — the job produced nothing and was
+cancelled. The corpus is intact and was collected entirely on the pinned version.
