@@ -5265,3 +5265,140 @@ compared unless each is known finer than the separations between them.
 
 Nothing here is confirmatory. Every result file the survey writes carries
 `phase: "exploration"`.
+
+## 2026-08-09 — SURVEY RESULT: no scalar anchor clears the bar on the dev seven
+
+**Outcome first: all three rungs fail, and the reason is not the anchor family.**
+An exhaustive sweep of every anchor location in [80, 101] at 0.01 resolution
+finds **zero** positions clearing criteria 1, 2 and 4. Criterion 3 can only
+remove locations, never add one. So the failure is not that R1, R2 and R3 landed
+badly — it is that **no scalar anchor whatsoever separates this cohort stably.**
+
+phase: exploration. Nothing below is confirmatory.
+
+### The three locations
+
+| rung | family | world_v0 | world_v2 | vs R1 |
+|---|---|---|---|---|
+| R1 | bigram, add-one | 92.02 ±0.112 | 90.24 ±0.120 | — |
+| R2 | trigram, stupid backoff 0.4 | 95.40 ±0.087 | 94.47 ±0.090 | +3.37 / +4.22 |
+| R3 | interpolated 4/3/2-gram | 91.99 ±0.110 | 90.27 ±0.127 | −0.03 / +0.03 |
+
+300 repeats, 3600 episodes, 59,400 commands per cell. Every SE is roughly a
+third of the 0.30 target, so no extension clause fired and the locations are
+known far finer than the separations between them. Every anchor strictly
+bracketed by the stooges.
+
+**Order does not raise the anchor; smoothing does.** R2 and R3 are both
+higher-order and they land 3.4 points apart, with R3 sitting on top of R1 to
+within 0.03. Stupid backoff gives an observed continuation its raw MLE, so R2
+concentrates. Add-one charges every tier `|V|` pseudo-counts regardless of
+evidence, so R3's sparse 4- and 3-gram tiers dilute back to bigram behaviour and
+the order gain cancels almost exactly. This mechanism was written down as a test
+before the fits ran (`tests/test_anchor_rungs.py`), where it predicted R3 *might*
+land below R1; the measured answer is that dilution and order gain cancel.
+
+**PF-L1 is confirmed as a measurement rather than a rescue clause.** It was
+conditional on an escalation that the phase switch abolished; fitting all three
+unconditionally turned it into a direct test, and R2 clears the 3-point bar on
+both worlds. PF-1 confirmed (R1 in 85–95 on both worlds). PF-2 confirmed at R1
+(AI2 FLAG, IBM UNSTABLE, five PASS). All three are **development observations**
+on a burned dev set.
+
+**The n=2 preview was wrong by 2.9 points.** It read 89.14 ±1.77; the 300-repeat
+fit is 92.02 ±0.112. Inside the preview's own interval, and a reminder of why
+TRAP 32 exists. R1-full supersedes it in the ledger.
+
+### Why the bar is unsatisfiable here
+
+The worst-phrasing adherences, which are what the boundary rule actually sees:
+
+| model | world_v0 | world_v2 |
+|---|---|---|
+| AI2 | 83.33 | 84.18 |
+| IBM | 91.92 | 91.31 |
+| TII | 93.27 | 95.96 |
+| MistralAI | 93.94 | 90.91 |
+| Meta | 95.96 | 99.66 |
+| Google | 99.49 | 99.16 |
+| Alibaba | 100.00 | 96.97 |
+
+**One outlier, one 6.7-point gap, and twelve cells packed into the nine points
+above it.** Every anchor location is therefore in one of five regimes:
+
+- below 83.33 — nothing flags, criterion 1 fails on an empty minority
+- 83.33 to 84.18 — AI2 flags on v0 only, criterion 2 fails
+- **84.18 to 90.91 — the gap. Memberships are stable, and exactly one model is
+  below the line, so criterion 1 fails on a minority of one**
+- 90.91 to 100 — inside the dense cluster, so whoever the line is nearest
+  straddles it; criteria 2, 3 and 4 fail
+- above 100 — everything flags, criterion 1 fails again
+
+R1 and R3 sit at the bottom edge of the cluster, R2 in its middle. Both are the
+same mistake in different places.
+
+### The predicted migration happened, and then kept going
+
+The plan predicted the binding constraint would move from criterion 1 to 2 and 3
+as the anchor rose, because a rising line buys non-degeneracy by newly flagging
+models that are *near* it. That is exactly what the straddle sets show:
+
+| rung | anchor | cells straddling under bootstrap |
+|---|---|---|
+| R1, R3 | ~92 / ~90 | IBM (both), MistralAI (both), TII v0 |
+| R2 | ~95 / ~94 | Alibaba v2, Meta v0, MistralAI v0, TII (both) |
+
+**The straddle set tracks the anchor.** Raising the line did not fix instability,
+it relocated it — from the models just above 90 to the models just above 95.
+That is the sweep result in miniature.
+
+Criterion 4 adds its own verdict. Under R1 on world_v2, dropping p5 empties the
+flag set entirely: **AI2's only cross-world flag rests on a single phrasing.**
+Its other four world_v2 phrasings read 90.74, 90.91, 94.61, 90.40 — all above the
+anchor. Under R2, MistralAI's flag dies on dropping p4 and TII's on dropping p5.
+
+### A property of the rule, recorded before it could mislead anyone
+
+Writing the bar's tests before the numbers landed caught an asymmetry I had
+backwards. The minimum of five noisy per-phrasing estimates is biased low — the
+min of five draws sits below the min of their five means — so the worst-case rule
+pushes resampled margins downward. **A model sitting exactly at the anchor
+therefore flags robustly rather than straddling, and the genuinely fragile cells
+are those with a small positive margin. FLAGs are sticky; PASSes are fragile.**
+
+Left as a percentile interval rather than bias-corrected, deliberately: the
+criterion asks whether the rule's verdict is stable under resampling, not what
+the true minimum is, and correcting the bias would answer the second question.
+Both directions are pinned by tests so a later reader seeing `flag_share` near 1
+on a zero-margin model does not conclude the bootstrap broke.
+
+### What this closes and what it opens
+
+**Closed: surveying more n-gram families on this cohort.** R4, R5,
+class-conditioned variants and trained micro-imitators all terminate in a scalar
+anchor location, and the sweep says no location works. Spending CPU on more
+families here would be answering a question already settled.
+
+**Open, and now precisely specified:**
+
+1. **Widen the sandbox.** The bar needs at least one more model whose worst-case
+   adherence sits in or below the gap on *both* worlds — comfortably below ~90,
+   not at its edge, or criterion 3 catches it. Two would be safer than one. Base
+   and small checkpoints are the obvious source, which is what the phase entry
+   anticipated.
+   **Caveat that must not be lost:** the anchor is fit on P1 commands from the
+   V-P sweep, so adding models to the sandbox adds their commands to the fit
+   corpus and *moves the anchor*. Low-adherence models weaken the imitator and
+   pull the line down — plausibly into the gap, which is where it needs to be.
+   Favourable, but a side effect rather than a control, and the resulting
+   separation risks being "instruct versus base", which is the composition
+   concern already disclosed for SmolLM2.
+2. **Change the boundary rule, at zero cost.** Every criterion-3 failure is a
+   cell whose margin is small relative to its own bootstrap spread. A rule with
+   an explicit indeterminate band — FLAG / INDETERMINATE / PASS, by margin
+   against its own SE rather than against zero — targets that failure directly
+   and needs no new data. The phase entry permits any boundary rule inside the
+   sandbox.
+
+**No reserve look is earned; the reserve stays unburned.** That is what pinning
+it before the survey ran was for. No GPU was spent this round.
