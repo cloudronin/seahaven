@@ -5999,3 +5999,54 @@ obviously weak, and adds nothing to a capability score it correlates with at
   base-model job and TRAP 34.
 - 12 models, 360 V-P cells, 3 anchor families, 2 boundary rules, 2 worlds,
   5 phrasings — and the answer is a negative with two independent supports.
+
+## 2026-08-10 — Tracking the two direction docs, and what tonight did to each
+
+`docs/program-note-dimensional-space.md` and `docs/e1-world-axes-scoring.md` are
+now tracked, **unmodified**. Both were written before tonight's closing results;
+this entry records their status rather than editing them, since a design note
+that gets quietly revised after the data stops being evidence of what was
+thought beforehand.
+
+### The program note predicted this outcome and specified the remedy
+
+Its Stage 4 already contains the provision tonight executed, written before the
+capability numbers existed:
+
+> Capability is categorically different from every candidate axis. […]
+> **An axis fully explained by capability is CULLED, and the cull is a finding.**
+
+That is exactly what happened. Containment correlates with MMLU-Pro at +0.717 /
++0.917 with a perfectly separating split, so **the containment axis is culled,
+and the cull is the finding.** The note also named the second contamination site
+— noise in adherence's denominator inflating a weak model's own score — which is
+the caveat registered before the widening and which the base-checkpoint stall
+then made concrete.
+
+Its finding 3 ("adding a flaggable model removed the existing flag") is the
+eight-model observation, now extended: the anchor fell 92.02 → 86.13 → 77.60 →
+78.86 across three widenings, and R2's ten-model clear did not survive the
+twelfth model. **A poorly-contained model makes its peers look more contained**
+is not a quirk of one cohort; it is what fitting the null on the scored cohort
+does, measured four times.
+
+Nothing in tonight's results contradicts the note. The scalar path is closed on
+its own terms, by the gate the note said should exist.
+
+### E1's recorded anchors are superseded, and its §0 is correct as written
+
+`e1-world-axes-scoring.md` §0 lists R1 at 92.02 / 90.24 and R2 world_v0 at 95.40.
+Those were the **seven-model** values, accurate when written mid-survey and
+labelled as such. The twelve-model refits are **R1 78.86 / 77.40, R2 85.43 /
+84.27, R3 78.97 / 77.41**. The gap is the composition-dependence the program note
+names, and it is the reason a cross-world battery built on cohort-fit anchors
+inherits the same problem one level up: each world's anchor would move with its
+reference cohort.
+
+Its budget line assumes ~$16 remaining; ~$7 remains. The axis program was
+already scoped as a fresh authorization decision "taken after the survey verdict
+and the bar reading" — both of which are now in, and both negative.
+
+**Neither doc is a commitment.** They are tracked so the direction survives the
+close of the scalar construct, which is what the program note asks for in its
+own first line.
