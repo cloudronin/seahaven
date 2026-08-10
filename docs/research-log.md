@@ -6148,3 +6148,82 @@ capability.
   Separating disposition from competence needs that axis partialled, which a
   scalar threshold on one adherence number structurally cannot do. Start rested,
   not on session momentum; cohort size is gate zero.
+
+## 2026-08-10 — CHECK 1: base-model cost solved; the regression failed and needs its control
+
+Gate-zero Check 1 of `docs/cohort-feasibility-gate.md`. Two questions were asked
+in order, A gating B. **B passed decisively. A failed, and the failure is not yet
+attributable — the control is running.**
+
+### B — base-model cost, with narration off
+
+| checkpoint | narration ON | narration OFF |
+|---|---|---|
+| `Qwen/Qwen3-8B` (instruct) | — | **9 s** |
+| `Qwen/Qwen3-8B-Base` | 45+ min, never completed a 30-eval sweep | **17 s** |
+
+**Multiplier 1.9×, inside the ~2× gate.** Both ran 12/12 runs and 198 commands,
+served alone, `VLLM_BATCH_INVARIANT=1`, v1 schedule, identical arguments.
+
+The base checkpoint that cost $4.25 for zero results now finishes an eval in
+seventeen seconds. **Narration was essentially the entire base-model cost**, not
+a contributing factor: 220 tokens per episode running to the cap on a model with
+no EOS discipline, for a fidelity number the dimensional program never reads.
+The base/instruct gradient is affordable, so the cohort does not have to be
+instruct-only.
+
+It also resets Check 4's arithmetic before Check 4 is written. At ~9 s per eval
+plus ~130 s of model load, a 30-eval sweep is roughly **7 minutes per model**, so
+a 30-model two-world cohort lands near **$17–25** rather than the hundreds the
+program note assumed.
+
+### A — byte-identity regression: FAILED, cause not yet established
+
+Re-ran the committed cell `vp_AlibabaSmall_p1_world_v0_5150` with the new
+default-on code, under the flag, against its stored file:
+
+    differs: runs
+    COMMAND STREAM identical: False
+    narratives identical:     False
+    score identical:          True
+
+**Score identical while the command stream differs.** That pattern points away
+from the code change, and the diff supports it: the change adds 18 executable
+lines and **every one sits inside an `if not narrate:` guard**, unreachable when
+`narrate=True`, plus a signature parameter and a docstring. vLLM was 0.26.0 in
+both jobs, so version drift is excluded.
+
+### [TRAP-32 recurrence] I ran the identity check before the determinism control
+
+TRAP 32's lesson was that **a byte-identity check presupposes determinism, so the
+determinism control must come first.** I wrote that lesson into this project and
+then inverted it one round later, in the very check whose purpose was to protect
+signed results.
+
+The consequence is bounded — no number moved, and the check was designed to
+fail loudly — but the failure is currently uninterpretable, which is exactly what
+running the control first would have prevented.
+
+### The condition that actually differed, and why it matters beyond this gate
+
+The baseline cell was produced in gpu_job22 as the **first of ten evals launched
+concurrently** (~120 sequences in flight). Check 1 re-ran it **alone** (12
+sequences). `VLLM_BATCH_INVARIANT=1` is meant to make results independent of
+batch composition, and **B2 verified reproducibility at fixed concurrency — it
+never varied composition.** This is the first test of that.
+
+Control (gpu_job24), three conditions on one served model, readings fixed before
+the run:
+
+| conditions | reading |
+|---|---|
+| S1 == S2 and C1 == baseline | flag binds within a composition; **results depend on batch composition**, and the corpus carries a hidden factor — which cells shared a batch |
+| S1 == S2 but C1 != baseline | composition is not the whole story; another environmental term moved |
+| S1 != S2 | the flag is **not binding** in this container, and B2's guarantee does not hold here |
+
+In every branch `--no-narrate` is untouched by the outcome. What moves is what
+this project may claim about **cross-batch comparability** — which bears on
+existing published comparisons and on the dimensional program's measurement
+design, not merely on this gate.
+
+**Check 1 is not closed and Checks 2–4 do not start until it is.**
