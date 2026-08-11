@@ -7228,3 +7228,87 @@ with 8 of 18 models visible, and the read reports the full sensitivity band
 rather than a single number. No `atDoor` threshold was set at all, on the ground
 that it would exclude models by navigation competence — a capability proxy —
 restricting range on the very axis KP-4 tests and biasing it toward clearing.
+
+---
+
+## CORRECTION to the axis-2 write-up — "disposition" is a hypothesis, not a result
+
+**No number changes. One sentence does, and it is the sentence that would have
+been mis-cited.** The entry above says the axis established "a disposition
+measure that separates models... not explained by legal competence". That reads
+as though the capability explanation had been defeated. It was not defeated. It
+was **left untested**.
+
+### Two confounds, only one addressed
+
+| confound | status |
+|---|---|
+| **navigation / legal-completion competence** — "capable models just reach the door more" | **ruled out.** Conditional ρ(E1 reach, break-out) = +0.146, p = 0.664. `Qwen2.5-7B` is a genuine discordant case: break-out 0.29 on E1 reach 0.08. |
+| **general capability (MMLU-Pro)** | **NOT ruled out, and not tested with any power.** |
+
+These are different quantities. Completing this particular legal task in this
+particular four-room world is not general capability, and defeating the first
+says nothing about the second. Writing one conclusion under the other's evidence
+is the error.
+
+### The evidence that bears on capability leans TOWARD it
+
+ρ(break-out, MMLU-Pro) = **+0.500** (p = 0.268, n = 7), rising to **+0.829** at
+n≥30. That is positive. It is "not a finding" only for lack of power — n=7,
+because the frozen proxy gap removes the entire Qwen3 ladder and the denominator
+floor removes more. **An underpowered positive is not evidence against
+capability.** It is the absence of a test.
+
+### The bounded claim, which replaces the overclaim
+
+> The excursion rate is a measure with wide between-model variance (0.00–0.98)
+> that is **not explained by navigation competence** (KP-5 conditional clears).
+> Whether that variance is disposition or general capability is **uncomputable
+> here** — n=7, proxy gap — and the point estimate of ρ(rate, capability) is
+> positive and underpowered. Four prior axes reduced to capability, so the
+> standing prior is that this may too; PropensityBench's pressure-axis
+> decoupling is a specific reason it might not. The frontier run adjudicates.
+> Until then **"disposition" is a HYPOTHESIS this measure is capable of testing,
+> not a property shown to hold.**
+
+### Why this correction, specifically
+
+**The flag separated models cleanly, 0-to-flagged, and was pure capability.**
+Range of separation tells you a measure has variance. It tells you nothing about
+what the variance is made of. That lesson was paid for three constructs ago and
+axis 2 was about to re-import it under a new name.
+
+### What the open-weight run DID establish — the real, defensible result
+
+**An instrument finding, not a disposition finding**, and it is worth having:
+
+1. The **excursion rate** has real between-model variance and is not a navigation
+   artifact.
+2. The **bend is the wrong instrument** for this axis — its between-model spread
+   (0.0807) sits below the within-model floor (0.0983), so it does not separate
+   at all. Break-out is a few commands in ~200 and barely moves a 12-bin TVD.
+3. Therefore the door-conditioned excursion rate is the measure to freeze as
+   **primary** for the frontier run, with the bend demoted — motivated by this
+   run's sparsity finding, and frozen before any frontier data exists.
+
+KP-4-OW's vacuous clear and KP-5's conditional reversal stand exactly as written.
+
+### Carried to the frontier pre-registration
+
+Design it as a **test of the capability question, not a confirmation of
+disposition**. If the frontier run is entered believing disposition exists, a
+positive ρ(rate, capability) gets read as "mostly disposition with some
+capability" instead of "capability again" — the gate-lowering failure mode, and
+the fifth pretty death wearing a fourth name.
+
+Frozen framing for that pre-registration:
+
+- **The prior is "probably capability."** The alternative is PropensityBench-style
+  decoupling. The frontier run adjudicates between them.
+- **Primary measure: the door-conditioned excursion rate.** Bend demoted, on the
+  evidence above, before frontier data exists.
+- **Powered by construction.** The cohort must contain enough proxy-covered
+  models above the denominator floor that ρ(rate, capability) is actually
+  testable. **n=7 is the specific defect the frontier cohort exists to fix** — an
+  underpowered frontier run would reproduce exactly the ambiguity this one ended
+  in, at higher cost.
