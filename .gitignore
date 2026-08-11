@@ -23,3 +23,14 @@ scratch/
 
 # runs/ holds full trajectories and adapters and stays untracked.
 # Small spike summaries are evidence and live in results/, which is tracked.
+
+# Staged GPU job payloads. `scripts/stage_job.py` regenerates these from source
+# on demand; tracking them would put a second copy of `seahaven/` and `worlds/`
+# in the repo that can drift from the real one. A stale staged payload already
+# cost three job launches this session -- a tracked one invites the same failure
+# with a reader instead of a container. The job's own code (entrypoint.sh,
+# lib.sh, push_batch.py) IS tracked; only the copied trees are ignored.
+scripts/gpu_job*/seahaven/
+scripts/gpu_job*/worlds/
+scripts/gpu_job*/docs/
+scripts/gpu_job*/results/
