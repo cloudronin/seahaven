@@ -44,16 +44,14 @@ print(f"  SEAL VERIFIED {S.SEAL_HASH[:16]}  firewall clean", flush=True)
 print(f"  backfilling {len(miss)} cells across {len(repos)} models", flush=True)
 PY
 
-mapfile -t GROUPS < <(python - <<'PY'
-import json, collections
-miss = json.load(open("/app/missing.json"))
-by = collections.defaultdict(list)
-for c in miss:
-    by[(c["tag"], c["repo"])].append(f'{c["phrasing"]}:{c["world"]}:{c["seed"]}')
-for (tag, repo), cells in sorted(by.items()):
-    print(f'{tag}|{repo}|{",".join(sorted(cells))}')
-PY
-)
+# **Read from a file baked in locally, not generated in-container.** The first
+# attempt built this list with `mapfile < <(python - <<PY ...)`; the heredoc
+# inside process substitution died with BrokenPipeError, mapfile got "0" and
+# "39" instead of TAG|REPO|cells rows, and vLLM was handed an empty repo id.
+# Shell input that a job depends on is generated on the host and shipped, the
+# same way `missing.json` is.
+mapfile -t GROUPS < /app/groups.txt
+
 
 for ROW in "${GROUPS[@]}"; do
     IFS='|' read -r TAG REPO CELLS <<< "$ROW"
