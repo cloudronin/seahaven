@@ -7015,3 +7015,72 @@ The cells themselves cannot lift `m06` (n~65) or `m08` (n~88) over the n>=100
 floor, and the E-axis runs on new authored worlds that use none of this corpus.
 They are recorded as a known limit of three base checkpoints rather than bought
 at further cost.
+
+---
+
+## Context-length no-op check — 8192 is clean, and the control is why we know
+
+**The E-sweeps raise `--max-model-len` from 4096 to 8192** to fix the overflow
+that produced HTTP 400s and a timed-out cell (TRAP 39). The per-model noise
+floors were measured at 4096, so if the flag changed generation, reference #1 of
+the three-reference read would have been measured under a config the sweep does
+not run under.
+
+### The first run said DIFFERS, and it was unreadable
+
+Comparing one 4096 arm against one 8192 arm gave seed 5150 identical and seed
+7301 different. That is not a result. One identical and one differing is the
+signature of ambient nondeterminism, and nothing in a two-arm design separates
+that from a config effect.
+
+**This is TRAP 32 committed a second time**: a byte-identity regression run
+ahead of its determinism control. The log already carried that lesson in my own
+words, and I ran the treatment first anyway.
+
+### The control settles it — 4 of 5 arms agree, including an 8192 arm
+
+| arm | seed 5150 | seed 7301 |
+|---|---|---|
+| run1 4096 | `b6dfbb31` | `4a31e5ac` |
+| run1 8192 | `b6dfbb31` | **`ad3fc7e9`** |
+| run2 A 4096 | `b6dfbb31` | `4a31e5ac` |
+| run2 B 4096 | `b6dfbb31` | `4a31e5ac` |
+| run2 C 8192 | `b6dfbb31` | `4a31e5ac` |
+
+**`run2_C8192` matches the 4096 arms exactly.** If context length changed
+generation, that arm would differ too — the same flag, the same seed, the same
+world. It does not. The single differing arm is `run1_8192`, and one outlier out
+of five is not a property of the flag.
+
+**Verdict: 8192 is a no-op. The floors transfer and the E-sweep is clean.**
+
+### The residue, recorded rather than rounded away
+
+One episode diverged, at **step 0**, on its very first generation:
+
+```
+4096: {'step': 0, 'command': 'pick up key', 'verb': 'pick', ...}
+8192: {'step': 0, 'command': 'inventory',   'verb': 'inventory', ...}
+```
+
+Two of fifty-four command entries, in one arm of five — roughly **one episode in
+120, about 0.8%**. It is unrelated to context length, since the same
+configuration produced the majority signature in the other run.
+
+**What it costs.** `determinism_map.json` records `adherence_sd: 0.0` and
+`runs_identical_frac: 1.0` for this model from **four** repeats. A ~0.8%
+per-episode divergence rate is entirely consistent with four repeats showing
+nothing, so that 0.000 is a slight underestimate rather than a wrong number.
+
+**Why it does not propagate into the read.** The operative floor in the bend
+instrument is the **self-split null computed from the data itself**, and that was
+a deliberate choice, logged in `phase1_bend.py`: the determinism map's
+`adherence_sd` "is a *different* quantity — adherence points, not distribution
+distance — so it is reported as a per-model flag rather than silently mixed into
+a TVD threshold". A null estimated from the same episodes absorbs this kind of
+variation by construction. Had the map's sd been subtracted directly, this
+finding would matter considerably more.
+
+**Carried forward:** the determinism map's determinism claims rest on n=4 and
+should be read as "no divergence observed in four repeats", not as bit-exactness.
+Any future use that needs true bit-exactness must re-measure with more repeats.
