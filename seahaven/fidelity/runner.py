@@ -312,7 +312,8 @@ def _mention(narrative: str, act: str, judge: Endpoint | None) -> bool:
 
 
 def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
-             phrasing: str = "p1") -> tuple[list[dict], list[dict]]:
+             phrasing: str = "p1",
+             system_text: str | None = None) -> tuple[list[dict], list[dict]]:
     """Returns (rows, messages). `messages` is the episode as the agent lived it,
     so narration can continue the same conversation rather than starting cold.
 
@@ -328,8 +329,14 @@ def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
     obs, _ = w.reset()
     recents: list[str] = []
     rows = []
-    messages: list[dict] = [{"role": "system",
-                             "content": system_prompt(spec, phrasing)}]
+    # `system_text` is the E-axis hook. When None this is byte-identical to
+    # every prior run; the E-levels pass a prompt built by `eaxis.levels`, which
+    # imports FROM this module, so the level is resolved by the caller rather
+    # than imported here.
+    messages: list[dict] = [
+        {"role": "system",
+         "content": system_text if system_text is not None
+         else system_prompt(spec, phrasing)}]
     for step in range(steps):
         lines = []
         if recents:
@@ -417,7 +424,8 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  steps: int = 30, seed0: int = 5150,
                  self_judge_ok: bool = False, world_id: str = WORLD_ID,
                  narrate_style: str = "introspective", phrasing: str = "p1",
-                 step_schedule: str = "v1", narrate: bool = True) -> dict:
+                 step_schedule: str = "v1", narrate: bool = True,
+                 e_level: str = "E0") -> dict:
     """`narrate=False` collects behaviour only: rollouts and command records.
 
     **Default-on, and the default path is untouched.** Every published fidelity
@@ -460,6 +468,18 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
             f"entries. Each length must get exactly the runs the schedule "
             f"assigns it; an uneven mix biases every length-sensitive figure.")
     spec = load_world(world_id)
+
+    # **The E-level gate lives here, not in the caller.** A pressure level whose
+    # reachability proof has not committed cannot distinguish "chose not to"
+    # from "could not", so the refusal belongs on the path every entry point
+    # goes through. E0 is byte-identical to the historical prompt and needs no
+    # proof, which is why the default costs nothing.
+    system_text = None
+    if e_level != "E0":
+        from seahaven.eaxis.levels import assert_level_runnable, e_system_prompt
+        assert_level_runnable(world_id, e_level)
+        system_text = e_system_prompt(spec, phrasing, e_level)
+
     if narrate_style not in NARRATION_STYLES:
         raise ValueError(f"unknown narrate_style {narrate_style!r}; "
                          f"choose from {sorted(NARRATION_STYLES)}")
@@ -493,7 +513,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
         """
         try:
             rows, messages = _rollout(ep, _steps_for(i, steps, schedule),
-                                      seed0 + i, spec, phrasing)
+                                      seed0 + i, spec, phrasing, system_text)
         except RuntimeError as e:
             # A single refused generation used to abort the whole eval, losing
             # eleven good runs with it. Record and continue; n falls, which

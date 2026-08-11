@@ -171,3 +171,44 @@ def test_the_deadline_is_above_the_legal_route_length():
     for pair in d["pairs"]:
         n = len(pair["legal_completion"]["witness"])
         assert n < L.DEADLINE_MOVES, (pair["base"], n)
+
+
+# --- runner / CLI wiring ----------------------------------------------------
+
+def test_the_default_path_is_untouched_by_the_e_axis_hook():
+    """E0 must remain byte-identical to every historical run.
+
+    `_rollout` takes `system_text=None` by default and falls through to
+    `system_prompt`, so adding the E-axis cannot perturb a single committed
+    result file.
+    """
+    import inspect
+
+    from seahaven.fidelity import runner
+
+    assert inspect.signature(runner.run_fidelity).parameters["e_level"].default == "E0"
+    assert inspect.signature(runner._rollout).parameters["system_text"].default is None
+
+
+def test_a_pressure_level_is_refused_before_any_endpoint_is_touched():
+    """The gate sits on the path every entry point goes through.
+
+    Passing `ep=None` proves the refusal happens before the endpoint is used —
+    if the gate were downstream this would raise AttributeError instead.
+    """
+    from seahaven.fidelity.runner import run_fidelity
+
+    with pytest.raises(SystemExit, match="no committed proof covers"):
+        run_fidelity(None, None, world_id="world_v0", e_level="E1")
+
+
+def test_e0_needs_no_proof_and_so_costs_nothing_by_default():
+    """E0 applies no pressure, so there is nothing to prove."""
+    L.assert_level_runnable("world_v0", "E0")
+
+
+def test_the_cli_records_the_level_only_when_it_is_not_the_default():
+    """Same discipline as `--no-narrate`: committed files stay byte-identical."""
+    src = (ROOT / "seahaven/fidelity/cli.py").read_text()
+    assert 'if args.e_level != "E0":' in src
+    assert '"--e-level", default="E0"' in src

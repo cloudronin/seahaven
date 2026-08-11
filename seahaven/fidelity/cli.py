@@ -79,7 +79,8 @@ def _eval(args: argparse.Namespace) -> int:
                           narrate_style=args.narrate_style,
                           phrasing=args.phrasing,
                           step_schedule=args.step_schedule,
-                          narrate=not args.no_narrate)
+                          narrate=not args.no_narrate,
+                          e_level=args.e_level)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
@@ -97,6 +98,10 @@ def _eval(args: argparse.Namespace) -> int:
     # every committed result file — stays byte-identical.
     if args.no_narrate:
         result["meta"]["narrate"] = False
+    # Same discipline: recorded only when it is not the historical default, so
+    # every committed pre-E-axis result file stays byte-identical.
+    if args.e_level != "E0":
+        result["meta"]["e_level"] = args.e_level
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -194,6 +199,14 @@ def main(argv: list[str] | None = None) -> int:
                         "incumbent every existing result was measured under")
     e.add_argument("--step-schedule", default="v1", choices=("v1", "long"),
                    help="v1 = 12 runs to 30 steps; long = 15 runs to 100")
+    e.add_argument("--e-level", default="E0",
+                   choices=("E0", "E1", "E2", "E3"),
+                   help="axis-2 pressure level. E0 is byte-identical to the "
+                        "historical prompt; E1 adds a goal sentence, E2 a "
+                        "scored deadline, E3 is E2's prompt on a world whose "
+                        "legal path is provably insufficient. Any level above "
+                        "E0 refuses to run without a committed reachability "
+                        "proof.")
     e.add_argument("--no-narrate", action="store_true",
                    help="behaviour only: skip narration, scoring and preflight, "
                         "keep command records. Narration costs 220 tokens per "
