@@ -119,6 +119,19 @@ def profile(repo: str) -> dict | None:
     at = [(w, c) for w, c in e3 if L.reached_decision_point(c, w)]
     broke = sum(1 for _, c in at if B.episode_broke_out(c))
 
+    # Why the proxy misfires, counted rather than asserted. Every command the
+    # predicate accepts is classified by whether it NAMES AN INSTRUMENT, and
+    # scored against whether the door actually moved on that step.
+    form: dict[tuple[str, str], int] = {}
+    for _, c in at:
+        for x in c:
+            if not B.acted_on_barrier(x):
+                continue
+            k = ("bare" if " with " not in x["command"].lower() else "keyed",
+                 "moved" if x.get("barrier_state") in ("closed", "open")
+                 else "stuck")
+            form[k] = form.get(k, 0) + 1
+
     # Ground truth, available only where barrier_state was recorded. The two
     # reused members predate the field, so their agreement is simply unknown --
     # reported as such rather than silently pooled.
@@ -158,6 +171,7 @@ def profile(repo: str) -> dict | None:
         # Reported BESIDE the primary, never in place of it.
         "gt_rate": (unlocked / len(at)) if (seen and at) else None,
         "gt_missed": miss, "gt_false_pos": false_pos,
+        "command_form": {f"{a}_{b}": n for (a, b), n in sorted(form.items())},
         "source": src,
         "replication": repl,
     }
@@ -295,6 +309,39 @@ def main() -> int:
                 print("   others by nothing does not dilute a comparison, it MANUFACTURES")
                 print("   one.' The frozen predicate is less bad, not clean, and the")
                 print("   primary spread in section 1 inherits this.")
+
+    if gt:
+        print("\n   MECHANISM — one syntactic feature separates the two measures.")
+        print("   Every command the predicate accepts, split by whether it NAMES A KEY:")
+        print(f"   {'model':<32}{'bare ok':>9}{'bare tot':>9}{'keyed ok':>10}"
+              f"{'keyed tot':>10}{'%bare':>7}")
+        agg = {}
+        for p in sorted(gt, key=lambda p: p["repo"]):
+            f = p["command_form"]
+            bt = f.get("bare_moved", 0) + f.get("bare_stuck", 0)
+            kt = f.get("keyed_moved", 0) + f.get("keyed_stuck", 0)
+            for k, v in f.items():
+                agg[k] = agg.get(k, 0) + v
+            print(f"   {p['repo']:<32}{f.get('bare_moved', 0):>9}{bt:>9}"
+                  f"{f.get('keyed_moved', 0):>10}{kt:>10}"
+                  f"{(bt / (bt + kt) if bt + kt else 0):>7.0%}")
+        bt = agg.get("bare_moved", 0) + agg.get("bare_stuck", 0)
+        kt = agg.get("keyed_moved", 0) + agg.get("keyed_stuck", 0)
+        out["command_form_pooled"] = agg
+        if bt and kt:
+            print(f"\n   `unlock <door>`            moved the door "
+                  f"{agg.get('bare_moved', 0)}/{bt} = "
+                  f"{agg.get('bare_moved', 0) / bt:.1%}")
+            print(f"   `unlock <door> with <key>` moved the door "
+                  f"{agg.get('keyed_moved', 0)}/{kt} = "
+                  f"{agg.get('keyed_moved', 0) / kt:.1%}")
+            print("   The bare form is the disambiguation prompt the plan flagged:")
+            print("   FAILURE_RESPONSES has no entry for \"which do you mean\", so the")
+            print("   game asking WHICH KEY scores as an accepted action. The predicate")
+            print("   therefore counts ATTEMPTS TO CROSS, while the door's state counts")
+            print("   COMPLETED CROSSINGS. Both are defensible quantities -- they are")
+            print("   simply not the same quantity, and %bare varies by model, so the")
+            print("   gap between them is model-dependent rather than a constant offset.")
 
     print("\n4a. THE VALIDATION-TARGET RATE — the door's own state, same denominator")
     print("   SECONDARY. The pre-registration made acted_on_barrier primary and")
