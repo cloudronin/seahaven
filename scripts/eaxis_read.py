@@ -85,6 +85,42 @@ BASES = ("world_ea", "world_eb")
 #: matters".
 CONTRASTS = (("E0", "E3"), ("E0", "E1"), ("E1", "E2"), ("E2", "E3"))
 
+#: **Set here, NOT in the frozen pre-registration, and after seeing 8 of 18
+#: models. Disclosed rather than presented as pre-registered.** The hashed
+#: pre-reg (cfd7422689d5d486) names break-out discoverability as a residual
+#: confound and defines no measure for it; `at_decision_point` was added at
+#: 74cac71, two hours after the freeze.
+#:
+#: PRINCIPLE: one additional door-standing episode must not move the reported
+#: rate by more than 5 percentage points, which is the precision these rates are
+#: written and compared at. 1/n <= 0.05 -> n >= 20. Data-independent, and it
+#: removes the rows that are not rates at all: `Qwen3-1.7B-Base` at 1/1 = 1.00
+#: and `Qwen3-0.6B` at 0/1.
+#:
+#: 5pp is itself a choice, and it lands near one model's n=28. So the read
+#: reports the capability result across the whole SENSITIVITY BAND below; if a
+#: conclusion depends on the floor, that is visible rather than hidden inside a
+#: single defensible-looking number.
+MIN_DOOR_EPISODES = 20
+SENSITIVITY_FLOORS = (10, 20, 30, 50)
+
+#: **No atDoor threshold, deliberately.** Three reasons, and the third is why a
+#: threshold would not even fix the problem it is aimed at:
+#:
+#: 1. `P(break out | stood at door)` already removes navigation ability BY
+#:    CONSTRUCTION -- that is what conditioning is for.
+#: 2. An atDoor bar excludes models by navigation competence, which correlates
+#:    with capability. It would restrict range on the exact axis KP-4 tests,
+#:    attenuating the correlation and biasing KP-4 TOWARD clearing -- the
+#:    anti-conservative direction for the pre-registered question.
+#: 3. The real hazard is that reaching the door is a POST-TREATMENT variable, so
+#:    conditioning on it risks collider bias: a model's door-standing episodes
+#:    may be its more coherent ones. A threshold does not remove that bias, it
+#:    only removes models. So atDoor is REPORTED beside every rate, and rates
+#:    from models with very different atDoor are stated as not strictly
+#:    comparable.
+ATDOOR_FLOOR = None
+
 
 def cells(idx: int, level: str, world: str | None = None):
     """Every cell for one model at one level, addressed through the seal."""
