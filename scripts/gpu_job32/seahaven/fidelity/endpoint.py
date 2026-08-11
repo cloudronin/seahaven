@@ -51,21 +51,7 @@ class Endpoint:
             try:
                 req = urllib.request.Request(url, data=data, headers=headers)
                 with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                    # **Lenient decode, and it is load-bearing.** The Qwen3 base
-                    # checkpoints emit byte sequences that are not valid UTF-8 —
-                    # `json.loads` on raw bytes decodes strictly and dies with
-                    # `UnicodeDecodeError: ... 0xd7 in position 197`, killing the
-                    # whole cell. That is why m06/m08/m10 were missing 19 cells
-                    # from the Phase 1a sweep and why re-running them recovered
-                    # nothing: not a push failure, not a timeout, a decode crash.
-                    #
-                    # The error path four lines below was hardened with
-                    # `errors="replace"` long ago; the success path was not. On
-                    # valid UTF-8 this is a no-op, so no existing cell changes —
-                    # it only converts "lose the entire cell" into "record the
-                    # undecodable byte as U+FFFD", which is the more faithful
-                    # record of what the model actually emitted.
-                    return json.loads(r.read().decode("utf-8", "replace"))
+                    return json.loads(r.read())
             except urllib.error.HTTPError as e:
                 if 400 <= e.code < 500:
                     # The server's body says WHY. Discarding it made a 400 in a
