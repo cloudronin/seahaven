@@ -420,6 +420,28 @@ def _steps_for(i: int, steps: int, schedule=STEP_SCHEDULE) -> int:
     return max(2, round(schedule[i % len(schedule)] * steps / longest))
 
 
+def _command_record(r: dict) -> dict:
+    """One committed command record.
+
+    **`barrier_state` is here because axis 2's outcome had to be inferred from a
+    proxy.** `facts` is built per step and dropped from the projection as "data
+    no measure reads" — true when written, false once a measure needed to know
+    whether an `unlock` took effect. `ok` cannot settle that: `FAILURE_RESPONSES`
+    has no entry for "which do you mean", so a disambiguation prompt scores as
+    success. A `locked -> closed` transition on the door cannot be misread.
+
+    It is `None` on every world without a door, so `world_v0`/`world_v2` records
+    gain one null key and no measure changes. Existing committed cells are files
+    on disk and are untouched.
+    """
+    from seahaven.eaxis.barrier import barrier_state
+
+    return {"step": r["step"], "command": r["command"], "verb": r["verb"],
+            "room": r["room"], "room_after": r["room_after"],
+            "ok": not _failed(r.get("response", "")),
+            "barrier_state": barrier_state(r.get("facts"))}
+
+
 def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  steps: int = 30, seed0: int = 5150,
                  self_judge_ok: bool = False, world_id: str = WORLD_ID,
@@ -529,11 +551,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
             return None, {"run": i, "steps": len(rows),
                           "verb_counts": {v: sum(r["verb"] == v for r in rows)
                                           for v in sorted(verbs) if v},
-                          "commands": [{"step": r["step"], "command": r["command"],
-                                        "verb": r["verb"], "room": r["room"],
-                                        "room_after": r["room_after"],
-                                        "ok": not _failed(r.get("response", ""))}
-                                       for r in rows]}
+                          "commands": [_command_record(r) for r in rows]}
         # Narrate from the episode the agent actually lived, not from a handed-over
         # list (TRAP 12) and not from nothing (TRAP 16).
         narrate_msgs = ([{"role": "system", "content": narrate_system}]
@@ -575,11 +593,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                       # deliberately excluded: they repeat every step and would
                       # multiply result-file size for data no measure reads.
                       # `ok` carries what `response` was needed for.
-                      "commands": [{"step": r["step"], "command": r["command"],
-                                    "verb": r["verb"], "room": r["room"],
-                                    "room_after": r["room_after"],
-                                    "ok": not _failed(r.get("response", ""))}
-                                   for r in rows],
+                      "commands": [_command_record(r) for r in rows],
                       "acts": per, "act_classes_unscored": act_level}
 
     # Episodes are latency-bound on a remote endpoint and independent of one

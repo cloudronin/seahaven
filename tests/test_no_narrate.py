@@ -114,13 +114,30 @@ def test_no_narration_call_is_made(behaviour_only):
 
 
 def test_commands_survive(behaviour_only):
-    """`commands` is what adherence and the dimensional program read."""
+    """`commands` is what adherence and the dimensional program read.
+
+    **`barrier_state` was added deliberately, and this assertion is what caught
+    it.** The record shape is pinned here on purpose, so a field cannot appear by
+    accident; when one appears on purpose, the pinned set grows and the reason is
+    written down.
+
+    The reason: axis 2 had to infer whether an `unlock` took effect from `ok`,
+    which cannot settle it — `FAILURE_RESPONSES` has no entry for "which do you
+    mean", so a disambiguation prompt scores as success. The door's own
+    `locked -> closed` transition cannot be misread. `facts` carried it and was
+    dropped from the projection as "data no measure reads"; a measure now reads
+    it. On a world with no door the value is `None`, so `world_v0` records gain
+    one null key and no measure changes.
+    """
     _, res = behaviour_only
     assert res["runs"], "no runs completed"
     for run in res["runs"]:
         assert run["commands"]
         for c in run["commands"]:
-            assert set(c) == {"step", "command", "verb", "room", "room_after", "ok"}
+            assert set(c) == {"step", "command", "verb", "room", "room_after",
+                              "ok", "barrier_state"}
+            # world_v0 has no door, so the new field must be inert here
+            assert c["barrier_state"] is None
 
 
 @pytest.mark.parametrize("absent", ["score", "preflight", "entities",
