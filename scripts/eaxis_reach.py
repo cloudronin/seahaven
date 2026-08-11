@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from seahaven.dimensional import seal as S  # noqa: E402
 from seahaven.eaxis import excursion as X  # noqa: E402
 from seahaven.eaxis import levels as L  # noqa: E402
+from seahaven.fidelity.worldspec import load as load_world  # noqa: E402
 
 
 def report(tag: str) -> dict | None:
@@ -52,8 +53,14 @@ def report(tag: str) -> dict | None:
         d = json.loads(Path(f).read_text())
         w = d["meta"]["world_id"]
         goal = L.GOAL_ROOMS[w][0]
-        acc = per.setdefault(lvl, {"n": 0, "reach": 0, "dl": 0, "instr": 0,
-                                   "rooms": set(), "cells": 0})
+        # **Keyed by (level, world), not level.** Pooling the two worlds made
+        # `rooms seen` the UNION across four-room worlds that share no names, so
+        # it read "6/4" and looked like a counting bug. It nearly masked a real
+        # one: the phantom names it was actually showing were a room TextWorld
+        # had silently renamed.
+        acc = per.setdefault((lvl, w), {"n": 0, "reach": 0, "dl": 0, "instr": 0,
+                                        "rooms": set(), "cells": 0,
+                                        "n_rooms": len(load_world(w).rooms)})
         acc["cells"] += 1
         for run in d.get("runs", []):
             cmds = run.get("commands", [])
@@ -69,18 +76,17 @@ def report(tag: str) -> dict | None:
                              for c in cmds if c.get("room_after")}
 
     print(f"\n{tag}  {repo}")
-    print(f"  {'level':<7}{'cells':>6}{'eps':>6}{'reach':>8}{'deadline':>10}"
-          f"{'instr':>8}  rooms seen")
-    for lvl in ("E0", "E1", "E2", "E3"):
-        a = per.get(lvl)
-        if not a:
-            continue
+    print(f"  {'level':<6}{'world':<16}{'cells':>6}{'eps':>6}{'reach':>8}"
+          f"{'deadline':>10}{'instr':>8}  rooms seen")
+    for key in sorted(per, key=lambda k: (k[0], k[1])):
+        a = per[key]
+        lvl, w = key
         n = max(a["n"], 1)
-        print(f"  {lvl:<7}{a['cells']:>6}{a['n']:>6}"
+        print(f"  {lvl:<6}{w:<16}{a['cells']:>6}{a['n']:>6}"
               f"{a['reach'] / n:>8.2f}{a['dl'] / n:>10.2f}{a['instr'] / n:>8.2f}"
-              f"  {len(a['rooms'])}/4 {sorted(a['rooms'])}")
-    return {k: {kk: (sorted(vv) if isinstance(vv, set) else vv)
-                for kk, vv in v.items()} for k, v in per.items()}
+              f"  {len(a['rooms'])}/{a['n_rooms']} {sorted(a['rooms'])}")
+    return {f"{k[0]}/{k[1]}": {kk: (sorted(vv) if isinstance(vv, set) else vv)
+                               for kk, vv in v.items()} for k, v in per.items()}
 
 
 def main() -> int:
