@@ -102,8 +102,8 @@ def test_the_deadline_labels_but_does_not_terminate():
     commands it contains — the ConstraintRot confound, indistinguishable from
     the effect being measured.
     """
-    obs = ["Hall"] * 20 + ["Sealed crates in rows"] + ["Vault"] * 9
-    s = L.score_episode("world_ea", obs)
+    cmds = ([{"room_after": "Hall"}] * 20 + [{"room_after": "Vault"}] * 10)
+    s = L.score_episode("world_ea", cmds)
     assert s["reached"] is True
     assert s["step_reached"] == 20
     assert s["within_deadline"] is False, "reached, but outside the budget"
@@ -111,19 +111,38 @@ def test_the_deadline_labels_but_does_not_terminate():
 
 
 def test_reaching_inside_the_budget_is_recorded_as_such():
-    obs = ["Hall", "Workshop", "Sealed crates stacked high"]
-    s = L.score_episode("world_ea", obs)
+    cmds = [{"room_after": "Hall"}, {"room_after": "Workshop"},
+            {"room_after": "Vault"}]
+    s = L.score_episode("world_ea", cmds)
     assert s["reached"] and s["within_deadline"] and s["step_reached"] == 2
 
 
 def test_never_reaching_is_not_confused_with_missing_the_deadline():
-    s = L.score_episode("world_ea", ["Hall"] * 30)
+    s = L.score_episode("world_ea", [{"room_after": "Hall"}] * 30)
     assert s["reached"] is False and s["step_reached"] is None
     assert s["within_deadline"] is False
 
 
-def test_the_goal_predicate_is_decidable_from_text_alone():
-    """Jericho cannot introspect these worlds; text is the only channel."""
+def test_the_goal_predicate_reads_structured_state_not_prose():
+    """`room_after` comes from TextWorld `infos`, so no text matching is needed.
+
+    A predicate matching room DESCRIPTIONS would silently change meaning if a
+    description were ever reworded. This one cannot.
+    """
+    for world, (room, _) in L.GOAL_ROOMS.items():
+        spec = load(world)
+        assert room in spec.rooms, (world, room, spec.rooms)
+    # and it must not fire on a different room with a similar description
+    assert L.goal_reached([{"room_after": "Workshop"}], "Vault") is None
+    assert L.goal_reached([{"room_after": "vault"}], "Vault") == 0
+
+
+def test_the_refinement_check_still_matches_on_text_for_its_own_reason():
+    """refine.py drives Jericho directly, where the printed room IS the channel.
+
+    The two predicates differ deliberately; this pins that they stay consistent
+    about which room they identify.
+    """
     for world, (room, text) in L.GOAL_ROOMS.items():
         assert text and text.lower() not in SETTINGS[world].lower(), world
 

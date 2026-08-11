@@ -74,8 +74,8 @@ for w in ("world_ea",):
 PY
 
 run_arm() {
-    local CTX="$1"
-    echo; echo "######## arm max-model-len=$CTX ########"
+    local CTX="$1" ARM="$2"
+    echo; echo "######## arm $ARM  max-model-len=$CTX ########"
     python -m vllm.entrypoints.openai.api_server --model "$MODEL" --port $PORT \
         --host 127.0.0.1 --gpu-memory-utilization 0.85 --max-model-len "$CTX" \
         > /tmp/vllm_$CTX.log 2>&1 &
@@ -98,15 +98,15 @@ PROBE
             --model "http://127.0.0.1:$PORT/v1" --served-name "$MODEL" \
             --allow-regex-judge --no-narrate --runs 12 --steps 8 \
             --step-schedule v1 --seed "$SEED" --world world_ea --phrasing p1 \
-            --output "$R/ctx${CTX}_${SEED}.json" \
-            > /tmp/ctx_${CTX}_${SEED}.log 2>&1
-          echo "    ctx=$CTX seed=$SEED exit=$?"
+            --output "$R/ctx${ARM}${CTX}_${SEED}.json" \
+            > /tmp/ctx_${ARM}_${SEED}.log 2>&1
+          echo "    arm=$ARM ctx=$CTX seed=$SEED exit=$?"
         ) &
         PIDS+=($!)
     done
     wait "${PIDS[@]}"
-    ls -1 "$R"/ctx${CTX}_*.json 2>/dev/null | wc -l | xargs echo "  cells:"
-    for L in /tmp/ctx_${CTX}_*.log; do
+    ls -1 "$R"/ctx${ARM}${CTX}_*.json 2>/dev/null | wc -l | xargs echo "  cells:"
+    for L in /tmp/ctx_${ARM}_*.log; do
         [ -f "$L" ] || continue
         grep -qiE "error|traceback" "$L" && { echo "  ---- $(basename $L) ----"; tail -8 "$L"; }
     done
@@ -116,64 +116,16 @@ PROBE
     sleep 8; reap_gpu || true
 }
 
-run_arm 4096
-run_arm 8192
+# THE CONTROL RUNS FIRST. A and B are identical configuration; if they differ,
+# the harness is not reproducible at this concurrency and the 8192 comparison
+# is unreadable. The previous run of this check omitted the control and
+# returned an uninterpretable "differs on one seed of two" -- TRAP 32, again.
+run_arm 4096 A
+run_arm 4096 B
+run_arm 8192 C
 
 echo; echo "########## BYTE COMPARISON ##########"
-python - <<'PY'
-import json, glob, hashlib, os, sys
-
-def commands(path):
-    """The emitted commands, in order. This is the generation, not the wrapper.
-
-    Whole-file equality would fail on timestamps and on the config echo, which
-    legitimately differ between arms and say nothing about generation.
-    """
-    d = json.loads(open(path).read())
-    return [c for r in d["runs"] for c in r.get("commands", [])]
-
-seeds, verdict = [5150, 7301], True
-for seed in seeds:
-    a, b = f"/tmp/results/ctx4096_{seed}.json", f"/tmp/results/ctx8192_{seed}.json"
-    if not (os.path.exists(a) and os.path.exists(b)):
-        print(f"  seed {seed}: MISSING ARM ({os.path.exists(a)}/{os.path.exists(b)})")
-        verdict = False
-        continue
-    ca, cb = commands(a), commands(b)
-    ba = json.dumps(ca, sort_keys=True).encode()
-    bb = json.dumps(cb, sort_keys=True).encode()
-    same = ba == bb
-    verdict = verdict and same
-    print(f"  seed {seed}: {len(ca)} vs {len(cb)} commands   "
-          f"sha {hashlib.sha256(ba).hexdigest()[:16]} / "
-          f"{hashlib.sha256(bb).hexdigest()[:16]}   "
-          f"{'IDENTICAL' if same else 'DIFFERS'}")
-    if not same:
-        for i, (x, y) in enumerate(zip(ca, cb)):
-            if x != y:
-                print(f"    first divergence at command {i}:")
-                print(f"      4096: {str(x)[:200]}")
-                print(f"      8192: {str(y)[:200]}")
-                break
-
-# Headroom: if the sweep config never approaches 4096 on these worlds, the flag
-# is irrelevant to the E-axis regardless of the byte result.
-worst = 0
-for f in glob.glob("/tmp/results/ctx4096_*.json"):
-    d = json.loads(open(f).read())
-    for r in d["runs"]:
-        n = sum(len(str(c)) for c in r.get("commands", []))
-        worst = max(worst, n)
-print(f"\n  longest transcript in this arm: ~{worst} chars "
-      f"(~{worst//4} tokens) against a 4096 window")
-print(f"\n  NO-OP VERDICT: {'CLEAN — floors transfer' if verdict else 'DIFFERS — floors need a caveat and re-measurement'}")
-json.dump({"phase": "exploration", "identical": verdict,
-           "model": "meta-llama/Llama-3.1-8B-Instruct",
-           "arms": [4096, 8192], "seeds": seeds,
-           "longest_transcript_chars": worst},
-          open("/tmp/results/ctx_noop_check.json", "w"), indent=2)
-sys.exit(0 if verdict else 1)
-PY
+python /app/compare.py
 RC=$?
 python /app/push_batch.py "$R" "ctx*.json" || true
 echo "########## DONE rc=$RC ##########"

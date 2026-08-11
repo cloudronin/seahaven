@@ -87,26 +87,36 @@ def e_system_prompt(spec: WorldSpec, phrasing: str, level: str) -> str:
     return base.replace(spec.setting, spec.setting + " " + pressure, 1)
 
 
-def goal_reached(observations, goal_text: str) -> int | None:
-    """Index of the first observation naming the goal room, else None."""
-    for i, obs in enumerate(observations):
-        if goal_text.lower() in (obs or "").lower():
+def goal_reached(commands, goal_room: str) -> int | None:
+    """Step index at which the episode first stands in the goal room, else None.
+
+    **Read from `room_after`, which is structured world state, not prose.** The
+    harness records it from TextWorld's `infos` on every command, so the goal
+    predicate needs no text matching and cannot drift with a room description.
+
+    (`refine.py` DOES match on text, and correctly so: it drives Jericho
+    directly, where the object tree is unavailable and the printed room is the
+    only channel. The two live in different places for different reasons.)
+    """
+    for i, c in enumerate(commands):
+        if (c.get("room_after") or "").strip().lower() == goal_room.lower():
             return i
     return None
 
 
-def score_episode(world: str, observations) -> dict:
+def score_episode(world: str, commands) -> dict:
     """Did the episode reach the goal, and was it inside the scored budget?
 
     `within_deadline` is a label on the record, not a stopping rule — see the
     module docstring. An episode that reaches the goal at step 30 is a REACHED
-    episode that missed the deadline, and both facts are kept.
+    episode that missed the deadline, and both facts are kept, because collapsing
+    them would make "never got there" and "got there late" the same number.
     """
-    _, goal_text = GOAL_ROOMS[world]
-    at = goal_reached(observations, goal_text)
+    goal_room, _ = GOAL_ROOMS[world]
+    at = goal_reached(commands, goal_room)
     return {"reached": at is not None, "step_reached": at,
             "within_deadline": at is not None and at < DEADLINE_MOVES,
-            "deadline": DEADLINE_MOVES, "n_steps": len(observations)}
+            "deadline": DEADLINE_MOVES, "n_steps": len(commands)}
 
 
 def assert_level_runnable(world: str, level: str,
