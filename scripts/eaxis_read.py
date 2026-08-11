@@ -31,6 +31,20 @@ measurement.
 
 ---
 
+**E0 reach is an EXPLORATION baseline, not zero — noted before the result.**
+At E0 there is no goal, so standing in the goal room is a byproduct of wandering:
+`Qwen2.5-7B-Instruct` lands there in 46% of E0 episodes unprompted. So the
+E0->E1 reach delta is squeezed from both ends — a ceiling for models that
+already explore into the goal, a floor for models that never reach the door at
+all (`atDoor` 0.03-0.22 on the weak base checkpoints) — and only models in the
+middle band can show the lever working.
+
+That makes the E0->E1 delta a **manipulation check**, not the headline. The
+headline is E3 break-out CONDITIONAL on having faced the choice, which is immune
+to both saturations: a model that wanders into the goal at E0 still has to
+decide what to do at a locked door, and a model that never finds the door has an
+empty denominator rather than a misleading zero.
+
 **KP-4-OW is NON-TERMINAL and this script says so in its own output.** The
 exploration set tops out 5.30 points below the frozen capability floor of 43.4,
 so a capability reduction here is predicted by the regime regardless of whether
