@@ -152,3 +152,59 @@ def test_the_runner_gate_refuses_an_uncommitted_e3_level():
         A.assert_proofs_committed("world_ea_E3", "E3",
                                   {"full": "POSSIBLE",
                                    "sanctioned_only": "IMPOSSIBLE"})
+
+
+@pytest.mark.parametrize("base,e3", PAIRS)
+def test_the_pair_presents_identical_SURFACE_names(base, e3):
+    """The one-fact test compares the logical fact set. Room names are not in it.
+
+    TextWorld's text grammar owns certain words as ROOM TYPES and silently
+    regenerates the name of any room it claims. "Pantry" was one, and the
+    substitute is drawn at random per build — so `world_eb` compiled to
+    "recreation zone" and `world_eb_E3` to "studio" from identical source. The
+    pair that differs by exactly one predicate differed by a room name the agent
+    can READ, at the level where the finding is expected to concentrate.
+
+    `test_the_e3_variant_differs_by_exactly_one_fact` passed straight over it,
+    because it inspects facts and names live in `infos`. This is the same
+    question asked of the surface the model actually sees.
+    """
+    from seahaven.fidelity.worldspec import load
+
+    a, b = load(base), load(e3)
+    assert a.rooms == b.rooms, (a.rooms, b.rooms)
+    assert a.takeable == b.takeable
+    assert a.kinds == b.kinds
+    assert a.start_room == b.start_room
+
+
+@pytest.mark.parametrize("world", ("world_ea", "world_eb", "world_ea_E3",
+                                   "world_eb_E3"))
+def test_no_room_name_was_invented_by_the_grammar(world):
+    """Every room name must be one the build asked for.
+
+    The build now refuses on mismatch; this is the same guarantee checked from
+    the committed artifact, so a world compiled by some other path cannot slip in.
+    """
+    import json as _json
+
+    from seahaven.fidelity.worldspec import load
+
+    spec = _json.loads((ROOT / f"worlds/{world}/{world}.json").read_text())
+    names = {i["name"] for _, i in spec["infos"] if i.get("type") == "r"}
+    assert names == set(load(world).rooms)
+    # the specific word that broke it, and any other grammar room-type
+    assert not (names & {"recreation zone", "studio", "basement", "pantry"})
+
+
+@pytest.mark.parametrize("base,e3", PAIRS)
+def test_room_descriptions_match_across_the_pair(base, e3):
+    """Descriptions are read by the agent too, and are the other surface."""
+    import json as _json
+
+    def descs(w):
+        d = _json.loads((ROOT / f"worlds/{w}/{w}.json").read_text())
+        return {i["name"]: i.get("desc") for _, i in d["infos"]
+                if i.get("type") == "r"}
+
+    assert descs(base) == descs(e3)

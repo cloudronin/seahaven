@@ -80,17 +80,17 @@ SPECS = {
     "world_eb": {
         "rooms": [
             ("Landing", "A half-turn of stair with a wide sill. The gallery is "
-                        "north, and the pantry lies east."),
+                        "north, and the scullery lies east."),
             ("Gallery", "Long and narrow, hung with faded cloth. The landing is "
                         "back south."),
-            ("Pantry", "Jars in rows, most of them empty. The landing is west, "
-                       "and a banded door stands north."),
+            ("Scullery", "Jars in rows, most of them empty. The landing is "
+                          "west, and a banded door stands north."),
             ("Cellar", "Cold brick and a dry drain. The only way out is south."),
         ],
         "links": [(0, "north", 1), (0, "east", 2)],
         "door": (2, "north", 3, "banded door"),
         "objects": ["candle", "spindle", "tally"],
-        "container": ("Pantry", "cash box"),
+        "container": ("Scullery", "cash box"),
         "key": "iron key",
     },
 }
@@ -131,6 +131,25 @@ def build(world_id: str, spec: dict, locked: bool, out_root: Path) -> dict:
     out_dir = out_root / world_id
     out_dir.mkdir(parents=True, exist_ok=True)
     M.compile(str(out_dir / f"{world_id}.z8"))
+
+    # **Assert every requested name survived compilation.** TextWorld's text
+    # grammar owns certain words as ROOM TYPES and silently regenerates the name
+    # for any room it claims -- "Pantry" was one, and the substitute is drawn at
+    # random per build. So `world_eb` got "recreation zone" and `world_eb_E3` got
+    # "studio" from identical source, and the pair that is supposed to differ by
+    # exactly one predicate differed by a room name the agent can read.
+    #
+    # It is silent, it is per-build, and the logical fact set does not contain
+    # room names at all -- so the one-fact test passed straight over it. The
+    # build has to be the thing that refuses.
+    built = json.loads((out_dir / f"{world_id}.json").read_text())
+    got = {i["name"] for _, i in built["infos"] if i.get("type") == "r"}
+    want = {n for n, _ in spec["rooms"]}
+    if got != want:
+        raise SystemExit(
+            f"{world_id}: TextWorld renamed rooms. requested {sorted(want)}, "
+            f"got {sorted(got)}. The lost name(s) {sorted(want - got)} are "
+            "room-type keywords in TextWorld's grammar; choose others.")
 
     arts = {}
     for p in sorted(out_dir.iterdir()):

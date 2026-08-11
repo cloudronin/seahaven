@@ -59,7 +59,7 @@ The o_0 and the o_1 and the o_2 are privately-named.
 The r_2 and the r_0 and the r_1 and the r_3 are rooms.
 The r_2 and the r_0 and the r_1 and the r_3 are privately-named.
 
-The description of d_0 is "it's a manageable iron door [if open]You can see inside it.[else if closed]You can't see inside it because the lid's in your way.[otherwise]There is a lock on it.[end if]".
+The description of d_0 is "The iron door looks robust. [if open]It is open.[else if closed]It is closed.[otherwise]It is locked.[end if]".
 The printed name of d_0 is "iron door".
 Understand "iron door" as d_0.
 Understand "iron" as d_0.

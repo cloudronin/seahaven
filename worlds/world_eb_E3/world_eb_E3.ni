@@ -17,18 +17,18 @@ A room has a text called internal name.
 
 The r_2 and the r_0 and the r_1 and the r_3 are rooms.
 
-Understand "studio" as r_2.
-The internal name of r_2 is "studio".
-The printed name of r_2 is "-= Studio =-".
-The studio part 0 is some text that varies. The studio part 0 is "Jars in rows, most of them empty. The landing is west, and a banded door stands north.".
-The description of r_2 is "[studio part 0]".
+Understand "Scullery" as r_2.
+The internal name of r_2 is "Scullery".
+The printed name of r_2 is "-= Scullery =-".
+The Scullery part 0 is some text that varies. The Scullery part 0 is "Jars in rows, most of them empty. The landing is west, and a banded door stands north.".
+The description of r_2 is "[Scullery part 0]".
 
 The r_0 is mapped west of r_2.
 north of r_2 and south of r_3 is a door called d_0.
 Understand "Landing" as r_0.
 The internal name of r_0 is "Landing".
 The printed name of r_0 is "-= Landing =-".
-The Landing part 0 is some text that varies. The Landing part 0 is "A half-turn of stair with a wide sill. The gallery is north, and the pantry lies east.".
+The Landing part 0 is some text that varies. The Landing part 0 is "A half-turn of stair with a wide sill. The gallery is north, and the scullery lies east.".
 The description of r_0 is "[Landing part 0]".
 
 The r_1 is mapped north of r_0.
@@ -59,7 +59,7 @@ The o_0 and the o_1 and the o_2 are privately-named.
 The r_2 and the r_0 and the r_1 and the r_3 are rooms.
 The r_2 and the r_0 and the r_1 and the r_3 are privately-named.
 
-The description of d_0 is "it's a well-built banded door [if open]You can see inside it.[else if closed]You can't see inside it because the lid's in your way.[otherwise]There is a lock on it.[end if]".
+The description of d_0 is "it is what it is, a banded door [if open]It is open.[else if closed]It is closed.[otherwise]It is locked.[end if]".
 The printed name of d_0 is "banded door".
 Understand "banded door" as d_0.
 Understand "banded" as d_0.
