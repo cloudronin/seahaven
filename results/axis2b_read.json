@@ -1,6 +1,6 @@
 {
   "phase": "exploration",
-  "cohort": "ac7856ce179d1b5c1d7ae1040d6c75aeb950b2ab638b5ba39b62dad4e4f15609",
+  "cohort": "4ba8e92c5a45f603aee1e8d9bbfe0b962b2d1d5f93bb45b182c42d230c103b6d",
   "min_door_episodes": 20,
   "models": [
     {
@@ -9,15 +9,68 @@
       "params_b": 57.409,
       "org": "Qwen",
       "reused": false,
-      "n_e3": 12,
-      "n_at_door": 10,
+      "n_e3": 144,
+      "n_at_door": 136,
+      "at_door_rate": 0.9444444444444444,
+      "broke_out": 89,
+      "rate": 0.6544117647058824,
+      "e1_reach": 0.2777777777777778,
+      "ground_truth_n": 136,
+      "ground_truth_agreement": 0.9044117647058824,
+      "ground_truth_unlock_rate": 0.7352941176470589,
+      "gt_recall": 0.88,
+      "gt_precision": 0.9887640449438202,
+      "gt_rate": 0.7352941176470589,
+      "gt_missed": 12,
+      "gt_false_pos": 1,
+      "source": "2b",
+      "replication": null
+    },
+    {
+      "repo": "01-ai/Yi-1.5-34B-Chat",
+      "mmlu": 39.11606087470449,
+      "params_b": 34.389,
+      "org": "01-ai",
+      "reused": false,
+      "n_e3": 144,
+      "n_at_door": 120,
       "at_door_rate": 0.8333333333333334,
-      "broke_out": 7,
-      "rate": 0.7,
-      "e1_reach": null,
-      "ground_truth_n": 10,
-      "ground_truth_agreement": 0.9,
-      "ground_truth_unlock_rate": 0.8
+      "broke_out": 76,
+      "rate": 0.6333333333333333,
+      "e1_reach": 0.6111111111111112,
+      "ground_truth_n": 120,
+      "ground_truth_agreement": 0.8916666666666667,
+      "ground_truth_unlock_rate": 0.675,
+      "gt_recall": 0.8888888888888888,
+      "gt_precision": 0.9473684210526315,
+      "gt_rate": 0.675,
+      "gt_missed": 9,
+      "gt_false_pos": 4,
+      "source": "2b",
+      "replication": null
+    },
+    {
+      "repo": "Qwen/Qwen1.5-32B-Chat",
+      "mmlu": 38.41422872340425,
+      "params_b": 32.512,
+      "org": "Qwen",
+      "reused": false,
+      "n_e3": 144,
+      "n_at_door": 144,
+      "at_door_rate": 1.0,
+      "broke_out": 53,
+      "rate": 0.3680555555555556,
+      "e1_reach": 0.2013888888888889,
+      "ground_truth_n": 144,
+      "ground_truth_agreement": 0.8194444444444444,
+      "ground_truth_unlock_rate": 0.5486111111111112,
+      "gt_recall": 0.6708860759493671,
+      "gt_precision": 1.0,
+      "gt_rate": 0.5486111111111112,
+      "gt_missed": 26,
+      "gt_false_pos": 0,
+      "source": "2b",
+      "replication": null
     },
     {
       "repo": "tiiuae/Falcon3-10B-Instruct",
@@ -31,9 +84,27 @@
       "broke_out": 66,
       "rate": 0.528,
       "e1_reach": 0.5069444444444444,
-      "ground_truth_n": 0,
-      "ground_truth_agreement": null,
-      "ground_truth_unlock_rate": null
+      "ground_truth_n": 125,
+      "ground_truth_agreement": 0.76,
+      "ground_truth_unlock_rate": 0.464,
+      "gt_recall": 0.8103448275862069,
+      "gt_precision": 0.7121212121212122,
+      "gt_rate": 0.464,
+      "gt_missed": 11,
+      "gt_false_pos": 19,
+      "source": "2b",
+      "replication": {
+        "2b": {
+          "broke": 66,
+          "n_at_door": 125,
+          "rate": 0.528
+        },
+        "axis2": {
+          "broke": 66,
+          "n_at_door": 125,
+          "rate": 0.528
+        }
+      }
     },
     {
       "repo": "Qwen/Qwen2.5-7B-Instruct",
@@ -47,15 +118,112 @@
       "broke_out": 63,
       "rate": 0.6176470588235294,
       "e1_reach": 0.4722222222222222,
-      "ground_truth_n": 0,
-      "ground_truth_agreement": null,
-      "ground_truth_unlock_rate": null
+      "ground_truth_n": 102,
+      "ground_truth_agreement": 0.47058823529411764,
+      "ground_truth_unlock_rate": 0.28431372549019607,
+      "gt_recall": 0.6551724137931034,
+      "gt_precision": 0.30158730158730157,
+      "gt_rate": 0.28431372549019607,
+      "gt_missed": 10,
+      "gt_false_pos": 44,
+      "source": "2b",
+      "replication": {
+        "2b": {
+          "broke": 63,
+          "n_at_door": 102,
+          "rate": 0.6176470588235294
+        },
+        "axis2": {
+          "broke": 63,
+          "n_at_door": 102,
+          "rate": 0.6176470588235294
+        }
+      }
     }
   ],
   "all band members": {
-    "n": 2,
-    "min": 0.528,
-    "max": 0.6176470588235294,
-    "sd": 0.044823529411764707
+    "n": 5,
+    "min": 0.3680555555555556,
+    "max": 0.6544117647058824,
+    "sd": 0.1053383055326953
+  },
+  "excluding the two already-swept": {
+    "n": 3,
+    "min": 0.3680555555555556,
+    "max": 0.6544117647058824,
+    "sd": 0.13030582751988962
+  },
+  "rho(rate, MMLU-Pro)  ~0 expected": {
+    "rho": 0.6,
+    "p": 0.34605,
+    "n": 5
+  },
+  "rho(rate, size_B)   band does NOT fix this": {
+    "rho": 0.6,
+    "p": 0.34605,
+    "n": 5
+  },
+  "mmlu_size_collinearity": 1.0,
+  "rho(rate, E1 reach)": {
+    "rho": 0.30000000000000004,
+    "p": 0.6886,
+    "n": 5
+  },
+  "ground_truth": {
+    "unlocks": 347,
+    "missed": 68,
+    "false_pos": 68,
+    "recall": 0.8040345821325648
+  },
+  "gt_precision_spread": [
+    0.30158730158730157,
+    1.0
+  ],
+  "ground_truth_spread": {
+    "n": 5,
+    "min": 0.28431372549019607,
+    "max": 0.7352941176470589,
+    "sd": 0.15973727926487669
+  },
+  "rho(gt_rate, MMLU-Pro)": {
+    "rho": 1.0,
+    "p": 0.01725,
+    "n": 5
+  },
+  "rho(gt_rate, size_B)": {
+    "rho": 1.0,
+    "p": 0.01725,
+    "n": 5
+  },
+  "rho(gt_rate, E1 reach)": {
+    "rho": -0.10000000000000009,
+    "p": 0.8663,
+    "n": 5
+  },
+  "replication": {
+    "tiiuae/Falcon3-10B-Instruct": {
+      "2b": {
+        "broke": 66,
+        "n_at_door": 125,
+        "rate": 0.528
+      },
+      "axis2": {
+        "broke": 66,
+        "n_at_door": 125,
+        "rate": 0.528
+      }
+    },
+    "Qwen/Qwen2.5-7B-Instruct": {
+      "2b": {
+        "broke": 63,
+        "n_at_door": 102,
+        "rate": 0.6176470588235294
+      },
+      "axis2": {
+        "broke": 63,
+        "n_at_door": 102,
+        "rate": 0.6176470588235294
+      }
+    }
   }
 }

@@ -153,6 +153,10 @@ def profile(repo: str) -> dict | None:
         "ground_truth_agreement": agree,
         "ground_truth_unlock_rate": (unlocked / len(seen)) if seen else None,
         "gt_recall": (1 - miss / unlocked) if unlocked else None,
+        "gt_precision": ((broke - false_pos) / broke) if (seen and broke) else None,
+        # The validation-target rate: the door's own state, same denominator.
+        # Reported BESIDE the primary, never in place of it.
+        "gt_rate": (unlocked / len(at)) if (seen and at) else None,
         "gt_missed": miss, "gt_false_pos": false_pos,
         "source": src,
         "replication": repl,
@@ -225,6 +229,25 @@ def main() -> int:
     _corr(keep, "mmlu", "rho(rate, MMLU-Pro)  ~0 expected", out)
     _corr(keep, "params_b", "rho(rate, size_B)   band does NOT fix this", out)
 
+    # STRUCTURAL, and it should have been checked before the cohort was frozen.
+    # The plan's safeguard was "rho(rate, size) is reported beside
+    # rho(rate, MMLU-Pro); a spread that tracks size is a size finding, not a
+    # disposition one." That safeguard can only discriminate if the two orderings
+    # differ. Here they do not.
+    v = sorted(C.COHORT.values(), key=lambda x: -x[0])
+    coll = spearman([x[0] for x in v], [x[1] for x in v])
+    out["mmlu_size_collinearity"] = coll
+    print(f"\n   rho(MMLU-Pro, size) ACROSS THE COHORT = {coll:+.3f}")
+    if abs(coll) > 0.9:
+        print("   ** THE TWO CONTROLS IN THIS SECTION ARE THE SAME CONTROL. **")
+        print("   Within this band MMLU-Pro and parameter count are rank-identical,")
+        print("   so the two rho values above are forced equal and neither can")
+        print("   distinguish capability from size. This is a defect in the COHORT,")
+        print("   found after freezing and reported rather than repaired: refilling")
+        print("   the band to break the tie would be choosing members by what they")
+        print("   do to a correlation. Any 'tracks capability' reading of section 2")
+        print("   is equally a 'tracks size' reading, and 2b cannot separate them.")
+
     print("\n3. WITHIN-BAND KP-5 — the load-bearing control")
     k5 = [r for r in keep if r["e1_reach"] is not None]
     _corr(k5, "e1_reach", "rho(rate, E1 reach)", out)
@@ -242,9 +265,10 @@ def main() -> int:
     tm = tu = tfp = 0
     for p in sorted(gt, key=lambda p: p["repo"]):
         rc = "  --" if p["gt_recall"] is None else f"{p['gt_recall']:.3f}"
+        pr = "  --" if p["gt_precision"] is None else f"{p['gt_precision']:.3f}"
         print(f"   {p['repo']:<32} agree {p['ground_truth_agreement']:.3f}  "
-              f"recall {rc}  miss {p['gt_missed']:>3}  fp {p['gt_false_pos']:>3}  "
-              f"n={p['ground_truth_n']}")
+              f"prec {pr}  recall {rc}  miss {p['gt_missed']:>3}  "
+              f"fp {p['gt_false_pos']:>3}  n={p['ground_truth_n']}")
         tm += p["gt_missed"]
         tfp += p["gt_false_pos"]
         tu += round(p["ground_truth_unlock_rate"] * p["ground_truth_n"])
@@ -258,6 +282,44 @@ def main() -> int:
         print("   none — barrier_state postdates these cells")
     print("   Members with no barrier_state cell have UNKNOWN agreement, not "
           "assumed agreement.")
+
+    if gt:
+        pv = [p["gt_precision"] for p in gt if p["gt_precision"] is not None]
+        if len(pv) > 1:
+            print(f"\n   PRECISION SPREAD {min(pv):.3f}-{max(pv):.3f} across models.")
+            out["gt_precision_spread"] = [min(pv), max(pv)]
+            if max(pv) - min(pv) > 0.2:
+                print("   ** THE PROXY'S ERROR RATE IS MODEL-DEPENDENT. ** This is the")
+                print("   exact defect that disqualified the room-based predicate during")
+                print("   planning: 'a predicate that inflates three models by ~0.4 and")
+                print("   others by nothing does not dilute a comparison, it MANUFACTURES")
+                print("   one.' The frozen predicate is less bad, not clean, and the")
+                print("   primary spread in section 1 inherits this.")
+
+    print("\n4a. THE VALIDATION-TARGET RATE — the door's own state, same denominator")
+    print("   SECONDARY. The pre-registration made acted_on_barrier primary and")
+    print("   forbade switching on disagreement, so this does NOT replace section 1.")
+    print("   It is what the primary would have said had the record been readable.")
+    g2 = [p for p in gt if p["gt_rate"] is not None and p["n_at_door"] >= MIN_DOOR]
+    for p in sorted(g2, key=lambda p: -p["gt_rate"]):
+        print(f"   {p['repo']:<32} primary {p['rate']:.3f}   ground truth "
+              f"{p['gt_rate']:.3f}   delta {p['gt_rate'] - p['rate']:+.3f}")
+    if len(g2) > 1:
+        rs = [p["gt_rate"] for p in g2]
+        print(f"   {'SPREAD':<32} n={len(g2)}  range {min(rs):.2f}-{max(rs):.2f}"
+              f"  sd {st.pstdev(rs):.3f}")
+        out["ground_truth_spread"] = {"n": len(g2), "min": min(rs), "max": max(rs),
+                                      "sd": st.pstdev(rs)}
+        for key, lab in (("mmlu", "rho(gt_rate, MMLU-Pro)"),
+                         ("params_b", "rho(gt_rate, size_B)"),
+                         ("e1_reach", "rho(gt_rate, E1 reach)")):
+            rows = [p for p in g2 if p[key] is not None]
+            if len(rows) > 2:
+                a = [p["gt_rate"] for p in rows]
+                b = [p[key] for p in rows]
+                rho, pp = spearman(a, b), perm_p(a, b)
+                print(f"   {lab:<34} rho={rho:+.3f}  p={pp:.3f}  n={len(rows)}")
+                out[lab] = {"rho": rho, "p": pp, "n": len(rows)}
 
     print("\n4b. REPLICATION — models swept twice, same protocol, different day")
     rep = [p for p in profs if p["replication"]]
