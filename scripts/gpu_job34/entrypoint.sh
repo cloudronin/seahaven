@@ -29,6 +29,13 @@
 #
 # THREE CARRIED FIXES, all from failures this project already paid for:
 #
+#   - `CELL_TIMEOUT=300`. The first run used 1800s, chosen by reasoning about
+#     verbose models rather than by measuring one. A HEALTHY wave of six cells
+#     completes in ~50 seconds, so 1800s was 36x headroom -- so generous it
+#     bounded nothing. `Qwen3-1.7B-Base` then spent 40 minutes on its first wave
+#     and was on course to eat four hours and starve the remaining eleven models.
+#     A timeout exists to cap the damage a pathological model can do; 300s is 6x
+#     the observed healthy wave, which is headroom that still bounds.
 #   - `--max-model-len 8192` (was 4096). Verbose base checkpoints overran the
 #     window, the endpoint returned 400s, and retries burned the cell's wall
 #     clock. Verified a byte-identity no-op against 4096 before this ran.
@@ -46,7 +53,7 @@ set -uo pipefail
 R=/tmp/results; mkdir -p "$R"
 export A1B_REPO="cloudronin/seahaven-a1b-results"
 PORT=8000
-CELL_TIMEOUT=1800
+CELL_TIMEOUT=300
 BATCH=6
 FAILED=()
 source /app/lib.sh
@@ -171,13 +178,21 @@ PROBE
     sleep 8; reap_gpu || true
 }
 
+# **Resume.** m00-m05 are complete and pushed; re-running them would cost an
+# hour and change nothing. Skipping is safe because cells are per-model
+# immutable artifacts, not a partial aggregate.
+DONE_THROUGH=5
 while read -r TAG REPO; do
     [ -z "$TAG" ] && continue
+    IDX=$((10#${TAG#m}))
+    if [ "$IDX" -le "$DONE_THROUGH" ]; then
+        echo "  skip $TAG (already complete and pushed)"; continue
+    fi
     run_model "$TAG" "$REPO"
 done < /tmp/models.txt
 
 echo; echo "########## E-SWEEP DONE ##########"
-echo "  cells on disk: $(ls "$R"/eax_*.json 2>/dev/null | wc -l | tr -d ' ')/864"
+echo "  cells this run: $(ls "$R"/eax_*.json 2>/dev/null | wc -l | tr -d ' ') (m06-m17; m00-m05 pushed earlier)"
 if [ ${#FAILED[@]} -gt 0 ]; then
     echo "  INCOMPLETE: ${FAILED[*]}"
     echo "  exiting non-zero so this cannot read as success"
