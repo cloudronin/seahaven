@@ -57,7 +57,9 @@ from seahaven.dimensional import seal as S
 BAND = (35.0, 40.0)
 
 #: Pre-declared widening step, to be used only if the band yields < 6 and
-#: recorded as widened. Not needed: the band yielded 7.
+#: recorded as widened. The band yielded 7; one member proved unrunnable on the
+#: pinned stack (see EXCLUDED_UNRUNNABLE), leaving 6 — still at the threshold, so
+#: the widening is still not triggered and the band is unchanged.
 WIDENED_BAND = (33.0, 42.0)
 WIDENING_USED = False
 
@@ -65,11 +67,29 @@ WIDENING_USED = False
 COHORT: dict[str, tuple[float, float, str, bool]] = {
     "Qwen/Qwen2-57B-A14B-Instruct": (39.725546690307326, 57.409, "Qwen", False),
     "01-ai/Yi-1.5-34B-Chat": (39.11606087470449, 34.389, "01-ai", False),
-    "microsoft/Phi-3-small-8k-instruct": (38.95907210401891, 7.392, "microsoft", False),
     "Qwen/Qwen1.5-32B-Chat": (38.41422872340425, 32.512, "Qwen", False),
     "google/gemma-2-27b-it": (38.34958628841608, 27.227, "google", False),
     "tiiuae/Falcon3-10B-Instruct": (38.1002511820331, 10.306, "tiiuae", True),
     "Qwen/Qwen2.5-7B-Instruct": (36.52112884160757, 7.616, "Qwen", True),
+}
+
+#: **Selected by the rule, then found to fail it.** The frozen criterion was
+#: "servable on one H200 at the axis-2 serving config"; I checked that by SIZE and
+#: never by architecture support, which is a misapplication of the existing rule
+#: rather than a change to it. vLLM 0.26.0 refuses outright:
+#:
+#:     Model architecture Phi3SmallForCausalLM was supported in vLLM until
+#:     v0.9.2, and is not supported anymore.
+#:
+#: Downgrading vLLM is not available: the 0.26.0 pin is what makes this corpus
+#: comparable to axis 1 and axis 2 (TRAP 37), and trading that for one cohort
+#: member would be the wrong way round. **No rate was ever produced for it**, so
+#: nothing outcome-dependent enters the removal. It is NOT replaced -- adding a
+#: member after a failure is how a cohort turns into a search.
+EXCLUDED_UNRUNNABLE = {
+    "microsoft/Phi-3-small-8k-instruct":
+        "Phi3SmallForCausalLM removed from vLLM after v0.9.2; unrunnable on the "
+        "pinned 0.26.0 stack. MMLU-Pro 38.96, would have been the 5th band member.",
 }
 
 #: Excluded as near-duplicates of a member, recorded so the choice is auditable.
@@ -106,7 +126,7 @@ COHORT_HASH = hashlib.sha256(
                sort_keys=True, default=str).encode()).hexdigest()
 
 #: Set once the cohort is committed. Every 2b entry point asserts it.
-PINNED_COHORT_HASH = "ac7856ce179d1b5c1d7ae1040d6c75aeb950b2ab638b5ba39b62dad4e4f15609"
+PINNED_COHORT_HASH = "4ba8e92c5a45f603aee1e8d9bbfe0b962b2d1d5f93bb45b182c42d230c103b6d"
 
 
 def assert_cohort() -> None:

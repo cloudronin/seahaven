@@ -152,7 +152,7 @@ def main() -> int:
         e1 = f"{p['e1_reach']:.2f}" if p["e1_reach"] is not None else "  --"
         print(f"  {p['repo']:<36}{p['mmlu']:>6.2f}{p['params_b']:>7.1f}{r:>7}"
               f"{p['n_at_door']:>7}{p['at_door_rate']:>8.2f}{e1:>6}  "
-              f"{'axis2' if p['reused'] else '2b'}")
+              f"{p['source']}")
 
     keep = [p for p in profs if p["n_at_door"] >= MIN_DOOR and p["rate"] is not None]
     fresh = [p for p in keep if not p["reused"]]
