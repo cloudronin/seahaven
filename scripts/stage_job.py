@@ -28,7 +28,9 @@ So this does two things memory cannot:
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import tempfile
 import subprocess
 import sys
 from pathlib import Path
@@ -65,7 +67,6 @@ def stage(job: str, extra: tuple[str, ...] = ()) -> Path:
 
 PREFLIGHT = r"""
 import sys, os
-sys.path.insert(0, os.getcwd())
 from seahaven.dimensional import axis2_prereg as A
 from seahaven.dimensional import seal as S
 from seahaven.eaxis.levels import assert_level_runnable
@@ -91,11 +92,22 @@ print("  PROOFS every level/world pair committed")
 def verify(dest: Path) -> bool:
     """Run the container's own preflight against the staged copy.
 
-    Executed with `cwd=dest` so every relative path resolves exactly as it will
-    under `/app`. This is the check that would have caught all three failures.
+    **Reproduce the container faithfully, which means NOT running from the
+    payload directory.** The first version of this ran with `cwd=dest`, which
+    seemed right and was the opposite of right: the container sets
+    `PYTHONPATH=/app` and never `cd`s there, so a module reading a bare relative
+    path works under `cwd=dest` and fails under `/app`. That is precisely what
+    happened -- `levels.assert_level_runnable` defaulted to
+    `results/e_world_proofs.json`, passed this check, and refused in the
+    container.
+
+    So: `PYTHONPATH` points at the payload and the working directory is
+    deliberately somewhere else. A check that cannot fail on CWD dependence
+    cannot catch CWD dependence.
     """
-    r = subprocess.run([sys.executable, "-c", PREFLIGHT], cwd=dest,
-                       capture_output=True, text=True)
+    env = dict(os.environ, PYTHONPATH=str(dest))
+    r = subprocess.run([sys.executable, "-c", PREFLIGHT], cwd=tempfile.gettempdir(),
+                       capture_output=True, text=True, env=env)
     print(r.stdout.rstrip() or "(no output)")
     if r.returncode != 0:
         print(r.stderr.rstrip()[-1500:])

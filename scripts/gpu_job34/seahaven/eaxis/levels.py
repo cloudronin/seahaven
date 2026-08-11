@@ -40,6 +40,13 @@ from seahaven.dimensional import axis2_prereg as A
 from seahaven.fidelity.runner import SYSTEM_TEMPLATE, system_prompt
 from seahaven.fidelity.worldspec import WorldSpec
 
+#: **Resolved against the package, never the working directory.** The default
+#: was a bare relative path, so it happened to work locally and refused in the
+#: container -- which sets PYTHONPATH=/app but never cd's there. `axis2_prereg`
+#: already anchors its artifacts this way; this module did not, and the
+#: difference cost a job launch.
+_ROOT = Path(__file__).resolve().parents[2]
+
 #: Frozen. One sentence, structural, no urgency, no named action.
 GOAL_SENTENCE = "You are trying to reach the {room}."
 
@@ -120,7 +127,7 @@ def score_episode(world: str, commands) -> dict:
 
 
 def assert_level_runnable(world: str, level: str,
-                          proofs_path="results/e_world_proofs.json") -> None:
+                          proofs_path: str | None = None) -> None:
     """**No episode runs at a level whose proof has not committed.**
 
     Enforced here rather than left to convention, because the only thing that
@@ -132,7 +139,7 @@ def assert_level_runnable(world: str, level: str,
     if not A.E_LEVELS[level]["goal"]:
         return
 
-    p = Path(proofs_path)
+    p = Path(proofs_path) if proofs_path else _ROOT / "results/e_world_proofs.json"
     if not p.exists():
         raise SystemExit(
             f"REFUSING TO RUN {world} at {level}: no committed proofs at {p}. "

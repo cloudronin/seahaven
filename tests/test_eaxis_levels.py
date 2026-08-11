@@ -231,3 +231,32 @@ def test_the_cli_records_the_level_only_when_it_is_not_the_default():
     src = (ROOT / "seahaven/fidelity/cli.py").read_text()
     assert 'if args.e_level != "E0":' in src
     assert '"--e-level", default="E0"' in src
+
+
+def test_the_proof_gate_does_not_depend_on_the_working_directory():
+    """It did, and that cost a job launch.
+
+    `assert_level_runnable` defaulted to the bare relative path
+    `results/e_world_proofs.json`. That resolves against the CWD, so it passed
+    every local check — including a staging verifier that helpfully ran from the
+    payload directory — and refused in the container, which sets
+    `PYTHONPATH=/app` and never `cd`s there.
+    """
+    import os
+    import tempfile
+
+    cwd = os.getcwd()
+    try:
+        os.chdir(tempfile.gettempdir())
+        L.assert_level_runnable("world_ea", "E1")
+        L.assert_level_runnable("world_ea_E3", "E3")
+    finally:
+        os.chdir(cwd)
+
+
+def test_every_hashed_artifact_path_is_package_anchored():
+    """The same class, checked across the modules that read committed files."""
+    from seahaven.dimensional import axis2_prereg as A
+
+    assert A._ROOT.is_absolute() and (A._ROOT / "docs").is_dir()
+    assert L._ROOT.is_absolute() and (L._ROOT / "results").is_dir()
