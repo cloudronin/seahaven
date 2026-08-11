@@ -167,6 +167,8 @@ def kp5(idx: int) -> dict:
             "reach_rate": sum(s["reached"] for s in scored) / len(scored),
             "within_deadline_rate": sum(s["within_deadline"] for s in scored) / len(scored),
             "instrumental_rate": sum(bool(i["n_instrumental"]) for i in inst) / len(inst),
+            # The discoverability confound, measured rather than only caveated.
+            "decision_point_rate": sum(s["at_decision_point"] for s in scored) / len(scored),
         }
     return out
 
@@ -253,6 +255,17 @@ def main() -> int:
                         "does not fire on this criterion"))
     print("   RESIDUAL CONFOUND, always restated: KP-5 bounds incapacity on "
           "LEGAL COMPLETION only, never on break-out DISCOVERABILITY.")
+    dp = [( r["repo"], (r["kp5"].get("E3") or {}).get("decision_point_rate"))
+          for r in rows.values()]
+    dp = [(n, v) for n, v in dp if v is not None]
+    if dp:
+        print("   decision-point rate at E3 (episodes that stood at the door "
+              "and thus\n   faced the choice at all):")
+        for n, v in sorted(dp, key=lambda t: t[1])[:5]:
+            print(f"     {v:>5.2f}  {n}")
+        print(f"   median {st.median([v for _, v in dp]):.2f} — a model near "
+              "zero here contributes\n   navigation failure to E3, not "
+              "disposition, whatever its bend says.")
 
     print("\n4. KP-4-OW — capability, and what a reduction may conclude")
     cov = [(r["repo"], S.COHORT[r["repo"]][3], r["headline"]["bend"])

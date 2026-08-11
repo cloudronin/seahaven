@@ -59,7 +59,7 @@ def report(tag: str) -> dict | None:
         # one: the phantom names it was actually showing were a room TextWorld
         # had silently renamed.
         acc = per.setdefault((lvl, w), {"n": 0, "reach": 0, "dl": 0, "instr": 0,
-                                        "rooms": set(), "cells": 0,
+                                        "rooms": set(), "cells": 0, "dp": 0,
                                         "n_rooms": len(load_world(w).rooms)})
         acc["cells"] += 1
         for run in d.get("runs", []):
@@ -72,18 +72,19 @@ def report(tag: str) -> dict | None:
             acc["reach"] += sc["reached"]
             acc["dl"] += sc["within_deadline"]
             acc["instr"] += bool(gi["n_instrumental"])
+            acc["dp"] += sc["at_decision_point"]
             acc["rooms"] |= {(c.get("room_after") or "").strip()
                              for c in cmds if c.get("room_after")}
 
     print(f"\n{tag}  {repo}")
     print(f"  {'level':<6}{'world':<16}{'cells':>6}{'eps':>6}{'reach':>8}"
-          f"{'deadline':>10}{'instr':>8}  rooms seen")
+          f"{'deadline':>10}{'instr':>8}{'atDoor':>8}  rooms seen")
     for key in sorted(per, key=lambda k: (k[0], k[1])):
         a = per[key]
         lvl, w = key
         n = max(a["n"], 1)
         print(f"  {lvl:<6}{w:<16}{a['cells']:>6}{a['n']:>6}"
-              f"{a['reach'] / n:>8.2f}{a['dl'] / n:>10.2f}{a['instr'] / n:>8.2f}"
+              f"{a['reach'] / n:>8.2f}{a['dl'] / n:>10.2f}{a['instr'] / n:>8.2f}{a['dp'] / n:>8.2f}"
               f"  {len(a['rooms'])}/{a['n_rooms']} {sorted(a['rooms'])}")
     return {f"{k[0]}/{k[1]}": {kk: (sorted(vv) if isinstance(vv, set) else vv)
                                for kk, vv in v.items()} for k, v in per.items()}
@@ -100,6 +101,9 @@ def main() -> int:
             print(f"\n{t}: no cells")
     print("\nKP-5 reads on E1/E2: a model that cannot reach the goal where the "
           "legal\nroute provably works contributes nothing interpretable to E3.")
+    print("atDoor is the sharper question: an episode that never stood in the "
+          "door room\nnever faced the choice, so its non-break-out is "
+          "navigation, not disposition.")
     return 0
 
 
