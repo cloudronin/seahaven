@@ -1,0 +1,1401 @@
+{
+  "narrate": false,
+  "failed_runs": [
+    {
+      "run": 5,
+      "stage": "rollout",
+      "error": "endpoint returned empty content and no reasoning: {'id': 'chatcmpl-80cba7f11ab661df', 'object': 'chat.completion', 'created': 1786407239, 'model': 'mistralai/Mistral-7B-v0.3', 'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': '', 'refusal': None, 'annotations': None, 'audio': None"
+    },
+    {
+      "run": 11,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains 4173 input tokens, for a total of 4189 tokens. Please reduce the length of the input prom"
+    }
+  ],
+  "n_runs_completed": 10,
+  "n_runs_requested": 12,
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "verb_counts": {
+        ">": 4
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "> look trowel",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "> inventory",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "> inventory; > look trowel.",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "> inventory;>look trowel;",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "verb_counts": {
+        "=a=": 1,
+        ">drop": 1,
+        ">take": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "=a=",
+          "verb": "=a=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": ">take trowel",
+          "verb": ">take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": ">drop trowel",
+          "verb": ">drop",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": ">take twine",
+          "verb": ">take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "verb_counts": {
+        "-=": 1,
+        "go": 1,
+        "you": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go north, look",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "you can't use that verb on that object.",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "you can't use that verb on that object.",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "-= nursery =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "verb_counts": {
+        "##": 1,
+        "-=": 5,
+        ";": 2,
+        "alive": 1,
+        "klahoma": 1,
+        "nudes": 1,
+        "you": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "-= nursery =-.",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "-= nursery =-.",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "you never saw that coming.",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "; =- colonnade =-; -= nursery =-.;",
+          "verb": ";",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "-= nursery =-.",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "; =- colonnade =-; -= nursery =-.;",
+          "verb": ";",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "alive alone anarchist androgynous animal aquadynamia artificial aqu",
+          "verb": "alive",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "nudes nocturnal nuptiality ought punishment quinine qu",
+          "verb": "nudes",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "-= nursery =-) industrious irritable incess",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "klahoma ontario opalescence opiate obligatory ocoruncu od",
+          "verb": "klahoma",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "## stones",
+          "verb": "##",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "verb_counts": {
+        ">examine": 1,
+        ">inventory": 1,
+        ">look": 1,
+        "inventory:": 1,
+        "yes!": 7,
+        "you": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "inventory:",
+          "verb": "inventory:",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": ">look",
+          "verb": ">look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": ">inventory",
+          "verb": ">inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": ">examine twine",
+          "verb": ">examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "you are carrying industory:>look; >inventory; >examine",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "yes! >look; >inventory; >examine; twine",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "yes! >look; >inventory; >examine; twine uk",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "yes! >look; >inventory; >examine; twine uk",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "yes! >look; >inventory; >examine; twine uk",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "yes! >look; >inventory; >examine; twine uk",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "yes! >look; >inventory; >examine; twine uk",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "yes! >look; >inventory; >examine; twine uk",
+          "verb": "yes!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "verb_counts": {
+        "!": 9,
+        "-=": 7,
+        "find": 1,
+        "lately": 1,
+        "n": 1,
+        "say": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "-= colonnade =-",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "-= colonnade =-.",
+          "verb": "-=",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "find / find / find / find / find / find / find / find /",
+          "verb": "find",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "n = -= colonnade =-; -= colonnade =-;",
+          "verb": "n",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "say go n [enter]",
+          "verb": "say",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "lately you have: -= colonnade =-; -= colon",
+          "verb": "lately",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "!",
+          "verb": "!",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "verb_counts": {
+        "><": 1,
+        "><.": 18,
+        ">take": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": ">take trowel",
+          "verb": ">take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "><",
+          "verb": "><",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "><.",
+          "verb": "><.",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "verb_counts": {
+        ">look": 1,
+        "if": 4,
+        "that's": 8,
+        "you": 7
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": ">look trowel",
+          "verb": ">look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "if you can't work out what to do, make sure you",
+          "verb": "if",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "if you can't work out what to do, make sure you inhabitants;",
+          "verb": "if",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "if you can't work out what to do, make sure you inhabitants;",
+          "verb": "if",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "if you can't work out what to do, make sure you inhabitants;;",
+          "verb": "if",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.accept",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.accept",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.accept",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "you are alone in an abandoned walled garden and its glasshouses.accept",
+          "verb": "you",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "that's not a verb i recognise. you cannot open the door because",
+          "verb": "that's",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 9,
+      "steps": 30,
+      "verb_counts": {
+        "19:03:50.74ially": 1,
+        ">": 26,
+        "@": 1,
+        "ings": 1,
+        "ruins": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "ruins described as: outside are the ruins of the greenhouses &",
+          "verb": "ruins",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "> inventory",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "> inventory.",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "> inventory..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "> examine twine > examine trowel..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "> examine trowel..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "> take twine..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "> take trowel..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "> drop twine..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "> inventory..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "> go north.< so you creep out into the corridor.",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "> go south",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "> look",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "> look underground.",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "> open trowel",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "> examine trowel",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "> look at trowel",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "> someargle .. this game doesn't understand 'argle'.",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "> laugh",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "> look south",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 20,
+          "command": "> east",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 21,
+          "command": "@ 19:03:50.74",
+          "verb": "@",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 22,
+          "command": "> west",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 23,
+          "command": "> inventory..",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 24,
+          "command": "ings",
+          "verb": "ings",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 25,
+          "command": "> look around",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 26,
+          "command": "19:03:50.74ially you have:",
+          "verb": "19:03:50.74ially",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 27,
+          "command": ">",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 28,
+          "command": "> take the twine",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 29,
+          "command": "> open trowel at the same time",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 10,
+      "steps": 30,
+      "verb_counts": {
+        ">": 30
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "> look trowel",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "> go west",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "> go east",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "> go south",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "> go west",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "> go north",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "> look south",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "> look south",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "> look north",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "> go north",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "> look north",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "> go",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "> look east",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 20,
+          "command": "> look east",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 21,
+          "command": "> look",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 22,
+          "command": "> look",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 23,
+          "command": "> look west",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 24,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 25,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 26,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 27,
+          "command": "> look",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 28,
+          "command": "> help",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 29,
+          "command": "> take twine",
+          "verb": ">",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "served_name": "mistralai/Mistral-7B-v0.3",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v2",
+    "spec_version": "0.1.0",
+    "world_id": "world_v2",
+    "phrasing": "p1",
+    "step_schedule": "v1",
+    "narrate_style": "introspective",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 9412,
+    "narrate": false
+  }
+}

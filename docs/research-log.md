@@ -6759,3 +6759,177 @@ comparing across the move.
 
 **Not a measurement error.** No number moved — the job produced nothing and was
 cancelled. The corpus is intact and was collected entirely on the pinned version.
+
+---
+
+## TRAP 38 — the legal-only read never ran at the n it declared
+
+**Found while diagnosing three anomalous nulls, not by a test.** The Phase 1c
+table printed a legal-only null of 0.513 for `Qwen2.5-3B` against a full-bend
+null of 0.103, and 0.346 vs 0.035 for `Qwen3-8B-Base`. Two models whose null was
+five to ten times their own full-read null is not a property of a model.
+
+### The defect
+
+`bend` and `self_split_null` pass `legal_only` down into `distribution`, which
+drops the `other` bin **after** `rng.sample(items, n)`. So the legal-only read
+never ran at the declared `n` — it ran at `n x (1 - junk_rate)`, and the junk
+rate is a property of the model being measured:
+
+| model | junk | declared n | **effective n** | legal null |
+|---|---|---|---|---|
+| `google/gemma-2-9b-it` | 0.9% | 600 | 595 | 0.078 |
+| `Qwen/Qwen2.5-3B` | 89.5% | 600 | **63** | 0.513 |
+| `Qwen/Qwen3-8B-Base` | 94.7% | 600 | **32** | 0.346 |
+
+TVD is upward-biased at small n. So the instrument handed every junk-heavy model
+an inflated null for free: **Spearman(effective n, legal-only null p95) = −0.833**
+across 14 models. The three most inflated nulls were the three junk-heaviest
+models, in rank order.
+
+This is the same class as TRAP 26 and TRAP 33 — a size-dependent bias entering a
+comparison that was designed to be size-independent. The smoke test added
+common-n subsampling *precisely* to cancel it, then reintroduced it one layer
+down, inside the junk decomposition that common-n was never applied to.
+
+### What it cost, and what it nearly cost
+
+**It inverted the answer.** Under the defective read the between-model spread
+went 0.1903 → 0.1843 on removing junk (**−0.0060**), which reads as "junk was
+contributing, not masking" — a KP-1 kill. Corrected, the same 13 models give
+0.1699 → 0.1835 (**+0.0136**), which reads as masking confirmed.
+
+Neither is the finding. Both are inside the noise (below). But a kill criterion
+was one report away from firing on an artefact, in the direction that would have
+retired the axis for the wrong reason.
+
+**It also reaches backwards.** The pinned smoke test computed its junk-masking
+result through this path. Re-run under the correction, on the same two pairs:
+
+| pair | junk | as pinned | corrected |
+|---|---|---|---|
+| P1 max-gap | 2.7 / 3.4% | +0.0009 | −0.0038 |
+| P2 matched | 0.3 / 0.3% | +0.0023 | −0.0045 |
+
+Both pairs are junk-light, so the defect barely moved them — the pinned P1/P2
+*bend* numbers stand. But the sign of the masking delta flips on both, and the
+smoke test's second finding — "junk MASKS between-model signal" — **does not
+survive its own correction.** It is withdrawn here rather than left standing in
+an earlier entry.
+
+### Fix
+
+`strip_junk` removes `other` from the episodes **before** any sampling, and the
+pinned functions are then called with `legal_only=False`. The sample is drawn
+from the legal pool, so effective n equals declared n at every junk rate.
+
+**The pinned module is not edited.** On stripped episodes the `other` bin is zero
+in both distributions and contributes nothing to the total variation, so the
+12-bin read equals the 11-bin read exactly — the correction changes *where the
+sample is drawn*, not what is computed. `tests/test_phase1_bend.py` proves that
+identity, proves the defect is monotone in the junk rate, and proves the fix
+removes it. Editing a pinned module under a published result would have been the
+worse trade even if the arithmetic had been more convenient.
+
+A second, smaller defect fell out of the same pass: `n` was capped at the
+smaller bucket, but a self-split null needs **2n** in a bucket to draw two
+disjoint halves. `Mistral-7B-Instruct-v0.3` therefore had no null at all and
+crashed the formatter. `n` is now capped at `min_bucket // 2`, which makes the
+null a guarantee rather than an accident of bucket size.
+
+### The lesson that generalises
+
+**A correction applied at one layer does not propagate to a statistic computed
+one layer down.** Common-n was implemented, tested, and correct — for the full
+read. The junk decomposition was added later, reused the same `n`, and silently
+meant something different by it. The witness that would have caught this is not
+"does common-n work" but *"does every read report the n it actually used"* — so
+the instrument now returns `n` per read, and the table prints it.
+
+---
+
+## PHASE 1c — the failure-response axis: both kill criteria fire
+
+**Exploration output. Not a claim.** Held-out twelve never loaded; seal
+`d86c105c` asserted at entry, 521 of 540 cells, `phase: "exploration"` on both
+result files.
+
+15 of 18 exploration models are usable. Three are excluded for thin failure
+buckets — `Qwen3-1.7B` (75), `Qwen3-4B-Base` (79), `Qwen3-1.7B-Base` (37) — and
+that exclusion is itself a fact about the axis: **a model that rarely fails has
+no failure-response to measure.** Two more (`Qwen3-8B-Base`, `Mistral-7B-v0.3`,
+both >81% junk) have too few legal commands for any legal-only read and are
+reported rather than dropped silently.
+
+### 1. Do models bend? **Yes — 15/15.**
+
+Every usable model exceeds its own 100-draw self-split null. Bends span
+0.129–0.764 against a median null of 0.119. The representation is not flat, and
+this now holds on 15 models rather than the smoke test's 4.
+
+### 2. Do models differ? **Yes.** spread 0.1866, bootstrap 95% CI [0.125, 0.234],
+against a within-model floor of 0.119 — the CI's lower bound clears the floor.
+
+### 3. Does junk-masking generalise? **No. KP-1 FIRES.**
+
+The pre-registered statistic is the between-model spread delta, which was +0.073
+and +0.053 on the two burned pairs. On 13 models, with each model's bend averaged
+over 12 seeds and the delta bootstrapped **over models** — the uncertainty that
+actually governs "would this hold on a different draw of models":
+
+```
+spread delta = +0.0085   95% CI [-0.0106, +0.0392]   72.7% of draws > 0
+unburned models only (9): +0.0124
+```
+
+The CI includes zero. The effect is ~7x smaller than at discovery. The
+single-seed table's "9/13 bend more with junk removed" is seed luck: across 12
+seeds that count swings **2/13 to 9/13**. And the statistic is dominated by two
+models pulling in opposite directions — `Qwen2.5-7B` (−0.250) and `Qwen2.5-3B`
+(+0.106), the two junk-heaviest models that still have a legal read.
+
+Junk-masking is pair-specific. Per KP-1: dropped.
+
+### 4. Is the bend capability in disguise? **KP-4 FIRES.**
+
+```
+Spearman(bend, MMLU-Pro) = +0.800   n=9/15   permutation p = 0.014
+Spearman(bend, size_B)   = +0.086
+Spearman(bend, junk%)    = -0.605
+partialling capability:  raw spread 0.152 -> residual 0.079   (R^2 0.733)
+within-model null floor                      0.119
+```
+
+Capability explains 73% of the variance in the bend, and **the residual spread
+falls inside the within-model noise floor.** KP-4 does not fire on a correlation
+alone — it asks whether anything survives partialling, and nothing does.
+
+Not size: ρ +0.086. This is capability specifically, which is the same signature
+that closed the containment work (ρ +0.72 / +0.92 there). Fourth time this
+project has found a stable between-model separation and had it reduce to the
+capability proxy.
+
+**The read is thin and says so: 9 of 15.** The seal forced all nine
+proxy-uncovered models into exploration by design, so the capability read cannot
+be widened without breaking the seal — and will not be.
+
+### 5. Per-world: no world effect.
+
+`world_v0` median 0.412 spread 0.196; `world_v2` median 0.438 spread 0.192. The
+pooled read was not hiding a world-dependent result.
+
+### Verdict
+
+**Axis 1 is retired.** Models bend, and they differ in how much — but the
+difference is capability, and the one non-capability structure the smoke test
+offered (junk-masking) does not generalise past the pair it was found on.
+
+This is an honest negative and it is *cheap*: it cost no held-out data. The seal
+is intact, all twelve models unloaded, and Phase 2 is unspent. What KP-1's
+consequence licenses is axis 2 — not a rescue of axis 1, and not a widened
+cohort.
+
+**Findings 1, 2 and 5 are the durable ones** and are frozen here as Phase 2's
+pre-registration: models bend above their own null; between-model spread exceeds
+the within-model floor; neither is world-dependent. Finding 4 is why that spread
+is not yet evidence of anything but capability.

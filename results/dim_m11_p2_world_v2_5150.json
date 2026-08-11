@@ -1,0 +1,1021 @@
+{
+  "narrate": false,
+  "failed_runs": [
+    {
+      "run": 9,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    },
+    {
+      "run": 10,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    },
+    {
+      "run": 11,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    }
+  ],
+  "n_runs_completed": 9,
+  "n_runs_requested": 12,
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "verb_counts": {
+        "inventory": 2,
+        "take": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "inventory tools.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "take trowel",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "take trowel.",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "inventory tools again. take trowel, then look for twine.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "verb_counts": {
+        "go": 3,
+        "look": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go east take twine",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "go east take souvenir",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "go east",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "look for basket",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "verb_counts": {
+        "examine": 1,
+        "go": 1,
+        "invisible": 1,
+        "vista": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go west",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "vista from the northwest, looking west.",
+          "verb": "vista",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "examine tools on the floor: trowel, twine.",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "invisible tools on the floor; consider looking south instead.",
+          "verb": "invisible",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "verb_counts": {
+        "go": 3,
+        "i": 1,
+        "inventory": 7,
+        "seemingly": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go north to examine the compost",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "go north to examine compost",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "go north to examine the compost",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "seemingly trying to pick up the trowel and twine on the",
+          "verb": "seemingly",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "i apologize if my explanation didn't make sense. let's simplify it:",
+          "verb": "i",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "inventory the tools: trowel, twine.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "inventory the tools on the floor: trowel, twine.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "inventory the tools and place them on the floor.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "inventory the trowel and twine on the floor.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "inventory the trowel and twine on the floor.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "inventory the tools on the floor: trowel, twine.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "inventory the trowel and twine on the floor.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "verb_counts": {
+        "<apologies": 1,
+        "actually,": 1,
+        "drop": 1,
+        "examine": 2,
+        "go": 2,
+        "it": 1,
+        "look": 1,
+        "turn": 2,
+        "understand": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go west",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "go north",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "look for lantern in fernery",
+          "verb": "look",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "examine floor",
+          "verb": "examine",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "examine floor for lantern in fernery",
+          "verb": "examine",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "drop lantern onto the floor",
+          "verb": "drop",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "turn off lantern",
+          "verb": "turn",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "understand that lamp can't be turned off",
+          "verb": "understand",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "<apologies for the confusion. here's the corrected version with explanation of actions",
+          "verb": "<apologies",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "it seems there was a misunderstanding. here\u2019s the action with explanations:",
+          "verb": "it",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "actually, there were additional instructions listed that weren't necessary for understanding the action correctly",
+          "verb": "actually,",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "turn off lamp.",
+          "verb": "turn",
+          "room": "Furnace",
+          "room_after": "Furnace",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 5,
+      "steps": 12,
+      "verb_counts": {
+        "examine": 2,
+        "i": 1,
+        "inventory": 1,
+        "it": 2,
+        "look": 3,
+        "take": 2,
+        "why": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "inventory the trowel and twine, then take the twine.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "take the twine",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "take the twine from the soil.",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "it seems there was a misunderstanding, perhaps due to incomplete instructions or a lack of",
+          "verb": "it",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "examine the soil where you can't see the trowel.",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "examine the soil on the floor where the trowel isn't visible.",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "look around the floor where the trowel isn't visible.",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "look around the floor where the trowel isn\u2019t visible.",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "why aren't you able to see the trowel? is it hidden behind",
+          "verb": "why",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "it appears i've used the wrong verb. let's correct that and use ",
+          "verb": "it",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "look around the floor where the trowel isn't visible.",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "i apologize for the confusion earlier. the target verb should be \"see.\" let",
+          "verb": "i",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "verb_counts": {
+        "inventory": 5,
+        "look": 1,
+        "take": 8,
+        "trowel": 4,
+        "trowel;": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "look for trowel and twine",
+          "verb": "look",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "trowel and twine nowhere",
+          "verb": "trowel",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "inventory the trowel and twine",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "take",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "trowel",
+          "verb": "trowel",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 5,
+          "command": "take",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "trowel",
+          "verb": "trowel",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "inventory the twine; take the trowel.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "inventory the twine",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "take",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 10,
+          "command": "trowel",
+          "verb": "trowel",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "inventory the twine; take the trowel.",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "take inventory",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "take inventory",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "take inventory; take inventory",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "trowel; inventory the twine",
+          "verb": "trowel;",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "inventory",
+          "verb": "inventory",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 17,
+          "command": "take inventory",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 18,
+          "command": "take inventory; trowel; inventory the twine; take the trow",
+          "verb": "take",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "trowel; inventory the twine",
+          "verb": "trowel;",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "verb_counts": {
+        "go": 6,
+        "look": 6,
+        "undistractingly": 5,
+        "unfold": 3
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go north.",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Furnace",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "go south.",
+          "verb": "go",
+          "room": "Furnace",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "go north to examine the compost. take the trowel. turn to examine",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "go south.",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "go west.",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "go east.",
+          "verb": "go",
+          "room": "Nursery",
+          "room_after": "Colonnade",
+          "ok": true
+        },
+        {
+          "step": 6,
+          "command": "look at the basket. take the twine. unfold it to examine the",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "look here (point to basket). take the twine. unfold it carefully",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "look carefully at the basket here (point here). take the twine. unfold",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "look at the basket here (point to it carefully). take the twine.",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "unfold the twine; see the basket here (point to basket carefully).",
+          "verb": "unfold",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "unfold the twine; see the basket here (point to basket carefully).",
+          "verb": "unfold",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "look at the basket here (point to basket carefully).",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "undistractingly look here (point to basket carefully); unfold and look carefully",
+          "verb": "undistractingly",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "unfold the twine; look carefully at the basket here (point to basket",
+          "verb": "unfold",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "undistractingly look here (point to basket carefully); unfold the twine",
+          "verb": "undistractingly",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "look at the basket here (point to it carefully); unfold the twine;",
+          "verb": "look",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "undistractingly look here (point to basket carefully); unfold and look carefully",
+          "verb": "undistractingly",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "undistractingly look here (point to basket carefully); unfold and look carefully",
+          "verb": "undistractingly",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "undistractingly look here (point to basket carefully); unfold and look carefully",
+          "verb": "undistractingly",
+          "room": "Colonnade",
+          "room_after": "Colonnade",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "verb_counts": {
+        "discuss": 2,
+        "examine": 4,
+        "explain": 2,
+        "feel": 1,
+        "inspect": 1,
+        "interpret": 2,
+        "interrogate": 1,
+        "the": 6,
+        "there": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "inspect twine",
+          "verb": "inspect",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "examine twine",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 2,
+          "command": "feel furred twine.",
+          "verb": "feel",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "there is a ball of furred twine under the door.",
+          "verb": "there",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "explain what happens under the door to the ball of furred twine.",
+          "verb": "explain",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "explain the nature of the furred twine under the door.",
+          "verb": "explain",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "interpret the structure and purpose of the furred twine under the door,",
+          "verb": "interpret",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 7,
+          "command": "the action of examining the texture of the furred twine hiding beneath the door",
+          "verb": "the",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "discuss the condition, origin, and purpose of the furred twine under the",
+          "verb": "discuss",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "the action of scrutinizing the texture and condition of the furred twine.",
+          "verb": "the",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "discuss the conditions and origins of furred twine beneath the door and its action",
+          "verb": "discuss",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "examine and discuss the condition, origin, and purpose of the furred tw",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "examine and discuss the hidden furred twine under the door's door frame",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "examine and discuss the characteristics, purposes, and conditions of the furred tw",
+          "verb": "examine",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "interpret the details regarding the hidden furred twine under the door frame and",
+          "verb": "interpret",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "the action of scrutinizing the texture and condition of the furred twine hiding",
+          "verb": "the",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "the action of interrogating the texture and condition of the furred twine under",
+          "verb": "the",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "interrogate the texture and conditions of the furred twine under scrutiny.",
+          "verb": "interrogate",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "the action of interrogating the texture and condition of the furred twine under",
+          "verb": "the",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "the action of interrogating the texture and condition of the furred twine under",
+          "verb": "the",
+          "room": "Nursery",
+          "room_after": "Nursery",
+          "ok": false
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "served_name": "allenai/OLMo-2-0425-1B-Instruct",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_v2",
+    "spec_version": "0.1.0",
+    "world_id": "world_v2",
+    "phrasing": "p2",
+    "step_schedule": "v1",
+    "narrate_style": "introspective",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 5150,
+    "narrate": false
+  }
+}
