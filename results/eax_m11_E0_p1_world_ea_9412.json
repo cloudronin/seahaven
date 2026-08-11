@@ -1,0 +1,1281 @@
+{
+  "narrate": false,
+  "failed_runs": [
+    {
+      "run": 9,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    },
+    {
+      "run": 10,
+      "stage": "rollout",
+      "error": "every request form was rejected by the endpoint: HTTP 400: Bad Request \u2014 {\"error\":{\"message\":\"This model's maximum context length is 4096 tokens. However, you requested 16 output tokens and your prompt contains at least 4081 input tokens, for a total of at least 4097 tokens. Please reduce the length"
+    }
+  ],
+  "n_runs_completed": 10,
+  "n_runs_requested": 12,
+  "runs": [
+    {
+      "run": 0,
+      "steps": 4,
+      "verb_counts": {
+        "*pick": 1,
+        "*resume*": 1,
+        "take": 1,
+        "the": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take brass key.",
+          "verb": "take",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "*pick up*",
+          "verb": "*pick",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "the action \"pick up\" seems off contextually here. let's revise it",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "*resume*",
+          "verb": "*resume*",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "steps": 4,
+      "verb_counts": {
+        "find": 2,
+        "go": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "find key",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "go east to the brass key",
+          "verb": "go",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "find key and walk east to the brass key.",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "go east to the brass key",
+          "verb": "go",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "steps": 4,
+      "verb_counts": {
+        "apologies,": 1,
+        "take": 1,
+        "thank": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "take brass key",
+          "verb": "take",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "thank you. the room is again as it was before my brief aside. the",
+          "verb": "thank",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "apologies, let's correct that:",
+          "verb": "apologies,",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "thank you. the brass key is now in my hand.",
+          "verb": "thank",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "steps": 12,
+      "verb_counts": {
+        "acknowledge": 1,
+        "check": 1,
+        "examine": 1,
+        "find": 1,
+        "identify": 1,
+        "nothing": 2,
+        "on": 3,
+        "the": 1,
+        "there": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "find",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "identify key.",
+          "verb": "identify",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "acknowledge key",
+          "verb": "acknowledge",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "check key.",
+          "verb": "check",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 4,
+          "command": "examine small",
+          "verb": "examine",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "there is nothing on the floor.",
+          "verb": "there",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "nothing on. it's a common idiom now to say 'there is nothing",
+          "verb": "nothing",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "nothing in sight. it's more common to say 'nothing is on the floor",
+          "verb": "nothing",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "on the floor. the idiom now commonly used is 'nothing on the floor",
+          "verb": "on",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "on the floor. the correct phrase is 'nothing on the floor' as it",
+          "verb": "on",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "on the floor. the common idiom nowadays is 'nothing on the floor.'",
+          "verb": "on",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "the brass key is on the floor.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 4,
+      "steps": 12,
+      "verb_counts": {
+        "close": 1,
+        "examine": 2,
+        "find": 1,
+        "go": 1,
+        "identify": 2,
+        "inspect": 1,
+        "see": 1,
+        "take": 2,
+        "use": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "go north to the store.",
+          "verb": "go",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "inspect the brass key on the floor.",
+          "verb": "inspect",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "examine the brass key on the floor.",
+          "verb": "examine",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "take the brass key on the floor and examine it.",
+          "verb": "take",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "take the brass key on the floor and examine it.",
+          "verb": "take",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "close the door on the brass key on the floor.",
+          "verb": "close",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "see where the brass key is on the floor.",
+          "verb": "see",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "identify the brass key on the floor, examine it, and leave the area",
+          "verb": "identify",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 8,
+          "command": "find and replace the brass key on the floor with a key mark indicating identification if",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "use a key to identify the brass key on the floor. place a \"x",
+          "verb": "use",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "examine the brass key on the floor; mark it with an \"x\";",
+          "verb": "examine",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "identify the brass key on the floor; mark it with an \"x\".",
+          "verb": "identify",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 5,
+      "steps": 12,
+      "verb_counts": {
+        "actually": 3,
+        "find": 8,
+        "notice": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "find + brass key",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "find + key",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "find + squeezing",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "actually exist",
+          "verb": "actually",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "find + at",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "find + appear",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "notice + brass key",
+          "verb": "notice",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "find + thrust",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "find + press",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "actually find",
+          "verb": "actually",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "actually glance",
+          "verb": "actually",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "find + looking",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 6,
+      "steps": 20,
+      "verb_counts": {
+        "assuming": 1,
+        "the": 19
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "the door to the workshop is open.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "assuming the sentence fragment \"the door to the workshop is open\" was an",
+          "verb": "assuming",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "the door to the workshop is open.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "the door is opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "the door is being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "the door is opening.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "the door is being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "the door is being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "the door is currently being opened.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 7,
+      "steps": 20,
+      "verb_counts": {
+        "describe": 1,
+        "find": 1,
+        "it": 1,
+        "the": 15,
+        "to": 2
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "find",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "describe the actions required to find the brass key on the floor.",
+          "verb": "describe",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "it seems i misunderstood your instructions. to find the brass key on the floor,",
+          "verb": "it",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "the actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "to find the brass key on the floor:",
+          "verb": "to",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "to find the brass key on the floor:",
+          "verb": "to",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "the actions to find the brass key on the floor:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "the correct verbs are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "the correct action to find the brass key on the floor:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 14,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "the correct actions to find the brass key on the floor:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "the correct actions to find the brass key on the floor:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "the correct actions to find the brass key on the floor are:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "the correct action to find the brass key on the floor:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "the correct actions to find the brass key on the floor:",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 8,
+      "steps": 20,
+      "verb_counts": {
+        "check": 2,
+        "describe": 1,
+        "find": 1,
+        "hinges": 1,
+        "i'll": 1,
+        "identify": 3,
+        "it": 1,
+        "open": 1,
+        "plainly:": 1,
+        "the": 7,
+        "wait!": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "find key.",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 1,
+          "command": "wait! what does this key do?",
+          "verb": "wait!",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "check key.",
+          "verb": "check",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 3,
+          "command": "check small brass key.",
+          "verb": "check",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "open clearly marked door. the door has a brass label indicating \"locks\".",
+          "verb": "open",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "i'll tell you what it does for sure:",
+          "verb": "i'll",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "identify as key for locks.",
+          "verb": "identify",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "identify as key for locks.",
+          "verb": "identify",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "identify key as for locks.",
+          "verb": "identify",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 9,
+          "command": "the key opens the door as designed.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "the key opens the door as intended, marked \"locks\".",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 11,
+          "command": "the key designed to lock the door as intended, marked \"locks\".",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 12,
+          "command": "describe the action plainly: the key swings to open the door. it has ",
+          "verb": "describe",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 13,
+          "command": "the key swings to open the door as intended, marked \"locks\".",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "the key swings to open the door as intended, with the letter \"l",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 15,
+          "command": "plainly:",
+          "verb": "plainly:",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "it swings to open the door. it has a \"l\".",
+          "verb": "it",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "the key hinges to open the door.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "hinges to open the door.",
+          "verb": "hinges",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 19,
+          "command": "the key swings to hinge the door.",
+          "verb": "the",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        }
+      ]
+    },
+    {
+      "run": 11,
+      "steps": 30,
+      "verb_counts": {
+        "already": 1,
+        "delivered": 1,
+        "drop": 1,
+        "dropped": 1,
+        "explain": 1,
+        "find": 3,
+        "found": 2,
+        "get": 1,
+        "got": 1,
+        "knock": 4,
+        "poured": 1,
+        "saw": 1,
+        "that's": 1,
+        "turn": 10,
+        "use": 1
+      },
+      "commands": [
+        {
+          "step": 0,
+          "command": "get the brass key.",
+          "verb": "get",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 1,
+          "command": "got the brass key.",
+          "verb": "got",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 2,
+          "command": "already provided: \"got the brass key.",
+          "verb": "already",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 3,
+          "command": "saw the brass key.",
+          "verb": "saw",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 4,
+          "command": "found the key.",
+          "verb": "found",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 5,
+          "command": "poured the key down.",
+          "verb": "poured",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 6,
+          "command": "found the way to the key.",
+          "verb": "found",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 7,
+          "command": "dropped the key.",
+          "verb": "dropped",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 8,
+          "command": "delivered the key. the words \"delivered,\" \"dropped,\" ",
+          "verb": "delivered",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 9,
+          "command": "that's fine. i'll provide a new command only.",
+          "verb": "that's",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 10,
+          "command": "explain how to get the key.",
+          "verb": "explain",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 11,
+          "command": "use the key and find the door.",
+          "verb": "use",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 12,
+          "command": "turn the key and follow the way.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 13,
+          "command": "turn the key and follow the way.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 14,
+          "command": "find the key and follow the passage.",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 15,
+          "command": "drop the key and enter through the passage.",
+          "verb": "drop",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 16,
+          "command": "find the key and knock on the door.",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 17,
+          "command": "knock on the door and open it.",
+          "verb": "knock",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 18,
+          "command": "turn the key and move towards the door.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 19,
+          "command": "turn the key and approach the door.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 20,
+          "command": "turn the key and move towards the door.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 21,
+          "command": "turn the key and approach the doorway.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 22,
+          "command": "find the key and knock on the door.",
+          "verb": "find",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 23,
+          "command": "knock on the door and open it.",
+          "verb": "knock",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 24,
+          "command": "knock on the door and walk inside.",
+          "verb": "knock",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 25,
+          "command": "knock on the door and walk inside.",
+          "verb": "knock",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": false
+        },
+        {
+          "step": 26,
+          "command": "turn the key and approach the doorway.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 27,
+          "command": "turn the key and walk inside.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 28,
+          "command": "turn the key and walk inside the door.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        },
+        {
+          "step": 29,
+          "command": "turn the key and walk inside the door.",
+          "verb": "turn",
+          "room": "Hall",
+          "room_after": "Hall",
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "served_name": "allenai/OLMo-2-0425-1B-Instruct",
+    "endpoint": "http://127.0.0.1:8000/v1",
+    "world_version": "world_ea",
+    "spec_version": "0.1.0",
+    "world_id": "world_ea",
+    "phrasing": "p1",
+    "step_schedule": "v1",
+    "narrate_style": "introspective",
+    "judge": "regex (lower confidence)",
+    "runs": 12,
+    "steps": 30,
+    "seed0": 9412,
+    "narrate": false
+  }
+}
