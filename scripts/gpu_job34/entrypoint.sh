@@ -99,21 +99,38 @@ print("  PROOFS   every level/world pair has a committed reachability proof",
       flush=True)
 PY
 
+# **The context cap is DERIVED per model, not forced.** Setting a uniform
+# --max-model-len 8192 killed both OLMo-2 checkpoints outright: their
+# architecture caps at max_position_embeddings=4096, and vLLM refuses to start
+# rather than silently truncating. The no-op check that blessed 8192 tested
+# whether it CHANGES GENERATION -- on one model that supports 131k tokens. It
+# never asked whether every model ACCEPTS it. Different questions, and only the
+# first was answered.
+#
+# min(8192, derived) gives every model the smaller of the intended window and
+# what it can actually take. Healthy transcripts here run ~206 tokens, so 4096
+# is ample for the OLMo pair.
 python - <<'PY' > /tmp/models.txt || exit 1
-import sys; sys.path.insert(0, "/app")
+import json, sys; sys.path.insert(0, "/app")
+from huggingface_hub import hf_hub_download
 from seahaven.dimensional import seal as S
 for i, repo in enumerate(S.EXPLORATION):
-    print(f"m{i:02d} {repo}")
+    try:
+        c = json.load(open(hf_hub_download(repo, "config.json")))
+        mpe = c.get("max_position_embeddings") or c.get("n_positions") or 8192
+    except Exception:
+        mpe = 8192
+    print(f"m{i:02d} {repo} {min(8192, int(mpe))}")
 PY
 N_MODELS=$(wc -l < /tmp/models.txt | tr -d ' ')
 [ "$N_MODELS" = "18" ] || { echo "STALE MOUNT: $N_MODELS models, expected 18"; exit 1; }
 echo "  models   $N_MODELS from the seal"
 
 run_model() {
-    local TAG="$1" REPO="$2"
-    echo; echo "######## $TAG  $REPO ########"
+    local TAG="$1" REPO="$2" CTX="$3"
+    echo; echo "######## $TAG  $REPO  (ctx $CTX) ########"
     python -m vllm.entrypoints.openai.api_server --model "$REPO" --port $PORT \
-        --host 127.0.0.1 --gpu-memory-utilization 0.85 --max-model-len 8192 \
+        --host 127.0.0.1 --gpu-memory-utilization 0.85 --max-model-len "$CTX" \
         > /tmp/vllm.log 2>&1 &
     local PID=$! READY=0 i
     for i in $(seq 1 60); do
@@ -181,14 +198,15 @@ PROBE
 # **Resume.** m00-m05 are complete and pushed; re-running them would cost an
 # hour and change nothing. Skipping is safe because cells are per-model
 # immutable artifacts, not a partial aggregate.
-DONE_THROUGH=5
-while read -r TAG REPO; do
+# ONLY, when set, restricts the run to a named list -- used to recover models
+# lost to a config error without re-paying for the ones already on the Hub.
+ONLY="${ONLY:-}"
+while read -r TAG REPO CTX; do
     [ -z "$TAG" ] && continue
-    IDX=$((10#${TAG#m}))
-    if [ "$IDX" -le "$DONE_THROUGH" ]; then
-        echo "  skip $TAG (already complete and pushed)"; continue
+    if [ -n "$ONLY" ]; then
+        case " $ONLY " in *" $TAG "*) ;; *) continue ;; esac
     fi
-    run_model "$TAG" "$REPO"
+    run_model "$TAG" "$REPO" "$CTX"
 done < /tmp/models.txt
 
 echo; echo "########## E-SWEEP DONE ##########"
