@@ -6933,3 +6933,85 @@ cohort.
 pre-registration: models bend above their own null; between-model spread exceeds
 the within-model floor; neither is world-dependent. Finding 4 is why that spread
 is not yet evidence of anything but capability.
+
+---
+
+## TRAP 39 — "the push is broken" was three different failures wearing one symptom
+
+**Nineteen cells were missing after Phase 1a, and five backfill attempts chased
+the wrong cause.** The symptom was always the same — `[push] nothing matching
+dim_mNN_*.json` — and it was read as a push failure every time. A probe with
+per-cell exit codes, costing about $2, ended the guessing in one run.
+
+### What the six probe cells actually said
+
+| model | exit | cause |
+|---|---|---|
+| `m08` x3 | `1` | `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd7 in position 197` |
+| `m10` x2 | `139` | SIGSEGV inside vLLM |
+| `m10` x1 | `124` | timeout, downstream of `HTTP 400 ... maximum context length` |
+
+Three causes, none of them the push, and none of them the timeout hypothesis I
+had written into the plan. The `exit=` line is what earned the answer: `1` is
+not `124`, and that single digit separates "the model crashed the client" from
+"the cell ran out of wall clock".
+
+### The decode crash, and why it was invisible
+
+`endpoint.py` did `json.loads(r.read())` — a strict UTF-8 decode of raw bytes.
+The Qwen3 base checkpoints emit byte sequences that are not valid UTF-8, so the
+decode raised and took the whole cell with it. No output file, no partial
+result, nothing for the push to find.
+
+**The error path four lines below had been hardened with `errors="replace"`
+long ago**, with a comment explaining that discarding the body had made a 400
+undiagnosable. The success path never got the same treatment. A defensive fix
+applied to one branch of a try/except and not the other is a shape worth
+recognising: the branch that gets hardened is the one that already failed
+visibly.
+
+Fixed there. On valid UTF-8 it is a no-op, so no existing cell changes — it only
+converts "lose the entire cell" into "record the undecodable byte as U+FFFD",
+which is the more faithful record of what the model emitted.
+
+### The context overflow
+
+`--max-model-len 4096` is not enough for models this verbose. A healthy model
+yields ~197 commands per cell at ~10 characters each; `Qwen3-1.7B-Base` yields
+107 at **46.9**. The transcript grows four to five times faster, overruns the
+window, and the endpoint starts returning 400s that retry until the cell's wall
+clock expires. **The E-sweeps raise this to 8192**, and their worlds are small,
+which shortens prompts independently.
+
+### Two claims of mine that this retired
+
+**"The model index and the push pattern are derived independently."** They are
+not. `run_model` already built the glob from its own `TAG` argument. I asserted
+a root cause from a log-ordering artefact without reading the function, and it
+was wrong.
+
+**"The push batching fix was fixing the wrong thing."** Also wrong, in the other
+direction. It was real and it worked — `m15`'s twenty cells were recovered and
+landed in a single commit. It simply fixed a different failure that shared a
+symptom with this one.
+
+### What made the difference
+
+Not a better hypothesis. **A job that reports what happened per cell and exits
+non-zero when a model produces nothing.** Attempt 5 printed `BACKFILL DONE` and
+exited clean while three of four models produced zero files; attempt 6 printed
+three distinct exit codes, tailed the logs that named the causes, and exited 1.
+
+The per-cell logs live and die inside the container, so surfacing them before
+teardown is the difference between a diagnosis and another guess. That is the
+generalisable fix, and it belongs in every sweep job from here.
+
+### Status of the 19 cells
+
+**Not recovered, and deliberately not pursued further.** Push-path integrity —
+the actual purpose of the gate — is demonstrated by `m15`. The decode bug is
+fixed and the context window is raised, which is what protects the E-sweeps.
+The cells themselves cannot lift `m06` (n~65) or `m08` (n~88) over the n>=100
+floor, and the E-axis runs on new authored worlds that use none of this corpus.
+They are recorded as a known limit of three base checkpoints rather than bought
+at further cost.
