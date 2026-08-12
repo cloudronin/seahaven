@@ -60,7 +60,7 @@ The printed name of f_0 is "blue gourd".
 Understand "blue gourd" as f_0.
 Understand "blue" as f_0.
 Understand "gourd" as f_0.
-The f_0 is in r_2.
+The f_0 is in r_0.
 The f_0 is edible.
 The description of f_1 is "A barley loaf.".
 The printed name of f_1 is "barley loaf".

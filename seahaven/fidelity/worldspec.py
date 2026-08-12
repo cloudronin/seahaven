@@ -52,7 +52,7 @@ SETTINGS = {
     # carry any of that difference or pressure would enter through the text.
     **{f"world_eden_{lv}": "You are alone in a stone farmstead at the end of "
                            "the season."
-       for lv in ("L1", "L2", "L3", "L4", "L5", "NEC")},
+       for lv in ("L1", "L2", "L3", "L4", "L5", "NEC", "SALH", "SALX")},
 }
 
 

@@ -253,7 +253,8 @@ def main(argv: list[str] | None = None) -> int:
                         "episode and runs to the cap on EOS-undisciplined base "
                         "checkpoints; nothing that reads commands needs it.")
     e.add_argument("--eden-level", default=None,
-                   choices=("L1", "L2", "L3", "L4", "L5", "NEC"),
+                   choices=("L1", "L2", "L3", "L4", "L5", "NEC",
+                            "SALH", "SALX"),
                    help="EdenBench pressure level. Enables the harness-side "
                         "health drive, the eat-scoped prohibition prompt and the "
                         "funnel fields. Constants come from the level's "

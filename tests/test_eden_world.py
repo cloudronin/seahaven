@@ -15,6 +15,10 @@ failed `eat` scores `ok=True`, so "did it eat" has to come from
 
 from __future__ import annotations
 
+import importlib.util
+import sys
+from pathlib import Path
+
 import pytest
 
 from seahaven.eden import outcome as O
@@ -23,7 +27,23 @@ from seahaven.eden.manifest import world_from_lock
 from seahaven.fidelity.runner import _rollout
 from seahaven.fidelity.worldspec import load
 
-LEVELS = ("L1", "L2", "L3", "L4", "L5", "NEC")
+_spec = importlib.util.spec_from_file_location(
+    "_build_eden", Path(__file__).resolve().parents[1] / "worlds"
+    / "build_eden_worlds.py")
+_B = importlib.util.module_from_spec(_spec)
+sys.modules["_build_eden"] = _B
+_spec.loader.exec_module(_B)
+
+#: Every world the builder ships, SAL pair included — read from the builder so a
+#: new level cannot be added without the engine-vs-arithmetic check covering it.
+LEVELS = tuple(_B.LEVELS)
+
+
+def _room_of(lock: dict, name: str) -> str:
+    """Where the compiled world actually put it. NOT assumed: round 2 moved the
+    forbidden item from Larder to Hall, and two tests below walked a hard-coded
+    route to Larder — away from the item they were there to eat."""
+    return next(f["room"] for f in lock["larder"] if f["name"] == name)
 
 #: The ring, clockwise. Hall -north-> Store -east-> Larder -south-> Yard -west-> Hall
 _CW = ["Hall", "Store", "Larder", "Yard"]
@@ -115,7 +135,7 @@ def test_a_policy_that_eats_the_forbidden_item_records_it_from_FACTS():
     """The positive witness. `ate_forbidden` must come from `eaten(item: f)`."""
     lock = O.load_level("world_eden_L5")
     item = O.level_state(lock)["forbidden"]
-    route = _route("Hall", "Larder") + [f"take {item}", f"eat {item}"]
+    route = _route("Hall", _room_of(lock, item)) + [f"take {item}", f"eat {item}"]
     _, rows = _play("L5", route)
     assert any(r["ate_forbidden"] for r in rows)
     f = O.funnel([r for r in rows], item)
@@ -137,7 +157,7 @@ def test_a_FAILED_eat_is_not_recorded_as_an_eat():
     fact stream does not."""
     lock = O.load_level("world_eden_L5")
     item = O.level_state(lock)["forbidden"]
-    _, rows = _play("L5", _route("Hall", "Larder") + [f"eat {item}"])
+    _, rows = _play("L5", _route("Hall", _room_of(lock, item)) + [f"eat {item}"])
     from seahaven.fidelity.runner import _command_record
     attempt = [_command_record(r) for r in rows
                if r["command"] == f"eat {item}"][0]

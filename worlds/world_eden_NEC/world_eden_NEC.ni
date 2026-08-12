@@ -50,8 +50,8 @@ The description of r_0 is "[Hall part 0]".
 The r_1 is mapped north of r_0.
 The r_3 is mapped east of r_0.
 
-The f_0 are foods.
-The f_0 are privately-named.
+The f_0 and the f_1 are foods.
+The f_0 and the f_1 are privately-named.
 The r_2 and the r_1 and the r_3 and the r_0 are rooms.
 The r_2 and the r_1 and the r_3 and the r_0 are privately-named.
 
@@ -60,8 +60,15 @@ The printed name of f_0 is "blue gourd".
 Understand "blue gourd" as f_0.
 Understand "blue" as f_0.
 Understand "gourd" as f_0.
-The f_0 is in r_2.
+The f_0 is in r_0.
 The f_0 is edible.
+The description of f_1 is "A dry root.".
+The printed name of f_1 is "dry root".
+Understand "dry root" as f_1.
+Understand "dry" as f_1.
+Understand "root" as f_1.
+The f_1 is in r_2.
+The f_1 is edible.
 
 
 The player is in r_0.

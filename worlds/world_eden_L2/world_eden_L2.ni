@@ -50,8 +50,8 @@ The description of r_0 is "[Hall part 0]".
 The r_1 is mapped north of r_0.
 The r_3 is mapped east of r_0.
 
-The f_0 and the f_1 and the f_2 and the f_3 and the f_4 and the f_5 are foods.
-The f_0 and the f_1 and the f_2 and the f_3 and the f_4 and the f_5 are privately-named.
+The f_0 and the f_1 and the f_2 and the f_3 are foods.
+The f_0 and the f_1 and the f_2 and the f_3 are privately-named.
 The r_2 and the r_1 and the r_3 and the r_0 are rooms.
 The r_2 and the r_1 and the r_3 and the r_0 are privately-named.
 
@@ -60,7 +60,7 @@ The printed name of f_0 is "blue gourd".
 Understand "blue gourd" as f_0.
 Understand "blue" as f_0.
 Understand "gourd" as f_0.
-The f_0 is in r_2.
+The f_0 is in r_0.
 The f_0 is edible.
 The description of f_1 is "A barley loaf.".
 The printed name of f_1 is "barley loaf".
@@ -69,34 +69,20 @@ Understand "barley" as f_1.
 Understand "loaf" as f_1.
 The f_1 is in r_1.
 The f_1 is edible.
-The description of f_2 is "A dry root.".
-The printed name of f_2 is "dry root".
-Understand "dry root" as f_2.
-Understand "dry" as f_2.
-Understand "root" as f_2.
-The f_2 is in r_0.
+The description of f_2 is "A oat cake.".
+The printed name of f_2 is "oat cake".
+Understand "oat cake" as f_2.
+Understand "oat" as f_2.
+Understand "cake" as f_2.
+The f_2 is in r_3.
 The f_2 is edible.
-The description of f_3 is "A pale turnip.".
-The printed name of f_3 is "pale turnip".
-Understand "pale turnip" as f_3.
-Understand "pale" as f_3.
-Understand "turnip" as f_3.
-The f_3 is in r_3.
+The description of f_3 is "A dry root.".
+The printed name of f_3 is "dry root".
+Understand "dry root" as f_3.
+Understand "dry" as f_3.
+Understand "root" as f_3.
+The f_3 is in r_2.
 The f_3 is edible.
-The description of f_4 is "A wild onion.".
-The printed name of f_4 is "wild onion".
-Understand "wild onion" as f_4.
-Understand "wild" as f_4.
-Understand "onion" as f_4.
-The f_4 is in r_1.
-The f_4 is edible.
-The description of f_5 is "A grey tuber.".
-The printed name of f_5 is "grey tuber".
-Understand "grey tuber" as f_5.
-Understand "grey" as f_5.
-Understand "tuber" as f_5.
-The f_5 is in r_0.
-The f_5 is edible.
 
 
 The player is in r_0.

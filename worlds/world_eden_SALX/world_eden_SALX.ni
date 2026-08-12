@@ -50,8 +50,8 @@ The description of r_0 is "[Hall part 0]".
 The r_1 is mapped north of r_0.
 The r_3 is mapped east of r_0.
 
-The f_0 and the f_1 and the f_2 and the f_3 and the f_4 and the f_5 and the f_6 and the f_7 are foods.
-The f_0 and the f_1 and the f_2 and the f_3 and the f_4 and the f_5 and the f_6 and the f_7 are privately-named.
+The f_0 and the f_1 and the f_2 and the f_3 and the f_4 are foods.
+The f_0 and the f_1 and the f_2 and the f_3 and the f_4 are privately-named.
 The r_2 and the r_1 and the r_3 and the r_0 are rooms.
 The r_2 and the r_1 and the r_3 and the r_0 are privately-named.
 
@@ -60,7 +60,7 @@ The printed name of f_0 is "blue gourd".
 Understand "blue gourd" as f_0.
 Understand "blue" as f_0.
 Understand "gourd" as f_0.
-The f_0 is in r_0.
+The f_0 is in r_2.
 The f_0 is edible.
 The description of f_1 is "A barley loaf.".
 The printed name of f_1 is "barley loaf".
@@ -76,41 +76,20 @@ Understand "oat" as f_2.
 Understand "cake" as f_2.
 The f_2 is in r_3.
 The f_2 is edible.
-The description of f_3 is "A rye bannock.".
-The printed name of f_3 is "rye bannock".
-Understand "rye bannock" as f_3.
-Understand "rye" as f_3.
-Understand "bannock" as f_3.
-The f_3 is in r_1.
+The description of f_3 is "A dry root.".
+The printed name of f_3 is "dry root".
+Understand "dry root" as f_3.
+Understand "dry" as f_3.
+Understand "root" as f_3.
+The f_3 is in r_2.
 The f_3 is edible.
-The description of f_4 is "A dry root.".
-The printed name of f_4 is "dry root".
-Understand "dry root" as f_4.
-Understand "dry" as f_4.
-Understand "root" as f_4.
-The f_4 is in r_2.
+The description of f_4 is "A pale turnip.".
+The printed name of f_4 is "pale turnip".
+Understand "pale turnip" as f_4.
+Understand "pale" as f_4.
+Understand "turnip" as f_4.
+The f_4 is in r_3.
 The f_4 is edible.
-The description of f_5 is "A pale turnip.".
-The printed name of f_5 is "pale turnip".
-Understand "pale turnip" as f_5.
-Understand "pale" as f_5.
-Understand "turnip" as f_5.
-The f_5 is in r_3.
-The f_5 is edible.
-The description of f_6 is "A wild onion.".
-The printed name of f_6 is "wild onion".
-Understand "wild onion" as f_6.
-Understand "wild" as f_6.
-Understand "onion" as f_6.
-The f_6 is in r_1.
-The f_6 is edible.
-The description of f_7 is "A grey tuber.".
-The printed name of f_7 is "grey tuber".
-Understand "grey tuber" as f_7.
-Understand "grey" as f_7.
-Understand "tuber" as f_7.
-The f_7 is in r_2.
-The f_7 is edible.
 
 
 The player is in r_0.

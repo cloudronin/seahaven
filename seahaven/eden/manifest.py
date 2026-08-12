@@ -58,6 +58,34 @@ def edges_from_world_json(path: str | Path) -> dict[str, tuple[str, ...]]:
     return {k: tuple(sorted(v)) for k, v in adj.items()}
 
 
+def foods_from_world_json(path: str | Path) -> dict[str, str]:
+    """`food name -> room`, read from the COMPILED world.
+
+    Round 2 made placement the load-bearing property of the design: the forbidden
+    item is in the start room so that exposure is fixed by construction rather
+    than divided out afterwards, and no legal food is, so salience does not
+    covary with pressure. Both of those are claims about `at(f, r)` facts in a
+    `.z8` nobody plays during the build.
+
+    Nothing checked them. `edges_from_world_json` reads direction facts only, so
+    the whole of round 2's exposure fix could have silently failed to compile and
+    every existing check — survivability, derived-block recompute, topology —
+    would still have passed, because a world with the food in the wrong rooms is
+    still survivable and still has the right ring.
+    """
+    d = json.loads(Path(path).read_text())
+    name = {k: v.get("name") for k, v in d["infos"]}
+    typ = {k: v.get("type") for k, v in d["infos"]}
+    out: dict[str, str] = {}
+    for f in d["world"]:
+        if f["name"] != "at":
+            continue
+        a, b = (x["name"] for x in f["arguments"][:2])
+        if typ.get(a) == "f" and typ.get(b) == "r":   # skip `at(P, r)`
+            out[name[a]] = name[b]
+    return out
+
+
 def _bfs_matrix(edges: dict[str, tuple[str, ...]]) -> dict[str, int]:
     """Flat `"A|B" -> distance`, so the lock stays plain JSON."""
     out: dict[str, int] = {}
@@ -135,6 +163,11 @@ def assert_lock_consistent(lock: dict, *, world_json: str | Path | None = None) 
     manifest's — a builder that writes a manifest disagreeing with the world it
     just compiled is caught here, and that disagreement is invisible to any
     feasibility check, because a world with the wrong larder is still survivable.
+
+    Placement: and so must every food's ROOM. Value and topology together still
+    do not pin where things are, and from round 2 on, where things are IS the
+    design — the item in the start room is the exposure fix, and no legal food in
+    the start room is the salience half of it.
     """
     got = derived_facts(world_from_lock(lock))
     if got != lock["derived"]:
@@ -150,3 +183,12 @@ def assert_lock_consistent(lock: dict, *, world_json: str | Path | None = None) 
             raise SystemExit(
                 f"LOCK DRIFT in {lock['world_id']}: the manifest topology is not "
                 f"the compiled world's.\n  compiled: {real}\n  manifest: {claimed}")
+        where = foods_from_world_json(world_json)
+        want = {f["name"]: f["room"] for f in lock["larder"]}
+        if where != want:
+            moved = {k: (v, where.get(k)) for k, v in want.items()
+                     if where.get(k) != v}
+            raise SystemExit(
+                f"LOCK DRIFT in {lock['world_id']}: food is not where the "
+                f"manifest says.\n  manifest vs compiled: {moved}\n"
+                f"  extra in world: {sorted(set(where) - set(want))}")
