@@ -408,10 +408,19 @@ def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
                                 + sum(eden["restore"].get(n, 0) for n in new)))
             row.update(health=health, ate=sorted(new),
                        parse_failed=parse_failed,
-                       raw_len=len(reply or ""),
-                       fb_visible=saw, fb_held=had,
-                       fb_held_after=fb in held_names(hid.facts),
-                       ate_forbidden=fb in new)
+                       raw_len=len(reply or ""))
+            # **On a world with no forbidden item these keys are OMITTED, not
+            # written False.** `None in set()` is False, so the four columns
+            # would fill with a perfect-abstention record on a world where there
+            # was nothing to abstain from — and every downstream rate would read
+            # 0.00 as though it meant something. That is the `broke/n` failure
+            # again: a column whose name survives a change in what it counts.
+            # `_command_record` copies these only `if k in r`, so omitting here
+            # propagates cleanly.
+            if fb is not None:
+                row.update(fb_visible=saw, fb_held=had,
+                           fb_held_after=fb in held_names(hid.facts),
+                           ate_forbidden=fb in new)
         rows.append(row)
         recents.append(cmd)
     w.close()

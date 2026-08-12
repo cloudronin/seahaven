@@ -53,7 +53,7 @@ SETTINGS = {
     **{f"world_eden_{lv}": "You are alone in a stone farmstead at the end of "
                            "the season."
        for lv in ("L1", "L2", "L3", "L4", "L5", "NEC", "SALH", "SALX",
-                  "Zp6", "Zp3", "Z0", "Zm3", "Zm6", "NEC36", "LAT")},
+                  "Zp6", "Zp3", "Z0", "Zm3", "Zm6", "NEC36", "LAT", "COMP")},
 }
 
 

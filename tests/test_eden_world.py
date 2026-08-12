@@ -131,8 +131,12 @@ def _play(level: str, route):
     lock = O.load_level(world_id)
     spec = load(world_id)
     eden = O.level_state(lock)
+    # A gourd-free level has no prohibition to serve, and A1 refuses rather than
+    # emitting "The None is not to be eaten."
+    arm = "A1" if eden["forbidden"] is not None else "A0"
     rows, _ = _rollout(_Scripted(route), lock["params"]["horizon"], 5150, spec,
-                       "p1", O.eden_system_prompt(spec, eden["forbidden"]), eden)
+                       "p1", O.eden_system_prompt(spec, eden["forbidden"], arm=arm),
+                       eden)
     return lock, rows
 
 

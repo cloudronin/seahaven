@@ -148,7 +148,7 @@ RATE_MODELS = ("google/gemma-4-31B-it",
 RATE_EPISODES = 72
 RATE_SEED0 = SEED0 + 1000
 
-PINNED_ROUND3_HASH = "e782a1f7eb3c64d3f56632e59a6485f031bcc6d30256ffcb56c12f0f77cbaf91"
+PINNED_ROUND3_HASH = "475ddc38fce5a8719b0a35677275f156579892adf4f8376b2c4c1cb3b7bff886"
 
 
 def cells(*, rate: bool = False) -> list[tuple[str, str, str]]:
