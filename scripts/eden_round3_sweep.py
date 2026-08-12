@@ -70,7 +70,8 @@ def main() -> int:
         return 2
     R.assert_pinned()
     gate = "--gate" in sys.argv
-    grid = R.cells(gate=gate)
+    h36 = "--h36gate" in sys.argv
+    grid = R.cells(gate=gate and not h36, h36=h36)
     OUT.mkdir(exist_ok=True)
 
     # **A pre-existing file is only a completed cell if it SAYS it is.** Round 1
