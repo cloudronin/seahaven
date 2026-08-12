@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -65,7 +66,12 @@ def _eval(args: argparse.Namespace) -> int:
               "explicitly marked lower-confidence.", file=sys.stderr)
         return 2
 
-    ep = Endpoint(args.model, args.served_name, api_key=args.api_key)
+    # **Key from the environment by preference.** `--api-key` puts a live
+    # credential into shell history and into any log that echoes the command;
+    # the sweep scripts set TOGETHER_API_KEY instead and pass nothing.
+    api_key = args.api_key or os.environ.get("TOGETHER_API_KEY") \
+        or os.environ.get("OPENAI_API_KEY")
+    ep = Endpoint(args.model, args.served_name, api_key=api_key)
     print(f"probing {args.served_name} at {args.model} ...", flush=True)
     try:
         p = ep.probe()

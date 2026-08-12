@@ -20,9 +20,21 @@ from __future__ import annotations
 import json
 import time
 import http.client
+import threading
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+
+
+def _retry_after(e) -> float | None:
+    """Seconds the server asked us to wait, if it said. Header may be a delay or
+    an HTTP date; only the delay form is honoured, the rest falls back to
+    exponential backoff."""
+    try:
+        v = (e.headers or {}).get("Retry-After")
+        return float(v) if v is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 @dataclass
@@ -38,6 +50,20 @@ class Endpoint:
     #: GPT-5-class models reject `max_tokens` outright and require
     #: `max_completion_tokens`. Another thing that cannot be assumed either way.
     _token_param: str | None = field(default=None, repr=False)
+
+    #: RUNNING TOTAL of the `usage` blocks the API returns. The provider bills on
+    #: these and the harness discarded them, so every cost figure in this program
+    #: has been an estimate. Accumulating makes cost a MEASUREMENT and makes
+    #: prompt-cache hits visible -- and since the conversation is append-only,
+    #: caching is worth ~84% of the input bill, which is the difference between a
+    #: $12 run and a $79 one.
+    #:
+    #: A TOTAL, not the last one: episodes run 12-wide, so `last_usage` would be
+    #: whichever thread happened to finish most recently.
+    usage_total: dict = field(default_factory=lambda: {
+        "calls": 0, "prompt_tokens": 0, "completion_tokens": 0,
+        "cached_tokens": 0, "reasoning_tokens": 0}, repr=False)
+    _usage_lock: object = field(default_factory=threading.Lock, repr=False)
 
     def _post(self, path: str, payload: dict) -> dict:
         url = self.base_url.rstrip("/") + path
@@ -65,8 +91,23 @@ class Endpoint:
                     # it only converts "lose the entire cell" into "record the
                     # undecodable byte as U+FFFD", which is the more faithful
                     # record of what the model actually emitted.
-                    return json.loads(r.read().decode("utf-8", "replace"))
+                    out = json.loads(r.read().decode("utf-8", "replace"))
+                    if isinstance(out, dict) and isinstance(out.get("usage"), dict):
+                        self._add_usage(out["usage"])
+                    return out
             except urllib.error.HTTPError as e:
+                # **429 IS NOT A REQUEST-FORM REJECTION.** Every 4xx used to raise
+                # here, which is right for a 400 (the payload is wrong and retrying
+                # cannot help) and wrong for a 429 (the payload is fine and waiting
+                # is the entire fix). On a self-served vLLM the distinction never
+                # arose; on a hosted API a throttle would kill the episode, and a
+                # throttle during the pre-concurrency warm-up would kill the whole
+                # eval before a single row existed.
+                if e.code == 429:
+                    last = e
+                    wait = _retry_after(e) or 2 ** attempt
+                    time.sleep(min(wait, 60))
+                    continue
                 if 400 <= e.code < 500:
                     # The server's body says WHY. Discarding it made a 400 in a
                     # real sweep undiagnosable: three models lost repeats and the
@@ -88,6 +129,17 @@ class Endpoint:
                 # generation would be scored as an omission and bias the result.
                 time.sleep(2 ** attempt)
         raise RuntimeError(f"endpoint failed after {self.max_retries} attempts: {last}")
+
+    def _add_usage(self, u: dict) -> None:
+        pd = u.get("prompt_tokens_details") or {}
+        cd = u.get("completion_tokens_details") or {}
+        with self._usage_lock:
+            t = self.usage_total
+            t["calls"] += 1
+            t["prompt_tokens"] += int(u.get("prompt_tokens") or 0)
+            t["completion_tokens"] += int(u.get("completion_tokens") or 0)
+            t["cached_tokens"] += int(pd.get("cached_tokens") or 0)
+            t["reasoning_tokens"] += int(cd.get("reasoning_tokens") or 0)
 
     def chat(self, messages: list[dict], *, max_tokens: int = 128,
              temperature: float = 0.0, seed: int | None = None,

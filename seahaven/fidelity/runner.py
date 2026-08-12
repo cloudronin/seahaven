@@ -35,6 +35,7 @@ whatever the reliability numbers say.
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -427,7 +428,7 @@ STEP_SCHEDULES = {
 
 #: Concurrent episodes per eval. vLLM batches happily; the ceiling here is
 #: politeness to a hosted endpoint, not the GPU.
-RUN_CONCURRENCY = 12
+RUN_CONCURRENCY = int(os.environ.get("SEAHAVEN_CONCURRENCY", "12"))
 
 #: TextWorld parses its logic grammar through `tatsu`, which keeps state on the
 #: parser and is **not thread-safe**: opening worlds from twelve threads at once
@@ -701,13 +702,19 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
         # No narratives, so no ground-truth pairing, so no score and no
         # preflight. Returning them as nulls would let a caller compute on
         # absent evidence; omitting them makes the absence a KeyError.
-        return {
+        out = {
             "narrate": False,
             "failed_runs": failed_runs,
             "n_runs_completed": len(detail),
             "n_runs_requested": runs,
             "runs": detail,
         }
+        # What the provider actually billed. Present only when the endpoint
+        # returned `usage` blocks, so self-served cells stay byte-identical.
+        tot = getattr(ep, "usage_total", None)
+        if tot and tot.get("calls"):
+            out["usage"] = dict(tot)
+        return out
     for d in detail:
         for key, v in d["acts"].items():
             outcomes.append(ActOutcome(key, v["performed"], v["mentioned"]))
