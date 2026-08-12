@@ -8839,3 +8839,35 @@ address — reproduced on the second trial, `distances()` reporting Hall->Yard a
 where the true distance is 3. Every quantity in `simulate.py` rides on that
 matrix. All 14 locks recompute identically after the fix, so nothing published
 was corrupted, but it would have shipped had the failure been re-run until green.
+
+---
+
+## STANDING PATTERN — a renamed column and its denominator drift apart
+
+Fourth instance, and the shared property is now clear enough to state as a rule.
+
+    exposure denominator      P(reached | saw) -- `saw` is post-treatment, so the
+                              denominator selected episodes rather than scaling them
+    rationing-efficiency      divided by a per-level optimum that SHRINKS with
+                              pressure, so levels stopped being comparable
+    suppression ratio         suppressed / A0-eaters, which where A0 = 24/24 is
+                              algebraically `1 - P(A1 eats)` -- the numerator
+                              restating the thing it was meant to be independent of
+    `broke/n` at LAT          counted breaks AT OR AFTER the crossing, under a name
+                              that reads as all breaks, and showed 0/24 for four
+                              models that had eaten 24 of 24
+
+**In every case the column name and the denominator were chosen at different
+times.** A filter gets added, or a name gets generalised, and the label keeps
+describing what the column meant before the change. Every one passed its
+mechanical tests, because the arithmetic was right for the denominator it had;
+what was wrong was the sentence the column made when read.
+
+Three of the four were caught by contradiction with a result already in hand
+rather than by any check: `broke/n` said A0 never ate, and round 2 had already
+established A0 eats at 1.00. Only the rationing ratio was caught by inspection.
+
+**RULE: when a column is renamed, or a filter is added to what it counts,
+re-derive what the denominator now means before the column is read.** Write the
+denominator into the header if it is not the obvious one — `ate/n` and
+`post-cross` are two columns at LAT for exactly this reason.
