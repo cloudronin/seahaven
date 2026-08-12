@@ -45,16 +45,22 @@ def run_cell(model: str, arm: str, level: str) -> dict:
                        seed0=R.SEED0, world_id=f"world_eden_{level}",
                        narrate=False, eden_level=level, eden_arm=arm)
     u = dict(ep.usage_total)
-    res["meta"]["eden_level"] = level
-    res["meta"]["eden_arm"] = arm
-    res["meta"]["served_name"] = model
-    res["meta"]["base_url"] = R.BASE_URL
-    res["meta"]["round2_pin"] = R.PINNED_ROUND2_HASH
-    res["meta"]["usage"] = u
-    res["meta"]["price_per_m"] = {"prompt": pi, "completion": po}
-    res["meta"]["billed_usd"] = round(
-        u["prompt_tokens"] / 1e6 * pi + u["completion_tokens"] / 1e6 * po, 5)
-    res["meta"]["wall_s"] = round(time.time() - t0)
+    # `run_fidelity` returns no `meta`; the CLI builds it. Assembling it here
+    # rather than shelling out to the CLI keeps the endpoint object -- and
+    # therefore `usage_total`, which is the only measured cost -- reachable.
+    res["meta"] = {
+        "served_name": model, "endpoint": R.BASE_URL, "base_url": R.BASE_URL,
+        "world_id": f"world_eden_{level}", "world_version": f"world_eden_{level}",
+        "eden_level": level, "eden_arm": arm,
+        "phrasing": "p1", "step_schedule": "v1", "narrate": False,
+        "runs": R.EPISODES_PER_CELL, "steps": 30, "seed0": R.SEED0,
+        "round2_pin": R.PINNED_ROUND2_HASH,
+        "usage": u,
+        "price_per_m": {"prompt": pi, "completion": po},
+        "billed_usd": round(u["prompt_tokens"] / 1e6 * pi
+                            + u["completion_tokens"] / 1e6 * po, 5),
+        "wall_s": round(time.time() - t0),
+    }
     return res
 
 
