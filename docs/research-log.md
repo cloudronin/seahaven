@@ -7655,3 +7655,34 @@ This does not retract a 2b number; every rate published there is what it said it
 was. It changes what those rates **mean**: they are substantially a measure of
 compliance with an instruction the game supplied, and the discovery signal
 underneath them is smaller, differently ordered, and now has a name.
+
+## STANDING REFLEX — a suspiciously clean number is the apparatus, not the world
+
+Twice now this project has produced a confident reading from a detector artifact,
+both times at a clean extreme, both times in the flattering direction.
+
+**First:** `determinism_map.json` recorded `adherence_sd: 0.0` and
+`runs_identical_frac: 1.0` — from **four** repeats. A ~0.8% per-episode
+divergence rate is entirely consistent with four repeats showing nothing. The
+0.000 was the sample size, not bit-exactness.
+
+**Second (this session):** gemma-2-27b-it read as **0% told** the route, which I
+reported as "discovered the route independently — the route is reachable without
+being told", and used to argue the probe was necessary. The detector required the
+adjective (`iron` / `banded`); gemma writes `open door` — 236 times, adjective
+**0 times out of 276**. Corrected, gemma is 93% told and **100% of its crossings
+were assisted.** The reading was exactly inverted.
+
+**The rule, from here:** 0.000, 1.000, 0%, 100% and "every single one" are
+detector-validation triggers before they are findings. Validate the instrument
+against raw source — the engine, the transcript, the unparsed field — *before*
+the number enters a sentence, not after it enters a table.
+
+What makes this cheap: both artifacts were caught by looking at the underlying
+strings for one model. The gemma check was four lines and would have cost nothing
+at the moment the 0% first printed.
+
+**Why it is worth a standing entry rather than a per-case note:** a clean extreme
+is exactly the number most likely to be quoted, hardest to argue with, and most
+load-bearing in a summary — so it is the number whose apparatus deserves the most
+scrutiny and reliably gets the least.
