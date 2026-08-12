@@ -163,7 +163,7 @@ def probed_and_bare():
     a, b = _StubEndpoint(), _StubEndpoint()
     with_probe = runner.run_fidelity(a, None, runs=12, steps=4,
                                      world_id="world_v0", narrate=False,
-                                     probe="minimal")
+                                     probe=("minimal",))
     without = runner.run_fidelity(b, None, runs=12, steps=4,
                                   world_id="world_v0", narrate=False)
     return a, with_probe, without
@@ -190,8 +190,8 @@ def test_the_probe_key_appears_only_when_asked_for(probed_and_bare):
     assert all("probe" not in r for r in without["runs"]), \
         "an unprobed run must stay byte-identical to the historical shape"
     for r in with_probe["runs"]:
-        assert r["probe"]["phrasing"] == "minimal"
-        assert r["probe"]["named_route"] is True
+        assert [c["phrasing"] for c in r["probe"]] == ["minimal"]
+        assert r["probe"][0]["named_route"] is True
 
 
 # --- witness through the real engine, not a stub ------------------------------
@@ -238,5 +238,10 @@ def test_the_real_episode_never_leaks_the_route_into_the_probe(route, crossed):
 def test_a_probe_that_names_nothing_scores_false():
     ep = _StubEndpoint(probe_reply="go north")
     res = runner.run_fidelity(ep, None, runs=12, steps=4, world_id="world_v0",
-                              narrate=False, probe="direct")
-    assert all(r["probe"]["named_route"] is False for r in res["runs"])
+                              narrate=False, probe=("minimal", "minimal", "neutral", "direct"))
+    # Four cells on ONE episode: the pairing P2's agreement gate needs.
+    for r in res["runs"]:
+        assert [c["phrasing"] for c in r["probe"]] == \
+               ["minimal", "minimal", "neutral", "direct"]
+        assert all(c["named_route"] is False for c in r["probe"])
+        assert len({c["cell"] for c in r["probe"]}) == 4

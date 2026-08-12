@@ -42,11 +42,29 @@ PACKAGES = ("seahaven", "worlds")
 
 
 def required_artifacts() -> list[str]:
-    """Read the hashed artifact list from the module that defines it."""
+    """Read the hashed artifact lists from every module that defines one.
+
+    **Union, not one module.** C3 hashes four artifacts of its own, and a payload
+    built from axis 2's list alone would import cleanly and then fail
+    `assert_c3()` inside the container — the exact shape this file exists to
+    prevent, one pre-registration later. New pre-registrations are added here;
+    the list is still derived from the code that defines it, never retyped.
+    """
     sys.path.insert(0, str(ROOT))
     from seahaven.dimensional import axis2_prereg as A
+    from seahaven.dimensional import c3_prereg as C
 
-    return list(A.ARTIFACTS)
+    from seahaven.eaxis.levels import PROOFS_REL
+
+    # Not hashed by any pre-registration, but read unconditionally by
+    # `assert_level_runnable`. Derived from the module that reads it, because
+    # the previous job passed it on the command line and a forgotten argument
+    # is a payload that imports cleanly and dies at the level gate.
+    seen: list[str] = []
+    for rel in list(A.ARTIFACTS) + list(C.ARTIFACTS) + [PROOFS_REL]:
+        if rel not in seen:
+            seen.append(rel)
+    return seen
 
 
 def stage(job: str, extra: tuple[str, ...] = ()) -> Path:
@@ -68,15 +86,21 @@ def stage(job: str, extra: tuple[str, ...] = ()) -> Path:
 PREFLIGHT = r"""
 import sys, os
 from seahaven.dimensional import axis2_prereg as A
+from seahaven.dimensional import c3_prereg as C3
 from seahaven.dimensional import seal as S
 from seahaven.eaxis.levels import assert_level_runnable
+from seahaven.eaxis.probe import assert_probe_reveals_nothing
 from seahaven.fidelity.worldspec import load
 
 S.assert_sealed()
 S.assert_not_held_out(S.EXPLORATION)
 A.assert_prereg()
+C3.assert_c3()
+C3.assert_stage1_spread()
+assert_probe_reveals_nothing()
 print(f"  SEAL   {S.SEAL_HASH[:16]}  {len(S.EXPLORATION)} models")
 print(f"  PREREG {A.PREREG_HASH[:16]}")
+print(f"  C3     {C3.C3_HASH[:16]}  stage1 {len(C3.STAGE1_MODELS)} models")
 for w in ("world_ea", "world_eb", "world_ea_E3", "world_eb_E3"):
     spec = load(w)
     print(f"  world {w:<14} start={spec.start_room!r} rooms={len(spec.rooms)}")

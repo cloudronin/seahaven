@@ -447,7 +447,8 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  self_judge_ok: bool = False, world_id: str = WORLD_ID,
                  narrate_style: str = "introspective", phrasing: str = "p1",
                  step_schedule: str = "v1", narrate: bool = True,
-                 e_level: str = "E0", probe: str | None = None) -> dict:
+                 e_level: str = "E0",
+                 probe: tuple[str, ...] | None = None) -> dict:
     """`narrate=False` collects behaviour only: rollouts and command records.
 
     **Default-on, and the default path is untouched.** Every published fidelity
@@ -547,19 +548,29 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
         # behaviour-only return, because C3 runs with --no-narrate and still
         # needs it. Statelessly seeded like every other generation here, so it
         # cannot reach back into the command stream that produced it.
+        # PAIRED BY CONSTRUCTION: every phrasing is asked of the SAME episode,
+        # against the same truncated context. P2's per-episode agreement is
+        # undefined otherwise, and running the phrasings as separate sweeps
+        # would pay for the rollout once per phrasing to reconstruct a pairing
+        # this gets for free. A repeated phrasing is legal and is how the
+        # test-retest ceiling is measured — hence a list, not a dict.
         probe_rec = None
-        if probe is not None:
+        if probe:
             from seahaven.eaxis.probe import (PROBE_MAX_TOKENS, named_route,
                                               probe_messages)
-            try:
-                reply = ep.chat(probe_messages(rows, messages, probe),
-                                max_tokens=PROBE_MAX_TOKENS, temperature=0.9,
-                                seed=(seed0 + i) * 7919)
-            except RuntimeError as e:
-                print(f"  run {i} FAILED in probe: {str(e)[:120]}", flush=True)
-                reply = None
-            probe_rec = {"phrasing": probe, "reply": reply,
-                         "named_route": named_route(reply or "")}
+            probe_rec = []
+            for k, ph in enumerate(probe):
+                try:
+                    reply = ep.chat(probe_messages(rows, messages, ph),
+                                    max_tokens=PROBE_MAX_TOKENS,
+                                    temperature=0.9,
+                                    seed=(seed0 + i) * 7919 + k * 104_729)
+                except RuntimeError as e:
+                    print(f"  run {i} probe {k} FAILED: {str(e)[:120]}",
+                          flush=True)
+                    reply = None
+                probe_rec.append({"cell": k, "phrasing": ph, "reply": reply,
+                                  "named_route": named_route(reply or "")})
         if not narrate:
             # Behaviour only. Returns the same `commands` projection the scored
             # path returns, and omits every narrative-derived field rather than
@@ -571,7 +582,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                     "commands": [_command_record(r) for r in rows]}
             # Key added only when asked for, so every committed behaviour-only
             # file stays byte-identical to the day it was produced.
-            if probe_rec is not None:
+            if probe_rec:
                 bare["probe"] = probe_rec
             return None, bare
         # Narrate from the episode the agent actually lived, not from a handed-over

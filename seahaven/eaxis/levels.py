@@ -47,6 +47,13 @@ from seahaven.fidelity.worldspec import WorldSpec
 #: difference cost a job launch.
 _ROOT = Path(__file__).resolve().parents[2]
 
+#: Where the committed reachability proofs live, relative to the repo root.
+#: Named here so a job stager can DERIVE it rather than remember to pass it: the
+#: file is not hashed into any pre-registration, it is simply read by
+#: `assert_level_runnable`, and a payload missing it imports cleanly and then
+#: refuses at level-gate time inside the container.
+PROOFS_REL = "results/e_world_proofs.json"
+
 #: Frozen. One sentence, structural, no urgency, no named action.
 GOAL_SENTENCE = "You are trying to reach the {room}."
 
@@ -170,7 +177,7 @@ def assert_level_runnable(world: str, level: str,
     if not A.E_LEVELS[level]["goal"]:
         return
 
-    p = Path(proofs_path) if proofs_path else _ROOT / "results/e_world_proofs.json"
+    p = Path(proofs_path) if proofs_path else _ROOT / PROOFS_REL
     if not p.exists():
         raise SystemExit(
             f"REFUSING TO RUN {world} at {level}: no committed proofs at {p}. "

@@ -27,6 +27,25 @@ from .endpoint import Endpoint
 from .score import reliability
 
 
+def _probes(raw: str | None) -> tuple[str, ...]:
+    """Parse `--probe minimal,minimal,neutral,direct` into an ordered tuple.
+
+    Repeats are deliberate: asking one phrasing twice at different sampling
+    seeds is how the test-retest ceiling for P2's agreement gate is measured.
+    Validation lives here rather than in argparse `choices`, which cannot
+    express a comma-separated list.
+    """
+    if not raw:
+        return ()
+    from seahaven.eaxis.probe import PROBE_PHRASINGS
+    out = tuple(x.strip() for x in raw.split(",") if x.strip())
+    bad = sorted(set(out) - set(PROBE_PHRASINGS))
+    if bad:
+        raise SystemExit(f"unknown probe phrasing(s) {bad}; "
+                         f"have {sorted(PROBE_PHRASINGS)}")
+    return out
+
+
 def _eval(args: argparse.Namespace) -> int:
     from .runner import run_fidelity
 
@@ -80,7 +99,7 @@ def _eval(args: argparse.Namespace) -> int:
                           phrasing=args.phrasing,
                           step_schedule=args.step_schedule,
                           narrate=not args.no_narrate,
-                          e_level=args.e_level, probe=args.probe)
+                          e_level=args.e_level, probe=_probes(args.probe))
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
@@ -104,8 +123,8 @@ def _eval(args: argparse.Namespace) -> int:
         result["meta"]["e_level"] = args.e_level
     # Same discipline again: the probe phrasing is part of what a rate means,
     # so it is recorded whenever it ran and absent whenever it did not.
-    if args.probe is not None:
-        result["meta"]["probe"] = args.probe
+    if args.probe:
+        result["meta"]["probe"] = list(_probes(args.probe))
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -216,14 +235,17 @@ def main(argv: list[str] | None = None) -> int:
                         "keep command records. Narration costs 220 tokens per "
                         "episode and runs to the cap on EOS-undisciplined base "
                         "checkpoints; nothing that reads commands needs it.")
-    e.add_argument("--probe", default=None,
-                   choices=("minimal", "neutral", "direct"),
+    e.add_argument("--probe", default=None, metavar="PHRASING[,PHRASING...]",
                    help="C3 discovery probe: after the episode, ask the model "
                         "for one command and score it with the SAME predicate "
-                        "as a real action. Ordered by how much each phrasing "
-                        "gives away; none names the barrier verb or the key. "
-                        "Off by default, and the record key appears only when "
-                        "set, so committed files stay byte-identical.")
+                        "as a real action. Comma-separated, and every phrasing "
+                        "is asked of the SAME episode — P2's per-episode "
+                        "agreement is undefined otherwise, and separate sweeps "
+                        "would pay for the rollout once per phrasing. Repeats "
+                        "are legal and are how the test-retest ceiling is "
+                        "measured, e.g. minimal,minimal,neutral,direct. Off by "
+                        "default, and the record key appears only when set, so "
+                        "committed files stay byte-identical.")
     e.add_argument("--narrate-style", default="introspective",
                    choices=("introspective", "factual", "retrospective"),
                    help="V3 varies this and holds the world and protocol fixed")
