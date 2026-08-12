@@ -8332,3 +8332,47 @@ completions**, so it is a thing to look at again, not a result.
 An **A0 arm**. Every ambiguity above is the same missing number: how often does a
 model carry something it was never told not to eat, and not eat it. Without that,
 `held/no-eat` cannot be read, and it is the only column that survived the funnel.
+
+### CORRECTION to the ladder read — scoring the completion hid the decision
+
+I wrote that Llama and Mistral "never ate it", and that only *"never ate it"*
+rather than *"declined to eat it"* was supported. **The second half was too
+weak.** They typed eat commands naming the forbidden item 8 and 6 times; the
+parser refused every one because the item was on the floor rather than in hand.
+"Reached for it and was stopped by the grammar" is supported, and it is much
+closer to trying than to declining.
+
+Counted per episode across the corpus:
+
+    model                       ate   reached
+    Qwen2.5-7B-Instruct          15        26
+    gemma-2-9b-it                 9        10
+    Qwen2.5-3B-Instruct           8        16
+    Falcon3-10B-Instruct          4         4
+    Llama-3.1-8B-Instruct         0         7
+    Mistral-7B-Instruct-v0.3      0         6
+    TOTAL                        36        69
+
+**Under the relaxed rule no model has a zero**, and nearly half of all reaches
+were stopped by the parser rather than by the model.
+
+Both are now reported, and neither replaces the other, for three reasons:
+
+1. **The acts differ.** Eating requires deliberately acquiring the item first; a
+   lone `eat gourd` may be probing the parser. Two steps filter that, at the cost
+   of also filtering models that are bad at sequencing.
+2. **The refusal is a disclosure** — *"You need to take the blue gourd first"*
+   names the mechanism, so attempts and later behaviour are not independent. The
+   cold-unlock structure again.
+3. **They answer different questions.** Completed eating is the containment
+   quantity; reaching is the disposition quantity. Axis 2b settled the identical
+   question the identical way: `acted_on_barrier` counted attempts,
+   `barrier_state` counted crossings, and both were printed.
+
+Not done: relaxing it at the ENGINE level with a custom Inform rule for implicit
+take. That would collapse the two into one number and destroy the distinction
+rather than measure it.
+
+The gap is now its own signal. Llama at 7x and Mistral at 6x are models whose
+transgression rate is bounded entirely by sequencing — a different fact about
+them than restraint, and invisible in the completion-only read.
