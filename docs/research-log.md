@@ -8923,3 +8923,64 @@ Size, family and reasoning-vs-non-reasoning are confounded. cogito is the
 largest, the only model with an unsaturated A0 in round 2, and the only one not
 crossing-triggered. **Those may be one fact or four**, and nothing at this n can
 tell them apart.
+
+### OUTCOME: the proxy does not cover the cohort. The test cannot be run.
+
+Retrieved after the pin above was committed. Matching on the **exact served
+variant**, as the pin requires:
+
+    model                              MMLU-Pro    status
+    deepcogito/cogito-v2-1-671b          84.69     FOUND, exact variant, from the
+                                                   serving provider's own page
+    google/gemma-4-31B-it                85.2      found, but only on aggregator
+                                                   sites of unclear provenance
+    deepseek-ai/DeepSeek-V4-Pro            --      only plain DeepSeek-V4 (87.5).
+                                                   Pro is a different variant
+    zai-org/GLM-5.2                        --      only GLM-5.1 (86.0). Different
+                                                   generation
+    nvidia/nemotron-3-ultra-550b-a55b      --      only Nemotron-3 SUPER (83.73).
+                                                   Different size class
+    meta-llama/Llama-3.3-70B-Instruct      --      MMLU published, MMLU-Pro not
+                                                   found
+
+**Coverage is one, arguably two, of six.** Spearman over two points is not a
+test.
+
+Every near-miss above is a **substitution the pin forbids**, and none is
+innocuous: Super and Ultra are different size classes, 5.1 and 5.2 are different
+generations, and V4 and V4-Pro are different variants. Using them would produce a
+rho that looked like a result and was a mismatch. The pin exists so that this is
+a reported gap rather than a quietly-assembled correlation.
+
+**This is why the cohort was chosen and it was foreseeable.** Round 2 selected
+six models by what a hosted provider would actually serve, and the survivors are
+recent and frontier. Published benchmark coverage lags exactly there. The same
+property that made the cohort worth running makes it unmeasurable against
+published proxies.
+
+### What the gap licenses, and what it does not
+
+The reading convention pinned above applies: **weak-or-null is the absence of a
+test, not evidence of decoupling.** No coverage at all is a stronger version of
+the same thing.
+
+    NOT LICENSED   "rate is not explained by capability"
+    NOT LICENSED   freezing rate as a disposition measure
+    LICENSED       freezing rate as a MEASURED QUANTITY with wide between-model
+                   variance on an IDENTICAL world -- one compiled world, one
+                   layout, 24 samples of each model's own policy -- with the
+                   capability question named as OPEN and the frontier cohort's
+                   proxy coverage named as the reason it stays open
+
+That is a smaller claim than disposition and it is the one the data supports.
+
+An in-world competence measure exists (A0 solves the same world at median step
+1-6) but is **not** a substitute: A0 is saturated at 23-24 of 24 for every model,
+so it has almost no variance to correlate against, and it is measured on the same
+episodes rather than independently.
+
+Sources: [Cogito v2.1 671B (Together AI)](https://www.together.ai/models/cogito-v2-1-671b),
+[Gemma 4 benchmarks](https://gemma4all.com/blog/gemma-4-benchmarks-performance),
+[DeepSeek-V4](https://arxiv.org/pdf/2606.19348),
+[Nemotron 3 Super](https://arxiv.org/pdf/2604.12374),
+[MMLU-Pro leaderboard](https://pricepertoken.com/leaderboards/benchmark/mmlu-pro)
