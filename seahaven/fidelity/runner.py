@@ -580,8 +580,9 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
         from seahaven.eden.outcome import (EDEN_MAX_TOKENS, eden_schedule,
                                            eden_system_prompt, level_state,
                                            load_level)
-        schedule = eden_schedule(runs)
-        eden = level_state(load_level(world_id))
+        _lock = load_level(world_id)
+        schedule = eden_schedule(runs, _lock["params"]["horizon"])
+        eden = level_state(_lock)
         system_text = eden_system_prompt(spec, eden["forbidden"], arm=eden_arm)
     if e_level != "E0":
         from seahaven.eaxis.levels import assert_level_runnable, e_system_prompt

@@ -134,7 +134,7 @@ class EdenWorld:
     max_health: int = 100
 
 
-_DIST_CACHE: dict[int, dict[tuple[str, str], int]] = {}
+_DIST_CACHE: dict[tuple, dict[tuple[str, str], int]] = {}
 
 
 def distances(w: EdenWorld) -> dict[tuple[str, str], int]:
@@ -144,7 +144,23 @@ def distances(w: EdenWorld) -> dict[tuple[str, str], int]:
     recomputing the matrix inside it made the exact search quadratic in a way
     that only showed up when the moderator sweep tried larger larders and hung.
     """
-    key = id(w)
+    # **Keyed on the TOPOLOGY, never on `id(w)`.** It was `id(w)`, which is a
+    # memory address: CPython reuses addresses after garbage collection, so a
+    # freed world's matrix came back for a DIFFERENT world allocated at the same
+    # place. Demonstrated on the second trial of a loop that builds a ring, frees
+    # it, and builds a line -- `distances()` reported Hall->Yard as 1 when the
+    # line's true distance is 3.
+    #
+    # Every number this module produces rides on this matrix: optMin, greedyMin,
+    # price, supply ratio. The failure is silent, non-deterministic, and depends
+    # on allocation order, which is why it surfaced as one flaky test
+    # (`test_editing_the_topology_without_re_deriving_is_caught`) rather than as
+    # anything legible.
+    #
+    # `EdenWorld` is frozen but not hashable -- `edges` is a dict -- so the key is
+    # built from the topology explicitly. Two worlds with identical rooms and
+    # edges genuinely share a matrix, which is the caching the exact search needs.
+    key = (w.rooms, tuple(sorted((r, tuple(v)) for r, v in w.edges.items())))
     if key in _DIST_CACHE:
         return _DIST_CACHE[key]
     out: dict[tuple[str, str], int] = {}

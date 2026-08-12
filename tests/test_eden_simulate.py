@@ -309,3 +309,69 @@ def test_the_exact_search_refuses_to_hang_on_a_large_larder():
     w = EdenWorld(("Hall",), {"Hall": ()}, big, "Hall", 3, 70, 30)
     with pytest.raises(SystemExit, match="MAX_FOODS_EXACT"):
         S.best_trajectory(w, legal_only=True)
+
+
+def test_the_distance_cache_is_keyed_on_TOPOLOGY_not_on_id():
+    """`_DIST_CACHE` was keyed on `id(w)`, and that is a real corruption route.
+
+    `id()` is a memory address; CPython reuses addresses after collection. So a
+    freed world's distance matrix came back for a DIFFERENT world allocated at
+    the same place -- silently, non-deterministically, and dependent on
+    allocation order. Every quantity in this module rides on that matrix: optMin,
+    greedyMin, price, supply ratio.
+
+    It surfaced as ONE flaky test (`test_editing_the_topology_without_re_deriving
+    _is_caught` in test_eden_manifest.py), which passed in isolation and failed
+    once in a full run -- the least legible form a correctness bug can take. This
+    reproduces it deterministically: build a ring, free it, build a LINE at the
+    same address, and demand the true line distance.
+    """
+    import gc
+
+    ring = {"Hall": ("Store", "Yard"), "Store": ("Hall", "Larder"),
+            "Larder": ("Store", "Yard"), "Yard": ("Larder", "Hall")}
+    line = {"Hall": ("Store",), "Store": ("Hall", "Larder"),
+            "Larder": ("Store", "Yard"), "Yard": ("Larder",)}
+    food = (Food("blue gourd", "Hall", 40, True),)
+
+    def mk(edges):
+        return EdenWorld(tuple(ring), {k: tuple(v) for k, v in edges.items()},
+                         food, "Hall", 3, 70, 30)
+
+    wrong = 0
+    for _ in range(200):
+        S._DIST_CACHE.clear()
+        a = mk(ring)
+        S.distances(a)
+        del a
+        gc.collect()
+        b = mk(line)
+        # Hall -> Yard is 1 on the ring and 3 on the line. Under the id() key
+        # this returned 1 whenever the address was reused.
+        if S.distances(b)[("Hall", "Yard")] != 3:
+            wrong += 1
+    assert wrong == 0, (
+        f"{wrong}/200 trials got another world's distance matrix; the cache key "
+        "is not the topology")
+
+
+def test_the_cache_still_SHARES_between_genuinely_identical_topologies():
+    """The key must not be so strict that the caching stops working.
+
+    `_trajectory` is called once per candidate ordering and recomputing the
+    matrix inside it made the exact search quadratic -- a hang the moderator
+    sweep found the hard way. Two worlds with the same rooms and edges must hit.
+    """
+    ring = {"Hall": ("Store", "Yard"), "Store": ("Hall", "Larder"),
+            "Larder": ("Store", "Yard"), "Yard": ("Larder", "Hall")}
+
+    def mk(restore):
+        return EdenWorld(tuple(ring), {k: tuple(v) for k, v in ring.items()},
+                         (Food("blue gourd", "Hall", restore, True),),
+                         "Hall", 3, 70, 30)
+
+    S._DIST_CACHE.clear()
+    S.distances(mk(40))
+    n = len(S._DIST_CACHE)
+    S.distances(mk(25))            # different larder, same topology
+    assert len(S._DIST_CACHE) == n, "identical topologies must share one entry"

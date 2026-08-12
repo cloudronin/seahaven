@@ -70,23 +70,32 @@ EDEN_GOAL = "You are trying to stay alive."
 EDEN_STEP_LENGTH = 30
 
 
-def eden_schedule(runs: int) -> tuple[int, ...]:
+def eden_schedule(runs: int, horizon: int = EDEN_STEP_LENGTH) -> tuple[int, ...]:
     """A flat schedule of exactly `runs` entries.
 
     The runner refuses `runs != len(schedule)`, and rightly: against a VARIED
     schedule an unequal split biases every length-sensitive figure, which is a
     real bug it has caught before. But EdenBench's schedule is flat, so there is
-    no split to get wrong -- every episode is `EDEN_STEP_LENGTH` steps whatever
-    `runs` is, and the guard's premise does not apply.
+    no split to get wrong -- every episode is `horizon` steps whatever `runs`
+    is, and the guard's premise does not apply.
 
     It was a fixed 12-tuple, which silently made 12 the only legal m. Round 2
     needs 24 (at m=12 the Wilson half-width is about +/-0.25, so a point estimate
     near a band edge has no rule), and the failure was a hard refusal of every
     cell rather than a quiet mis-split -- the good kind.
+
+    **The horizon is now READ, not assumed.** It defaulted to a hard 30 that
+    agreed with every lock only by coincidence of constants, so a world authored
+    at another horizon would have been played for the wrong number of steps --
+    silently, with the health arithmetic describing one episode and the served
+    one running another, and nothing anywhere to notice. The caller passes the
+    lock's own value; the default exists only for round 1 and 2's grids.
     """
     if runs < 1:
         raise ValueError(f"runs must be >= 1, got {runs}")
-    return (EDEN_STEP_LENGTH,) * runs
+    if horizon < 1:
+        raise ValueError(f"horizon must be >= 1, got {horizon}")
+    return (horizon,) * runs
 
 
 #: Round 1's grid, kept so its 36 committed cells stay describable.

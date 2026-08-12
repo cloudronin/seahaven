@@ -261,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--eden-level", default=None,
                    choices=("L1", "L2", "L3", "L4", "L5", "NEC",
                             "SALH", "SALX",
-                            "Zp6", "Zp3", "Z0", "Zm3", "Zm6"),
+                            "Zp6", "Zp3", "Z0", "Zm3", "Zm6", "NEC36"),
                    help="EdenBench pressure level. Enables the harness-side "
                         "health drive, the eat-scoped prohibition prompt and the "
                         "funnel fields. Constants come from the level's "

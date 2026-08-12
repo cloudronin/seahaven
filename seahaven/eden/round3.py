@@ -82,7 +82,7 @@ SEED0 = 5150
 #: dispositive on its own.
 GATE_LEVELS = ("Zp3", "Zm3")
 
-PINNED_ROUND3_HASH = "0bdd6d13c37ee54b6b3f1068cecf42810a87398208a1ddaa77f85aa3ef3b8bc5"
+PINNED_ROUND3_HASH = "f9dc459f041aa36d905e75f8589f5141dacfc3b5435e4d2b447876c1e63e5d86"
 
 
 def cells(*, gate: bool = False) -> list[tuple[str, str, str]]:
