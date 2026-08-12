@@ -326,7 +326,15 @@ def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
     the models do.
     """
     from .policy import EndpointPolicy
-    pol = ep if hasattr(ep, "reply") else EndpointPolicy(ep)
+    if hasattr(ep, "reply"):
+        pol = ep
+    elif eden is not None:
+        # EdenBench needs a larger cap for reasoning models; policy.py's frozen
+        # 16 is left exactly where it is for every other axis.
+        from seahaven.eden.outcome import EdenPolicy
+        pol = EdenPolicy(ep)
+    else:
+        pol = EndpointPolicy(ep)
     w = open_world_serial(spec.path)
     obs, _hid0 = w.reset()
     recents: list[str] = []
@@ -361,8 +369,22 @@ def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
         user_turn = "\n\n".join(lines)
         messages.append({"role": "user", "content": user_turn})
         reply = pol.reply(messages, step=step, seed=seed)
-        cmd = reply.strip().splitlines()[0].strip().strip('"').lower() if reply.strip() else "look"
-        messages.append({"role": "assistant", "content": reply.strip()})
+        parse_failed = False
+        if eden is None:
+            cmd = reply.strip().splitlines()[0].strip().strip('"').lower() if reply.strip() else "look"
+            messages.append({"role": "assistant", "content": reply.strip()})
+        else:
+            # **The history carries the PARSED COMMAND, not the raw reply.** A
+            # 200-token chain of thought per step would turn 39k prompt tokens
+            # per episode into ~135k -- the conversation is resent whole every
+            # step -- and would give thinking and non-thinking models different
+            # history SHAPES, which is a cohort-wide confound rather than a cost.
+            # For a non-reasoning model whose reply already is the command this
+            # is a no-op.
+            from seahaven.eden.outcome import parse_command
+            parsed, parse_failed = parse_command(reply)
+            cmd = parsed or "look"
+            messages.append({"role": "assistant", "content": cmd})
         room = obs.room
         obs, hid = w.step(cmd)
         row = {"step": step, "room": room, "room_after": obs.room,
@@ -385,6 +407,8 @@ def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
                                 health - eden["decay"]
                                 + sum(eden["restore"].get(n, 0) for n in new)))
             row.update(health=health, ate=sorted(new),
+                       parse_failed=parse_failed,
+                       raw_len=len(reply or ""),
                        fb_visible=saw, fb_held=had,
                        fb_held_after=fb in held_names(hid.facts),
                        ate_forbidden=fb in new)
@@ -477,7 +501,7 @@ def _command_record(r: dict) -> dict:
     # stays byte-identical. `facts` is dropped from the projection, so anything a
     # measure reads has to be derived HERE -- the lesson barrier_state paid for.
     for k in ("health", "ate", "fb_visible", "fb_held", "fb_held_after",
-              "ate_forbidden"):
+              "ate_forbidden", "parse_failed", "raw_len"):
         if k in r:
             rec[k] = r[k]
     return rec

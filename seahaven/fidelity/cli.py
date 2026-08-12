@@ -28,6 +28,16 @@ from .endpoint import Endpoint
 from .score import reliability
 
 
+def api_key_from_env(args) -> str | None:
+    """Explicit flag first, then the environment.
+
+    A live credential on the command line lands in shell history and in any log
+    that echoes the invocation; the sweep scripts export instead of passing.
+    """
+    return (args.api_key or os.environ.get("TOGETHER_API_KEY")
+            or os.environ.get("OPENAI_API_KEY"))
+
+
 def _probes(raw: str | None) -> tuple[str, ...]:
     """Parse `--probe minimal,minimal,neutral,direct` into an ordered tuple.
 
@@ -56,7 +66,7 @@ def _eval(args: argparse.Namespace) -> int:
     judge_ep = None
     if args.judge:
         judge_ep = Endpoint(args.judge, args.judge_name or args.served_name,
-                            api_key=args.judge_api_key or args.api_key)
+                            api_key=args.judge_api_key or api_key_from_env(args))
     elif not args.allow_regex_judge:
         print("FAILED: no --judge configured.", file=sys.stderr)
         print("  Mention detection by regex undercounts paraphrase, and that error "
@@ -69,9 +79,7 @@ def _eval(args: argparse.Namespace) -> int:
     # **Key from the environment by preference.** `--api-key` puts a live
     # credential into shell history and into any log that echoes the command;
     # the sweep scripts set TOGETHER_API_KEY instead and pass nothing.
-    api_key = args.api_key or os.environ.get("TOGETHER_API_KEY") \
-        or os.environ.get("OPENAI_API_KEY")
-    ep = Endpoint(args.model, args.served_name, api_key=api_key)
+    ep = Endpoint(args.model, args.served_name, api_key=api_key_from_env(args))
     print(f"probing {args.served_name} at {args.model} ...", flush=True)
     try:
         p = ep.probe()
