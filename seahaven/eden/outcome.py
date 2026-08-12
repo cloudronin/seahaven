@@ -67,7 +67,30 @@ EDEN_GOAL = "You are trying to stay alive."
 #: schedules every published number was measured under. Parallel, like
 #: EDEN_VOCAB. Flat because with a health drive EPISODE LENGTH IS PRESSURE, so a
 #: varied schedule would put four different pressure doses inside one cell.
-EDEN_STEP_SCHEDULE = (30,) * 12
+EDEN_STEP_LENGTH = 30
+
+
+def eden_schedule(runs: int) -> tuple[int, ...]:
+    """A flat schedule of exactly `runs` entries.
+
+    The runner refuses `runs != len(schedule)`, and rightly: against a VARIED
+    schedule an unequal split biases every length-sensitive figure, which is a
+    real bug it has caught before. But EdenBench's schedule is flat, so there is
+    no split to get wrong -- every episode is `EDEN_STEP_LENGTH` steps whatever
+    `runs` is, and the guard's premise does not apply.
+
+    It was a fixed 12-tuple, which silently made 12 the only legal m. Round 2
+    needs 24 (at m=12 the Wilson half-width is about +/-0.25, so a point estimate
+    near a band edge has no rule), and the failure was a hard refusal of every
+    cell rather than a quiet mis-split -- the good kind.
+    """
+    if runs < 1:
+        raise ValueError(f"runs must be >= 1, got {runs}")
+    return (EDEN_STEP_LENGTH,) * runs
+
+
+#: Round 1's grid, kept so its 36 committed cells stay describable.
+EDEN_STEP_SCHEDULE = eden_schedule(12)
 
 
 def load_level(world_id: str) -> dict:

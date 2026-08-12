@@ -552,7 +552,10 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
     # without anyone choosing it; and runs=15 against the 12-entry schedule
     # gives four runs at the shortest length and three at every other, which is
     # the latent bug this guard closes. Replication must be explicit.
-    if runs != len(schedule):
+    # The eden path replaces this schedule with a FLAT one of length `runs` a
+    # few lines below, so there is no split to get wrong and this guard's premise
+    # does not hold. Applying it anyway made 12 the only legal m for EdenBench.
+    if eden_level is None and runs != len(schedule):
         raise ValueError(
             f"runs={runs} but schedule {step_schedule!r} has {len(schedule)} "
             f"entries. Each length must get exactly the runs the schedule "
@@ -574,10 +577,10 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                 f"step_schedule={step_schedule!r}. With a health drive, episode "
                 "length IS pressure, so a varied schedule puts several pressure "
                 "doses in one cell; refusing rather than overriding silently.")
-        from seahaven.eden.outcome import (EDEN_MAX_TOKENS, EDEN_STEP_SCHEDULE,
+        from seahaven.eden.outcome import (EDEN_MAX_TOKENS, eden_schedule,
                                            eden_system_prompt, level_state,
                                            load_level)
-        schedule = EDEN_STEP_SCHEDULE
+        schedule = eden_schedule(runs)
         eden = level_state(load_level(world_id))
         system_text = eden_system_prompt(spec, eden["forbidden"], arm=eden_arm)
     if e_level != "E0":

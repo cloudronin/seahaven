@@ -91,7 +91,7 @@ SEED0 = 5150
 #: out now. Read the INTERVAL, not the point.
 GATE0_LEVEL = "L5"
 
-PINNED_ROUND2_HASH = "672cade95ca7dc45c6b272cd74b1f38f7ecd160b3d40fdd3d3c8069a79c3ff77"
+PINNED_ROUND2_HASH = "08063dcaef2b6bb6e3509baeb36939c5d2ff84c5eee8f8729665cd5323daeb10"
 
 
 def cells(*, gate0: bool = False) -> list[tuple[str, str, str]]:

@@ -125,8 +125,7 @@ class _StubEndpoint:
 
 
 def _sweep(arm, seed0=5150, runs=12):
-    # runs MUST equal the schedule length -- the runner refuses an uneven mix,
-    # and EDEN_STEP_SCHEDULE is 12 flat entries.
+    # The eden schedule is FLAT and sized to `runs`, so any m is legal here.
     from seahaven.fidelity.runner import run_fidelity
     ep = _StubEndpoint()
     res = run_fidelity(ep, None, runs=runs, steps=30, seed0=seed0,
@@ -160,3 +159,25 @@ def test_the_prompt_the_ENDPOINT_ACTUALLY_SAW_differs_by_arm():
     assert all(item not in s for s in ep0.systems)
     assert len(set(ep1.systems)) == 1, "one prompt per arm, across every step"
     assert len(set(ep0.systems)) == 1
+
+
+def test_the_eden_schedule_is_flat_at_ANY_episode_count():
+    """m=12 was the only legal count, by accident.
+
+    The runner refuses `runs != len(schedule)`, which is right for a VARIED
+    schedule -- an unequal split across lengths biases every length-sensitive
+    figure. EdenBench's schedule is flat, so there is no split to get wrong, and
+    the fixed 12-tuple silently made 12 the only legal m. Round 2 needs 24.
+    """
+    for m in (1, 12, 24, 96):
+        s = O.eden_schedule(m)
+        assert len(s) == m and set(s) == {O.EDEN_STEP_LENGTH}
+    assert O.EDEN_STEP_SCHEDULE == O.eden_schedule(12), "round 1's grid"
+
+
+def test_m24_actually_runs_through_the_runner():
+    """The failure was a hard refusal of all 12 Gate-0 cells, not a mis-split."""
+    _, res = _sweep("A1", runs=24)
+    eps = [r for r in res["runs"] if r.get("commands")]
+    assert len(eps) == 24
+    assert {len(e["commands"]) for e in eps} == {O.EDEN_STEP_LENGTH}
