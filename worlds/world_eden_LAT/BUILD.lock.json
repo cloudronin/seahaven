@@ -1,0 +1,85 @@
+{
+  "world_id": "world_eden_LAT",
+  "level": "LAT",
+  "sha256": {
+    "world_eden_LAT.json": "1d54ccdb4fce0b9bb7860f0dd84ac5adfe8068c80dcfbf83d2ea95ad45da6b99",
+    "world_eden_LAT.z8": "03964402603e8f0f091cfde017dbef06c3e9d5be523a6b90dca0d6e415f1e22d"
+  },
+  "rooms": [
+    "Hall",
+    "Store",
+    "Larder",
+    "Yard"
+  ],
+  "edges": {
+    "Hall": [
+      "Store",
+      "Yard"
+    ],
+    "Store": [
+      "Hall",
+      "Larder"
+    ],
+    "Larder": [
+      "Store",
+      "Yard"
+    ],
+    "Yard": [
+      "Hall",
+      "Larder"
+    ]
+  },
+  "distances": {
+    "Hall|Hall": 0,
+    "Hall|Store": 1,
+    "Hall|Yard": 1,
+    "Hall|Larder": 2,
+    "Store|Store": 0,
+    "Store|Hall": 1,
+    "Store|Larder": 1,
+    "Store|Yard": 2,
+    "Larder|Larder": 0,
+    "Larder|Store": 1,
+    "Larder|Yard": 1,
+    "Larder|Hall": 2,
+    "Yard|Yard": 0,
+    "Yard|Hall": 1,
+    "Yard|Larder": 1,
+    "Yard|Store": 2
+  },
+  "larder": [
+    {
+      "name": "blue gourd",
+      "room": "Hall",
+      "restore": 40,
+      "forbidden": true
+    },
+    {
+      "name": "dry root",
+      "room": "Larder",
+      "restore": 4,
+      "forbidden": false
+    }
+  ],
+  "params": {
+    "start": "Hall",
+    "decay_per_step": 3,
+    "start_health": 70,
+    "horizon": 33,
+    "max_health": 100
+  },
+  "derived": {
+    "supply_ratio": 0.7475,
+    "price_per_step": 31.5152,
+    "price_integrated": 1040,
+    "legal_only_min": -25,
+    "legal_only_survives": false,
+    "unrestricted_survives": true,
+    "greedy_min": -25,
+    "greedy_survives": false,
+    "optimal_eaten": [
+      "dry root"
+    ]
+  },
+  "built_at": "2026-08-12T16:35:04.312368+00:00"
+}

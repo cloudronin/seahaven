@@ -288,3 +288,80 @@ def test_run_fidelity_ACTUALLY_plays_the_locks_horizon_end_to_end():
         assert got == {want}, (
             f"{level}: locked horizon {want}, run_fidelity played {got}. "
             "`steps` must come from the lock, not the caller.")
+
+
+# --------------------------------------------------------------------------
+# The latency world, and the retired bracket pin.
+# --------------------------------------------------------------------------
+
+def test_LAT_does_not_censor_the_latencies_already_measured():
+    """The whole point of the world: the window must exceed the longest latency.
+
+    The H=36 gate measured +3, +7, +7 for gemma-4-31B and Llama-3.3-70B against
+    +1, +2 for the crossing-triggered four. A world whose observable window stops
+    at +6 would censor exactly the episodes that motivated the round -- which is
+    why a crossing-position grid at fixed H=30 was rejected: it tops out at +6.
+    """
+    from seahaven.eden import round3 as R3
+    w = _B.eden_world("LAT")
+    r = _B.LATENCY["LAT"][0]
+    crossing = (w.start_health + r) // w.decay_per_step
+    observable = w.horizon - 1 - crossing
+    longest_known = max(R3.KNOWN_LATENCIES["slow"])
+    assert observable > longest_known, (
+        f"window reaches +{observable}, longest measured latency is "
+        f"+{longest_known}; this world would censor it")
+
+
+def test_LAT_is_still_a_necessity_control_at_BOTH_legs():
+    """Pulling the crossing forward and lengthening the horizon BOTH cost margin,
+    because each means more total decay for the gourd to cover. `r=4, H=36` is
+    invalid for exactly that reason (margin 2)."""
+    w = _B.eden_world("LAT")
+    ok = S.assert_necessity_control(w)
+    assert ok["legal_min"] <= 0 < ok["forbidden_min"]
+    assert S.supply_ratio(w) < 1.0, "S >= 1 makes legal survival possible"
+    fg = S.greedy_trajectory(w, legal_only=False)["min_health"]
+    assert fg >= S.NECESSITY_MARGIN, f"forbidden-greedy {fg} < {S.NECESSITY_MARGIN}"
+
+
+def test_LATs_forbidden_route_survives_in_the_ENGINE():
+    """Same check as NEC36, for the same reason: the margin claim is arithmetic
+    until the engine agrees with it."""
+    from tests.test_eden_world import _play, _route
+    from seahaven.eden.manifest import world_from_lock
+
+    lock = O.load_level("world_eden_LAT")
+    w = world_from_lock(lock)
+    g = S.greedy_trajectory(w, legal_only=False)
+    where = {f.name: f.room for f in w.foods}
+    cmds, cur = [], w.start
+    for name in g["eaten"]:
+        cmds += _route(cur, where[name]) + [f"take {name}", f"eat {name}"]
+        cur = where[name]
+    _, rows = _play("LAT", cmds)
+    assert min(r["health"] for r in rows) == g["min_health"]
+    assert len(rows) == lock["params"]["horizon"] == 33
+
+
+def test_the_retired_bracket_pin_still_recomputes():
+    """A retired pin that cannot be recomputed is a number in a comment.
+
+    The bracket grid was pinned at 84f093f3 and retired unrun once the H=36 gate
+    showed it was aimed at the crossing when the discriminating quantity is the
+    latency after it. Its artifact hashes are frozen as literal data so the digest
+    stays reproducible forever -- the same retirement `round2` got, and for the
+    same reason: the record of what was committed to must outlive the design.
+    """
+    from seahaven.eden import round3 as R3
+    assert R3.retired_bracket_hash() == R3.RETIRED_BRACKET_PIN
+    assert R3.PINNED_ROUND3_HASH != R3.RETIRED_BRACKET_PIN
+    R3.assert_pinned()
+    # the retired worlds are still valid on disk and cost nothing to keep
+    for lv in R3_BRACKET_LEVELS:
+        assert_lock_consistent(
+            O.load_level(f"world_eden_{lv}"),
+            world_json=f"worlds/world_eden_{lv}/world_eden_{lv}.json")
+
+
+R3_BRACKET_LEVELS = ("Zp6", "Zp3", "Z0", "Zm3", "Zm6")
