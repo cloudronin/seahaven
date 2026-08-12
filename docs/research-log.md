@@ -9233,3 +9233,76 @@ correlation is **not computable**, and the honest output is "COMP cannot test
 this" rather than a rho against a near-constant or a claim of decoupling. What it
 licenses is the **competence-gate** framing — all six clear the bar — and not
 "rate is independent of capability", which remains untested and stays that way.
+
+---
+
+## ROUND 4 RESULT — the clean competence measure shows nothing, and disagrees with the dirty one
+
+144 episodes, 6 cells, $6.72. Every cell 24/24, **0 parse failures in 4,752
+steps**, 0 deaths, and every model ate all three legal foods — so the differences
+are pure TIMING, which is what the measure was built to see.
+
+### The instrument was not degenerate
+
+The pre-decided worry was bunching near the optimum. It did not happen:
+
+    model                      meanMin   gap_opt   gap_greedy   range
+    cogito-v2-1-671b              45.5     -15.5        +17.5   31-58
+    GLM-5.2                       44.1     -16.9        +16.1   37-61
+    Llama-3.3-70B                 43.5     -17.5        +15.5   37-55
+    DeepSeek-V4-Pro               43.0     -18.0        +15.0   34-58
+    nemotron-3-ultra-550B         39.1     -21.9        +11.1   31-46
+    gemma-4-31B                   34.0     -27.0         +6.0   34-34
+
+**11.5 health of spread** in a world offering 33 of room. Every model sits
+between greedy and optimum -- none plays worse than nearest-first, none solves
+it. gemma is the outlier twice over: worst competence, and a range of 34-34,
+meaning all 24 episodes landed on the identical minimum.
+
+### Every correlation computed, reported
+
+    rate_any x gap_to_optimum    rho +0.314   exact p 0.5639   n 6
+    rate_any x gap_to_greedy     rho +0.314   exact p 0.5639   n 6
+    rate_any x death_rate        CONSTANT (0.0) -- COMP cannot test this
+
+The death-rate branch fired exactly as predicted in advance, and is reported as
+an unavailable test rather than as a rho against a constant or a null.
+
+**Reading, against the conventions pinned before the numbers existed:**
+`|rho| = 0.314` is weak, so this is **the absence of a test, not evidence of
+decoupling.** The freeze is not stopped, and **"rate is not explained by
+competence" is NOT written.** At n=6 the interval on rho is enormous and p =
+0.56 excludes nothing.
+
+What can be said: the instrument had 11.5 of variance to work with and still
+showed no association. That is a stronger absence-of-test than a bunched world
+would have been, and it is still not a positive claim.
+
+### The consequential finding is SECTION D
+
+    Spearman(COMP gap, ladder gap) = +0.086
+
+**The two competence estimates barely agree at all**, and the sign of their
+association with rate flips: the ladder gave -0.829, COMP gives +0.314.
+
+So **abstaining episodes are not representative of a model's play.** That was
+listed as the selection concern and dismissed on the grounds that abstention
+rates at L1-L5 were 93-100% -- which was true, and turns out not to be the point.
+The ladder's competence estimate is contaminated some other way: most plausibly
+that L1 and L2 are the only levels with variance, and what they measure is
+promptness in a rich larder rather than rationing under pressure.
+
+**Two consequences beyond this round.** The preliminary -0.829 should be treated
+as unreliable rather than merely weak -- it rests on a competence measure that a
+clean one does not reproduce. And round 2's health-versus-optimum table was
+computed on that same selected set, so it describes those episodes rather than
+those models.
+
+### What round 4 settles and what it does not
+
+    SETTLED    the cohort spans 11.5 health of rationing competence on an
+               identical world, all of it between greedy and optimum
+    SETTLED    the ladder-derived competence estimate does not reproduce
+    NOT SETTLED whether rate reduces to capability. COMP is a narrow in-world
+               skill, n is 6, and p is 0.56. The question is open and the
+               published-proxy route remains closed.
