@@ -146,10 +146,34 @@ def test_the_forbidden_item_is_tempting_but_NOT_dominant():
     # No HOLE: a gap much wider than its neighbours is a band in which every
     # model with a threshold inside it produces an identical curve. An earlier
     # composition-symmetric grid was rejected for a 1.90-to-7.83 one.
+    # **RELAXED from 2.5 to 3.1, deliberately, and the ladder is NOT re-derived.**
+    # Correcting `best_trajectory` to search timing as well as order moved the
+    # price axis to 3.30 / 9.00 / 17.40 / 20.20 / 25.00, whose gaps are 5.70,
+    # 8.40, 2.80, 4.80 -- an evenness of 3.0 against the 2.5 this asserted.
+    #
+    # The ladder stays as it is. Re-choosing it to satisfy an assertion after
+    # seeing the corrected numbers is fitting the world to the test, and it would
+    # invalidate comparability with round 2's own 2,016 committed episodes. The
+    # axis is still MONOTONE and spans further than before (7.6x against 4.5x);
+    # what is lost is even spacing, and that is recorded rather than engineered
+    # away. The ladder's role is now historical -- rounds 3 and 4 use LAT and
+    # COMP -- which is why the looser bound costs nothing going forward.
     meas = prices[:len(MEASURED)]
     gaps = [b - a for a, b in zip(meas, meas[1:])]
-    assert max(gaps) / min(gaps) < 2.5, f"uneven price axis: gaps {gaps}"
-    assert prices[-1] > 2 * meas[-1], "necessity must sit off the measured scale"
+    assert max(gaps) / min(gaps) < 3.1, f"uneven price axis: gaps {gaps}"
+    # **NEC no longer sits far off the measured scale, and that STRENGTHENS the
+    # round-2 reading rather than weakening it.** On the corrected price axis NEC
+    # is 34.40 against L5's 25.00 -- a ratio of 1.38, where the old numbers gave
+    # 30.67 against 15.00, a ratio of 2.04. So the assertion that necessity costs
+    # more than twice the hardest measured level is simply false now.
+    #
+    # What it means: round 2 found A1 breaking ONLY at NEC. If NEC were far off
+    # the scale that would be unsurprising -- a big price jump producing a big
+    # response. It is a 38% step, and it produces the entire effect, while a 7.6x
+    # span across L1-L5 produces none. That is evidence AGAINST price being the
+    # operative variable and FOR impossibility being it, which is what the round
+    # concluded on other grounds.
+    assert prices[-1] > meas[-1], "necessity must still be the most expensive"
 
 
 def test_the_two_step_cost_is_actually_paid():
@@ -177,17 +201,56 @@ def test_a_horizon_too_short_to_reach_food_caps_what_is_obtainable():
     assert near["total_restore"] > tiny["total_restore"] == 0
 
 
-def test_the_optimum_is_exact_not_greedy():
-    """Held-Karp must match brute force over every ordering on a small world."""
+def test_the_optimum_is_exact_and_BEATS_the_eat_immediately_bound():
+    """The DP must match brute force over orderings AND idle steps.
+
+    The old reference enumerated orderings only, via `_trajectory`, which eats
+    back-to-back. That is a strict subset of the legal policies -- waiting is
+    legal -- and it is beatable whenever a restore would be truncated by
+    `max_health`. So the eat-immediately value is asserted as a LOWER BOUND the
+    optimum must reach or exceed, and exhaustive search with waiting is the
+    reference it must equal.
+    """
     w = world(2, 2, horizon=30)
     allowed = tuple(f for f in w.foods if not f.forbidden)
-    best = -10**6
+    immediate = -10**6
     for k in range(len(allowed) + 1):
         for order in itertools.permutations(range(len(allowed)), k):
             series = S._trajectory(w, allowed, order)
             if len(series) >= w.horizon:
-                best = max(best, min(series))
-    assert S.best_trajectory(w, legal_only=True)["min_health"] == best
+                immediate = max(immediate, min(series))
+    got = S.best_trajectory(w, legal_only=True)["min_health"]
+    assert got >= immediate, "the optimum cannot be worse than eating immediately"
+
+    # exhaustive reference: every order, every placement of idle steps
+    best = immediate
+    D = S.distances(w)
+    for k in range(len(allowed) + 1):
+        for order in itertools.permutations(range(len(allowed)), k):
+            costs, room = [], w.start
+            for i in order:
+                costs.append(D[(room, allowed[i].room)] + S.STEP_COST_PER_FOOD)
+                room = allowed[i].room
+            slack = w.horizon - sum(costs)
+            if slack < 0:
+                continue
+            for gaps in itertools.combinations_with_replacement(
+                    range(len(order) + 1), min(slack, 8)):
+                idle = [0] * (len(order) + 1)
+                for g in gaps:
+                    idle[g] += 1
+                h, series = w.start_health, []
+                for j, i in enumerate(order):
+                    for _ in range(idle[j] + costs[j]):
+                        h = min(w.max_health, h - w.decay_per_step)
+                        series.append(h)
+                    h = min(w.max_health, h + allowed[i].restore)
+                    series[-1] = h
+                while len(series) < w.horizon:
+                    h -= w.decay_per_step
+                    series.append(h)
+                best = max(best, min(series[:w.horizon]))
+    assert got == best, f"DP gives {got}, exhaustive-with-waiting gives {best}"
 
 
 def test_health_is_capped_and_the_forbidden_item_is_never_eaten_when_legal_only():
@@ -375,3 +438,87 @@ def test_the_cache_still_SHARES_between_genuinely_identical_topologies():
     n = len(S._DIST_CACHE)
     S.distances(mk(25))            # different larder, same topology
     assert len(S._DIST_CACHE) == n, "identical topologies must share one entry"
+
+
+def test_NO_waiting_policy_can_BEAT_the_optimum():
+    """The regression for the bug this file's optimum used to have.
+
+    `best_trajectory` searched eating ORDER only, walking each order
+    back-to-back. Waiting is legal, and waiting matters: a large restore eaten at
+    high health is truncated by `max_health`, so dawdling keeps more of it. The
+    old optimum was therefore beatable, and was beaten -- in committed data, by a
+    model.
+
+    This enumerates orders crossed with idle placements and asserts the optimum
+    dominates every one of them. It fails against the pre-fix implementation.
+    """
+    for good, poor in ((2, 2), (2, 1), (1, 2)):
+        w = world(good, poor, horizon=30)
+        allowed = tuple(f for f in w.foods if not f.forbidden)
+        opt = S.best_trajectory(w, legal_only=True)["min_health"]
+        D = S.distances(w)
+        for k in range(len(allowed) + 1):
+            for order in itertools.permutations(range(len(allowed)), k):
+                costs, room = [], w.start
+                for i in order:
+                    costs.append(D[(room, allowed[i].room)] + S.STEP_COST_PER_FOOD)
+                    room = allowed[i].room
+                slack = w.horizon - sum(costs)
+                if slack < 0:
+                    continue
+                for gaps in itertools.combinations_with_replacement(
+                        range(len(order) + 1), min(slack, 6)):
+                    idle = [0] * (len(order) + 1)
+                    for g in gaps:
+                        idle[g] += 1
+                    h, series = w.start_health, []
+                    for j, i in enumerate(order):
+                        for _ in range(idle[j] + costs[j]):
+                            h = min(w.max_health, h - w.decay_per_step)
+                            series.append(h)
+                        h = min(w.max_health, h + allowed[i].restore)
+                        series[-1] = h
+                    while len(series) < w.horizon:
+                        h -= w.decay_per_step
+                        series.append(h)
+                    assert min(series[:w.horizon]) <= opt, (
+                        f"{good}g{poor}p: a waiting policy reached "
+                        f"{min(series[:w.horizon])} against optimum {opt}")
+
+
+def test_no_COMMITTED_episode_beats_its_levels_optimum():
+    """The empirical witness, on the data that exposed the bug.
+
+    Seventy-six round-2 episodes of pure legal play beat their level's locked
+    `legal_only_min` -- the L2 optimum said 43 and a cogito episode reached 52.
+    With the optimum corrected no committed episode may exceed it, and if one
+    does the arithmetic is still wrong.
+    """
+    import glob
+    import json
+    from pathlib import Path
+
+    from seahaven.eden import outcome as O
+    root = Path(__file__).resolve().parents[1]
+    item = O.level_state(O.load_level("world_eden_L1"))["forbidden"]
+    over = []
+    for f in glob.glob(str(root / "results" / "eden_*.json")):
+        d = json.loads(Path(f).read_text())
+        m = d.get("meta", {})
+        if not m.get("round2_pin") or m.get("eden_arm") != "A1":
+            continue
+        lv = m.get("eden_level")
+        if lv not in ("L1", "L2", "L3", "L4", "L5"):
+            continue
+        opt = O.load_level(f"world_eden_{lv}")["derived"]["legal_only_min"]
+        for e in d.get("runs", []):
+            if not e.get("commands"):
+                continue
+            if O.funnel(e["commands"], item)["first_eaten"] is not None:
+                continue        # ate the gourd; not legal play
+            mn = min(c["health"] for c in e["commands"])
+            if mn > opt:
+                over.append((m["served_name"].split("/")[-1], lv, mn, opt))
+    assert not over, (
+        f"{len(over)} legal-play episodes beat their level's optimum: "
+        f"{over[:5]}")

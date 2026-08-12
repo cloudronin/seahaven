@@ -254,6 +254,41 @@ def build(level: str, out_root: Path) -> dict:
     return lock
 
 
+def refresh_derived(root: Path) -> int:
+    """Recompute every lock's `derived` block IN PLACE, touching nothing else.
+
+    **The compiled world must not be rebuilt to fix our arithmetic about it.**
+    `best_trajectory` was corrected to search timing as well as order, so
+    `legal_only_min` and `price_per_step` move at most levels -- but the `.z8`
+    and `.json` are unchanged, and TextWorld's compilation is not
+    byte-deterministic, so a rebuild would move every sha256 and leave round 2's
+    2,016 committed episodes pointing at bytes that no longer exist.
+
+    So: recompute `derived`, keep `sha256` and `built_at` exactly as they were,
+    and report every field that moved.
+    """
+    moved = []
+    for level in list(LEVELS) + list(BRACKET) + list(HORIZON_VARIANTS) + list(LATENCY):
+        p = root / f"world_eden_{level}" / "BUILD.lock.json"
+        if not p.exists():
+            continue
+        lock = json.loads(p.read_text())
+        fresh = derived_facts(eden_world(level))
+        diff = {k: (lock["derived"].get(k), fresh[k])
+                for k in fresh if lock["derived"].get(k) != fresh[k]}
+        if diff:
+            moved.append((level, diff))
+            lock["derived"] = fresh
+            p.write_text(json.dumps(lock, indent=2) + "\n")
+    print(f"{len(moved)} locks refreshed; sha256 and built_at untouched\n")
+    for level, diff in moved:
+        keys = ", ".join(f"{k} {a} -> {b}" for k, (a, b) in sorted(diff.items())
+                         if k in ("legal_only_min", "price_per_step",
+                                  "legal_only_survives", "greedy_min"))
+        print(f"  {level:<8}{keys}")
+    return 0
+
+
 def main() -> int:
     root = Path(__file__).resolve().parent
     print(f"{'world':<20}{'foods':>7}{'S':>7}{'price/st':>10}{'optMin':>8}"
@@ -295,4 +330,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if "--refresh-derived" in sys.argv:
+        raise SystemExit(refresh_derived(Path(__file__).resolve().parent))
     raise SystemExit(main())

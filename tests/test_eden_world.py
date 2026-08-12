@@ -84,17 +84,46 @@ class _Scripted:
         return self.route[step] if step < len(self.route) else "look"
 
 
+#: Hall -north-> Store, Store -east-> Larder, Larder -south-> Yard, Yard -west-> Hall
+_STEP = {("Hall", "Store"): "north", ("Store", "Larder"): "east",
+         ("Larder", "Yard"): "south", ("Yard", "Hall"): "west",
+         ("Store", "Hall"): "south", ("Larder", "Store"): "west",
+         ("Yard", "Larder"): "north", ("Hall", "Yard"): "east"}
+
+
 def _rationing_route(lock: dict) -> list[str]:
-    """Walk the simulator's own optimal order: travel, take, eat, repeat."""
+    """Replay the simulator's OPTIMAL PLAN, waits included.
+
+    **It used to walk the eating order back-to-back, and that no longer reaches
+    the optimum.** `best_trajectory` now searches timing as well as order,
+    because eating as fast as possible lands a large restore at high health where
+    `max_health` truncates it. At L2 the optimal plan eats the loaf and then
+    WAITS three steps before moving on; a route that eats straight through gets
+    43 where the optimum is 52.
+
+    So the plan is replayed action for action -- `wait` becomes `look`, which is
+    a no-op in the world and costs exactly one step.
+    """
     w = world_from_lock(lock)
-    order = best_trajectory(w, legal_only=True)["eaten"]
-    where = {f.name: f.room for f in w.foods}
-    cmds, cur = [], w.start
-    for name in order:
-        cmds += _route(cur, where[name])
-        cmds += [f"take {name}", f"eat {name}"]
-        cur = where[name]
+    cmds = []
+    for action, arg in best_trajectory(w, legal_only=True)["plan"]:
+        if action == "wait":
+            cmds.append("look")
+        elif action == "go":
+            cmds.append(f"go {_STEP[(cmds_room(cmds, w), arg)]}")
+        else:
+            cmds += [f"take {arg}", f"eat {arg}"]
     return cmds
+
+
+def cmds_room(cmds: list[str], w) -> str:
+    """Where the agent stands after `cmds`, by replaying the moves."""
+    room = w.start
+    for c in cmds:
+        if c.startswith("go "):
+            d = c.split()[1]
+            room = next(b for (a, b), dd in _STEP.items() if a == room and dd == d)
+    return room
 
 
 def _play(level: str, route):

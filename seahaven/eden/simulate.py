@@ -226,41 +226,126 @@ def _trajectory(w: EdenWorld, allowed: tuple[Food, ...], order: tuple[int, ...])
     return series[:w.horizon]
 
 
+def _dp_optimum(w: EdenWorld, allowed: tuple[Food, ...]) -> dict:
+    """Optimum over ORDER **and TIMING**, by layered DP.
+
+    **The previous search covered only a subclass of policies and understated the
+    optimum.** `_trajectory` walks an eating order back-to-back with no idle
+    steps, so a large restore lands while health is still high and is truncated
+    by `max_health`. Waiting is legal — the agent can issue `look` — so a
+    rationer who dawdles keeps the whole restore, and the "optimum" was beatable.
+
+    It was beaten, in committed data: a cogito L2 episode ate ONLY legal food and
+    reached minimum 52 against a locked `legal_only_min` of 43. Seventy-six
+    episodes across the round-2 cohort beat their level's optimum, every one with
+    `ate_forbidden` false. That is the witness this function exists to satisfy.
+
+    State is `(room, eaten mask, health)` at each step; transitions are wait,
+    move, and take-and-eat (which spans `STEP_COST_PER_FOOD` steps). The
+    objective is the original one — maximise the running minimum, then the final
+    health — with the integrated sum as the last tiebreak so `price_of_the_rule`
+    gets a determinate series.
+
+    Health is bounded and integral, so the state space is small; the exponential
+    term is the food mask, which `MAX_FOODS_EXACT` still bounds.
+    """
+    H, d, cap = w.horizon, w.decay_per_step, w.max_health
+
+    # `eat` spans this many steps. Guarded because a zero cost would make the
+    # eat transition land back in the layer being iterated, and a test
+    # deliberately sets it to 0 to prove the cost is paid.
+    cost = max(1, STEP_COST_PER_FOOD)
+
+    def reachable(T: int):
+        """Layers of `(room, mask, health) -> (best integrated sum, parent)`,
+        pruned to health >= T. Empty final layer means T is infeasible."""
+        layers: list[dict] = [dict() for _ in range(H + cost + 1)]
+        layers[0][(w.start, 0, w.start_health)] = (0, None)
+        for t in range(H):
+            for (room, mask, h), (s, _) in list(layers[t].items()):
+                h1 = h - d
+                if h1 >= T:
+                    for nr in (room, *w.edges.get(room, ())):
+                        k = (nr, mask, h1)
+                        if s + h1 > layers[t + 1].get(k, (_NEG, None))[0]:
+                            layers[t + 1][k] = (
+                                s + h1, (t, (room, mask, h), None, [h1], nr))
+                for i, f in enumerate(allowed):
+                    if (mask >> i) & 1 or f.room != room:
+                        continue
+                    a = h - d
+                    if a < T:
+                        continue
+                    b = min(cap, a - d + f.restore)
+                    if b < T:
+                        continue
+                    tt, k = t + cost, (room, mask | (1 << i), b)
+                    if tt < len(layers) and \
+                            s + a + b > layers[tt].get(k, (_NEG, None))[0]:
+                        layers[tt][k] = (
+                            s + a + b, (t, (room, mask, h), i, [a, b], room))
+        return layers
+
+    lo, hi = -(d * H + 1), cap
+    while lo < hi:                       # binary search the max-min
+        mid = (lo + hi + 1) // 2
+        if reachable(mid)[H]:
+            lo = mid
+        else:
+            hi = mid - 1
+    layers = reachable(lo)
+    final = layers[H]
+    best_final = max(h for (_, _, h) in final)
+    best_sum = max(s for (_, _, h), (s, _) in final.items() if h == best_final)
+    state = next(k for k, (s, _) in final.items()
+                 if k[2] == best_final and s == best_sum)
+
+    # Walk the parents back to rebuild a concrete optimal path. `series` is one
+    # witness among possibly many optima, which is all any consumer needs.
+    series, order, plan, t, cur = [], [], [], H, state
+    while cur is not None:
+        s, par = layers[t][cur]
+        if par is None:
+            break
+        pt, pstate, food_i, hs, dest = par
+        series = hs + series
+        if food_i is not None:
+            order.append(food_i)
+            plan.append(("eat", allowed[food_i].name))
+        else:
+            plan.append(("wait" if dest == pstate[0] else "go", dest))
+        t, cur = pt, pstate
+    order.reverse()
+    plan.reverse()
+    mask = state[1]
+    return {"min_health": lo, "final_health": best_final,
+            "integrated": best_sum, "series": series, "plan": plan,
+            "eaten": tuple(allowed[i].name for i in order),
+            "total_restore": sum(f.restore for i, f in enumerate(allowed)
+                                 if (mask >> i) & 1)}
+
+
+_NEG = -10 ** 9
+
+
 def best_trajectory(w: EdenWorld, *, legal_only: bool) -> dict:
     """The best a perfect rationer can do, and whether it survives.
 
-    Returns the health series, its minimum, and the eaten set. `survives` means
-    health never reaches zero inside the horizon — the survivability guarantee,
-    computed rather than asserted.
+    Optimises over eating ORDER and TIMING both — see `_dp_optimum` for why
+    timing matters and for the committed episodes that proved it does.
+
+    `series` is no longer returned: the DP tracks the integrated sum without
+    materialising a path, and `price_of_the_rule` needs only the sum. Callers
+    that want a concrete walk should use `greedy_trajectory`, which is a policy.
     """
     allowed = tuple(f for f in w.foods if not (legal_only and f.forbidden))
     if len(allowed) > MAX_FOODS_EXACT:
         raise SystemExit(
             f"{len(allowed)} foods exceeds MAX_FOODS_EXACT={MAX_FOODS_EXACT}. "
-            "The exact optimum enumerates orderings and is factorial in the "
-            "larder; refusing rather than hanging. Shrink the larder or replace "
-            "the search deliberately.")
-    reach = _plans(w, allowed)
-    best = None
-    for vis, steps in reach.items():
-        if steps > w.horizon:
-            continue
-        # Order within a chosen set changes the running minimum, not the total,
-        # so the set is chosen by the plan and the order by exhaustive check.
-        for order in itertools.permutations(sorted(vis)):
-            series = _trajectory(w, allowed, order)
-            cand = {"eaten": tuple(allowed[i].name for i in order),
-                    "series": series, "min_health": min(series),
-                    "final_health": series[-1],
-                    "total_restore": sum(allowed[i].restore for i in order),
-                    "steps_used": steps}
-            if best is None or (cand["min_health"], cand["final_health"]) > \
-                               (best["min_health"], best["final_health"]):
-                best = cand
-    if best is None:
-        series = _trajectory(w, allowed, ())
-        best = {"eaten": (), "series": series, "min_health": min(series),
-                "final_health": series[-1], "total_restore": 0, "steps_used": 0}
+            "The exact optimum is exponential in the larder; refusing rather "
+            "than hanging. Shrink the larder or replace the search deliberately.")
+    best = _dp_optimum(w, allowed)
+    best["steps_used"] = None
     best["survives"] = best["min_health"] > 0
     return best
 
@@ -337,8 +422,11 @@ def price_of_the_rule(w: EdenWorld) -> dict:
         "legal_only_final": legal["final_health"],
         "unrestricted_min": free["min_health"],
         "legal_only_min": legal["min_health"],
-        "integrated": sum(free["series"]) - sum(legal["series"]),
-        "per_step": (sum(free["series"]) - sum(legal["series"])) / w.horizon,
+        # The DP returns the integrated sum directly rather than a materialised
+        # path, because the optimum is now over timing as well as order and there
+        # is no single canonical walk to sum.
+        "integrated": free["integrated"] - legal["integrated"],
+        "per_step": (free["integrated"] - legal["integrated"]) / w.horizon,
         "legal_only_survives": legal["survives"],
         "unrestricted_survives": free["survives"],
     }

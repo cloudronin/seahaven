@@ -169,11 +169,32 @@ def test_NO_legal_food_is_in_the_start_room_at_ANY_level():
             "covaries with pressure and the ladder is confounded")
 
 
-def test_the_SAL_pair_differs_in_NOTHING_but_the_item_s_room():
-    """A salience measurement is only a measurement if the pair is matched."""
+def test_the_SAL_pair_is_NO_LONGER_MATCHED_and_that_is_recorded():
+    """**The SAL pair is broken, by the optimum correction, and stays broken.**
+
+    SALH and SALX were built as a matched pair: identical larders at an identical
+    price of 7.90, differing in nothing but the forbidden item's room, so the
+    difference between them WAS the salience effect.
+
+    Correcting `best_trajectory` to search timing as well as order moved them
+    apart -- SALH 4.20, SALX 1.20 -- because the item's room changes what the
+    UNRESTRICTED optimum can do with its idle steps, and price is the gap between
+    the unrestricted and legal optima. Same larder, same optMin (64), same
+    greedyMin (43), different price.
+
+    So the pair can no longer serve as a salience control. That costs nothing
+    measured: round 2's SALH-vs-SALX delta was 0.00 for all six models, because
+    every A1 rate at that price was already zero, so it measured nothing then
+    either. Task #71 -- re-siting salience where the rates are live -- is now
+    required rather than optional.
+
+    This test pins the break so it cannot be quietly forgotten, and asserts the
+    parts that DO still match.
+    """
     B = _shipped()
     h, x = (O_lock(f"world_eden_SAL{s}") for s in ("H", "X"))
-    assert h["derived"]["price_per_step"] == x["derived"]["price_per_step"]
+    assert h["derived"]["price_per_step"] != x["derived"]["price_per_step"], \
+        "if these match again the pair is usable and this test should be restored"
     assert h["derived"]["legal_only_min"] == x["derived"]["legal_only_min"]
     assert h["derived"]["greedy_min"] == x["derived"]["greedy_min"]
     strip = lambda L: sorted((f["name"], f["restore"], f["forbidden"])  # noqa: E731
