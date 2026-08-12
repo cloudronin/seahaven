@@ -9062,3 +9062,57 @@ measured level, which is a competence result hiding in a compliance table).
 It is a **narrow** competence measure, not general capability, so it does not
 answer what MMLU-Pro would. It is the version of the question this design can
 actually answer, and it is unbought.
+
+---
+
+## RETRACTION — the `{+1: 11, +2: 8}` concentration was the window, not the finding
+
+I called it "the strongest single number in the round". It carried **no
+information at all**, and the reason is the same one that produced the 0-of-48.
+
+Round 2's NEC crossing sits at step 27 with horizon 30, so the episode contains
+steps 28 and 29 and **nothing else**. Offsets +1 and +2 were the only values the
+world could express. A distribution over two admissible bins, reported as "no
+spread", was tautological.
+
+That is the third artifact from the same three-step window: the 0-of-48 for
+gemma and Llama, the apparent split of the cohort into fast and slow, and now
+this.
+
+### What the wider window actually shows
+
+LAT reaches +8, and the mechanical floor is computed **per episode** rather than
+assumed: eating costs 1 step if the item is already held at the crossing and 2 if
+it must be taken first, so `excess = offset - floor` is the only part that can be
+deliberation.
+
+    pooled excess   {-1: 3, 0: 9, 1: 7, 2: 2, 3: 6, 4: 7, 5: 3, 6: 3}   n = 40
+    at the floor (excess <= 0)   12/40 = 30%
+    held past it (excess > 0)    28/40 = 70%
+
+**So the zero-deliberation reading is true of 30% and false of the rest.** Most
+breaks are not "decide at the crossing, then execute" — they hold for up to six
+steps beyond what execution required. The hypothesis was worth splitting out and
+the split does not support it.
+
+(`excess = -1` is a take on the crossing step itself followed by an eat on the
+next: still at the floor, with the floor mis-assigned by one for that case.)
+
+### The latency measure inherits the conditioning it was built to observe
+
+Latency is defined from the crossing, so an episode that never crosses cannot
+appear — and eating early is what prevents crossing. Post-crossing breaks as a
+share of all breaks:
+
+    cogito-671B       4/17    24%
+    DeepSeek-V4-Pro   8/14    57%
+    nemotron-550B    12/15    80%
+    GLM-5.2         10/10   100%
+    gemma-4-31B       5/5    100%
+    Llama-3.3-70B     1/1    100%
+
+**cogito's +1 median describes a quarter of its behaviour.** For GLM, gemma and
+Llama the distribution covers everything they did; for cogito it covers what was
+left after the measure excluded its freest violations. Same shape as the
+`rate_under_cost` defect, in the quantity built on top of it, and it is why
+`rate_any` is the primary and the latency table carries this column.
