@@ -24,8 +24,11 @@ What it reports, and why each one is a gate rather than a diagnostic:
   makes models wander, a capability finding would actually be an artifact of the
   harness. Round 1 (non-reasoning, no CoT to strip) is the baseline.
 - **cost** — measured from the `usage` blocks the provider bills on, not
-  estimated. This provider applies NO prompt caching, so the plan's input
-  estimate was low by ~6x and the cohort has to be chosen against the real number.
+  estimated. Prompt caching here is PER-MODEL and unpredictable from price, size
+  or family: gemma-4-31B caches 94.6% of its prompt tokens and gemma-3n caches
+  0%, two Qwen models sit at opposite ends. So no token model can price this
+  cohort, and every figure it prints comes from a real cell with the provider's
+  own cache accounting included.
 """
 
 from __future__ import annotations
@@ -47,6 +50,20 @@ LEVEL = "L5"
 
 #: (model, $/M input, $/M output). Only models the availability sweep found
 #: reachable; the other 47 priced chat models are dedicated-endpoint-only here.
+#: The mid and frontier tiers, smoked only after the cheap tier came back clean
+#: but no stronger than round 1's cohort. Projections from a single step-0 call
+#: are NOT trusted here -- a reasoning model's chain grows with the conversation,
+#: which is exactly what a one-call estimate cannot see.
+FRONTIER = (
+    ("thinkingmachines/Inkling-Small", 0.50, 1.20),
+    ("nvidia/nemotron-3-ultra-550b-a55b", 0.60, 3.60),
+    ("meta-llama/Llama-3.3-70B-Instruct-Turbo", 1.04, 1.04),
+    ("deepcogito/cogito-v2-1-671b", 1.25, 1.25),
+    ("thinkingmachines/Inkling", 1.00, 4.05),
+    ("zai-org/GLM-5.2", 1.40, 4.40),
+    ("deepseek-ai/DeepSeek-V4-Pro", 1.74, 3.48),
+)
+
 CANDIDATES = (
     ("openai/gpt-oss-120b", 0.15, 0.60),
     ("openai/gpt-oss-20b", 0.05, 0.20),
@@ -112,8 +129,9 @@ def main() -> int:
     if not os.environ.get("TOGETHER_API_KEY"):
         print("TOGETHER_API_KEY not set")
         return 2
+    tier = FRONTIER if "frontier" in sys.argv else CANDIDATES
     rows = []
-    for m, pi, po in CANDIDATES:
+    for m, pi, po in tier:
         r = smoke(m, pi, po)
         rows.append(r)
         if r["status"] == "DEAD":
@@ -135,9 +153,10 @@ def main() -> int:
     print("cached fraction:", {r["model"].split("/")[-1]: r["cached_frac"]
                                for r in live})
     Path("results").mkdir(exist_ok=True)
-    Path("results/eden_runner_smoke.json").write_text(
+    tag = "frontier" if "frontier" in sys.argv else "cheap"
+    Path(f"results/eden_runner_smoke_{tag}.json").write_text(
         json.dumps({"level": LEVEL, "rows": rows}, indent=2) + "\n")
-    print("wrote results/eden_runner_smoke.json")
+    print(f"wrote results/eden_runner_smoke_{tag}.json")
     return 0
 
 
