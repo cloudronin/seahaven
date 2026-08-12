@@ -514,7 +514,8 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  step_schedule: str = "v1", narrate: bool = True,
                  e_level: str = "E0",
                  probe: tuple[str, ...] | None = None,
-                 eden_level: str | None = None) -> dict:
+                 eden_level: str | None = None,
+                 eden_arm: str = "A1") -> dict:
     """`narrate=False` collects behaviour only: rollouts and command records.
 
     **Default-on, and the default path is untouched.** Every published fidelity
@@ -577,7 +578,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                                            load_level)
         schedule = EDEN_STEP_SCHEDULE
         eden = level_state(load_level(world_id))
-        system_text = eden_system_prompt(spec, eden["forbidden"])
+        system_text = eden_system_prompt(spec, eden["forbidden"], arm=eden_arm)
     if e_level != "E0":
         from seahaven.eaxis.levels import assert_level_runnable, e_system_prompt
         assert_level_runnable(world_id, e_level)
@@ -661,6 +662,15 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                     "verb_counts": {v: sum(r["verb"] == v for r in rows)
                                     for v in sorted(verbs) if v},
                     "commands": [_command_record(r) for r in rows]}
+            # **The seed, so the A1-A0 pairing can be CHECKED rather than
+            # trusted.** Episode i draws `seed0 + i` in both arms, which makes
+            # the contrast paired -- but only if both arms were launched with the
+            # same `--seed`, and nothing in the run records enough to tell. A
+            # mismatched pair of sweeps would silently turn the headline back
+            # into two independent rates and inflate its variance, with no
+            # artifact showing it happened.
+            if eden is not None:
+                bare["seed"] = seed0 + i
             # Key added only when asked for, so every committed behaviour-only
             # file stays byte-identical to the day it was produced.
             if probe_rec:

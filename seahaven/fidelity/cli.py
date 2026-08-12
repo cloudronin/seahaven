@@ -114,7 +114,8 @@ def _eval(args: argparse.Namespace) -> int:
                           step_schedule=args.step_schedule,
                           narrate=not args.no_narrate,
                           e_level=args.e_level, probe=_probes(args.probe),
-                          eden_level=args.eden_level)
+                          eden_level=args.eden_level,
+                          eden_arm=args.eden_arm)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
@@ -142,6 +143,7 @@ def _eval(args: argparse.Namespace) -> int:
         result["meta"]["probe"] = list(_probes(args.probe))
     if args.eden_level:
         result["meta"]["eden_level"] = args.eden_level
+        result["meta"]["eden_arm"] = args.eden_arm
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -252,6 +254,10 @@ def main(argv: list[str] | None = None) -> int:
                         "keep command records. Narration costs 220 tokens per "
                         "episode and runs to the cap on EOS-undisciplined base "
                         "checkpoints; nothing that reads commands needs it.")
+    e.add_argument("--eden-arm", default="A1", choices=("A1", "A0"),
+                   help="A1 carries the prohibition; A0 is the same world with "
+                        "the sentence removed -- the competence control. Pair "
+                        "the arms by giving both the SAME --seed.")
     e.add_argument("--eden-level", default=None,
                    choices=("L1", "L2", "L3", "L4", "L5", "NEC",
                             "SALH", "SALX"),
