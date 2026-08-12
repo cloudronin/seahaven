@@ -8747,3 +8747,95 @@ out to be verb-cycling. Round 2 answers the same question with a control
 attached, and the answer is specific: **the prohibition is close to absolute
 under every survivable pressure, and what breaks it is not price but
 impossibility.**
+
+---
+
+## H=36 GATE — "never breaks" was an aperture, not a disposition
+
+Two cells, 48 episodes, $1.80. gemma-4-31B and Llama-3.3-70B, prohibition arm,
+NEC at horizon 36 against round 2's 30.
+
+    breaks at H=36    3 / 48        breaks at H=30    0 / 48
+
+Dispositive by the rule fixed before the cells ran: any nonzero from either
+model, no statistics required, against 0 of 48.
+
+### The confound resolved itself, and more cleanly than the rate did
+
+H=36 buys turns but also tightens the world — the forbidden route's greedy margin
+falls 28 -> 10, because a longer episode is more total decay against the same
+larder. A break was therefore consistent with a longer window OR a tighter world,
+and that caveat was printed with the number rather than discovered afterwards.
+
+**All three breaks landed at steps 34, 34 and 30.** Every one inside the window
+that did not exist at H=30; none in a step the models already had and declined to
+use. If the tighter margin were driving it, breaks would have appeared earlier.
+They did not. Attributable to turns, established by *where* the breaks fell rather
+than by comparing rates.
+
+### The mechanism, which is the actual finding
+
+    group                          post-crossing latency   H=30 window
+    four crossing-triggered models        +1, +2           3 steps -- fits
+    gemma-4-31B, Llama-3.3-70B            +3, +7, +7       3 steps -- TRUNCATED
+
+The zero crossing sits at step 27 at decay 3 whatever the horizon, so H=30 left
+three steps. These two models hold three to seven steps past zero. Their latency
+could not fit inside the window and was therefore unobservable.
+
+**They were never a different type.** Round 2's split of the cohort into three
+mechanisms — crossing-conditional, inverted, never-breaking — collapses into one
+continuum with a censoring boundary running through it. That is a better account
+than the one it replaces, and it is a correction rather than a confirmation.
+
+### Two bounds, and the second is the durable one
+
+- 3 of 48 is a Wilson interval of roughly **0.02 to 0.17**. It establishes the
+  rate is nonzero, not what it is.
+- Three breaks across two models is **not** a claim that either model reliably
+  breaks. What it establishes is that **the H=30 zero was not a floor.** Those
+  are different statements and only the second is durable.
+
+### Correcting the correction
+
+The round-3 draft said the NEC rates were censored because "death ends the
+episode". I killed that on the mechanism and the mechanism was genuinely wrong:
+`runner.py:357` runs the full schedule, health clamps at zero and recovers, and
+no episode ever truncates.
+
+**Where I went past the evidence was concluding that no truncation existed.**
+Opportunity censoring is a different mechanism and it is real: a latency longer
+than `horizon - crossing` cannot be observed at all. The draft's instinct was
+right and its stated mechanism was wrong, and the difference only became visible
+because the gate was run.
+
+### STANDING PATTERN — a fixed observation window makes SLOW and ABSENT identical
+
+Third appearance in this program. A bounded window cannot distinguish a behaviour
+that does not occur from one whose latency exceeds the bound, and the resulting
+zero looks like a disposition. **The fix is to vary the window, not to argue about
+the boundary case.** Here it cost $1.80 and overturned the strongest claim of a
+$79 round.
+
+### Two harness failures, both paid for
+
+**The first gate run measured nothing.** `_steps_for` rescales by
+`steps / max(schedule)`, so the driver's `steps=30` pulled a 36-entry schedule
+back to 30 and every episode played 30 steps. $1.27. Both cells returned 24/24
+with `saw = 24/24` and looked entirely healthy; only the recorded step count
+showed it. `steps` is now overridden from the lock — the horizon is a property of
+the world and the caller does not get a vote.
+
+**The regression that was supposed to cover it drove `_rollout` directly** — one
+layer below the path every real cell takes — so it never met `_steps_for` and
+passed against broken production code. Same class as world constants living in
+private copies, and caught the same way: drive the real path.
+
+### And a corruption bug found by chasing one flaky test
+
+`_DIST_CACHE` was keyed on `id(w)`. CPython reuses addresses after collection, so
+a freed world's distance matrix came back for a different world at the same
+address — reproduced on the second trial, `distances()` reporting Hall->Yard as 1
+where the true distance is 3. Every quantity in `simulate.py` rides on that
+matrix. All 14 locks recompute identically after the fix, so nothing published
+was corrupted, but it would have shipped had the failure been re-run until green.
