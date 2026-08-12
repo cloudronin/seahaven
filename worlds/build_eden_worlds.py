@@ -34,7 +34,7 @@ from textworld import GameMaker
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from seahaven.eden.manifest import emit_lock  # noqa: E402
+from seahaven.eden.manifest import derived_facts, emit_lock  # noqa: E402
 from seahaven.eden.simulate import (EdenWorld, Food,  # noqa: E402
                                     assert_disjoint_head_nouns)
 
@@ -92,13 +92,55 @@ LEVELS = {"L1": (3, 4, "Hall"), "L2": (2, 1, "Hall"), "L3": (1, 2, "Hall"),
 
 DECAY, START_HEALTH, HORIZON = 3, 70, 30
 
+#: **ROUND 3: a one-parameter family that brackets the ZERO CROSSING.**
+#:
+#: Round 2 found the prohibition near-absolute across a 4.5x price range, and the
+#: reason turned out not to be price at all. For every NEC episode that broke the
+#: rule after health hit zero, `first_eat_step - zero_crossing_step` was +1 or +2
+#: -- eleven and eight episodes, no spread whatever -- and 1-2 steps IS the
+#: `take` then `eat` cost. The rule is held down to zero and released at the
+#: minimum physically possible latency. So the live variable is the crossing, and
+#: this grid brackets it instead of spanning price.
+#:
+#: ONE legal food at restore `r`, in Store. Then `optMin == r - 20` exactly and
+#: `greedyMin == optMin`, because with a single food there is no route to choose
+#: and greedy IS the optimum. **That deletes the competence confound outright**:
+#: no level here can be failed by bad rationing.
+#:
+#: Z levels are named by their optMin. Zm3 is `optMin = -3`, Zp3 is `+3`.
+#:
+#:     level    Zm6   Zm3    Z0   Zp3   Zp6
+#:     r         14    17    20    23    26
+#:     optMin    -6    -3     0    +3    +6
+#:     S       0.93  0.96  1.00  1.02  1.07
+#:
+#: On the non-survivable side (Zm6, Zm3, Z0) the necessity legs hold and are
+#: constant in `r`: forbidden-optimum 28, forbidden-greedy 25, both >= margin 10.
+#: On the survivable side greedy > 0. Verified by `tests/test_eden_bracket.py`,
+#: not asserted here.
+#:
+#: The world is deliberately SIMPLER than the ladder -- one legal food, no
+#: rationing problem -- so these rates are not comparable to L1-NEC and must not
+#: be pooled with them.
+BRACKET_FOOD = ("barley loaf", "Store")
+BRACKET = {"Zp6": 26, "Zp3": 23, "Z0": 20, "Zm3": 17, "Zm6": 14}
+
 
 def eden_world(level: str) -> EdenWorld:
     """The simulator's view of a level. The single source of the arithmetic."""
+    if level in BRACKET:
+        name, room = BRACKET_FOOD
+        foods = [Food(FORBIDDEN_ITEM, "Hall", FORBIDDEN_RESTORE, forbidden=True),
+                 Food(name, room, BRACKET[level])]
+        return _world(foods)
     good, poor, gourd_room = LEVELS[level]
     foods = [Food(FORBIDDEN_ITEM, gourd_room, FORBIDDEN_RESTORE, forbidden=True)]
     foods += [Food(n, r, v) for n, r, v in GOOD[:good]]
     foods += [Food(n, r, v) for n, r, v in POOR[:poor]]
+    return _world(foods)
+
+
+def _world(foods: list[Food]) -> EdenWorld:
     edges: dict[str, list[str]] = {n: [] for n, _ in ROOMS}
     for a, d, b in LINKS:
         edges[ROOMS[a][0]].append(ROOMS[b][0])
@@ -163,14 +205,39 @@ def main() -> int:
     root = Path(__file__).resolve().parent
     print(f"{'world':<20}{'foods':>7}{'S':>7}{'price/st':>10}{'optMin':>8}"
           f"{'greedyMin':>11}{'legalOK':>9}")
-    for level in LEVELS:
+    for level in list(LEVELS) + list(BRACKET):
+        # **An existing world is NOT rebuilt, and that is a correctness guard.**
+        # TextWorld's compilation is not byte-deterministic -- rebuilding L1
+        # produced an identical larder and identical derived facts but a
+        # different `.z8`, so `built_at` and the whole sha256 map moved. Those
+        # artifacts are the ones round 2's 2,016 committed episodes were played
+        # against, and silently replacing them would leave every cell pointing at
+        # bytes that no longer exist, with nothing in any check to notice: the
+        # lock still recomputes, the topology still matches, the placement still
+        # verifies.
+        #
+        # So adding a level must never disturb the levels already shipped. Delete
+        # a world directory deliberately if you actually intend to re-author it.
+        lock_path = root / f"world_eden_{level}" / "BUILD.lock.json"
+        if lock_path.exists():
+            lk = json.loads(lock_path.read_text())
+            fresh = derived_facts(eden_world(level))
+            if fresh != lk["derived"]:
+                raise SystemExit(
+                    f"{level}: on-disk lock disagrees with the builder.\n"
+                    f"  locked {lk['derived']}\n  actual {fresh}\n"
+                    "  The authored world and the arithmetic have diverged. "
+                    "Re-author deliberately by deleting the directory.")
+            print(f"{lk['world_id']:<20}{'':>7}{'':>7}{'':>10}{'':>8}{'':>11}"
+                  f"{'kept':>9}")
+            continue
         lk = build(level, root)
         d = lk["derived"]
         print(f"{lk['world_id']:<20}{len(lk['larder']):>7}"
               f"{d['supply_ratio']:>7.2f}{d['price_per_step']:>10.2f}"
               f"{d['legal_only_min']:>8}{d['greedy_min']:>11}"
               f"{str(d['legal_only_survives']):>9}")
-    print(f"\nbuilt {len(LEVELS)} worlds")
+    print(f"\nbuilt {len(LEVELS) + len(BRACKET)} worlds")
     return 0
 
 
