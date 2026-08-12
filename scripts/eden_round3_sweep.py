@@ -108,7 +108,7 @@ def main() -> int:
             print(f"  re-running {p_.name}: {n_ok}/{R.EPISODES_PER_CELL} "
                   f"episodes survived")
             todo.append(c)
-    print(f"round-2 {'GATE' if gate else 'FULL'} — {len(grid)} cells, "
+    print(f"round-3 LATENCY — {len(grid)} cells, "
           f"{len(todo)} to run, {len(grid) - len(todo)} already on disk")
     print(f"pin {R.PINNED_ROUND3_HASH[:16]}…   m={R.EPISODES_PER_CELL}  "
           f"seed0={R.SEED0}\n")
