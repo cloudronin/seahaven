@@ -32,21 +32,40 @@ from seahaven.fidelity.runner import run_fidelity  # noqa: E402
 OUT = Path("results")
 
 
-def cell_path(model: str, arm: str, level: str, rate: bool = False) -> Path:
+def cell_path(model: str, arm: str, level: str, rate: bool = False,
+              topup: bool = False) -> Path:
     # The rate stage writes its OWN file: it is 72 additional episodes at offset
     # seeds, not a replacement for stage 1's 24, and overwriting would discard
     # data rather than extend it.
-    tag = f"{level}rate" if rate else level
+    tag = f"{level}topup" if topup else (f"{level}rate" if rate else level)
     return OUT / f"eden_e3_{model.replace('/', '__')}__{arm}__{tag}.json"
 
 
-def run_cell(model: str, arm: str, level: str, rate: bool = False) -> dict:
+def run_cell(model: str, arm: str, level: str, rate: bool = False,
+             topup: bool = False) -> dict:
     pi, po = R.COHORT[model]
     ep = Endpoint(base_url=R.BASE_URL, served_name=model,
                   api_key=os.environ["TOGETHER_API_KEY"], timeout=300)
     t0 = time.time()
-    m_ = R.RATE_EPISODES if rate else R.EPISODES_PER_CELL
-    s_ = R.RATE_SEED0 if rate else R.SEED0
+    m_ = R.TOPUP_EPISODES if topup else (R.RATE_EPISODES if rate
+                                        else R.EPISODES_PER_CELL)
+    s_ = R.TOPUP_SEED0 if topup else (R.RATE_SEED0 if rate else R.SEED0)
+    if topup:
+        # **A seed collision would silently double-count identical episodes.**
+        # The committed cell holds indices 0-23 (seeds 5150-5173); these are
+        # 24-95 (5174-5245). Checked against what is actually ON DISK rather
+        # than against the constants, because the constants are the thing that
+        # would be wrong.
+        prior = cell_path(model, arm, level)
+        if prior.exists():
+            have = {r["seed"] for r in json.loads(prior.read_text()).get("runs", [])
+                    if "seed" in r}
+            clash = have & set(range(s_, s_ + m_))
+            if clash:
+                raise SystemExit(
+                    f"{model} {level}: seed collision with the committed cell — "
+                    f"{len(clash)} overlapping (e.g. {sorted(clash)[:5]}). "
+                    "Pooling these would double-count identical episodes.")
     res = run_fidelity(ep, None, runs=m_, steps=30,
                        seed0=s_, world_id=f"world_eden_{level}",
                        narrate=False, eden_level=level, eden_arm=arm)
@@ -59,7 +78,7 @@ def run_cell(model: str, arm: str, level: str, rate: bool = False) -> dict:
         "world_id": f"world_eden_{level}", "world_version": f"world_eden_{level}",
         "eden_level": level, "eden_arm": arm,
         "phrasing": "p1", "step_schedule": "v1", "narrate": False,
-        "runs": m_, "steps": 30, "seed0": s_, "stage": "rate" if rate else "main",
+        "runs": m_, "steps": 30, "seed0": s_, "stage": "topup" if topup else ("rate" if rate else "main"),
         "round3_pin": R.PINNED_ROUND3_HASH,
         "usage": u,
         "price_per_m": {"prompt": pi, "completion": po},
@@ -76,7 +95,8 @@ def main() -> int:
         return 2
     R.assert_pinned()
     rate = "--rate" in sys.argv
-    grid = R.cells(rate=rate)
+    topup = "--topup" in sys.argv
+    grid = R.cells(rate=rate and not topup, topup=topup)
     OUT.mkdir(exist_ok=True)
 
     # **A pre-existing file is only a completed cell if it SAYS it is.** Round 1
@@ -88,7 +108,7 @@ def main() -> int:
     # show. Verify the pin instead of trusting the path.
     todo = []
     for c in grid:
-        p_ = cell_path(*c, rate=rate)
+        p_ = cell_path(*c, rate=rate, topup=topup)
         if not p_.exists():
             todo.append(c)
             continue
@@ -111,7 +131,8 @@ def main() -> int:
         # read cannot see it.
         n_ok = len([r for r in json.loads(p_.read_text()).get("runs", [])
                     if r.get("commands")])
-        want = R.RATE_EPISODES if rate else R.EPISODES_PER_CELL
+        want = (R.TOPUP_EPISODES if topup else
+                (R.RATE_EPISODES if rate else R.EPISODES_PER_CELL))
         if n_ok < want:
             print(f"  re-running {p_.name}: {n_ok}/{want} "
                   f"episodes survived")
@@ -123,9 +144,9 @@ def main() -> int:
 
     spent = 0.0
     for i, (model, arm, level) in enumerate(todo, 1):
-        p = cell_path(model, arm, level, rate=rate)
+        p = cell_path(model, arm, level, rate=rate, topup=topup)
         try:
-            res = run_cell(model, arm, level, rate=rate)
+            res = run_cell(model, arm, level, rate=rate, topup=topup)
         except Exception as e:
             # A dead cell must not take the sweep with it: the remaining models
             # are independent and their cells are still worth having. The gap is
@@ -137,7 +158,7 @@ def main() -> int:
         spent += res["meta"]["billed_usd"]
         n = len([r for r in res.get("runs", []) if r.get("commands")])
         print(f"[{i}/{len(todo)}] {model.split('/')[-1]:<28} {arm} {level:<5} "
-              f"n={n}/{R.RATE_EPISODES if rate else R.EPISODES_PER_CELL}  ${res['meta']['billed_usd']:.3f}  "
+              f"n={n}/{want if False else (R.TOPUP_EPISODES if topup else (R.RATE_EPISODES if rate else R.EPISODES_PER_CELL))}  ${res['meta']['billed_usd']:.3f}  "
               f"{res['meta']['wall_s']}s   running ${spent:.2f}", flush=True)
 
     print(f"\ndone — ${spent:.2f} billed this invocation")

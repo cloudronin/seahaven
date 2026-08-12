@@ -143,3 +143,68 @@ def test_round1_already_owns_the_eden_e2_prefix():
     assert r1, "round-1 E2 cells missing; this regression needs them"
     r2 = {cell_path(*c).name for c in R.cells()}
     assert not (r1 & r2), f"round-2 cell path collides with round 1: {r1 & r2}"
+
+
+# --------------------------------------------------------------------------
+# The round-3 top-up's licence: the pin moved, the generative path did not.
+# --------------------------------------------------------------------------
+
+def test_the_LAT_GENERATIVE_PATH_is_unchanged_since_the_original_cells():
+    """**A pin that moved is not the same as a world that moved.**
+
+    Round 3's LAT cells were played at `d50dc45`. Since then `simulate.py`,
+    `outcome.py` and `build_eden_worlds.py` have all changed, so round 3's pin
+    no longer matches what those cells recorded — and the top-up rule says stop
+    if a hashed file moved.
+
+    It moved. But `simulate.py` changed the arithmetic reported ABOUT a world,
+    not the world served: the runner reads `params` and `larder` from the lock
+    during a rollout and never calls `best_trajectory`. This asserts the things
+    a model actually experiences are byte-identical, which is what makes the new
+    72 episodes poolable with the committed 24.
+
+    If this ever fails, the top-up is genuinely not poolable and the rule bites.
+    """
+    import subprocess
+
+    root = Path(__file__).resolve().parents[1]
+    REF = "d50dc45"          # the commit the LAT cells were played at
+
+    old = json.loads(subprocess.run(
+        ["git", "show", f"{REF}:worlds/world_eden_LAT/BUILD.lock.json"],
+        cwd=root, capture_output=True, text=True).stdout)
+    new = json.loads((root / "worlds/world_eden_LAT/BUILD.lock.json").read_text())
+    assert old["params"] == new["params"], "the served world's parameters moved"
+    assert old["larder"] == new["larder"], "the larder moved"
+    assert old["sha256"] == new["sha256"], "the compiled .z8 moved"
+    assert old["derived"] != new["derived"], (
+        "derived is expected to have changed — if it has not, the optimum fix "
+        "did not land and this test is checking nothing")
+
+    # Every constant that reaches the served prompt.
+    src = subprocess.run(["git", "show", f"{REF}:seahaven/eden/outcome.py"],
+                         cwd=root, capture_output=True, text=True).stdout
+    cur = (root / "seahaven/eden/outcome.py").read_text()
+    import re
+    for name in ("PROHIBITION", "EDEN_GOAL", "EDEN_VOCAB", "EDEN_RESTRICTION",
+                 "EDEN_MAX_TOKENS"):
+        a = re.search(rf"^{name} = (.+)$", src, re.M)
+        b = re.search(rf"^{name} = (.+)$", cur, re.M)
+        assert a and b and a.group(1) == b.group(1), \
+            f"{name} changed; the served prompt is not what round 3 served"
+
+
+def test_the_LAT_corpus_already_pools_across_pins_and_that_is_recorded():
+    """gemma and Llama's n=96 — quoted throughout rounds 3 and 4 — pools two
+    pins. No hashed artifact moved between them, only `round3.py`'s own
+    constants, so it was substantively safe. It was never stated, and this is
+    where it is stated."""
+    import glob
+
+    root = Path(__file__).resolve().parents[1]
+    pins = set()
+    for f in glob.glob(str(root / "results" / "eden_e3_*LAT*.json")):
+        pins.add(json.loads(Path(f).read_text())["meta"]["round3_pin"])
+    assert len(pins) >= 2, (
+        "expected the LAT corpus to span more than one pin; if it no longer "
+        "does, this note is stale and should be removed rather than kept")

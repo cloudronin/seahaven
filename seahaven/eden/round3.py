@@ -148,11 +148,54 @@ RATE_MODELS = ("google/gemma-4-31B-it",
 RATE_EPISODES = 72
 RATE_SEED0 = SEED0 + 1000
 
-PINNED_ROUND3_HASH = "475ddc38fce5a8719b0a35677275f156579892adf4f8376b2c4c1cb3b7bff886"
+#: **STAGE 3 — TOP-UP, bringing the high group to n=96 at LAT.**
+#:
+#: The evidence base is inverted relative to where the uncertainty sits. Llama
+#: and gemma have 96 episodes because the rate stage bought them 72 more;
+#: cogito, nemotron, DeepSeek and GLM have 24. Any per-model reproduction test
+#: therefore detects a shift of +/-0.09 for Llama and +/-0.32 for GLM -- weakest
+#: exactly where a group-separation prediction is also weakest.
+#:
+#: This does NOT buy the separation, which is ~4.7 SD either way. It buys
+#: precision on the individual rates.
+#:
+#: **THE PIN GATE FIRED AND WAS OVERRIDDEN, DELIBERATELY.** The rule was: if a
+#: hashed artifact moved since the original cells, the top-up is not poolable.
+#: `simulate.py`, `outcome.py` and `build_eden_worlds.py` all moved. But
+#: `simulate.py` changed the arithmetic reported ABOUT a world, not the world
+#: served -- the runner reads `params` and `larder` from the lock during a
+#: rollout and never calls `best_trajectory`. Checked in code, not asserted in
+#: prose, by `test_the_LAT_GENERATIVE_PATH_is_unchanged_since_the_original_cells`:
+#:
+#:     lock params / larder / .z8 sha256              IDENTICAL
+#:     PROHIBITION, EDEN_GOAL, EDEN_VOCAB,
+#:     EDEN_RESTRICTION, EDEN_MAX_TOKENS              IDENTICAL
+#:
+#: So the new episodes are generatively byte-identical to the committed 24.
+#:
+#: **A1 only.** A0 is a precondition arm at 0.958-1.000 and its role does not
+#: change with n.
+#:
+#: **Indices CONTINUE rather than restart**: the committed cells are 0-23, these
+#: are 24-95 under the same SEED0, i.e. seeds 5174-5245. A collision would
+#: silently double-count identical episodes, so disjointness is asserted before
+#: writing. Note this differs from the RATE stage's construction, which used
+#: OFFSET seeds (6150+) -- both give 96 distinct episodes, by different means,
+#: and a later reader should not infer a uniform scheme.
+TOPUP_MODELS = ("deepcogito/cogito-v2-1-671b",
+                "nvidia/nemotron-3-ultra-550b-a55b",
+                "deepseek-ai/DeepSeek-V4-Pro",
+                "zai-org/GLM-5.2")
+TOPUP_EPISODES = 72
+TOPUP_SEED0 = SEED0 + 24
+
+PINNED_ROUND3_HASH = "5cda15238a1d5fa377409e7ee014587747927e7669b0c5eaef72b974d8b72888"
 
 
-def cells(*, rate: bool = False) -> list[tuple[str, str, str]]:
-    """(model, arm, level). 12 cells / 288 episodes, or the 2-cell rate stage."""
+def cells(*, rate: bool = False, topup: bool = False) -> list[tuple[str, str, str]]:
+    """(model, arm, level). The main grid, or the rate / top-up stages."""
+    if topup:
+        return [(m, "A1", LEVEL) for m in TOPUP_MODELS]
     if rate:
         return [(m, "A1", LEVEL) for m in RATE_MODELS]
     return [(m, a, LEVEL) for m in COHORT for a in ARMS]
@@ -170,6 +213,9 @@ def payload() -> str:
         "rate_models": RATE_MODELS,
         "rate_episodes": RATE_EPISODES,
         "rate_seed0": RATE_SEED0,
+        "topup_models": TOPUP_MODELS,
+        "topup_episodes": TOPUP_EPISODES,
+        "topup_seed0": TOPUP_SEED0,
         "retired_bracket_pin": RETIRED_BRACKET_PIN,
         "artifacts": {a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
                       for a in ARTIFACTS},
