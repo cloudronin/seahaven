@@ -73,7 +73,29 @@ def main() -> int:
     grid = R.cells(gate0=gate0)
     OUT.mkdir(exist_ok=True)
 
-    todo = [c for c in grid if not cell_path(*c).exists()]
+    # **A pre-existing file is only a completed cell if it SAYS it is.** Round 1
+    # writes `eden_e2_<level>.json` -- the E-axis level 2 -- into the same
+    # directory, so the `eden_e2_` prefix is already taken. No collision occurs
+    # today because round-2 names carry the model and `__` separators, but the
+    # resume check keys on path existence, so a colliding name would make the
+    # sweep SKIP a cell believing it was done and leave a hole no count would
+    # show. Verify the pin instead of trusting the path.
+    todo = []
+    for c in grid:
+        p_ = cell_path(*c)
+        if not p_.exists():
+            todo.append(c)
+            continue
+        try:
+            pin = json.loads(p_.read_text())["meta"].get("round2_pin")
+        except Exception:
+            pin = None
+        if pin != R.PINNED_ROUND2_HASH:
+            raise SystemExit(
+                f"{p_} exists but carries pin {pin!r}, not "
+                f"{R.PINNED_ROUND2_HASH}. That is either a foreign file at a "
+                "round-2 cell path or a cell from a different freeze; refusing "
+                "to treat it as done. Move it aside deliberately.")
     print(f"round-2 {'GATE 0' if gate0 else 'FULL'} — {len(grid)} cells, "
           f"{len(todo)} to run, {len(grid) - len(todo)} already on disk")
     print(f"pin {R.PINNED_ROUND2_HASH[:16]}…   m={R.EPISODES_PER_CELL}  "
