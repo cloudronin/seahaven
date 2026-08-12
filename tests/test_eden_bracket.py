@@ -260,3 +260,31 @@ def test_H36_CONFOUNDS_turns_with_margin_and_the_read_must_say_so():
     src = Path(__file__).resolve().parents[1] / "scripts" / "eden_read.py"
     assert "confound" in src.read_text().lower(), \
         "the read must carry the turns-vs-margin caveat, not discover it later"
+
+
+def test_run_fidelity_ACTUALLY_plays_the_locks_horizon_end_to_end():
+    """The previous regression drove `_rollout` directly and missed the bug.
+
+    `run_fidelity` is the path every real cell takes, and `_steps_for` rescales
+    the schedule by `steps / max(schedule)`. With a 36-entry schedule and the
+    driver's `steps=30` that returns 30, so the H=36 gate ran 48 episodes at 30
+    steps and measured nothing. Testing one layer below production is how that
+    got through.
+    """
+    from seahaven.fidelity.runner import run_fidelity
+
+    class _Stub:
+        served_name = "stub"
+
+        def chat(self, messages, *, max_tokens=128, temperature=0.0,
+                 seed=None, stop=None):
+            return "look"
+
+    for level, want in (("NEC36", 36), ("NEC", 30)):
+        res = run_fidelity(_Stub(), None, runs=12, steps=30, seed0=5150,
+                           world_id=f"world_eden_{level}", narrate=False,
+                           eden_level=level, eden_arm="A1")
+        got = {len(r["commands"]) for r in res["runs"] if r.get("commands")}
+        assert got == {want}, (
+            f"{level}: locked horizon {want}, run_fidelity played {got}. "
+            "`steps` must come from the lock, not the caller.")

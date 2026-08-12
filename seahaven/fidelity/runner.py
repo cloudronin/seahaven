@@ -581,7 +581,15 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                                            eden_system_prompt, level_state,
                                            load_level)
         _lock = load_level(world_id)
-        schedule = eden_schedule(runs, _lock["params"]["horizon"])
+        # **`steps` is OVERRIDDEN from the lock, not merely defaulted.**
+        # `_steps_for` RESCALES: it returns `schedule[i] * steps / max(schedule)`,
+        # so a 36-entry schedule with steps=30 comes back as 30 and the horizon
+        # silently does not take. That is exactly what happened to the first H=36
+        # gate -- 48 episodes bought, every one played at 30 steps, measuring
+        # nothing. The horizon is a property of the WORLD, so the caller does not
+        # get a vote.
+        steps = _lock["params"]["horizon"]
+        schedule = eden_schedule(runs, steps)
         eden = level_state(_lock)
         system_text = eden_system_prompt(spec, eden["forbidden"], arm=eden_arm)
     if e_level != "E0":
