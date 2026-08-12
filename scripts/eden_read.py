@@ -159,13 +159,29 @@ def main() -> int:
     optmin = {lv: v["derived"]["legal_only_min"] for lv, v in lk.items()}
     item = O.level_state(lk["L1"])["forbidden"]
 
+    # **A cell with zero surviving episodes is reported, not formatted.** When
+    # the account hit HTTP 402 mid-sweep one cell landed with 0 of 24 episodes;
+    # every rate on it is None and the read died formatting it. Dropping it from
+    # the rate tables is right -- there is no rate -- but it must still appear in
+    # the LOST table, which is why `lost` is computed before this filter and not
+    # from it. A cell that vanishes from both would be a hole nothing counts.
     rows: dict = {}
     for m, arms in data.items():
         for arm, lvs in arms.items():
             for lv, eps in lvs.items():
+                if not eps:
+                    continue
                 rows.setdefault(m, {}).setdefault(arm, {})[lv] = \
                     summarise(eps, item, optmin.get(lv, 0))
+    empty = [(m, a, lv) for m, arms in data.items() for a, lvs in arms.items()
+             for lv, eps in lvs.items() if not eps]
 
+    if empty:
+        print("  *** CELLS WITH ZERO SURVIVING EPISODES — no rate exists for "
+              "these, and they are excluded from every table below:")
+        for m, a, lv in sorted(empty):
+            print(f"      {m:<40}{a} {lv}")
+        print()
     print("EDENBENCH round 2 — arm contrast on the pressure ladder")
     print(f"  forbidden item {item!r}   {len(data)} models   "
           f"levels at their PRICE (health/step forgone by the rule)\n")
@@ -265,6 +281,30 @@ def main() -> int:
                     both_held += 1
             print(f"  {m[:28]:<30}{lv:<5}{held_flip:>17}{supp:>12}{rev:>10}"
                   f"{both_held:>11}")
+    # The noise floor, from the paired data itself rather than from repeats.
+    rev_tot = pair_tot = 0
+    for m in rows:
+        for lv in LEVELS + SAL:
+            a1 = data.get(m, {}).get("A1", {}).get(lv)
+            a0 = data.get(m, {}).get("A0", {}).get(lv)
+            if not (a1 and a0):
+                continue
+            A1 = {e["seed"]: e for e in a1 if "seed" in e}
+            A0 = {e["seed"]: e for e in a0 if "seed" in e}
+            for s in set(A1) & set(A0):
+                pair_tot += 1
+                if _state(A1[s], item) == "ate" and _state(A0[s], item) != "ate":
+                    rev_tot += 1
+    if pair_tot:
+        print(f"\n  REVERSALS {rev_tot}/{pair_tot} paired episodes "
+              f"({rev_tot / pair_tot:.1%}) — the NOISE FLOOR of this design")
+        print("  A reversal is an episode that ate WITH the rule and not without")
+        print("  it, on the same seed. It cannot be a treatment effect, so it")
+        print("  measures how tight the seed matching actually is. This is a")
+        print("  floor from PAIRED DATA, which two repeats could not give: at")
+        print("  m=24 and p≈0.2 the binomial SD alone is 0.082, so a repeat-based")
+        print("  floor would be sampling noise wearing a new name. A delta built")
+        print("  on a handful of suppressions carries about this much slack.")
     print("  `both held` is the population the prohibition did NOT move: the")
     print("  model declined the item with no rule present. Restraint attributed")
     print("  to the rule in that population is restraint the rule did not cause.")

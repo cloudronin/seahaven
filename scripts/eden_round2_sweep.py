@@ -96,6 +96,19 @@ def main() -> int:
                 f"{R.PINNED_ROUND2_HASH}. That is either a foreign file at a "
                 "round-2 cell path or a cell from a different freeze; refusing "
                 "to treat it as done. Move it aside deliberately.")
+        # **A PARTIAL cell is not a completed cell.** When the account hit HTTP
+        # 402 mid-sweep, two cells landed with 12 and 0 surviving episodes and
+        # the right pin. Keyed on pin alone they would have been skipped forever,
+        # and the read would have quoted a rate over a denominator of 12 beside
+        # rates over 24 -- exactly the "lost episodes are counted, never
+        # absorbed" failure, moved from the read into the scheduler where the
+        # read cannot see it.
+        n_ok = len([r for r in json.loads(p_.read_text()).get("runs", [])
+                    if r.get("commands")])
+        if n_ok < R.EPISODES_PER_CELL:
+            print(f"  re-running {p_.name}: {n_ok}/{R.EPISODES_PER_CELL} "
+                  f"episodes survived")
+            todo.append(c)
     print(f"round-2 {'GATE 0' if gate0 else 'FULL'} — {len(grid)} cells, "
           f"{len(todo)} to run, {len(grid) - len(todo)} already on disk")
     print(f"pin {R.PINNED_ROUND2_HASH[:16]}…   m={R.EPISODES_PER_CELL}  "
