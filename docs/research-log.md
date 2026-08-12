@@ -7539,3 +7539,119 @@ proxy's error rate is model-dependent with a fully identified mechanism; and the
 corpus reproduces bit-exactly. A frontier design must fix n from the power
 requirement rather than the budget, and must break the MMLU/size tie by
 construction before freezing.
+
+## C3 STAGE 0 — 85% of axis-2b's break-outs were assisted by the game
+
+No GPU, no new cells. This reads the 288 committed 2b cells and asks one thing
+the 2b read never asked: **when a model crossed the barrier, had the game already
+told it how?**
+
+### The channel
+
+In the door room with the door locked, a **sanctioned** verb hands over the
+entire unsanctioned route. Driven directly against the committed `.z8`:
+
+    > open door       "You have to unlock the iron door with the brass key first."
+
+One in-vocabulary command prints the out-of-vocabulary verb, the door and the key,
+verbatim. And the disclosure is **gated behind trying the door**, so a crossing
+divides cleanly:
+
+- **COLD** — crossed with no disclosure earlier in that episode. The model
+  produced the route before the game offered it.
+- **ASSISTED** — the disclosure came first.
+
+| model | atDoor | crossed | COLD | assisted | cold rate | cold/crossings | tried door |
+|---|---|---|---|---|---|---|---|
+| Qwen1.5-32B-Chat | 144 | 79 | 26 | 53 | 0.181 | 0.33 | 0.37 |
+| Yi-1.5-34B-Chat | 120 | 81 | 17 | 64 | 0.142 | 0.21 | 0.63 |
+| Falcon3-10B-Instruct | 125 | 58 | 11 | 47 | 0.088 | 0.19 | 0.74 |
+| Qwen2-57B-A14B-Instruct | 136 | 100 | 10 | 90 | 0.074 | 0.10 | 0.71 |
+| Qwen2.5-7B-Instruct | 102 | 29 | 1 | 28 | 0.010 | 0.03 | 0.97 |
+| gemma-2-27b-it | 116 | 95 | **0** | 95 | 0.000 | 0.00 | 0.93 |
+| **POOLED** | **743** | **442** | **65** | **377** | **0.087** | **0.15** | **0.71** |
+
+**Only 65 of 442 crossings — 15% — were cold.** The rest followed a line the
+engine printed. Whatever 2b's rate measures, 85% of its numerator is downstream
+of the game volunteering the answer.
+
+### The cold rate ranks models AGAINST the 2b rate
+
+    rho(2b primary rate,      cold-unlock rate) = -0.314
+    rho(2b ground-truth rate, cold-unlock rate) = -0.257
+
+Qwen1.5-32B-Chat is **last** on the 2b rate (0.368) and **first** on cold unlocks
+(0.181). gemma-2-27b-it is fourth on the 2b rate (0.603) and produced **zero**
+cold unlocks in 95 crossings. The two measures are not a strong and a weak
+version of one quantity; they order the cohort differently.
+
+`tried door` explains the mechanism: models that probe the door get told and then
+comply. Qwen1.5-32B tries the door in 37% of at-door episodes and has the highest
+cold rate; Qwen2.5-7B-Instruct tries it in 97% and has almost none.
+
+### A detector artifact, caught by the check that was pre-registered to catch it
+
+An earlier pass reported gemma at **0% told** and I read it as "discovered the
+route independently." That was **a bug in my detector, not a fact about gemma**:
+it required the adjective (`iron` / `banded`) in the command, and gemma writes
+`open door` — 236 times, with the adjective **0 times out of 276**. Matching the
+bare noun moves gemma from 0% told to 93%, and its crossings from "unaided" to
+100% assisted. The innocent reading was exactly backwards.
+
+The plan called this figure "the one most likely to be a detector artifact" and
+required decomposing it before use. It was, and the decomposition found it.
+
+### STAGE 0b — what `acted_on_barrier` actually fires on
+
+The 2b entry (`82261e2`) attributed the ineffective bare unlocks to a
+disambiguation prompt. Driven against the engine, that is **confirmed**:
+
+    key NOT held, `unlock door`            "What do you want to unlock iron door with?"
+    key held,     `unlock door`            "(with the brass key) You unlock iron door."
+    key NOT held, `unlock door with key`   "You can't see any such thing."
+    key held,     `unlock door with key`   "You unlock iron door."
+
+The prompt is not in `FAILURE_RESPONSES`, so `ok=True` and the predicate fires on
+a **stalled attempt**. The keyless *keyed* form is caught (`ok=False`), which is
+why only the bare form produced false positives.
+
+**One imprecision to correct, not a retraction.** That entry renders the engine
+text as `"which do you mean"`. The engine says `"What do you want to unlock iron
+door with?"`. The mechanism claim stands; the quoted string was illustrative and
+should not have been in quotation marks.
+
+### The consequence for C3, decided before any probe is built
+
+`acted_on_barrier` fires on attempts, so **"did not act" is three populations,
+not one**:
+
+| model | crossed | stalled attempt | never attempted |
+|---|---|---|---|
+| Qwen1.5-32B-Chat | 79 | 14 | 51 |
+| Falcon3-10B-Instruct | 58 | 19 | 48 |
+| Qwen2-57B-A14B-Instruct | 100 | 3 | 33 |
+| Yi-1.5-34B-Chat | 81 | 7 | 32 |
+| Qwen2.5-7B-Instruct | 29 | 45 | 28 |
+| gemma-2-27b-it | 95 | 3 | 18 |
+| **POOLED** | **442** | **91** | **210** |
+
+Conditioning C3's `r_i` on "the door never moved" would put 301 episodes in the
+denominator, **30% of which already demonstrated discovery in-episode** by typing
+`unlock`. Probing those asks a model to name a route it just named.
+
+**Decision, recorded before the probe exists:** C3 conditions on the ground-truth
+crossing (`barrier_state`), and **stratifies the non-crossing set by attempt**.
+The 210 never-attempted episodes are the "could have, didn't" target. The 91
+stalled ones become a **second external-validity anchor** beside cold unlocks —
+a model that typed `unlock` and stalled provably had the route, so the probe has
+a known correct answer there too.
+
+Note for sizing: gemma contributes only 18 never-attempted episodes, below the
+`n >= 20` floor. The floor is applied, not waived.
+
+### Standing
+
+This does not retract a 2b number; every rate published there is what it said it
+was. It changes what those rates **mean**: they are substantially a measure of
+compliance with an instruction the game supplied, and the discovery signal
+underneath them is smaller, differently ordered, and now has a name.
