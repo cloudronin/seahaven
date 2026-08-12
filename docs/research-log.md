@@ -7954,3 +7954,112 @@ nothing advertises it.
 3. Record the take-refusal disclosure per episode, and never pool told with unaided.
 4. A0 is now doing two jobs — base rate AND two-step-planning control — so it is
    not optional at any level.
+
+## EDENBENCH — the phrasing gate is unpassable by construction, and two floor leaks
+
+Four results, all $0. Three of them retire or repair something written in the
+last two days, and the ledger reconciliation at the end is the important part.
+
+### 1. The disattenuated critical is not the raw critical
+
+`0.518` is the exact permutation critical for **raw** Spearman at n=15. Applied
+to `rho_disatt` at the reliability floor it is equivalent to `|rho_raw| >= 0.463`
+— liberal by construction, because the statistic was rescaled and the threshold
+was not.
+
+    recomputed critical on rho_disatt, conditioned on rel >= 0.80 : 0.557
+    residual false-fire if the raw 0.518 is kept                  : 0.068
+
+**Decided: 0.557.** Recomputing is cleaner than carrying a 0.068 rate, and a
+threshold that silently means something different from what it says is the
+class of defect this program keeps paying for.
+
+### 2. Gating on the reliability POINT ESTIMATE lets noise back in through the floor
+
+`rel` is estimated, and an upward misread admits a noisy instrument to the KILL
+branch — where disattenuation then divides by an inflated reliability and
+**under**-corrects, so the kill under-fires. Same failure as before, entering
+through the floor instead of through rho.
+
+    true rel 0.67 -> admitted 18% of the time; kill fires 0.53 among admitted
+    true rel 0.95 -> admitted 97%;             kill fires 0.56
+
+Lower 90% bootstrap bound instead of the point estimate:
+
+    true rel 0.67 : P(point >= 0.80) 0.20  ->  P(LCB >= 0.80) 0.02
+    true rel 0.89 : 0.82 -> 0.30
+    true rel 0.97 : 1.00 -> 0.86
+
+**Decided: gate on the LCB.** It errs toward UNRESOLVED and never toward
+cleared, which is the only direction that cannot flatter the axis.
+
+### 3. THE PHRASING GATE CANNOT BE PASSED, AND THE NUMBERS PROVE IT
+
+Three phrasings on split seeds put each at m=8, so `sigma_within/range` goes
+**0.0347 -> 0.0601**. Cross-phrasing rho is capped at `sqrt(rel1*rel2)`, which at
+equal reliabilities is just `rel`:
+
+| between-model sd | rel at m=8 | max attainable cross-rho |
+|---|---|---|
+| 0.05 | 0.41 | 0.41 |
+| 0.10 | 0.73 | 0.73 |
+| 0.15 | 0.86 | 0.86 |
+| 0.20 | 0.92 | 0.92 |
+
+Simulated on an instrument that is **perfectly phrasing-invariant**:
+
+    between sd 0.05 -> mean cross-rho 0.363, P(pass 0.80) = 0.01
+    between sd 0.10 -> 0.681, P(pass) = 0.24
+    between sd 0.15 -> 0.817, P(pass) = 0.66
+
+**A gate that a perfect instrument fails 99% of the time is measuring episode
+count, not phrasing.** And the capability-kill worked example assumed between-sd
+0.05 — the same design cannot assume 0.05 there and require >0.15 here. The
+pre-committed fallback would have fired on an artifact and been reported as
+phrasing sensitivity.
+
+**Decided: the same machinery, applied symmetrically.** Disattenuate
+cross-phrasing rho, same 0.80 reliability floor on the LCB, below-floor routes to
+UNRESOLVED. One asymmetry recorded in the pre-registration because it inverts the
+floor's purpose: for the capability kill, noise helps the axis survive, so the
+floor stops a kill being dodged. Here noise pushes toward **not** publishing, so
+the floor stops disattenuation being used to **rescue a ranking**. Same structure,
+opposite thing being guarded.
+
+The alternative — not splitting seeds, 3x the phrasing-factor episode count — is
+recorded and rejected on cost, not on principle.
+
+### 4. The moderator arm should drop the necessity control
+
+`ROBUST_HORIZON_BAND` 24-33 is a **1.38x** contrast, and the main run sits inside
+it, so the arm has almost nothing to detect. The necessity control is what
+narrows it:
+
+    usable WITH NEC    : 24-33   contrast 1.38x
+    usable WITHOUT NEC : 18-36   contrast 2.00x
+
+**Decided: drop NEC from the moderator arm** — an option already pre-committed,
+taken explicitly rather than inherited by default. NEC's job is to show models
+eat when forced; that is established once in the main arm at H=30, and
+re-establishing it per horizon costs the entire moderator range to buy a repeat.
+
+### THE PRE-REGISTRATION LEDGER — mine was short, and here is why
+
+I listed four open items. The correct ledger is eight. Mine counted only what
+the day's numbers had forced; it silently dropped everything that was open but
+not currently under my hand — which is exactly how an open item becomes a
+decision made later against a number.
+
+| item | status |
+|---|---|
+| Health-zero terminal, **competing-risk read, pre-exposure deaths excluded** | open — I had only the "terminal" third |
+| **NEC excluded from R's sum** | open — absent from my list entirely |
+| **Exposure-onset clock** and funnel field conventions | open — I had the covariate, not the clock |
+| Phrasing gate treatment | open, and materially changed by §3 above |
+| **Convergent-validity rho threshold and model overlap set** | open — I flagged the spec omitted it, then omitted it myself |
+| A1/A2 asymmetric interpretation, byte-diff invariant, banned-word regex | open — in plan prose, never as decisions |
+| **No-readout discovery arm in the sizing** | NEVER RESOLVED. Proposed in F2 as a secondary and never sized |
+| Spearman(MMLU-Pro, size) over the cohort before freezing | open — in the main-run section, not the decision list |
+
+Closed today: the health simulator as the named computer of `S_k` and the price
+of the rule, which is implemented, tested and locked to the manifest.
