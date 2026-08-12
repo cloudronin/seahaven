@@ -7,7 +7,7 @@ looks trustworthy. So P4 leads the output.
 
     P1  marginal equivalence   every phrasing pair within +/- 0.10 (90% CI)
     P2  item agreement         worst cross-phrasing kappa vs the retest ceiling
-    P3  informative envelope   spread <= p95(self-split) AND p95 <= 0.10
+    P3  informative envelope   spread <= p95(paired-label null) AND p95 <= 0.10
     P4  external validity      probe rate vs the Stage-0 cold-unlock anchor
 
 ---
@@ -34,7 +34,6 @@ import itertools
 import json
 import math
 import random
-import statistics as st
 import sys
 from pathlib import Path
 
@@ -100,20 +99,33 @@ def kappa(a: list[bool], b: list[bool]) -> float:
     return 1.0 if exp == 1 else (obs - exp) / (1 - exp)
 
 
-def self_split_null(flags: list[bool], p: int, rng) -> list[float]:
-    """Range of p random cells drawn from ONE phrasing's own episodes.
+def paired_label_null(pairs, rng, B: int = 2000) -> list[float]:
+    """Max-min of the cell rates when phrasing labels are shuffled WITHIN episode.
 
-    The envelope a cross-phrasing spread has to beat. Reused in spirit from
-    `smoke_state_conditioned.self_split_null`; the statistic here is the rate
-    range rather than a distribution distance.
+    **The cells are paired, and the null has to be too.** The first version of
+    this partitioned a model's episodes into disjoint cells of n/4 — the right
+    null for four INDEPENDENT samples, and the wrong one here: every phrasing is
+    asked of every episode, so each cell has all n, not n/4. That null was up to
+    three times too wide (p95 0.306 against a 0.10 margin), which inverts the leg
+    entirely: the first clause then passes trivially and the second can never be
+    met, so an underpowered run reads as a broken instrument.
+
+    Under the null of no phrasing effect the labels are exchangeable within an
+    episode, so permuting them there is exact rather than approximate. It also
+    degenerates correctly: if the cells agree episode by episode, the permutation
+    changes nothing and the null collapses to zero, which is the honest statement
+    that there was no room for chance variation.
     """
-    n, out = len(flags), []
-    size = n // p
-    for _ in range(2000):
-        s = flags[:]
-        rng.shuffle(s)
-        cells = [s[k * size:(k + 1) * size] for k in range(p)]
-        rates = [sum(c) / len(c) for c in cells if c]
+    n, p = len(pairs), len(pairs[0])
+    out = []
+    for _ in range(B):
+        tot = [0] * p
+        for row in pairs:
+            s = list(row)
+            rng.shuffle(s)
+            for k in range(p):
+                tot[k] += s[k]
+        rates = [t / n for t in tot]
         out.append(max(rates) - min(rates))
     out.sort()
     return out
@@ -183,16 +195,36 @@ def main() -> int:
 
     # ---- P1 ----
     print("\nP1  MARGINAL EQUIVALENCE — every phrasing pair within +/- 0.10")
+    # A bare CI makes a failure ambiguous between two opposite diagnoses:
+    #   SHIFTED  the phrasings really do disagree      -> the instrument failed
+    #   WIDE     the interval is too wide to certify   -> not enough episodes
+    # The first is a redesign, the second is a bigger sweep, so the reader has to
+    # say which. Half-width alone decides it: if it already exceeds the margin,
+    # the run could not have passed no matter where the centre sat.
     p1 = True
+    wide_only = True
     for m, p in sorted(prof.items()):
         for i, j in itertools.combinations(range(len(CELLS)), 2):
             lo, hi = _boot_diff(p["pairs"], i, j, rng)
             ok = -0.10 <= lo and hi <= 0.10
             p1 &= ok
             if not ok:
-                print(f"  FAIL {m:<30}{CELLS[i]}({i}) vs {CELLS[j]}({j})  "
-                      f"90% CI [{lo:+.3f}, {hi:+.3f}]")
+                mid, half = (lo + hi) / 2, (hi - lo) / 2
+                why = "WIDE " if half > 0.10 else "SHIFT"
+                if why == "SHIFT":
+                    wide_only = False
+                print(f"  FAIL[{why}] {m:<28}{CELLS[i]}({i}) vs {CELLS[j]}({j})  "
+                      f"centre {mid:+.3f}  half-width {half:.3f}")
     print(f"  {'PASS' if p1 else 'FAIL'}")
+    if not p1:
+        print("  " + ("EVERY failure is WIDE: the phrasings are not shown to "
+                      "differ, the run\n  simply cannot certify they agree. That "
+                      "is an episode-count problem, not\n  an instrument one — "
+                      "more episodes, same probe."
+                      if wide_only else
+                      "At least one failure is SHIFTED: the phrasings genuinely "
+                      "disagree, and\n  more episodes will not fix it. That is "
+                      "the instrument failing."))
 
     # ---- P2 ----
     print("\nP2  ITEM AGREEMENT — worst cross-phrasing kappa vs the retest ceiling")
@@ -214,7 +246,7 @@ def main() -> int:
     p3 = True
     for m, p in sorted(prof.items()):
         spread = max(p["rates"]) - min(p["rates"])
-        null = self_split_null([q[0] for q in p["pairs"]], len(CELLS), rng)
+        null = paired_label_null(p["pairs"], rng)
         p95 = null[int(len(null) * 0.95)]
         ok = spread <= p95 and p95 <= C.GATE["P3_envelope_max"]
         p3 &= ok
