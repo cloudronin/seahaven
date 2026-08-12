@@ -42,6 +42,17 @@ def cells() -> tuple[dict, dict]:
     episodes while looking like 12. gemma-2-9b-it lost 11 of 72 on this run to
     `endpoint returned empty content`, which is 15% of the model showing the most
     distinctive behaviour.
+
+    **It is gemma, not the stack.** The failures clustered inside a 6-second
+    window, which looked like a transient server event -- but every other model
+    lost 0 of 72, and gemma's six cells run CONCURRENTLY, so its whole run
+    occupies one short window and any failures inside it cluster by construction.
+    The clustering carried no information at all.
+
+    The consequence is a live caveat rather than a settled one: the loss may be
+    state-dependent, and `failed_runs` records the stage but not the step, so
+    this corpus cannot say where in an episode gemma went empty. Its rates are
+    over a denominator that is 15% short and possibly not missing-at-random.
     """
     out: dict[str, dict[str, list[dict]]] = {}
     lost: dict[str, dict[str, int]] = {}
