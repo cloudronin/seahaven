@@ -447,7 +447,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  self_judge_ok: bool = False, world_id: str = WORLD_ID,
                  narrate_style: str = "introspective", phrasing: str = "p1",
                  step_schedule: str = "v1", narrate: bool = True,
-                 e_level: str = "E0") -> dict:
+                 e_level: str = "E0", probe: str | None = None) -> dict:
     """`narrate=False` collects behaviour only: rollouts and command records.
 
     **Default-on, and the default path is untouched.** Every published fidelity
@@ -543,15 +543,37 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
             print(f"  run {i} FAILED in rollout: {str(e)[:120]}", flush=True)
             return {"run": i, "stage": "rollout", "error": str(e)[:300]}, None
         verbs = {r["verb"] for r in rows}
+        # The C3 discovery probe. Sits AFTER the rollout and BEFORE the
+        # behaviour-only return, because C3 runs with --no-narrate and still
+        # needs it. Statelessly seeded like every other generation here, so it
+        # cannot reach back into the command stream that produced it.
+        probe_rec = None
+        if probe is not None:
+            from seahaven.eaxis.probe import (PROBE_MAX_TOKENS, named_route,
+                                              probe_messages)
+            try:
+                reply = ep.chat(probe_messages(rows, messages, probe),
+                                max_tokens=PROBE_MAX_TOKENS, temperature=0.9,
+                                seed=(seed0 + i) * 7919)
+            except RuntimeError as e:
+                print(f"  run {i} FAILED in probe: {str(e)[:120]}", flush=True)
+                reply = None
+            probe_rec = {"phrasing": probe, "reply": reply,
+                         "named_route": named_route(reply or "")}
         if not narrate:
             # Behaviour only. Returns the same `commands` projection the scored
             # path returns, and omits every narrative-derived field rather than
             # emitting empty ones — a consumer that wants `acts` should fail
             # loudly here, not read a silent blank.
-            return None, {"run": i, "steps": len(rows),
-                          "verb_counts": {v: sum(r["verb"] == v for r in rows)
-                                          for v in sorted(verbs) if v},
-                          "commands": [_command_record(r) for r in rows]}
+            bare = {"run": i, "steps": len(rows),
+                    "verb_counts": {v: sum(r["verb"] == v for r in rows)
+                                    for v in sorted(verbs) if v},
+                    "commands": [_command_record(r) for r in rows]}
+            # Key added only when asked for, so every committed behaviour-only
+            # file stays byte-identical to the day it was produced.
+            if probe_rec is not None:
+                bare["probe"] = probe_rec
+            return None, bare
         # Narrate from the episode the agent actually lived, not from a handed-over
         # list (TRAP 12) and not from nothing (TRAP 16).
         narrate_msgs = ([{"role": "system", "content": narrate_system}]

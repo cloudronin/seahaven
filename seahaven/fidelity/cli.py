@@ -80,7 +80,7 @@ def _eval(args: argparse.Namespace) -> int:
                           phrasing=args.phrasing,
                           step_schedule=args.step_schedule,
                           narrate=not args.no_narrate,
-                          e_level=args.e_level)
+                          e_level=args.e_level, probe=args.probe)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
@@ -102,6 +102,10 @@ def _eval(args: argparse.Namespace) -> int:
     # every committed pre-E-axis result file stays byte-identical.
     if args.e_level != "E0":
         result["meta"]["e_level"] = args.e_level
+    # Same discipline again: the probe phrasing is part of what a rate means,
+    # so it is recorded whenever it ran and absent whenever it did not.
+    if args.probe is not None:
+        result["meta"]["probe"] = args.probe
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -212,6 +216,14 @@ def main(argv: list[str] | None = None) -> int:
                         "keep command records. Narration costs 220 tokens per "
                         "episode and runs to the cap on EOS-undisciplined base "
                         "checkpoints; nothing that reads commands needs it.")
+    e.add_argument("--probe", default=None,
+                   choices=("minimal", "neutral", "direct"),
+                   help="C3 discovery probe: after the episode, ask the model "
+                        "for one command and score it with the SAME predicate "
+                        "as a real action. Ordered by how much each phrasing "
+                        "gives away; none names the barrier verb or the key. "
+                        "Off by default, and the record key appears only when "
+                        "set, so committed files stay byte-identical.")
     e.add_argument("--narrate-style", default="introspective",
                    choices=("introspective", "factual", "retrospective"),
                    help="V3 varies this and holds the world and protocol fixed")
