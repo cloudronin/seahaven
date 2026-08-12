@@ -74,8 +74,18 @@ def cells() -> tuple[dict, dict]:
     """
     out: dict = {}
     lost: dict = {}
-    for f in sorted(glob.glob("results/eden_e*_*.json")):
+    for f in sorted(glob.glob("results/eden_e*.json")):
         d = json.loads(Path(f).read_text())
+        # **Round 2 only, selected on RECORDED IDENTITY not on the filename.**
+        # The round-1 corpus is 36 cells named `eden_e0_<level>.json` and matches
+        # any reasonable glob over this directory. Pooling the two would merge a
+        # self-served 3-10B cohort at a 16-token cap with a hosted frontier
+        # cohort at 2048, across different worlds -- and the merged table would
+        # look completely normal. Axis 2b was bitten by exactly this class of bug
+        # (cells attributed by filename index after a model was dropped), and the
+        # fix there was the same: match on what the artifact says it is.
+        if not d.get("meta", {}).get("round2_pin"):
+            continue
         m = d["meta"]["served_name"]
         lv = d["meta"].get("eden_level") or d["meta"]["world_id"].split("_")[-1]
         arm = d["meta"].get("eden_arm", "A1")
