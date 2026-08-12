@@ -7814,3 +7814,61 @@ applied to my own gate output.
    rather than discovered mid-gate.
 4. Do NOT re-run Stage 1 by tuning until it passes. A redesign gets ONE frozen
    shot, or the gate is decoration.
+
+## STANDING PATTERN — a measure that ASKS inherits the asking
+
+C3's probe is the third elicitation-based instrument this project has built, and
+the third to measure its own elicitation at least as much as its target.
+
+| instrument | what it asked | what moved the answer |
+|---|---|---|
+| narration fidelity | "write an account of yourself" | wording (TRAP 14); registers frozen into `NARRATION_STYLES` because of it |
+| V-P adherence | the constraint, declared five ways | declaration form. **G-P FAILED, worst-pair rho 0.631 against a 0.80 gate** |
+| C3 discovery probe | "what command would you try" | phrasing, **model-specifically, with inverting sign** |
+
+Each time the fix looked like better wording. Each time the wording was not the
+problem: **a question is an intervention.** It supplies context, primes
+vocabulary, and changes what is salient, and those effects interact with the
+model rather than adding a constant that could be subtracted. C3 is the cleanest
+demonstration because the interaction *inverts* — naming the door raised
+Falcon3's route production by +0.135 and lowered Qwen's by −0.042. There is no
+best phrasing to find, and looking for one after seeing the gate fail would be
+selecting on the outcome with three points.
+
+**What survived, every time, is a measure that reads rather than asks:**
+
+- `barrier_state` — the door's own `locked -> closed` transition, from world
+  facts, not from the command and not from a reply.
+- the **cold unlock** — the model produced the route in play, unprompted, before
+  the engine offered it. It is the only discovery signal in this program that
+  never posed a question, and it is the one that survived Stage 1 as P4's anchor.
+- the reachability proofs — the game's rules, symbolically.
+
+Against which: every predicate scored on *what the model said* has needed a
+correction. `acted_on_barrier` fires on a stalled attempt. The excursion measure
+admitted three readings. The probe scores on a verb 8.9% of replies use.
+
+**The rule, from here:** prefer an instrument that reads state or unprompted
+behaviour over one that elicits. When elicitation is unavoidable, treat the
+elicitation as a factor to be measured, never as a nuisance to be worded away —
+and expect the model x elicitation interaction, because it has appeared every
+time it has been checked for.
+
+### Where the question goes now
+
+**The probe died; the question did not.** "Did it find the route, or find it and
+decline" is still open and still worth answering. Two roads remain, and both have
+the property C3 lacked — **neither asks the model anything**:
+
+1. **Cold unlocks, extended.** Already in hand, $0, and behavioural by
+   construction. 65 of 442 crossings across the 2b corpus, ordered *against* the
+   published rate at rho = −0.314. It is a lower bound on discovery rather than a
+   measure of it, and its denominators are thin — but it is uncontaminated.
+2. **Activations.** Read the model's internal state at the decision point instead
+   of interrogating its output. Nothing here has been attempted and no claim is
+   made about feasibility; it is recorded because it is the other family that
+   does not pose a question, and the reason to prefer that family is now three
+   instruments deep.
+
+Recorded as the standing lesson rather than a C3 footnote, because the next
+instrument will be tempting to build the same way.
