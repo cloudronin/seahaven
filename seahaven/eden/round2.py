@@ -49,6 +49,35 @@ ARTIFACTS = (
     "worlds/build_eden_worlds.py",
 )
 
+#: **RETIRED PIN — the artifact hashes as they stood when round 2 ran**, taken
+#: from git at `db5f508`, the commit that set `PINNED_ROUND2_HASH`.
+#:
+#: The pin was live while round 2 was running, and its job was to refuse a sweep
+#: against constants that had moved. Round 2 is complete, committed and pushed;
+#: round 3 legitimately edits four of these six files. Recomputing from the
+#: working tree would therefore fail forever, and "delete the check" and "re-pin
+#: to today's files" are both wrong — the first loses the record, the second
+#: silently relabels 84 cells as belonging to a freeze they never ran under.
+#:
+#: So the hashes are frozen here as literal data. `current_hash()` still
+#: reproduces `PINNED_ROUND2_HASH` exactly, permanently, and every committed cell
+#: still verifies against it. What is given up is the "the files have not moved"
+#: property, which is only meaningful while a round is in flight.
+FROZEN_ARTIFACT_SHA256 = {
+    "docs/edenbench-spec.md":
+        "27b79a6666f4d8b902f3fa01a6babacbc6b0173a2cd2a695816128aea6cf7e78",
+    "docs/eden-round2-hosted.md":
+        "d36beb6b507b9a3934c1451fe6c94b2aeb7e612de6e749981393db5f9b4f68d2",
+    "seahaven/eden/simulate.py":
+        "489a37394a50cedda51c1280860ecca4df994f8d4948eb13b8b4b0b0407b3cca",
+    "seahaven/eden/outcome.py":
+        "0d57d5646f25886de4ff8e7436d9c8e0d56e0bcc7bfc6ce76e25f9219fcf4d3f",
+    "seahaven/eden/manifest.py":
+        "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
+    "worlds/build_eden_worlds.py":
+        "c2a7201cffe391a400b0a222a9ffefa414aec463e91dc4d83b697037d2a10ba3",
+}
+
 #: The provider. Recorded because round 2 is a SEPARATE SEALED EXPERIMENT and
 #: nothing it produces may be pooled with the 2,285 self-served cells --
 #: `axis2-prereg-amendment-two-tier-kp4.md:153-156` is the sanctioning route and
@@ -113,8 +142,9 @@ def payload() -> str:
         "episodes_per_cell": EPISODES_PER_CELL,
         "seed0": SEED0,
         "gate0_level": GATE0_LEVEL,
-        "artifacts": {a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
-                      for a in ARTIFACTS},
+        # Frozen literals, not a re-read of the working tree. See
+        # FROZEN_ARTIFACT_SHA256 for why.
+        "artifacts": {a: FROZEN_ARTIFACT_SHA256[a] for a in ARTIFACTS},
     }
     return json.dumps(body, sort_keys=True, separators=(",", ":"))
 
@@ -127,6 +157,9 @@ def assert_pinned() -> None:
     """Refuse to run against a moved pin. The failure mode this closes is a
     constant edited after the numbers came in, which no test would otherwise
     catch because the numbers would still recompute from the edited constant."""
+    missing = [a for a in ARTIFACTS if a not in FROZEN_ARTIFACT_SHA256]
+    if missing:
+        raise SystemExit(f"artifacts with no frozen hash: {missing}")
     if not PINNED_ROUND2_HASH:
         raise SystemExit(
             "round-2 pin is EMPTY. Compute it with `current_hash()`, paste it "

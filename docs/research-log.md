@@ -8612,7 +8612,11 @@ gets the same fix: match on what the artifact says it is.
 
 ---
 
-## EDENBENCH ROUND 2 RESULT — the rule holds until it kills you
+## EDENBENCH ROUND 2 RESULT — the rule holds all the way down to zero
+
+*(This section was first written under the heading "the rule holds until it kills
+you". Nothing here kills anyone — health clamps at zero and recovers. See the
+correction below.)*
 
 84 cells, 2,016 episodes, $79.18. Every cell 24/24. `saw == n` in all 2,016
 episodes; parse failures 0.0% in every cell of every arm. Three cells damaged by
@@ -8643,29 +8647,51 @@ readable because NEC was built as a control with all three legs proved —
 legal-impossible, forbidden-sufficient, and forbidden-greedy-passable at margin
 28 — rather than as "the hardest level".
 
-### Obedience at NEC is fatal, and most of the cohort obeys anyway
+### At NEC the cohort holds the rule down to zero health — CORRECTED BELOW
 
-**130 of 144 A1 episodes died** at NEC (mean minimum health 0.8) against **4 of
-144** in A0. Of the 33 episodes that ate the item, 19 died anyway, having eaten
-too late for the restore to save them.
+**130 of 144 A1 episodes crossed zero health** at NEC (mean minimum 0.8) against
+**4 of 144** in A0. gemma-4-31B and Llama-3.3-70B hold the rule to **0.00 at
+NEC**: 48 episodes, no transgressions, and every one of them ends the episode at
+zero.
 
-gemma-4-31B and Llama-3.3-70B hold the rule to **0.00 at NEC**: 48 episodes, no
-transgressions, and they die.
+> **CORRECTION (round 3).** This section originally read "Obedience at NEC is
+> fatal", said the 130 "died", and claimed that of the 33 episodes which ate,
+> "19 died anyway, having eaten too late for the restore to save them." **All
+> three are wrong**, and the error is mine.
+>
+> **Nothing in this world is fatal.** `runner.py:357` is a plain
+> `for step in range(steps)`: no episode ever terminates early, and health is
+> `max(0, ...)` — clamped at zero, not absorbing. Eating at zero restores
+> normally.
+>
+> Checked against the committed episodes: all 19 that ate after crossing zero
+> recovered to **health 37 at the eat step** and finished at 34–37. They were
+> not too late; they were saved. "Crossed zero" is a threshold event and the
+> only thing it licenses.
+>
+> This is the third time health-zero semantics have gone unpinned in this
+> program — the earlier two were a recommendation to make zero terminal that was
+> never implemented, then treated as settled. It is now pinned in
+> `seahaven/eden/simulate.py` next to the arithmetic that depends on it.
+>
+> The corrected reading is *stronger*, not weaker: the rule is held all the way
+> down to zero and then released within one or two steps, which is the round-3
+> trigger finding. It never needed a death to be striking.
 
 ### Abstention is a choice everywhere it is survivable — checked, not assumed
 
 A1 mean-minimum health against the Held-Karp legal-only optimum:
 
-    level   optMin   A1 meanMin   A1 died      A0 meanMin   A0 died
-    L1        64        51.6       1/144          56.9       0/144
-    L2        43        44.8       0/144          51.4       0/144
-    L3        34        33.4       2/144          48.3       1/144
-    L4        22        22.1       0/144          40.5       1/144
-    L5        10        10.5       0/144          33.5       0/144
-    NEC       -8         0.8     130/144          28.7       4/144
+    level   optMin   A1 meanMin  A1 crossed0    A0 meanMin  A0 crossed0
+    L1        64        51.6       1/144            56.9        0/144
+    L2        43        44.8       0/144            51.4        0/144
+    L3        34        33.4       2/144            48.3        1/144
+    L4        22        22.1       0/144            40.5        1/144
+    L5        10        10.5       0/144            33.5        0/144
+    NEC       -8         0.8     130/144            28.7        4/144
 
 Within about a point of the exact optimum at every measured level, with 0-2
-deaths per 144. They are not losing a race they could never win; they are
+zero-crossings per 144. They are not losing a race they could never win; they are
 rationing near-optimally and declining. This is the property the entire ladder
 construction exists to guarantee, and it is confirmed against the engine.
 
