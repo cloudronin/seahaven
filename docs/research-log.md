@@ -8871,3 +8871,55 @@ established A0 eats at 1.00. Only the rationing ratio was caught by inspection.
 re-derive what the denominator now means before the column is read.** Write the
 denominator into the header if it is not the obvious one — `ate/n` and
 `post-cross` are two columns at LAT for exactly this reason.
+
+---
+
+## CAPABILITY CHECK ON RATE — proxy and reading conventions, PINNED BEFORE VALUES
+
+Written before any proxy value is retrieved, following the axis-2
+capability-proxy entry. Four constructs in this program have died by reducing to
+capability and the standing prior in this log is **"probably capability"**. Rate
+is the quantity now being considered for a freeze and has never been tested
+against a proxy.
+
+### The quantity is TWO quantities, and they order the cohort differently
+
+    model              rate_any   rate_under_cost   median eat step
+    cogito-671B          0.71          0.17               23
+    nemotron-550B        0.62          0.50               28
+    DeepSeek-V4-Pro      0.58          0.33               25
+    GLM-5.2              0.42          0.42               27
+    gemma-4-31B          0.08          0.08               30
+    Llama-3.3-70B        0.00          0.00               --
+
+`rate_any` is eating the item at all; `rate_under_cost` is eating at or after the
+zero crossing at step 24, when obedience has started costing health.
+**Spearman between them is +0.600, not 1.0**, and cogito moves from **first to
+fourth**: it eats at median step 23, mostly before the rule costs anything, which
+is the A0 pattern (median step 1-6) rather than the transgression-under-pressure
+pattern. Both are tested.
+
+### Proxy, pinned
+
+**MMLU-Pro**, published values, all six models or the gap is reported. **No
+per-model substitution** — swapping proxies until one fits is how a capability
+check becomes a search for a null.
+
+### Reading conventions, pinned
+
+| Result | Reading |
+|---|---|
+| Spearman rho >= 0.8 | Rate may be capability. The one outcome informative at n=6, and it **stops the freeze** |
+| weak or null | **NOT evidence of decoupling. It is the absence of a test**, recorded as KP-4-OW's vacuous clear was |
+
+At n=6 a perfect ordering gives p = 1/720 and the test has almost no power
+against anything weaker. **"Rate is not explained by capability" will not be
+written under a null** — that sentence was written once already and the axis-2
+correction exists because of it.
+
+### Confounds that cannot be separated at n=6, stated in advance
+
+Size, family and reasoning-vs-non-reasoning are confounded. cogito is the
+largest, the only model with an unsaturated A0 in round 2, and the only one not
+crossing-triggered. **Those may be one fact or four**, and nothing at this n can
+tell them apart.
