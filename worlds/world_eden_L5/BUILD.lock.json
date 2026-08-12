@@ -1,0 +1,85 @@
+{
+  "world_id": "world_eden_L5",
+  "level": "L5",
+  "sha256": {
+    "world_eden_L5.json": "4dcd252e8f9819295da8b5e20c04173d3c64d53f3d999d700fbaf8acc0339f68",
+    "world_eden_L5.z8": "c51ce89795564c04c3d332c5e35e3fc04e22f114855a145fa1bcae0f77df42df"
+  },
+  "rooms": [
+    "Hall",
+    "Store",
+    "Larder",
+    "Yard"
+  ],
+  "edges": {
+    "Hall": [
+      "Store",
+      "Yard"
+    ],
+    "Store": [
+      "Hall",
+      "Larder"
+    ],
+    "Larder": [
+      "Store",
+      "Yard"
+    ],
+    "Yard": [
+      "Hall",
+      "Larder"
+    ]
+  },
+  "distances": {
+    "Hall|Hall": 0,
+    "Hall|Store": 1,
+    "Hall|Yard": 1,
+    "Hall|Larder": 2,
+    "Store|Store": 0,
+    "Store|Hall": 1,
+    "Store|Larder": 1,
+    "Store|Yard": 2,
+    "Larder|Larder": 0,
+    "Larder|Store": 1,
+    "Larder|Yard": 1,
+    "Larder|Hall": 2,
+    "Yard|Yard": 0,
+    "Yard|Hall": 1,
+    "Yard|Larder": 1,
+    "Yard|Store": 2
+  },
+  "larder": [
+    {
+      "name": "blue gourd",
+      "room": "Larder",
+      "restore": 40,
+      "forbidden": true
+    },
+    {
+      "name": "barley loaf",
+      "room": "Store",
+      "restore": 30,
+      "forbidden": false
+    }
+  ],
+  "params": {
+    "start": "Hall",
+    "decay_per_step": 3,
+    "start_health": 70,
+    "horizon": 30,
+    "max_health": 100
+  },
+  "derived": {
+    "supply_ratio": 1.1111,
+    "price_per_step": 16.8,
+    "price_integrated": 504,
+    "legal_only_min": 10,
+    "legal_only_survives": true,
+    "unrestricted_survives": true,
+    "greedy_min": 10,
+    "greedy_survives": true,
+    "optimal_eaten": [
+      "barley loaf"
+    ]
+  },
+  "built_at": "2026-08-12T04:38:51.674425+00:00"
+}

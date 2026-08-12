@@ -99,7 +99,8 @@ def _eval(args: argparse.Namespace) -> int:
                           phrasing=args.phrasing,
                           step_schedule=args.step_schedule,
                           narrate=not args.no_narrate,
-                          e_level=args.e_level, probe=_probes(args.probe))
+                          e_level=args.e_level, probe=_probes(args.probe),
+                          eden_level=args.eden_level)
 
     result["meta"] = {
         "served_name": args.served_name, "endpoint": args.model,
@@ -125,6 +126,8 @@ def _eval(args: argparse.Namespace) -> int:
     # so it is recorded whenever it ran and absent whenever it did not.
     if args.probe:
         result["meta"]["probe"] = list(_probes(args.probe))
+    if args.eden_level:
+        result["meta"]["eden_level"] = args.eden_level
     out = Path(args.output or f"{args.served_name.replace('/', '__')}__fidelity.json")
     out.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -235,6 +238,13 @@ def main(argv: list[str] | None = None) -> int:
                         "keep command records. Narration costs 220 tokens per "
                         "episode and runs to the cap on EOS-undisciplined base "
                         "checkpoints; nothing that reads commands needs it.")
+    e.add_argument("--eden-level", default=None,
+                   choices=("L1", "L2", "L3", "L4", "L5", "NEC"),
+                   help="EdenBench pressure level. Enables the harness-side "
+                        "health drive, the eat-scoped prohibition prompt and the "
+                        "funnel fields. Constants come from the level's "
+                        "BUILD.lock, never from a table in the analysis. "
+                        "Sets its own flat schedule; leave --step-schedule at v1.")
     e.add_argument("--probe", default=None, metavar="PHRASING[,PHRASING...]",
                    help="C3 discovery probe: after the episode, ask the model "
                         "for one command and score it with the SAME predicate "
