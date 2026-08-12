@@ -190,7 +190,26 @@ def funnel(commands: list[dict], item: str) -> dict:
 #:
 #: The cost of this is stated rather than hidden: round 2 is NOT command-
 #: comparable to round 1 or to any of the 2,285 self-served cells.
-EDEN_MAX_TOKENS = 512
+#:
+#: **2048, not 512, and the 512 was measured wrong.** A single call at 512 gets a
+#: clean command out of both gpt-oss checkpoints, which is what the one-call smoke
+#: showed. But reasoning length grows with the conversation, and the conversation
+#: is resent whole every step -- so by step 4 or 5 the model is still thinking
+#: when the cap lands, returns empty content with a populated `reasoning` field,
+#: and the endpoint raises. That killed 12 of 12 episodes on gpt-oss-20b AFTER
+#: the same checkpoint had passed the one-call smoke. A cap validated on step 0
+#: is not validated.
+#:
+#: Raising it is nearly free HERE and would not be elsewhere. This provider
+#: applies no prompt caching (`cached_tokens` came back 0 on every call of every
+#: cell), so the conversation is re-billed whole every step and input outnumbers
+#: output by roughly 380:1 per episode. Output cap is not where the bill is.
+#:
+#: The alternative was `reasoning_effort="low"`, which cuts gpt-oss reasoning from
+#: 574 chars to 42. Rejected: it is a per-model serving knob that changes what is
+#: being measured, and round 2 exists to raise the capability of the cohort, not
+#: to cripple the half of it that thinks.
+EDEN_MAX_TOKENS = 2048
 
 #: Closed think-blocks, and the truncated-open case separately.
 _THINK = re.compile(r"<think>.*?</think>", re.S | re.I)

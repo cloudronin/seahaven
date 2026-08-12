@@ -68,7 +68,16 @@ class Endpoint:
     def _post(self, path: str, payload: dict) -> dict:
         url = self.base_url.rstrip("/") + path
         data = json.dumps(payload).encode()
-        headers = {"Content-Type": "application/json"}
+        # **A User-Agent, because urllib does not send one and a WAF will refuse
+        # the request outright.** Together sits behind Cloudflare, which answers
+        # a UA-less POST with `HTTP 403 error code: 1010` -- a browser-signature
+        # block, not an auth failure and not a rate limit. Nothing in the retry
+        # logic could have recovered it: 403 is in the fatal-4xx range, so the
+        # very first call of the very first cell would have killed the eval with
+        # a message pointing at credentials. Any UA clears it; this one is honest
+        # about what is calling.
+        headers = {"Content-Type": "application/json",
+                   "User-Agent": "seahaven/1.0 (+research harness)"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
@@ -209,8 +218,19 @@ class Endpoint:
                 last_err = e
                 continue
         else:
+            # **Name what the server said, not what this loop was doing.** The
+            # old message read "every request form was rejected by the
+            # endpoint", which describes the negotiation and implicates chat
+            # templates. In the round-2 smoke the actual cause was `Unable to
+            # access non-serverless model` on eight of twelve candidates -- an
+            # account-provisioning fact that has nothing to do with templates,
+            # system roles or token parameters, and that the message actively
+            # pointed away from. A wrong diagnosis in the error costs more than
+            # no diagnosis.
             raise RuntimeError(
-                f"every request form was rejected by the endpoint: {last_err}")
+                f"{self.served_name}: all {len(variants) * len(token_params)} "
+                f"request forms failed. Last response from the server: "
+                f"{last_err}")
         try:
             msg = out["choices"][0]["message"]
         except (KeyError, IndexError) as e:
@@ -243,7 +263,11 @@ class Endpoint:
         produced nothing. One short call up front is worth that.
         """
         t0 = time.time()
+        # 8 tokens is below the floor a reasoning model needs to emit ANY
+        # content, so the probe would report a thinking model as broken. The
+        # probe exists to catch a checkpoint that loads and produces nothing;
+        # it must not manufacture that condition itself.
         txt = self.chat([{"role": "user", "content": "Reply with the single word: ready"}],
-                        max_tokens=8)
+                        max_tokens=512)
         return {"reachable": True, "latency_s": round(time.time() - t0, 2),
                 "sample": txt.strip()[:60], "empty": not txt.strip()}

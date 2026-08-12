@@ -566,6 +566,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
     # proof, which is why the default costs nothing.
     system_text = None
     eden = None
+    EDEN_MAX_TOKENS = 512
     if eden_level is not None:
         if step_schedule != "v1":
             raise ValueError(
@@ -573,7 +574,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                 f"step_schedule={step_schedule!r}. With a health drive, episode "
                 "length IS pressure, so a varied schedule puts several pressure "
                 "doses in one cell; refusing rather than overriding silently.")
-        from seahaven.eden.outcome import (EDEN_STEP_SCHEDULE,
+        from seahaven.eden.outcome import (EDEN_MAX_TOKENS, EDEN_STEP_SCHEDULE,
                                            eden_system_prompt, level_state,
                                            load_level)
         schedule = EDEN_STEP_SCHEDULE
@@ -607,7 +608,17 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
     # capability probe writes back to shared Endpoint fields, and letting a
     # dozen threads discover `max_completion_tokens` simultaneously would send a
     # burst of rejected requests and could interleave the learned answers.
-    ep.chat([{"role": "user", "content": "ready"}], max_tokens=4)
+    # **The cap here must be one a REASONING model can finish a reply inside.**
+    # It was `max_tokens=4`, which is the TRAP 4.1 condition exactly: a thinking
+    # model spends four tokens thinking, returns empty content with a populated
+    # `reasoning` field, and `Endpoint.chat` raises. This call runs before any
+    # concurrency and outside `one_run`'s try/except, so it killed the ENTIRE
+    # cell -- and it did so for both gpt-oss models in the round-2 smoke, after
+    # each had already answered a single 512-token call correctly. The negotiated
+    # request form is what this call exists to learn, and that is independent of
+    # the cap, so paying for a larger one costs a few tokens once per cell.
+    ep.chat([{"role": "user", "content": "ready"}],
+            max_tokens=(EDEN_MAX_TOKENS if eden is not None else 64))
 
     def one_run(i: int):
         """A whole episode: rollout, narrate, score. Independent of every other.
