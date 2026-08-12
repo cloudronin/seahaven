@@ -32,17 +32,23 @@ from seahaven.fidelity.runner import run_fidelity  # noqa: E402
 OUT = Path("results")
 
 
-def cell_path(model: str, arm: str, level: str) -> Path:
-    return OUT / f"eden_e3_{model.replace('/', '__')}__{arm}__{level}.json"
+def cell_path(model: str, arm: str, level: str, rate: bool = False) -> Path:
+    # The rate stage writes its OWN file: it is 72 additional episodes at offset
+    # seeds, not a replacement for stage 1's 24, and overwriting would discard
+    # data rather than extend it.
+    tag = f"{level}rate" if rate else level
+    return OUT / f"eden_e3_{model.replace('/', '__')}__{arm}__{tag}.json"
 
 
-def run_cell(model: str, arm: str, level: str) -> dict:
+def run_cell(model: str, arm: str, level: str, rate: bool = False) -> dict:
     pi, po = R.COHORT[model]
     ep = Endpoint(base_url=R.BASE_URL, served_name=model,
                   api_key=os.environ["TOGETHER_API_KEY"], timeout=300)
     t0 = time.time()
-    res = run_fidelity(ep, None, runs=R.EPISODES_PER_CELL, steps=30,
-                       seed0=R.SEED0, world_id=f"world_eden_{level}",
+    m_ = R.RATE_EPISODES if rate else R.EPISODES_PER_CELL
+    s_ = R.RATE_SEED0 if rate else R.SEED0
+    res = run_fidelity(ep, None, runs=m_, steps=30,
+                       seed0=s_, world_id=f"world_eden_{level}",
                        narrate=False, eden_level=level, eden_arm=arm)
     u = dict(ep.usage_total)
     # `run_fidelity` returns no `meta`; the CLI builds it. Assembling it here
@@ -53,7 +59,7 @@ def run_cell(model: str, arm: str, level: str) -> dict:
         "world_id": f"world_eden_{level}", "world_version": f"world_eden_{level}",
         "eden_level": level, "eden_arm": arm,
         "phrasing": "p1", "step_schedule": "v1", "narrate": False,
-        "runs": R.EPISODES_PER_CELL, "steps": 30, "seed0": R.SEED0,
+        "runs": m_, "steps": 30, "seed0": s_, "stage": "rate" if rate else "main",
         "round3_pin": R.PINNED_ROUND3_HASH,
         "usage": u,
         "price_per_m": {"prompt": pi, "completion": po},
@@ -69,7 +75,8 @@ def main() -> int:
         print("TOGETHER_API_KEY not set")
         return 2
     R.assert_pinned()
-    grid = R.cells()
+    rate = "--rate" in sys.argv
+    grid = R.cells(rate=rate)
     OUT.mkdir(exist_ok=True)
 
     # **A pre-existing file is only a completed cell if it SAYS it is.** Round 1
@@ -81,7 +88,7 @@ def main() -> int:
     # show. Verify the pin instead of trusting the path.
     todo = []
     for c in grid:
-        p_ = cell_path(*c)
+        p_ = cell_path(*c, rate=rate)
         if not p_.exists():
             todo.append(c)
             continue
@@ -104,8 +111,9 @@ def main() -> int:
         # read cannot see it.
         n_ok = len([r for r in json.loads(p_.read_text()).get("runs", [])
                     if r.get("commands")])
-        if n_ok < R.EPISODES_PER_CELL:
-            print(f"  re-running {p_.name}: {n_ok}/{R.EPISODES_PER_CELL} "
+        want = R.RATE_EPISODES if rate else R.EPISODES_PER_CELL
+        if n_ok < want:
+            print(f"  re-running {p_.name}: {n_ok}/{want} "
                   f"episodes survived")
             todo.append(c)
     print(f"round-3 LATENCY — {len(grid)} cells, "
@@ -115,9 +123,9 @@ def main() -> int:
 
     spent = 0.0
     for i, (model, arm, level) in enumerate(todo, 1):
-        p = cell_path(model, arm, level)
+        p = cell_path(model, arm, level, rate=rate)
         try:
-            res = run_cell(model, arm, level)
+            res = run_cell(model, arm, level, rate=rate)
         except Exception as e:
             # A dead cell must not take the sweep with it: the remaining models
             # are independent and their cells are still worth having. The gap is
@@ -129,7 +137,7 @@ def main() -> int:
         spent += res["meta"]["billed_usd"]
         n = len([r for r in res.get("runs", []) if r.get("commands")])
         print(f"[{i}/{len(todo)}] {model.split('/')[-1]:<28} {arm} {level:<5} "
-              f"n={n}/{R.EPISODES_PER_CELL}  ${res['meta']['billed_usd']:.3f}  "
+              f"n={n}/{R.RATE_EPISODES if rate else R.EPISODES_PER_CELL}  ${res['meta']['billed_usd']:.3f}  "
               f"{res['meta']['wall_s']}s   running ${spent:.2f}", flush=True)
 
     print(f"\ndone — ${spent:.2f} billed this invocation")

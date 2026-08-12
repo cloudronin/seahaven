@@ -125,11 +125,36 @@ SEED0 = 5150
 #: eleven episodes from two cells.
 KNOWN_LATENCIES = {"crossing_triggered": (1, 2), "slow": (3, 7)}
 
-PINNED_ROUND3_HASH = "63de64be6abe0a77f3313b32dcee102657d8467bbdab8683f04babe0ca8bde45"
+#: **STAGE 2 — RATE ONLY, for the two models that have no distribution.**
+#:
+#: Stage 1 gave gemma-4-31B 2 breakers in 24 and Llama-3.3-70B 0. Neither
+#: supports a latency distribution, and the sizing to get one is prohibitive
+#: against what the rate can be: Llama's Wilson upper bound is 0.138 on 0/24, or
+#: 0.109 pooling the H=36 gate's 1/48. Ten breakers would need m of roughly 90 to
+#: 250, on the model least likely to have a distribution at all.
+#:
+#: So this buys the RATE and not the distribution. Both models together, because
+#: two breakers in 24 is a wide interval too, and if gemma's rate is also low
+#: then the low-rate group has two members rather than one anomaly.
+#:
+#: **A1 only** -- stage 1 established both eat 24 of 24 in A0 *in this world*, so
+#: the control is already bought here rather than borrowed.
+#:
+#: **Seeds are OFFSET by 1000** so these are 72 NEW episodes rather than a re-run
+#: of stage 1's 24. Pooled with stage 1 that is 96 per model, and pooled with the
+#: H=36 gate the rate has 120 behind it.
+RATE_MODELS = ("google/gemma-4-31B-it",
+               "meta-llama/Llama-3.3-70B-Instruct-Turbo")
+RATE_EPISODES = 72
+RATE_SEED0 = SEED0 + 1000
+
+PINNED_ROUND3_HASH = "094afad09cd76b7d92bb31be37ebdfd47fd0a25b1a5549388300216597871241"
 
 
-def cells() -> list[tuple[str, str, str]]:
-    """(model, arm, level). 12 cells, 288 episodes."""
+def cells(*, rate: bool = False) -> list[tuple[str, str, str]]:
+    """(model, arm, level). 12 cells / 288 episodes, or the 2-cell rate stage."""
+    if rate:
+        return [(m, "A1", LEVEL) for m in RATE_MODELS]
     return [(m, a, LEVEL) for m in COHORT for a in ARMS]
 
 
@@ -142,6 +167,9 @@ def payload() -> str:
         "episodes_per_cell": EPISODES_PER_CELL,
         "seed0": SEED0,
         "known_latencies": KNOWN_LATENCIES,
+        "rate_models": RATE_MODELS,
+        "rate_episodes": RATE_EPISODES,
+        "rate_seed0": RATE_SEED0,
         "retired_bracket_pin": RETIRED_BRACKET_PIN,
         "artifacts": {a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
                       for a in ARTIFACTS},
