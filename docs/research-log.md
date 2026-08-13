@@ -10166,3 +10166,96 @@ contamination — 22/144 → 2/72 — and that is exactly why generation 3 could
 paying for the belief and start paying for the stake. Round 8's corpus keeps a
 specific job: it is the measurement of a world with **no stakes**, which is what
 makes this round's argument evidenced rather than asserted.
+
+## ROUND 10 STAGE A — the raidex pool, and the requirement it could not satisfy
+
+**Standing requirement 1 fails here, and the round proceeds on a named assumption
+rather than pretending otherwise.** Measured before any planning:
+
+    43 raidex models, 40 at 9/9 coverage
+    73 Together strings on record
+    EXACT string matches:                 0
+    same model, different provider:      17   (13 of them new)
+    raidex models measured ON Together:   1   (thinkingmachines/Inkling)
+
+    provider mix: openrouter 19, sambanova 6, anthropic 5, openai 4,
+                  gemini 2, huggingface 2, xai 1, together_ai 1
+
+raidex ids are provider-prefixed (`openrouter/deepseek/deepseek-v4-pro`);
+Together strings are not (`deepseek-ai/DeepSeek-V4-Pro`). **Exact-string matching
+yields nothing at all**, so every correlate this round produces will pair a
+Together-served behavioural rate with an OpenRouter- or SambaNova-served RAI
+score.
+
+**What that costs, stated as a limitation.** Round 4 *closed* the capability route
+rather than substitute a near-miss variant. This is a weaker version of the same
+compromise: same weights, different serving stack, possibly different
+quantization and sampling defaults. Defensible because it is the same model
+rather than a different one — and it is a limitation of every number the round
+produces, not a footnote. `measured_on` is carried per record so no correlation
+can silently lose which stack produced its x-axis.
+
+### The one ambiguity, resolved by prior commitment rather than by picking
+
+`gemma-4-31B-it` is listed on Together **twice** — `google/gemma-4-31B-it` and
+`pearl-ai/gemma-4-31b-it`, two resellers of the same weights. Choosing between
+them on plausibility is precisely the near-miss the requirement exists to refuse.
+The program has served `google/...` for 96 committed episodes, so **that
+commitment decides it**, and anything with two candidates and no prior commitment
+stays unmapped rather than guessed. Zero records remain ambiguous.
+
+Normalisation collapses serving suffixes and nothing else: `GLM-5.1` and
+`GLM-5.2` stay distinct, `gpt-oss-20b` and `-120b` stay distinct, and a test
+asserts it — a join key that erased a version digit would re-admit exactly the
+substitutions round 4 refused.
+
+### The cohort is EVERYTHING the pool offers — selection is deleted, not vacuous
+
+13 new candidates for the spec's 10 slots would have made the selection rule
+nearly empty, and any "spans the capability range" claim would then be a claim
+about **raidex's coverage** rather than a designed span. So all 13 run. No
+selection step exists, so selection-on-outcome is impossible in principle, and
+the honest statement is that the cohort is whatever the pool contains that
+Together serves at 9/9.
+
+    Kimi-K3 73.4 · Inkling 71.8 · DeepSeek-V3.1 67.0 · MiniMax-M3 66.7
+    Kimi-K2.7-Code 65.0 · MiniMax-M2.7 60.2 · gpt-oss-120b 58.9
+    Qwen3.5-397B 58.0 · Kimi-K2.6 57.2 · gpt-oss-20b 57.1 · GLM-5.1 57.1
+    GLM-4.6 49.8 · GLM-5 47.6
+
+### A truncation recorded BEFORE any correlation is computed
+
+**cogito and Llama are not in raidex at all.** cogito is the HIGH pole at 0.375
+and Llama is a floor member, so every rate-versus-RAI correlation runs on a
+cohort **whose top is missing**, attenuating it in an unknown direction. That is
+raidex's coverage, not a choice, and it belongs beside the rho rather than in a
+methods appendix. Of the existing six, four map: DeepSeek, gemma, nemotron, GLM.
+
+The dimension spread is wide enough to correlate against — `machine_ethics` runs
+4.2 to 88.5, `sycophancy` 13.9 to 97.8 — which is more variance than the
+published-proxy route ever offered.
+
+### The class rule was DEGENERATE and is replaced before any cell runs
+
+The spec's rule — Floor at Wilson upper < 0.10, High at Wilson lower > 0.25 — is
+unusable at m=24:
+
+    Floor:       UNREACHABLE, since 0/24 gives an upper bound of 0.138
+    High:        needs 11/24 = 0.458, ABOVE cogito's 0.375
+    Unresolved:  spans 0.000-0.417
+
+**Unresolved covers every rate generation 3 has ever measured**, so a pile-up
+there would have been guaranteed by the design and the headline read could not
+have distinguished its two hypotheses. That is standing requirement 3 again, one
+level up: a read that cannot fail.
+
+Replaced by a **pole-comparison rule** — classify by separability from the two
+poles (0/192 floor, cogito 36/96) — which is what the spec's own justification
+argues for. At m=48 it gives FLOOR 0-1, MIDDLE 0.042-0.188, HIGH 0.208-0.542 and
+**no unreachable region**, with the MIDDLE band matching where the observed
+middle sits.
+
+**And the committed data already separates three groups under it:** cogito HIGH,
+DeepSeek/nemotron/GLM all separable from **both** poles, gemma/Llama FLOOR. So the
+middle's *existence* is not what the round buys — what it buys is
+cluster-versus-continuum, and whether membership correlates with anything.
