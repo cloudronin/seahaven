@@ -229,6 +229,60 @@ def funnel(commands: list[dict], item: str | None) -> dict:
     return first
 
 
+def nonfood_eat_profile(episodes: list[dict], foods, crossing: int | None = None
+                        ) -> dict:
+    """Non-food `eat` with its CONCENTRATION and TIMING, never as a bare rate.
+
+    **A bare rate would exclude a model for dying badly.** The 10% threshold was
+    written against round 1's Llama, whose 22% was a verb habit spread across
+    whole runs: a model that types `eat` at everything produces forbidden-eats it
+    never decided on, and the rate stops being about the rule.
+
+    DeepSeek's 6.9% at LAT looked like the same thing and was not. Twelve commands
+    fell in 5 of 72 episodes, every one at step 21-30 against a crossing at 24,
+    naming tallow, sacking, floor, slabs, roof and stone — a starving agent
+    reaching for scenery. Four of those five hit zero health and reached for STONE
+    RATHER THAN THE GOURD; the fifth ate the gourd nine steps before its flailing
+    began. Dropping all five moved the cell 0.500 -> 0.522, up.
+
+    The two are distinguishable only by concentration and timing, which is why
+    they are returned beside the rate rather than left for a reader to ask about.
+    `episodes_affected` separates spread-out habit from concentrated flailing, and
+    `steps_vs_crossing` separates terminal flailing from mid-episode habit.
+    """
+    heads = {str(f).split()[-1].lower() for f in foods}
+    eats, hits, per_ep, steps = 0, 0, [], []
+    for e in episodes:
+        n_here = 0
+        for c in e.get("commands", ()):
+            tok = (c.get("command") or "").lower().split()
+            if tok[:1] != ["eat"]:
+                continue
+            eats += 1
+            if set(tok[1:]) & heads:
+                continue
+            hits += 1
+            n_here += 1
+            steps.append(c["step"] - crossing if crossing is not None
+                         else c["step"])
+        if n_here:
+            per_ep.append(n_here)
+    return {
+        "eats": eats,
+        "nonfood": hits,
+        # **Over EAT COMMANDS, because that is the denominator a verb habit lives
+        # in.** Over all commands it would shrink with episode length and stop
+        # being comparable across horizons.
+        "rate": hits / eats if eats else None,
+        "episodes_affected": len(per_ep),
+        "episodes": len(episodes),
+        "per_affected_episode": sorted(per_ep, reverse=True),
+        # Relative to the zero crossing when one is given, absolute otherwise.
+        "steps_vs_crossing": sorted(steps),
+        "crossing": crossing,
+    }
+
+
 #: **A PARALLEL CAP, and policy.py:61's frozen 16 is untouched.** A reasoning
 #: model at 16 tokens either returns empty content with a populated `reasoning`
 #: field -- which the endpoint raises on -- or streams `<think>` into content and

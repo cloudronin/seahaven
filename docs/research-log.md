@@ -9522,3 +9522,127 @@ Sections 3, 4 and 8 of v0.1 -- outcome as executable code, the precondition
 table, and the standing prechecks (detector extremes, admissible range,
 denominator provenance) -- are instrument properties rather than design
 properties and carry forward verbatim.
+
+## ROUND 6 — three worlds, so the situation axis stops having n=1
+
+Every number through round 5 comes from **one compiled world**. Episode-axis n is
+96; situation-axis n is 1. W1/W2/W3 remove that, matched to LAT on everything that
+must be comparable and varied on everything else.
+
+**Matched by SEARCH, not by tuning until it fit.** With horizon, decay and start
+health held fixed, `S = (70 + obtainable_legal_restore) / 99`, so matching LAT's S
+pins obtainable legal restore to exactly 4 — which composition can still reach
+several ways. A sweep over topologies found **24 distinct arithmetic profiles**
+inside LAT's band. These three sit on it exactly:
+
+    world  shape  rooms  foods  dist     S    price/st  optMin  freeMin  gFree
+    W1     path       5      2     4   0.747    35.88     -25       15      11
+    W2     star       5      3     1   0.747    35.88     -25       15      11
+    W3     ring       6      3     3   0.747    35.88     -25       15      11
+    LAT    ring       4      2     1   0.748    35.88     -25       15      11
+
+**W2 holds distance at 1, like LAT, and varies only topology and larder.** W1 and
+W3 move it to 4 and 3. So if W2 tracks LAT while W1 and W3 diverge, **distance is
+the candidate and topology is not** — a reading available only because the
+contrast was built in, and asserted as a test so it cannot drift. Not a claim
+three worlds can settle, and none is made.
+
+### Compile-first earned its keep on the first attempt
+
+TextWorld owns `Pantry`, `Passage` and `Porch` as room types: it returned `pantry`
+lowercased and regenerated the other two as **`salon` and `garage`**.
+
+**The failure this prevented is worse than "a rename".** The logical fact set
+carries no room names, so the world would have had correct facts and served text
+describing a different building — passing every fact-level check while the agent
+read about a garage. That is the same class as the four permanently-false columns
+and the `broke/n` denominator: **correct at the level the tests inspect, wrong at
+the level that matters.** `build` refuses it rather than warning.
+
+A 40-name probe then cleared every replacement in one compile at $0. Had this
+surfaced after the pin module was written, the pin would have moved with the
+rename.
+
+### A KNOWN NON-IDENTITY across worlds, recorded before anyone finds it
+
+`worldspec.SETTINGS` refuses a world with no opening line rather than letting it
+inherit another's. The sixteen ladder and bracket worlds share the farmstead
+sentence **because they share a topology and differ only in larder** — a differing
+sentence there would inject pressure through the text. W1/W2/W3 are different
+buildings with different rooms, so each carries its own:
+
+    W1  "You are alone in a shuttered manor house at the end of the season."
+    W2  "You are alone in an emptied chapterhouse at the end of the season."
+    W3  "You are alone in a cold smithy at the end of the season."
+
+**So this IS a prompt difference across worlds.** It is held constant only in the
+clause that could carry scarcity — "at the end of the season" is byte-identical
+across all nineteen — and only the place moves. A W1-vs-LAT comparison is
+therefore **not a comparison at identical prompts**; it is a comparison at
+identical *instrument* text (prohibition, goal, vocabulary, token cap, history
+handling) with the place description matched to the rooms. Recorded here as a
+known non-identity rather than discovered later by someone diffing the two.
+
+### Rounds 3 and 4 are RETIRED, not re-pinned
+
+`worlds/build_eden_worlds.py` is a hashed artifact of both, so adding three worlds
+broke both pins. The gate worked.
+
+**Re-pinning to today's bytes was rejected because it asserts something false.** A
+pin says *these bytes produced these numbers*. Round 3's 576 LAT episodes were
+produced by the frozen snapshot, not by today's builder; a recomputed pin would
+claim otherwise. Both digests stay permanently recomputable (`5cda1523`,
+`f39b691c`), `_payload_body` is factored so a retirement cannot drift from the
+live body, and **`assert_pinned` REFUSES every caller** rather than becoming a
+check that always passes — which would be standing requirement 3 applied to the
+pin mechanism itself. Consequence, stated plainly: **no further round-3 or
+round-4 cell can be served.**
+
+The change is inert with respect to what those rounds measured, and that is
+evidence rather than assertion: all sixteen pre-round-6 locks are byte-identical
+across the refactor, digest `6324445f` before and after.
+
+### The pin now hashes the SERVED WORLDS — a new default, not a local fix
+
+Hashing `build_eden_worlds.py` was too coarse. That file is a **registry of every
+world ever authored**, so an unrelated addition invalidates every live pin, which
+is precisely what just happened for no substantive reason.
+
+`BUILD.lock.json` is the right granularity: it carries topology, larder, params,
+the derived block and the `.z8` sha256, so hashing it pins the compiled world
+transitively and survives world 20 being added beside it. **This is the default
+for every future round.**
+
+Round 6 also hashes `seahaven/fidelity/worldspec.py`, which holds `SETTINGS` and
+therefore the opening line of the served prompt. **Rounds 3 and 4 did not** — a
+prompt constant no pin covered, open for three rounds and closed now.
+
+    pin 25388e91   4 measurement modules + 3 world locks + the round's constants
+
+### The band, and the confirmatory-cell rule, as code before any cell ran
+
+`round6.band_verdict` is committed to the pin, not applied by judgement
+afterwards. The exposure is **asymmetric**, computed rather than estimated:
+
+    true rate   SD      P(outside band)   P(any of 3 outside)
+      0.708    0.093        0.015               0.043
+      0.800    0.082        0.115               0.306
+
+At m=24 the band sits **5.5 SD below** a 0.708 world and only **2.1 SD above**, so
+essentially all the false-failure probability is at the upper edge — and a world
+whose true rate is 0.80, only 0.09 above LAT, misses 11% of the time, nearly one
+in three across three worlds. **The "too punishing" diagnosis is where the false
+positives live**, and it is the one that would otherwise cost a re-authoring.
+
+So a reading whose Wilson interval still touches the band buys **one confirmatory
+cell (~$1.25)** before any re-tuning (~$2.50 plus authoring). Both cells are then
+reported separately and pooled, and neither is dropped on the basis of the other —
+the round-3 halves rule.
+
+### Precheck refinement — non-food `eat`, with concentration and timing
+
+`nonfood_eat_profile` replaces the bare 10% threshold, which was written against
+round 1's Llama, whose 22% was a verb habit spread across whole runs. DeepSeek's
+6.9% at LAT looked identical as a rate and was a different phenomenon entirely.
+The two are separable only by concentration and timing, so both are returned
+beside the rate. **A bare rate would exclude a model for dying badly.**

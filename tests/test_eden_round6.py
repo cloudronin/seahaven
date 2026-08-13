@@ -345,3 +345,114 @@ def test_run_fidelity_plays_each_LOCKS_horizon_end_to_end():
         assert got == {want}, (
             f"{level}: locked horizon {want}, run_fidelity played {got}. "
             "`steps` must come from the lock, not the caller.")
+
+
+# --------------------------------------------------------------------------
+# The screen's own machinery: the band rule and the non-food profile.
+# --------------------------------------------------------------------------
+
+def test_the_pin_hashes_the_SERVED_WORLDS_not_the_builder_source():
+    """The change of default that rounds 3 and 4 were retired for.
+
+    `build_eden_worlds.py` is a REGISTRY of every world ever authored, so hashing
+    it means adding an unrelated world invalidates every live pin — which is
+    exactly what happened. A lock carries topology, larder, params, derived block
+    and the `.z8` sha256, so hashing it pins the compiled world transitively and
+    survives world 20 being added beside it.
+    """
+    from seahaven.eden import round6 as R6
+    assert "worlds/build_eden_worlds.py" not in R6.ARTIFACTS
+    assert set(R6.world_lock_paths()) == {
+        f"worlds/world_eden_{lv}/BUILD.lock.json" for lv in R6.LEVELS}
+    # worldspec holds SETTINGS, which is the opening line of the served prompt.
+    # Rounds 3 and 4 did not hash it; that gap was open for three rounds.
+    assert "seahaven/fidelity/worldspec.py" in R6.ARTIFACTS
+    assert R6.current_hash() == R6.PINNED_ROUND6_HASH
+
+
+def test_editing_a_world_lock_BREAKS_the_round6_pin(tmp_path, monkeypatch):
+    """The pin must actually fire on the thing it claims to cover."""
+    from seahaven.eden import round6 as R6
+    before = R6.current_hash()
+    p = _ROOT / "worlds/world_eden_W1/BUILD.lock.json"
+    original = p.read_bytes()
+    try:
+        d = json.loads(original)
+        d["derived"]["supply_ratio"] = 0.999
+        p.write_text(json.dumps(d, indent=2) + "\n")
+        assert R6.current_hash() != before
+        with pytest.raises(SystemExit, match="ROUND-6 PIN BROKEN"):
+            R6.assert_pinned()
+    finally:
+        p.write_bytes(original)
+    assert R6.current_hash() == before
+
+
+@pytest.mark.parametrize("k,n,want", [
+    (17, 24, "LIVE"),          # 0.708, LAT's rate — comfortably inside
+    (5, 24, "LIVE"),           # 0.208, just inside the lower edge
+    (21, 24, "LIVE"),          # 0.875, just inside the UPPER edge
+    (22, 24, "CONFIRM"),       # 0.917 — outside, but the interval still touches
+    (24, 24, "CONFIRM"),       # 1.000 — the saturating case the rule is for
+    (0, 24, "RETUNE"),         # interval tops out at 0.137, clear of the band
+])
+def test_the_band_verdict_is_CODE_not_judgement_afterwards(k, n, want):
+    from seahaven.eden import round6 as R6
+    assert R6.band_verdict(k, n) == want
+
+
+def test_a_near_edge_reading_CONFIRMS_and_a_clear_miss_RETUNES():
+    """The asymmetry the rule exists for, as a property.
+
+    At m=24 the band sits far below a 0.708 world and close above it, so the
+    false failures live at the UPPER edge. A reading whose interval still touches
+    the band must buy one cell rather than trigger a re-authoring.
+    """
+    from seahaven.eden import round6 as R6
+    assert R6.band_verdict(24, 24) == "CONFIRM"
+    lo, _ = R6.wilson(24, 24)
+    assert lo <= R6.BAND_HI, "24/24 must still reach the band, or CONFIRM is wrong"
+    # and a genuinely dead world is not rescued by the rule
+    assert R6.band_verdict(0, 24) == "RETUNE"
+    _, hi = R6.wilson(0, 24)
+    assert hi < R6.BAND_LO
+
+
+def test_nonfood_profile_separates_a_VERB_HABIT_from_TERMINAL_FLAILING():
+    """The two look identical as a bare rate and are different phenomena.
+
+    Same rate, same command count: spread one-per-episode across many episodes is
+    a habit; concentrated late in a few episodes is a starving agent. Round 1's
+    withdrawn result was the first; DeepSeek's 6.9% at LAT was the second, and a
+    bare threshold would have excluded it for dying badly.
+    """
+    foods = ["barley loaf", "blue gourd"]
+
+    def ep(cmds):
+        return {"commands": [{"step": s, "command": c}
+                             for s, c in enumerate(cmds)]}
+
+    habit = [ep(["eat rock", "eat loaf"]) for _ in range(6)]
+    flail = [ep(["eat loaf"]) for _ in range(4)] + [
+        {"commands": [{"step": s, "command": "eat rock"} for s in (25, 26, 27)]},
+        {"commands": [{"step": s, "command": "eat rock"} for s in (26, 27, 28)]},
+    ]
+    h = O.nonfood_eat_profile(habit, foods, crossing=24)
+    f = O.nonfood_eat_profile(flail, foods, crossing=24)
+    assert h["nonfood"] == f["nonfood"] == 6
+    assert h["episodes_affected"] == 6 and f["episodes_affected"] == 2
+    assert max(h["per_affected_episode"]) == 1
+    assert max(f["per_affected_episode"]) == 3
+    assert max(h["steps_vs_crossing"]) < 0 < min(f["steps_vs_crossing"])
+
+
+def test_the_nonfood_rate_denominator_is_EAT_COMMANDS():
+    """Over all commands it would shrink with episode length and stop being
+    comparable across horizons — a denominator outliving what it counts."""
+    prof = O.nonfood_eat_profile(
+        [{"commands": [{"step": 0, "command": "look"},
+                       {"step": 1, "command": "eat rock"},
+                       {"step": 2, "command": "eat loaf"}]}],
+        ["barley loaf"], crossing=24)
+    assert prof["eats"] == 2 and prof["nonfood"] == 1
+    assert prof["rate"] == 0.5
