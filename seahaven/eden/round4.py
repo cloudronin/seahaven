@@ -93,7 +93,7 @@ def cells() -> list[tuple[str, str, str]]:
     return [(m, ARM, LEVEL) for m in COHORT]
 
 
-def payload() -> str:
+def _payload_body(artifacts: dict) -> str:
     body = {
         "base_url": BASE_URL,
         "cohort": COHORT,
@@ -103,27 +103,58 @@ def payload() -> str:
         "seed0": SEED0,
         "opt_min": OPT_MIN,
         "greedy_min": GREEDY_MIN,
-        "artifacts": {a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
-                      for a in ARTIFACTS},
+        "artifacts": artifacts,
     }
     return json.dumps(body, sort_keys=True, separators=(",", ":"))
+
+
+def payload() -> str:
+    return _payload_body({a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
+                          for a in ARTIFACTS})
 
 
 def current_hash() -> str:
     return hashlib.sha256(payload().encode()).hexdigest()
 
 
+#: **ROUND 4 IS CLOSED, retired on the same grounds as round 3.** Round 6 added
+#: three worlds to `worlds/build_eden_worlds.py`, a hashed artifact here too. A
+#: pin says "these bytes produced these numbers"; COMP's 144 episodes were
+#: produced by the snapshot below, so re-pinning to today's files would claim
+#: something false. The change is inert with respect to COMP -- its lock is
+#: byte-identical across the refactor, verified against a pre-refactor snapshot of
+#: all sixteen locks -- but inert is not the same as unchanged, and the record
+#: keeps the distinction.
+RETIRED_COMP_PIN = PINNED_ROUND4_HASH
+RETIRED_COMP_SHA256 = {
+    "docs/edenbench-spec.md":
+        "27b79a6666f4d8b902f3fa01a6babacbc6b0173a2cd2a695816128aea6cf7e78",
+    "docs/eden-round2-hosted.md":
+        "d36beb6b507b9a3934c1451fe6c94b2aeb7e612de6e749981393db5f9b4f68d2",
+    "seahaven/eden/simulate.py":
+        "dbce00d372549eeab69eb11139e3102fcad1b2d4f7f8ee8542ed2cbe9ebc8a80",
+    "seahaven/eden/outcome.py":
+        "347e269b09b3d0979d559d828a7df084bcb2378597b56976d405b8508bcc7fc9",
+    "seahaven/eden/manifest.py":
+        "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
+    "worlds/build_eden_worlds.py":
+        "392b92f33257f6712e373fa9c9513263c406b352e9adc1d5237d870df0eb2ab3",
+}
+
+
+def retired_comp_hash() -> str:
+    """Reproduces `RETIRED_COMP_PIN` from the frozen snapshot, permanently."""
+    return hashlib.sha256(
+        _payload_body(dict(RETIRED_COMP_SHA256)).encode()).hexdigest()
+
+
 def assert_pinned() -> None:
-    if not PINNED_ROUND4_HASH:
-        raise SystemExit(
-            "round-4 pin is EMPTY. Compute it with `current_hash()`, paste it "
-            "into PINNED_ROUND4_HASH, and commit BEFORE running any cell.")
-    got = current_hash()
-    if got != PINNED_ROUND4_HASH:
-        raise SystemExit(
-            f"ROUND-4 PIN BROKEN\n  pinned {PINNED_ROUND4_HASH}\n  actual {got}\n"
-            "  A constant or a hashed artifact changed after the freeze. Either "
-            "revert it, or re-pin DELIBERATELY and say so in the commit.")
+    """**Refuses. Round 4 is closed.** Not a check that always passes — it
+    refuses every caller, which is the true statement."""
+    raise SystemExit(
+        "ROUND 4 IS CLOSED. Its pin is retired as RETIRED_COMP_PIN and the "
+        "artifacts that produced its 144 COMP episodes have since moved (round 6 "
+        "added three worlds to the builder). Open a new round with its own pin.")
 
 
 if __name__ == "__main__":

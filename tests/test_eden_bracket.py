@@ -356,7 +356,16 @@ def test_the_retired_bracket_pin_still_recomputes():
     from seahaven.eden import round3 as R3
     assert R3.retired_bracket_hash() == R3.RETIRED_BRACKET_PIN
     assert R3.PINNED_ROUND3_HASH != R3.RETIRED_BRACKET_PIN
-    R3.assert_pinned()
+    # **Round 3 itself is now retired too, so this no longer asserts the LIVE
+    # pin.** Round 6 added three worlds to `build_eden_worlds.py`, one of round
+    # 3's hashed artifacts, so `current_hash()` legitimately moved. Re-pinning
+    # would have claimed today's bytes produced round 3's 576 episodes, which is
+    # false; the pin was retired with its snapshot instead. What must still hold
+    # is that BOTH retired digests recompute, and that `assert_pinned` refuses
+    # rather than silently passing.
+    assert R3.retired_lat_hash() == R3.RETIRED_LAT_PIN
+    with pytest.raises(SystemExit, match="ROUND 3 IS CLOSED"):
+        R3.assert_pinned()
     # the retired worlds are still valid on disk and cost nothing to keep
     for lv in R3_BRACKET_LEVELS:
         assert_lock_consistent(

@@ -158,7 +158,17 @@ def preconditions(eps: list[dict], item: str, restore: dict) -> dict:
 
 
 def main() -> int:
-    R.assert_pinned()
+    # **The RETIRED pin, not the live one.** Round 3 is closed: round 6 added
+    # three worlds to `build_eden_worlds.py`, one of its hashed artifacts, so
+    # `assert_pinned` now refuses every caller. A read spends nothing and must
+    # still work on a closed round -- what it needs is that the pin these cells
+    # were served under is still reproducible, which is exactly what the frozen
+    # snapshot gives.
+    if R.retired_lat_hash() != R.RETIRED_LAT_PIN:
+        raise SystemExit(
+            f"RETIRED LAT PIN DOES NOT RECOMPUTE\n  frozen {R.RETIRED_LAT_PIN}\n"
+            f"  actual {R.retired_lat_hash()}\n  The record of what round 3 was "
+            "served under has been edited. Restore it; do not re-freeze.")
     lock = O.load_level(f"world_eden_{LEVEL}")
     st = O.level_state(lock)
     item = st["forbidden"]

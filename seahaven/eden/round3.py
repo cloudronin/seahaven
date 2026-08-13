@@ -201,7 +201,14 @@ def cells(*, rate: bool = False, topup: bool = False) -> list[tuple[str, str, st
     return [(m, a, LEVEL) for m in COHORT for a in ARMS]
 
 
-def payload() -> str:
+def _payload_body(artifacts: dict) -> str:
+    """The payload for a GIVEN artifact map.
+
+    Factored out so the retired snapshot and the live hash cannot drift apart in
+    structure: a retirement that reproduced its pin only because it carried its
+    own private copy of the body would stop being a check the moment a constant
+    was added here.
+    """
     body = {
         "base_url": BASE_URL,
         "cohort": COHORT,
@@ -217,10 +224,14 @@ def payload() -> str:
         "topup_episodes": TOPUP_EPISODES,
         "topup_seed0": TOPUP_SEED0,
         "retired_bracket_pin": RETIRED_BRACKET_PIN,
-        "artifacts": {a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
-                      for a in ARTIFACTS},
+        "artifacts": artifacts,
     }
     return json.dumps(body, sort_keys=True, separators=(",", ":"))
+
+
+def payload() -> str:
+    return _payload_body({a: hashlib.sha256((_ROOT / a).read_bytes()).hexdigest()
+                          for a in ARTIFACTS})
 
 
 def current_hash() -> str:
@@ -253,17 +264,69 @@ def retired_bracket_hash() -> str:
     ).hexdigest()
 
 
+#: **ROUND 3 IS CLOSED, and the pin is retired rather than moved.**
+#:
+#: Round 6 added three worlds to `worlds/build_eden_worlds.py`, which is one of
+#: this round's hashed artifacts, so `current_hash()` no longer returns
+#: `PINNED_ROUND3_HASH`. The gate fired correctly.
+#:
+#: **Re-pinning to today's bytes was rejected, because it would assert something
+#: false.** A pin says "these bytes produced these numbers". Round 3's 576 LAT
+#: episodes were produced by the artifacts frozen below and by nothing else; a pin
+#: recomputed from today's files would claim today's builder produced them, and it
+#: did not. The bracket pin was retired for the same reason and this follows it.
+#:
+#: **The change is inert with respect to what round 3 measured, and that is
+#: evidence rather than assertion**: all sixteen pre-round-6 `BUILD.lock.json`
+#: files are byte-identical across the refactor -- same derived block, same
+#: sha256 map, same larder, same rooms -- so LAT's compiled world and its
+#: arithmetic are untouched. `tests/test_eden_round6.py` pins that every
+#: pre-round-6 level still sits on the ring.
+#:
+#: Consequence, stated plainly: **no further round-3 cell can be served.** More
+#: LAT episodes need a new round with its own pin, and the fact that the artifacts
+#: moved has to be recorded there rather than absorbed.
+RETIRED_LAT_PIN = PINNED_ROUND3_HASH
+RETIRED_LAT_SHA256 = {
+    "docs/edenbench-spec.md":
+        "27b79a6666f4d8b902f3fa01a6babacbc6b0173a2cd2a695816128aea6cf7e78",
+    "docs/eden-round2-hosted.md":
+        "d36beb6b507b9a3934c1451fe6c94b2aeb7e612de6e749981393db5f9b4f68d2",
+    "seahaven/eden/simulate.py":
+        "dbce00d372549eeab69eb11139e3102fcad1b2d4f7f8ee8542ed2cbe9ebc8a80",
+    "seahaven/eden/outcome.py":
+        "347e269b09b3d0979d559d828a7df084bcb2378597b56976d405b8508bcc7fc9",
+    "seahaven/eden/manifest.py":
+        "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
+    "worlds/build_eden_worlds.py":
+        "392b92f33257f6712e373fa9c9513263c406b352e9adc1d5237d870df0eb2ab3",
+}
+
+
+def retired_lat_hash() -> str:
+    """Reproduces `RETIRED_LAT_PIN` from the frozen snapshot, permanently.
+
+    A retired pin that cannot be recomputed is a number in a comment, and the
+    whole discipline is that a pin is checkable.
+    """
+    return hashlib.sha256(
+        _payload_body(dict(RETIRED_LAT_SHA256)).encode()).hexdigest()
+
+
 def assert_pinned() -> None:
-    if not PINNED_ROUND3_HASH:
-        raise SystemExit(
-            "round-3 pin is EMPTY. Compute it with `current_hash()`, paste it "
-            "into PINNED_ROUND3_HASH, and commit BEFORE running any cell.")
-    got = current_hash()
-    if got != PINNED_ROUND3_HASH:
-        raise SystemExit(
-            f"ROUND-3 PIN BROKEN\n  pinned {PINNED_ROUND3_HASH}\n  actual {got}\n"
-            "  A constant or a hashed artifact changed after the freeze. Either "
-            "revert it, or re-pin DELIBERATELY and say so in the commit.")
+    """**Refuses. Round 3 is closed.**
+
+    Not a no-op that always passes -- that would be a check which cannot fail,
+    which is the defect the standing requirements name. It refuses every caller,
+    which is the true statement: the artifacts that produced round 3 have moved,
+    so nothing further can be served under this pin.
+    """
+    raise SystemExit(
+        "ROUND 3 IS CLOSED. Its pin is retired as RETIRED_LAT_PIN and the "
+        "artifacts that produced its 576 episodes have since moved (round 6 "
+        "added three worlds to the builder). Serving another cell under this "
+        "pin would attribute it to bytes that no longer exist. Open a new round "
+        "with its own pin and record there that the artifacts moved.")
 
 
 if __name__ == "__main__":
