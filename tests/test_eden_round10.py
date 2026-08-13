@@ -233,15 +233,18 @@ def test_the_pin_covers_BOTH_locks_and_the_class_rule():
 # THE RESULT'S SHAPE — pinned because the first writeup got it wrong.
 # --------------------------------------------------------------------------
 
-# The observed generation-3 LAT table, as reported. Literals on purpose: these
-# tests pin the CLAIM made about the scatter, so if a number moves they fire.
+# The observed generation-3 LAT table, AFTER both top-ups. Literals on purpose:
+# these tests pin the CLAIM made about the scatter, so if a number moves they fire
+# — and one did. Qwen3.5-9B went 44/72 -> 58/96 and DS-V4-Flash 27/72 -> 46/96,
+# and the second of those RETRACTED round 10's published break. See
+# `tests/test_eden_stability.py` for the retraction and the evidence behind it.
 _OBSERVED = [
     ("gemma", 0, 96), ("Llama", 0, 96), ("MiniMax-M3", 1, 72),
     ("Inkling", 1, 72), ("gpt-oss-120b", 1, 65), ("gpt-oss-20b", 1, 32),
     ("GLM-5.2", 5, 96), ("Muse-Glimmer", 7, 71), ("nemotron", 12, 96),
     ("Kimi-K2.7", 9, 72), ("Kimi-K2.6", 11, 72), ("DeepSeek-Pro", 19, 96),
-    ("Qwen2.5-7B", 22, 72), ("cogito", 36, 96), ("DS-V4-Flash", 27, 72),
-    ("Qwen3.5-9B", 44, 72),
+    ("Qwen2.5-7B", 22, 72), ("cogito", 36, 96), ("DS-V4-Flash", 46, 96),
+    ("Qwen3.5-9B", 58, 96),
 ]
 _FLOOR_MEMBERS = ("gemma", "Llama", "MiniMax-M3", "Inkling",
                   "gpt-oss-120b", "gpt-oss-20b")
@@ -265,22 +268,25 @@ def test_the_FLOOR_boundary_is_NOT_marked_by_a_gap():
     ranked = sorted(gaps, reverse=True)
     pos = [i for i, (_, nm) in enumerate(ranked) if nm == "GLM-5.2"][0]
     assert len(gaps) == 15
-    assert pos == 7, f"floor boundary ranks {pos+1}th of 15, not 8th"
+    assert pos == 8, f"floor boundary ranks {pos+1}th of 15, not 9th"
     wider_inside = [nm for g, nm in ranked[:pos]]
     assert "Qwen3.5-9B" in wider_inside
-    assert len(wider_inside) == 7, "seven gaps must be wider than the boundary"
+    assert len(wider_inside) == 8, "eight gaps must be wider than the boundary"
 
 
-def test_the_ONLY_real_break_in_the_cohort_is_at_the_TOP():
-    """Exactly one adjacent pair has non-overlapping 95% intervals, and it is
-    below Qwen3.5-9B — not at the floor."""
+def test_there_is_NO_break_anywhere_in_the_cohort_any_more():
+    """**RETRACTED.** This test used to assert exactly one adjacent pair with
+    non-overlapping 95% intervals, below Qwen3.5-9B. Topping DS-V4-Flash from
+    27/72 to 46/96 closed it: there is now no break anywhere, and the sixteen
+    rates are a single continuum end to end. Kept in this file, inverted, so the
+    old claim cannot be restored by a later edit that only touches the table."""
     rows = [(name, k, n) for name, k, n in
             sorted(_OBSERVED, key=lambda r: r[1] / r[2])]
     sep = []
     for (n1, k1, m1), (n2, k2, m2) in zip(rows, rows[1:]):
         if R.wilson(k1, m1)[1] < R.wilson(k2, m2)[0]:
             sep.append((n1, n2))
-    assert sep == [("DS-V4-Flash", "Qwen3.5-9B")], sep
+    assert sep == [], f"a break reappeared: {sep}"
 
 
 def test_NO_floor_member_is_separable_from_the_LOWEST_spread_member():

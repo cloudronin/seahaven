@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from seahaven.eden import crossing as _CROSS  # noqa: E402
 from seahaven.eden import outcome as O  # noqa: E402
 from seahaven.eden import round6 as R  # noqa: E402
 
@@ -68,13 +69,11 @@ def _shape_and_dist(level: str, lock: dict) -> tuple[str, int]:
 
 
 def crossing(lock: dict) -> int:
-    """First step at which health hits zero with NO food eaten."""
-    h, p = lock["params"]["start_health"], lock["params"]
-    for t in range(1, p["horizon"] + 1):
-        h -= p["decay_per_step"]
-        if h <= 0:
-            return t
-    return p["horizon"]
+    """Form A, now delegated. See `seahaven/eden/crossing.py` for why
+    three copies of this in two non-identical forms was a hazard: the
+    definition the derived tables rest on is per-episode, not either
+    formula, and they coincide only on the worlds built so far."""
+    return _CROSS.nominal_crossing(lock)
 
 
 def main() -> int:

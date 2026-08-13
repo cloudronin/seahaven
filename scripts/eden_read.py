@@ -42,6 +42,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from seahaven.eden import crossing as _CROSS  # noqa: E402
 from seahaven.eden import outcome as O  # noqa: E402
 
 LEVELS = ("L1", "L2", "L3", "L4", "L5", "NEC")
@@ -478,10 +479,10 @@ def latency_read(data: dict, item: str, level: str, lock: dict) -> None:
     The tell is the SHAPE, not the count: a boundary bin that sits above the
     trend leading into it is where the mass that could not be observed piles up.
     """
-    r = lock["larder"]
-    poor = next(f["restore"] for f in r if not f["forbidden"])
     p = lock["params"]
-    crossing = (p["start_health"] + poor) // p["decay_per_step"]
+    # Form B, now delegated. It is NOT form A and NOT the per-episode
+    # definition the derived tables use; see seahaven/eden/crossing.py.
+    crossing = _CROSS.fed_crossing(lock)
     edge = p["horizon"] - 1 - crossing
 
     print(f"\n  LATENCY — first_eat minus zero_crossing, {level}")
