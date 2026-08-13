@@ -456,3 +456,111 @@ def test_the_nonfood_rate_denominator_is_EAT_COMMANDS():
         ["barley loaf"], crossing=24)
     assert prof["eats"] == 2 and prof["nonfood"] == 1
     assert prof["rate"] == 0.5
+
+
+# --------------------------------------------------------------------------
+# The gap-fill: a retry must not re-draw the episodes that already survived.
+# --------------------------------------------------------------------------
+
+def _sweep_module():
+    key = "_r6_sweep"
+    if key not in sys.modules:
+        sp = importlib.util.spec_from_file_location(
+            key, _ROOT / "scripts" / "eden_round6_sweep.py")
+        mod = importlib.util.module_from_spec(sp)
+        sys.modules[key] = mod
+        sp.loader.exec_module(mod)
+    return sys.modules[key]
+
+
+def _fake_cell(path, seeds, steps=33, billed=1.0):
+    path.write_text(json.dumps({
+        "n_runs_requested": 24,
+        "runs": [{"seed": s, "commands": [{"step": i, "command": "look",
+                                           "health": 70 - i}
+                                          for i in range(steps)]}
+                 for s in seeds],
+        "meta": {"billed_usd": billed, "wall_s": 50, "attempts": 1},
+    }) + "\n")
+
+
+def test_missing_seeds_reads_the_FILE_not_a_count(tmp_path):
+    S = _sweep_module()
+    p = tmp_path / "cell.json"
+    _fake_cell(p, [7300 + i for i in range(24) if i != 21])
+    assert S.missing_seeds(p, 7300, 24) == [7321]
+    _fake_cell(p, [7300 + i for i in range(24)])
+    assert S.missing_seeds(p, 7300, 24) == []
+
+
+def test_a_retry_FILLS_the_gap_instead_of_redrawing_the_cell(tmp_path, monkeypatch):
+    """The arithmetic this exists for.
+
+    A sporadic ~1/24 failure leaves a clean 24-episode redraw only ~36% likely,
+    so completing a cell costs about triple the nominal — round 6's W3 A1 cell
+    burned $3.89 across three attempts to buy one episode, twice throwing away 23
+    good ones. Filling makes it one call.
+    """
+    S = _sweep_module()
+    p = tmp_path / "eden_e6_m__A1__W3.json"
+    survivors = [7300 + i for i in range(24) if i != 21]
+    _fake_cell(p, survivors, billed=1.35)
+
+    calls = []
+
+    def fake_run_fidelity(ep, _p, *, runs, steps, seed0, **kw):
+        calls.append((runs, seed0))
+        return {"n_runs_requested": runs,
+                "runs": [{"seed": seed0 + i,
+                          "commands": [{"step": j, "command": "look",
+                                        "health": 70 - j} for j in range(33)]}
+                         for i in range(runs)]}
+
+    monkeypatch.setattr(S, "run_fidelity", fake_run_fidelity)
+    monkeypatch.setattr(S, "Endpoint", lambda **kw: type(
+        "E", (), {"usage_total": {"prompt_tokens": 1000, "completion_tokens": 100}})())
+    monkeypatch.setattr(S, "cell_path", lambda *a, **k: p)
+    monkeypatch.setenv("TOGETHER_API_KEY", "x")
+
+    res = S.run_cell("deepcogito/cogito-v2-1-671b", "A1", "W3", seeds=[7321])
+
+    assert calls == [(1, 7321)], (
+        f"expected ONE one-episode call at the missing seed, got {calls}")
+    got = sorted(r["seed"] for r in res["runs"])
+    assert got == sorted(survivors + [7321]) and len(got) == 24
+    # the 23 survivors are the SAME objects, not re-drawn
+    assert res["meta"]["filled_seeds"] == [7321]
+    assert res["meta"]["attempts"] == 2
+    # cost accumulates across attempts rather than reporting only this one
+    assert res["meta"]["billed_usd"] > res["meta"]["billed_this_attempt_usd"]
+    assert res["meta"]["billed_usd"] == pytest.approx(
+        1.35 + res["meta"]["billed_this_attempt_usd"], abs=1e-6)
+
+
+def test_a_gap_fill_REFUSES_when_the_filled_episode_is_a_different_length(
+        tmp_path, monkeypatch):
+    """Construction-identity is asserted, not trusted.
+
+    The fill relies on EdenBench's schedule being flat, so `_steps_for` gives the
+    same horizon at every index. If that ever stops holding, a filled episode
+    would be a different length from the cell's others and the pooled rate would
+    mix two episode lengths — the H=36 failure, moved into the scheduler.
+    """
+    S = _sweep_module()
+    p = tmp_path / "cell.json"
+    _fake_cell(p, [7300 + i for i in range(24) if i != 21], steps=33)
+
+    def short_run(ep, _p, *, runs, steps, seed0, **kw):
+        return {"n_runs_requested": runs,
+                "runs": [{"seed": seed0,
+                          "commands": [{"step": j, "command": "look",
+                                        "health": 70 - j} for j in range(30)]}]}
+
+    monkeypatch.setattr(S, "run_fidelity", short_run)
+    monkeypatch.setattr(S, "Endpoint", lambda **kw: type(
+        "E", (), {"usage_total": {"prompt_tokens": 0, "completion_tokens": 0}})())
+    monkeypatch.setattr(S, "cell_path", lambda *a, **k: p)
+    monkeypatch.setenv("TOGETHER_API_KEY", "x")
+
+    with pytest.raises(SystemExit, match="NOT construction-identical"):
+        S.run_cell("deepcogito/cogito-v2-1-671b", "A1", "W3", seeds=[7321])

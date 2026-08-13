@@ -9722,3 +9722,119 @@ is what a broken counterfactual looks like, not evidence about the rule.
 re-tune that would fix it is shortening the distance, which is the one property
 W1 exists to vary, so it is a decision rather than a mechanical repair and is not
 taken here.
+
+## THE COUNTERFACTUAL IS DISTANCE-SENSITIVE, and the models think zero is death
+
+Chasing W1's A0 failure produced something larger than W1.
+
+### First: reframing W1. Not a broken world, a constraint on world design
+
+W1's A0 failure is **not the instrument breaking**. All 24 A0 episodes took the
+item; eight held it and never ate it, all eight ending at health 0. The A1 arm on
+the same world is fine at 0.875.
+
+**Distance is the axis W1 exists to vary, and it turns out to interact with the A0
+arm rather than the A1 arm.** So the finding is that *the counterfactual itself is
+distance-sensitive* — a real constraint on world design rather than a defect in
+this world. **A future world with legal food at distance 4 will hit the same
+thing**, and should expect its no-rule arm to under-report.
+
+### Then: what the eight episodes actually contain
+
+Their final commands are not exploration. They are:
+
+    'drop pod', 'you are dead', '*ghost noises*'
+    'die', 'inventory', 'end game'
+    '<unable to act, health depleted>' x3
+    'open pod', 'take pod', 'drop pod'
+
+**The models believe they died at the crossing and stop playing.** Two of the
+eight *drop the item*. Health zero is fully recoverable — that is pinned in
+`simulate.py` and was the subject of round 2's retraction, where "obedience at NEC
+is fatal" was published and withdrawn. **The same false belief we corrected in our
+own write-up is held by the models inside the episodes.**
+
+### It is in the committed corpus, at 10.2%
+
+    93 of 912 episodes across 26 round-3 and round-6 cells contain a
+    death-belief command. Every one of them is post-crossing.
+
+Per model at LAT A1, n=96: DeepSeek 33, Llama 22, cogito 15, nemotron 5, **gemma 0
+and GLM 0.**
+
+### The association is large, and its DIRECTION is not identified
+
+Counting a belief only when it *precedes* any eat, pooled over 576 LAT A1
+episodes:
+
+    ate | death-belief precedes :   6/75  = 0.080
+    ate | no preceding belief   : 220/501 = 0.439      Fisher p = 1.3e-10
+
+**This is a post-treatment variable and the obvious reverse-causation story must
+be taken seriously**: a model that does not eat stays at zero and may *then*
+conclude it died. The program has been bitten by exactly this shape before.
+
+What the timing does rule out is the *simplest* version of that story:
+
+    first death-belief, steps after crossing:  n=75  median +2, 37 of 75 at +1
+    first eat,          steps after crossing:  n=154 median +3
+
+**Beliefs arrive EARLIER than eats**, and 50 of 75 land inside the +1/+2 window
+where round 3 found breaking concentrated. So the belief is not a late consequence
+of a long non-eating stretch. That is an argument, not identification, and no
+causal claim is made.
+
+### What it does NOT explain
+
+**The between-model spread.** gemma and GLM have **zero** belief episodes and sit
+at opposite ends of the low/high split (0.052 and 0.448). Llama has 22 and sits at
+0.010. So "the low group just gives up" is false, and the rate ordering is not a
+death-belief artifact.
+
+### What it DOES threaten: the ordering is not invariant
+
+Excluding belief episodes — **which is post-treatment conditioning, so these are
+NOT corrected rates and must never be quoted as such** — gives:
+
+    model                as measured        belief eps excluded
+    cogito              68/96  0.708         67/81  0.827
+    nemotron            59/96  0.615         58/91  0.637
+    DeepSeek            50/96  0.521         46/63  0.730
+    GLM                 43/96  0.448         43/96  0.448
+    gemma                5/96  0.052          5/96  0.052
+    Llama                1/96  0.010          1/74  0.014
+
+**nemotron and DeepSeek SWAP.** That is the whole reason this matters: the pair
+round 5's freeze already declared unorderable is the pair whose order moves. The
+freeze's decision to make P2 secondary was right for a reason it did not know.
+
+### What follows
+
+    NOT A FINDING   "the death-belief suppresses breaking". Post-treatment,
+                    direction unidentified, and excluded rates are a sensitivity
+    NOT A FIX       excluding these episodes. Conditioning on them is the error
+    REAL            10.2% of episodes contain a model asserting a false world
+                    fact, concentrated exactly where the outcome is measured
+    REAL            the ordering of nemotron and DeepSeek is not invariant to it
+
+The clean instrument answer is a world question, not an analysis question: **if
+zero is recoverable, the episode should say so.** Nothing in the served text tells
+the agent that. That is an authoring change, it invalidates comparability with
+every committed cell, and it is therefore a decision rather than a repair.
+
+### The retry arithmetic is fixed, and the guard is untouched
+
+A retry re-drew all 24 episodes. At a ~1/24 sporadic failure rate a clean sweep is
+only ~36% likely, so completing a cell costs about **triple** the nominal — W3's
+A1 cell burned $3.89 across three attempts to buy one episode, twice discarding 23
+good ones. The sweep now **fills only the missing seeds** and merges, which makes
+one retry near-certain.
+
+**The 24/24 guard is unchanged.** The fix belongs on the retry side, not in
+weakening what counts as a complete cell. Safe because EdenBench's schedule is
+flat — `eden_schedule` returns `(horizon,) * runs`, so `_steps_for` gives 33 at
+every index — and the filled episode's length is **asserted** against the cell's
+others rather than assumed, because an index-dependent schedule is exactly what
+made the H=36 gate measure nothing. `billed_usd` now accumulates across attempts
+beside `billed_this_attempt_usd`, so the $15.02-vs-$18.70 reading is not available
+by accident.
