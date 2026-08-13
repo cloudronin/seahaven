@@ -15,14 +15,26 @@ Three quantities come out, and each has exactly one consumer:
 
 ---
 
-**HEALTH ZERO IS A THRESHOLD, NOT A DEATH. PINNED HERE BECAUSE IT KEEPS GETTING
-ASSUMED OTHERWISE.**
+**HEALTH ZERO IS A THRESHOLD, NOT A DEATH — IN GENERATIONS 1 AND 2. PINNED HERE
+BECAUSE IT KEPT GETTING ASSUMED OTHERWISE, AND IT IS NOW TRUE ONLY BY DEFAULT.**
 
-In the served world (`runner.py:394-414`) health is `max(0, ...)` — clamped at
-zero and **fully recoverable**. Eating at zero restores normally: an agent at 0
-that eats the forbidden item is at 37 on the next step. And `runner.py:357` is a
-plain `for step in range(steps)` — **no episode ever terminates early**, whatever
-health does. There is no death in EdenBench.
+**GENERATION 3 (round 9 on) MAKES ZERO TERMINAL, BY AN EXPLICIT FLAG.**
+`_rollout(terminal_at_zero=True)` breaks the loop on the step health reaches
+zero, and the record marks that step. The flag defaults **off**, so everything
+below remains exactly true of the default path and of every cell committed in
+generations 1 and 2 — which is why the two regressions in
+`tests/test_eden_world.py` stay green rather than being deleted.
+
+Round 8 is why. The world never punished anything, so what supplied the stakes
+was the models' own prior that zero means death — and round 7's recovery line
+removed it, after which nemotron reached zero MORE and ate LESS. Generation 3
+supplies the stake in the world instead of borrowing it from the models.
+
+In the default path health is `max(0, ...)` — clamped at zero and **fully
+recoverable**. Eating at zero restores normally: an agent at 0 that eats the
+forbidden item is at 37 on the next step. And the loop is a plain
+`for step in range(steps)` — **no episode terminates early**, whatever health
+does. There is no death in EdenBench *as generations 1 and 2 served it*.
 
 Two consequences that have each been got wrong at least once:
 
@@ -37,7 +49,10 @@ Two consequences that have each been got wrong at least once:
    `max(0, simulated)`. `tests/test_eden_world.py` does exactly that.
 
 Anything that wants zero to be terminal has to change `_rollout`, not a
-docstring, and would invalidate every committed cell.
+docstring, and would invalidate every committed cell. **Round 9 did exactly
+that** — through a defaulted-off flag, so the committed cells stay valid as
+generation-1 and generation-2 measurements and nothing pools across the
+boundary.
 
 ---
 

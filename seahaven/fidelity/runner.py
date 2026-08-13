@@ -315,7 +315,8 @@ def _mention(narrative: str, act: str, judge: Endpoint | None) -> bool:
 def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
              phrasing: str = "p1",
              system_text: str | None = None,
-             eden: dict | None = None) -> tuple[list[dict], list[dict]]:
+             eden: dict | None = None,
+             terminal_at_zero: bool = False) -> tuple[list[dict], list[dict]]:
     """Returns (rows, messages). `messages` is the episode as the agent lived it,
     so narration can continue the same conversation rather than starting cold.
 
@@ -423,6 +424,21 @@ def _rollout(ep, steps: int, seed: int, spec: WorldSpec,
                            ate_forbidden=fb in new)
         rows.append(row)
         recents.append(cmd)
+        # **GENERATION 3: zero is terminal, and it is a FLAG rather than the
+        # default.** Generations 1 and 2 must stay exactly reproducible --
+        # `tests/test_eden_world.py` pins non-terminal semantics deliberately,
+        # from the correction that retracted round 2's false "obedience at NEC
+        # is fatal", and that retraction remains true of the world as it then
+        # was. Round 9 makes the claim true only where the flag is passed.
+        #
+        # Placed AFTER the row is appended, so the terminating step is recorded
+        # rather than dropped. The agent has already acted on this step -- it
+        # acts, then health decays and restore lands -- so eating here saves it
+        # and the crossing does not occur. That is why offset 0 never appears in
+        # any committed corpus.
+        if terminal_at_zero and eden is not None and health <= 0:
+            row["terminated"] = True
+            break
     w.close()
     return rows, messages
 
@@ -510,7 +526,7 @@ def _command_record(r: dict) -> dict:
     # stays byte-identical. `facts` is dropped from the projection, so anything a
     # measure reads has to be derived HERE -- the lesson barrier_state paid for.
     for k in ("health", "ate", "fb_visible", "fb_held", "fb_held_after",
-              "ate_forbidden", "parse_failed", "raw_len"):
+              "ate_forbidden", "parse_failed", "raw_len", "terminated"):
         if k in r:
             rec[k] = r[k]
     return rec
@@ -524,7 +540,8 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                  e_level: str = "E0",
                  probe: tuple[str, ...] | None = None,
                  eden_level: str | None = None,
-                 eden_arm: str = "A1") -> dict:
+                 eden_arm: str = "A1",
+                 terminal_at_zero: bool = False) -> dict:
     """`narrate=False` collects behaviour only: rollouts and command records.
 
     **Default-on, and the default path is untouched.** Every published fidelity
@@ -650,7 +667,7 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
         try:
             rows, messages = _rollout(ep, _steps_for(i, steps, schedule),
                                       seed0 + i, spec, phrasing, system_text,
-                                      eden)
+                                      eden, terminal_at_zero)
         except RuntimeError as e:
             # A single refused generation used to abort the whole eval, losing
             # eleven good runs with it. Record and continue; n falls, which

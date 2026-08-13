@@ -202,7 +202,8 @@ def test_the_pin_covers_the_LAT_lock_the_prompt_module_and_the_prediction():
     assert "worlds/build_eden_worlds.py" not in R8.ARTIFACTS
     assert "seahaven/eden/outcome.py" in R8.ARTIFACTS
     assert R8.world_lock_paths() == ("worlds/world_eden_LAT/BUILD.lock.json",)
-    assert R8.current_hash() == R8.PINNED_ROUND8_HASH
+    # Retired as generation 2 — round 9 reverted EDEN_RECOVERY.
+    assert R8.retired_g2_hash() == R8.RETIRED_G2_PIN
 
 
 def test_editing_the_PREDICTION_would_break_the_round8_pin():
@@ -213,12 +214,13 @@ def test_editing_the_PREDICTION_would_break_the_round8_pin():
     try:
         R8._PRED["zai-org/GLM-5.2"] = (0, 0.448, 0.900)
         assert R8.current_hash() != before
-        with pytest.raises(SystemExit, match="ROUND-8 PIN BROKEN"):
-            R8.assert_pinned()
     finally:
         R8._PRED.clear()
         R8._PRED.update(original)
     assert R8.current_hash() == before
+    # and the round is closed, so the live check refuses outright
+    with pytest.raises(SystemExit, match="ROUND 8 IS CLOSED"):
+        R8.assert_pinned()
 
 
 def test_the_before_baseline_matches_the_prediction_modules_own_numbers():

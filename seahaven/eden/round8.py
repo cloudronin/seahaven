@@ -263,18 +263,54 @@ def current_hash() -> str:
     return hashlib.sha256(payload().encode()).hexdigest()
 
 
+#: **ROUND 8 IS CLOSED — the end of GENERATION 2.** Round 9 reverts
+#: `EDEN_RECOVERY` from `outcome.py`, a hashed artifact here, so the pin broke.
+#:
+#: Retired rather than re-pinned, the fourth time and the same reason: round 8's
+#: 720 episodes were served under a prompt that told the agent health recovers
+#: from zero, and that prompt no longer exists. A recomputed pin would claim
+#: otherwise.
+#:
+#: **This corpus keeps a specific job.** It is the measurement of a world with
+#: NO STAKES — the recovery line removed the models' own death prior and the
+#: world never supplied a replacement — and that is what makes round 9's
+#: argument evidenced rather than asserted. It is not superseded data; it is the
+#: control generation 3 is defined against.
+#:
+#: The LAT lock is frozen below at its current bytes to record that round 9
+#: re-authors nothing: same compiled `.z8`, different prompt and different
+#: termination rule.
+RETIRED_G2_PIN = PINNED_ROUND8_HASH
+RETIRED_G2_SHA256 = {
+    "seahaven/eden/simulate.py":
+        "dbce00d372549eeab69eb11139e3102fcad1b2d4f7f8ee8542ed2cbe9ebc8a80",
+    "seahaven/eden/outcome.py":
+        "89f74c25a8f00f7270f0473b13bd06184e1ec071b5fa214fd6290f72df4d9f0d",
+    "seahaven/eden/manifest.py":
+        "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
+    "seahaven/fidelity/worldspec.py":
+        "bba9d54e9e13e31e260efa11d01ba1f2c7007653d62c42870bda5ab7a369bb85",
+}
+RETIRED_G2_LOCKS = {
+    "worlds/world_eden_LAT/BUILD.lock.json":
+        "85f272b569dad254911850a36cefbb73422a7e175d7144d934ad83aadc35b703",
+}
+
+
+def retired_g2_hash() -> str:
+    """Reproduces `RETIRED_G2_PIN` from the frozen snapshot, permanently."""
+    return hashlib.sha256(
+        _payload_body(dict(RETIRED_G2_SHA256),
+                      dict(RETIRED_G2_LOCKS)).encode()).hexdigest()
+
+
 def assert_pinned() -> None:
-    if not PINNED_ROUND8_HASH:
-        raise SystemExit(
-            "round-8 pin is EMPTY. Compute it with `current_hash()`, paste it "
-            "into PINNED_ROUND8_HASH, and commit BEFORE running any cell.")
-    got = current_hash()
-    if got != PINNED_ROUND8_HASH:
-        raise SystemExit(
-            f"ROUND-8 PIN BROKEN\n  pinned {PINNED_ROUND8_HASH}\n  actual {got}\n"
-            "  A constant, a measurement module, or the LAT lock changed after "
-            "the freeze. Either revert it, or re-pin DELIBERATELY and say so in "
-            "the commit.")
+    """**Refuses. Round 8 is closed and generation 2 with it.**"""
+    raise SystemExit(
+        "ROUND 8 IS CLOSED. Its pin is retired as RETIRED_G2_PIN. Round 9 "
+        "reverted EDEN_RECOVERY, so every round-8 cell was served under a prompt "
+        "that no longer exists, and generation 3 additionally makes zero "
+        "terminal. Nothing pools across either boundary. Open a new round.")
 
 
 if __name__ == "__main__":

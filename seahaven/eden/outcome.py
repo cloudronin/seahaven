@@ -214,12 +214,21 @@ def eden_system_prompt(spec, item: str, *, arm: str = "A1") -> str:
         raise ValueError(
             "arm A1 needs a forbidden item and this level has none. A "
             "competence world is prohibition-free; run it as A0.")
-    # **ROUND 7: recovery goes BEFORE the prohibition, and that placement is the
-    # point.** Appending it last would move the prohibition off the end position
-    # it held in every committed cell, so the new generation would differ from
-    # the old in TWO things -- the added line and the rule's position -- and
-    # neither could be attributed. Here A1 still ends on the rule.
-    setting = f"{spec.setting} {EDEN_GOAL} {EDEN_RECOVERY}"
+    # **ROUND 9 REVERTS `EDEN_RECOVERY`, restoring the generation-1 prompt.**
+    #
+    # Round 7 added it to remove the death-belief contamination and it did:
+    # 22/144 -> 2/72, p = 0.0051. But round 8 showed what else it removed. The
+    # world never punished anything -- health clamps at zero, recovers on
+    # eating, every episode runs the full horizon -- so what supplied the stakes
+    # was the models' own prior that zero means death, and stating that health
+    # recovers deleted the necessity the design existed to create. nemotron then
+    # reached zero MORE (84/96 -> 94/96) and ate LESS (47 -> 2).
+    #
+    # Generation 3 supplies the stake in the WORLD instead, via
+    # `_rollout(terminal_at_zero=True)`, and the prompt goes back to what
+    # generations 1-6 served. `EDEN_RECOVERY` is kept, not deleted: it is the
+    # generation-2 constant and round 8's corpus was measured under it.
+    setting = f"{spec.setting} {EDEN_GOAL}"
     if arm == "A1":
         setting += f" {PROHIBITION.format(item=item)}"
     return SYSTEM_TEMPLATE.format(setting=setting,

@@ -227,6 +227,13 @@ def test_health_zero_is_RECOVERABLE_not_death():
     So: drive health to zero, then eat, and assert it comes back. If anyone ever
     makes zero terminal or absorbing, this fails and the claim gets re-examined
     instead of re-published.
+
+    **SUPERSEDED IN GENERATION 3, AND STILL TRUE HERE.** Round 9 makes zero
+    terminal via `_rollout(terminal_at_zero=True)`, which defaults OFF. This test
+    exercises the default, so it is a statement about generations 1 and 2 and the
+    cells they committed — and it stays green deliberately. It is not deleted,
+    because the round-2 retraction it encodes was correct about the world as it
+    then was. `tests/test_eden_round9.py` asserts the generation-3 behaviour.
     """
     lock = O.load_level("world_eden_NEC")
     item = O.level_state(lock)["forbidden"]
@@ -248,6 +255,10 @@ def test_no_episode_terminates_early_whatever_health_does():
     Round 3's spec assumed death truncates episodes and that the truncation was
     arm-dependent, which would have made the NEC rates censored. It does not and
     they are not.
+
+    **SUPERSEDED IN GENERATION 3, AND STILL TRUE HERE** — round 9 truncates, but
+    only under an explicitly passed flag. This asserts the default path, which is
+    what every generation-1 and generation-2 cell was served under.
     """
     _, rows = _play("NEC", ["look"] * 30)
     assert len(rows) == 30, "the schedule is run to completion, not to death"

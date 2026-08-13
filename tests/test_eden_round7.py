@@ -98,13 +98,30 @@ def test_the_detector_does_not_fire_on_ORDINARY_commands(cmd):
 # The line.
 # --------------------------------------------------------------------------
 
+def _gen2_prompt(level, arm):
+    """Generation 2's setting line, RECONSTRUCTED.
+
+    Round 9 reverted `EDEN_RECOVERY` from `eden_system_prompt`, so the live
+    builder no longer emits it and these tests can no longer read it off the
+    production path. They are statements about what generation 2 SERVED, and
+    round 7's 288 committed episodes were served under exactly this string.
+    """
+    spec = load(f"world_eden_{level}")
+    item = O.level_state(O.load_level(f"world_eden_{level}"))["forbidden"]
+    setting = f"{spec.setting} {O.EDEN_GOAL} {O.EDEN_RECOVERY}"
+    if arm == "A1":
+        setting += f" {O.PROHIBITION.format(item=item)}"
+    return setting
+
+
 @pytest.mark.parametrize("level", R7.LEVELS)
 @pytest.mark.parametrize("arm", R7.ARMS)
-def test_EDEN_RECOVERY_is_in_both_arms_of_every_world(level, arm):
-    lock = O.load_level(f"world_eden_{level}")
-    item = O.level_state(lock)["forbidden"]
-    p = O.eden_system_prompt(load(f"world_eden_{level}"), item, arm=arm)
-    assert O.EDEN_RECOVERY in p
+def test_EDEN_RECOVERY_was_in_both_arms_of_every_generation2_world(level, arm):
+    assert O.EDEN_RECOVERY in _gen2_prompt(level, arm)
+    # and it is GONE from the live builder, which is generation 3
+    item = O.level_state(O.load_level(f"world_eden_{level}"))["forbidden"]
+    live = O.eden_system_prompt(load(f"world_eden_{level}"), item, arm=arm)
+    assert O.EDEN_RECOVERY not in live
 
 
 def test_the_line_is_BYTE_IDENTICAL_across_arms_and_worlds():
@@ -112,10 +129,8 @@ def test_the_line_is_BYTE_IDENTICAL_across_arms_and_worlds():
     second thing changing alongside the worlds themselves."""
     seen = set()
     for level in R7.LEVELS:
-        lock = O.load_level(f"world_eden_{level}")
-        item = O.level_state(lock)["forbidden"]
         for arm in R7.ARMS:
-            p = O.eden_system_prompt(load(f"world_eden_{level}"), item, arm=arm)
+            p = _gen2_prompt(level, arm)
             i = p.index(O.EDEN_RECOVERY)
             seen.add(p[i:i + len(O.EDEN_RECOVERY)])
     assert len(seen) == 1
@@ -129,10 +144,8 @@ def test_A1_still_ENDS_on_the_prohibition(level):
     every committed cell, so the new generation would differ from the old in TWO
     things and neither could be attributed.
     """
-    lock = O.load_level(f"world_eden_{level}")
-    item = O.level_state(lock)["forbidden"]
-    head = O.eden_system_prompt(load(f"world_eden_{level}"), item,
-                                arm="A1").split("Say what")[0].rstrip()
+    item = O.level_state(O.load_level(f"world_eden_{level}"))["forbidden"]
+    head = _gen2_prompt(level, "A1")
     assert head.endswith(O.PROHIBITION.format(item=item))
     assert head.index(O.EDEN_RECOVERY) < head.index(
         O.PROHIBITION.format(item=item))
@@ -170,7 +183,8 @@ def test_the_round7_pin_covers_the_LOCKS_and_the_PROMPT_module():
     assert "seahaven/fidelity/worldspec.py" in R7.ARTIFACTS
     assert set(R7.world_lock_paths()) == {
         f"worlds/world_eden_{lv}/BUILD.lock.json" for lv in R7.LEVELS}
-    assert R7.current_hash() == R7.PINNED_ROUND7_HASH
+    # Retired with round 8 as generation 2 — round 9 reverted the line.
+    assert R7.retired_g2_hash() == R7.RETIRED_G2_PIN
 
 
 def test_the_worlds_did_NOT_change_across_the_generation_boundary():
@@ -183,18 +197,27 @@ def test_the_worlds_did_NOT_change_across_the_generation_boundary():
         assert got == want, f"{p} changed; round 7 was supposed to touch no world"
 
 
-def test_editing_outcome_py_would_break_the_round7_pin(monkeypatch):
-    """The pin must fire on the module that carries the line."""
+def test_the_retired_round7_digest_is_immune_to_edits_of_the_live_files():
+    """What makes the retirement durable rather than decorative.
+
+    Round 9 reverted `EDEN_RECOVERY` from `outcome.py`, a hashed artifact here,
+    so this pin broke at the same moment round 8's did. Both are retired as
+    generation 2. Editing the live file must move `current_hash()` and leave the
+    frozen digest exactly where it was — otherwise the record of what round 7
+    served would depend on the state of the working tree.
+    """
+    frozen, live = R7.retired_g2_hash(), R7.current_hash()
     p = _ROOT / "seahaven/eden/outcome.py"
     original = p.read_bytes()
     try:
         p.write_bytes(original + b"\n# drift\n")
-        assert R7.current_hash() != R7.PINNED_ROUND7_HASH
-        with pytest.raises(SystemExit, match="ROUND-7 PIN BROKEN"):
-            R7.assert_pinned()
+        assert R7.current_hash() != live, "live hash must notice the edit"
+        assert R7.retired_g2_hash() == frozen, "the RETIRED digest moved"
     finally:
         p.write_bytes(original)
-    assert R7.current_hash() == R7.PINNED_ROUND7_HASH
+    with pytest.raises(SystemExit, match="ROUND 7 IS CLOSED"):
+        R7.assert_pinned()
+    assert R7.retired_g2_hash() == R7.RETIRED_G2_PIN
 
 
 def test_the_seeds_are_disjoint_from_every_prior_generation_block():
