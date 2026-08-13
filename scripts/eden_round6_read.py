@@ -78,7 +78,15 @@ def crossing(lock: dict) -> int:
 
 
 def main() -> int:
-    R.assert_pinned()
+    # **The RETIRED pin.** Round 6 is closed — round 7 added EDEN_RECOVERY to the
+    # served prompt, so `assert_pinned` refuses every caller. A read spends
+    # nothing and must still work on a closed round; what it needs is that the
+    # pin these cells were served under is still reproducible.
+    if R.retired_w_hash() != R.RETIRED_W_PIN:
+        raise SystemExit(
+            f"RETIRED ROUND-6 PIN DOES NOT RECOMPUTE\n  frozen {R.RETIRED_W_PIN}\n"
+            f"  actual {R.retired_w_hash()}\n  The record of what round 6 was "
+            "served under has been edited. Restore it; do not re-freeze.")
     data = load()
     if not data:
         print("no round-6 cells on disk yet")

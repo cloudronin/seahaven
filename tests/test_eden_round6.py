@@ -367,25 +367,44 @@ def test_the_pin_hashes_the_SERVED_WORLDS_not_the_builder_source():
     # worldspec holds SETTINGS, which is the opening line of the served prompt.
     # Rounds 3 and 4 did not hash it; that gap was open for three rounds.
     assert "seahaven/fidelity/worldspec.py" in R6.ARTIFACTS
-    assert R6.current_hash() == R6.PINNED_ROUND6_HASH
+    # **The live pin is gone — round 6 is retired.** Round 7 added EDEN_RECOVERY
+    # to `outcome.py`, a hashed artifact here, so its 144 episodes were served
+    # under a prompt that no longer exists. What must still hold is that the
+    # digest they WERE served under stays reproducible.
+    assert R6.retired_w_hash() == R6.RETIRED_W_PIN
 
 
-def test_editing_a_world_lock_BREAKS_the_round6_pin(tmp_path, monkeypatch):
-    """The pin must actually fire on the thing it claims to cover."""
+def test_the_retired_round6_digest_is_IMMUNE_to_edits_of_the_live_files():
+    """What makes a retirement durable rather than decorative.
+
+    A retired pin computed from live files would drift every time anything it
+    hashes is touched, and then the record of what was served would depend on
+    the state of the working tree. It is computed from frozen literals instead,
+    so editing a world lock moves `current_hash()` and leaves `retired_w_hash()`
+    exactly where it was.
+    """
     from seahaven.eden import round6 as R6
-    before = R6.current_hash()
+    frozen_before, live_before = R6.retired_w_hash(), R6.current_hash()
     p = _ROOT / "worlds/world_eden_W1/BUILD.lock.json"
     original = p.read_bytes()
     try:
         d = json.loads(original)
         d["derived"]["supply_ratio"] = 0.999
         p.write_text(json.dumps(d, indent=2) + "\n")
-        assert R6.current_hash() != before
-        with pytest.raises(SystemExit, match="ROUND-6 PIN BROKEN"):
-            R6.assert_pinned()
+        assert R6.current_hash() != live_before, "live hash must notice the edit"
+        assert R6.retired_w_hash() == frozen_before, (
+            "the RETIRED digest moved — it is not reading its frozen snapshot")
     finally:
         p.write_bytes(original)
-    assert R6.current_hash() == before
+    assert R6.current_hash() == live_before
+
+
+def test_round6_assert_pinned_REFUSES_rather_than_passing():
+    """A retired pin that silently succeeds is a check that can never fail —
+    standing requirement 3, applied to the pin mechanism itself."""
+    from seahaven.eden import round6 as R6
+    with pytest.raises(SystemExit, match="ROUND 6 IS CLOSED"):
+        R6.assert_pinned()
 
 
 @pytest.mark.parametrize("k,n,want", [

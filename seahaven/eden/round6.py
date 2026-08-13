@@ -196,18 +196,55 @@ def current_hash() -> str:
     return hashlib.sha256(payload().encode()).hexdigest()
 
 
+#: **ROUND 6 IS CLOSED. Retired, not re-pinned — the third time, same reason.**
+#:
+#: Round 7 adds `EDEN_RECOVERY` to `outcome.py`, a hashed artifact here, so the
+#: pin broke. A pin says "these bytes produced these numbers"; round 6's 144
+#: episodes were produced by the snapshot below, and recomputing against today's
+#: files would claim the recovery line was present when it was not.
+#:
+#: **The world locks are UNCHANGED** and are frozen below at their current bytes
+#: to record exactly that: the three `.z8` worlds round 7 screens are the same
+#: worlds round 6 screened, and only the prompt moved. That is why round 7
+#: re-authors nothing.
+#:
+#: **This is the change the whole generation boundary exists for**, so the
+#: retirement is the point rather than an inconvenience: nothing pools across it.
+RETIRED_W_PIN = PINNED_ROUND6_HASH
+RETIRED_W_SHA256 = {
+    "seahaven/eden/simulate.py":
+        "dbce00d372549eeab69eb11139e3102fcad1b2d4f7f8ee8542ed2cbe9ebc8a80",
+    "seahaven/eden/outcome.py":
+        "39edf1c5b821875805fc7e56c4bdbccc6d557bb07d7e69e12c3ca1d99249f094",
+    "seahaven/eden/manifest.py":
+        "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
+    "seahaven/fidelity/worldspec.py":
+        "bba9d54e9e13e31e260efa11d01ba1f2c7007653d62c42870bda5ab7a369bb85",
+}
+RETIRED_W_LOCKS = {
+    "worlds/world_eden_W1/BUILD.lock.json":
+        "c7cb215f14f6714245e776b2cde7a739689b630d3954f1a55879ca3ccd5a3d3d",
+    "worlds/world_eden_W2/BUILD.lock.json":
+        "4d009ec70ffe6331ddd2da78428562570974aa47656ecc28665c0824bf740cd2",
+    "worlds/world_eden_W3/BUILD.lock.json":
+        "7b248708afb5b2daa0d297f4bf5344aeea57487fbb727d2487b012021edabc80",
+}
+
+
+def retired_w_hash() -> str:
+    """Reproduces `RETIRED_W_PIN` from the frozen snapshot, permanently."""
+    return hashlib.sha256(
+        _payload_body(dict(RETIRED_W_SHA256),
+                      dict(RETIRED_W_LOCKS)).encode()).hexdigest()
+
+
 def assert_pinned() -> None:
-    if not PINNED_ROUND6_HASH:
-        raise SystemExit(
-            "round-6 pin is EMPTY. Compute it with `current_hash()`, paste it "
-            "into PINNED_ROUND6_HASH, and commit BEFORE running any cell.")
-    got = current_hash()
-    if got != PINNED_ROUND6_HASH:
-        raise SystemExit(
-            f"ROUND-6 PIN BROKEN\n  pinned {PINNED_ROUND6_HASH}\n  actual {got}\n"
-            "  A constant, a measurement module, or one of the three world locks "
-            "changed after the freeze. Either revert it, or re-pin DELIBERATELY "
-            "and say so in the commit.")
+    """**Refuses. Round 6 is closed.** Not a check that always passes."""
+    raise SystemExit(
+        "ROUND 6 IS CLOSED. Its pin is retired as RETIRED_W_PIN. Round 7 added "
+        "EDEN_RECOVERY to the served prompt, so every round-6 cell was played "
+        "under a prompt that no longer exists and nothing pools across that "
+        "boundary. Open a new round with its own pin.")
 
 
 if __name__ == "__main__":
