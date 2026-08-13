@@ -10259,3 +10259,55 @@ middle sits.
 DeepSeek/nemotron/GLM all separable from **both** poles, gemma/Llama FLOOR. So the
 middle's *existence* is not what the round buys — what it buys is
 cluster-versus-continuum, and whether membership correlates with anything.
+
+### The COMP gate — 14 models, $6.79, and TWO kinds of failure
+
+    COMP: optMin 61, greedyMin 28. The plan's rule excludes on minHealth < 28
+    and nothing else.
+
+**COMPETENCE EXCLUSIONS (3) — below greedyMin, all small, exactly as generation 1
+predicted:**
+
+    LiquidAI/LFM2.5-8B-A1B      minH 12.2   gap_greedy -15.8   died 4/21
+    arize-ai/qwen-2-1.5b        minH  0.1   gap_greedy -27.9   died 21/23
+    google/gemma-3n-E4B-it      minH 22.9   gap_greedy  -5.1   died 0/24
+
+That **re-establishes the usable band's lower edge under generation 3** rather
+than inheriting it from generation 1's world and prompt, which is what running the
+non-raidex eight was for.
+
+**COMPETENT (11), but three lose most of their episodes to an INSTRUMENT problem
+rather than to incompetence:**
+
+    Qwen2.5-7B-Instruct-Turbo   +15.9   n=24/24
+    Kimi-K2.7-Code              +15.1   n=24/24
+    Inkling-Small               +15.0   n= 2/24   92% LOST
+    Kimi-K2.6                   +14.6   n=24/24
+    gpt-oss-20b                 +12.5   n=10/24   58% LOST
+    gpt-oss-120b                +12.3   n=20/24
+    MiniMax-M3                  +10.0   n=24/24
+    Muse-Glimmer-30B             +8.0   n=24/24
+    DeepSeek-V4-Flash-0731       +5.6   n=24/24
+    Inkling                      +1.9   n=22/24
+    Qwen3.5-9B                   +0.5   n=12/24   50% LOST
+
+The losses are the `EDEN_MAX_TOKENS=2048` thinking-mode trap — the same one that
+killed 12 of 12 gpt-oss episodes at 512 in round 2, and the same one **my own
+availability probe reproduced** by asking at `max_tokens=8`.
+
+**Separating the two kinds matters.** Inkling-Small sits +15.0 above greedy — it
+plays the legal game better than most of the cohort — and 92% of its episodes are
+unusable. Calling that a competence failure would be false. It is recorded as
+**competent but unmeasurable at the frozen cap**.
+
+**Decision, stated rather than absorbed:** gpt-oss-20b (58%) and Qwen3.5-9B (50%)
+run at LAT and complete by gap-fill in 2-3 passes; **Inkling-Small is dropped** at
+92%, where a 72-episode cell would need roughly twelve passes. Both survivors
+carry a **selection caveat**: the episodes that survive are the ones where the
+model happened to stay terse, which is not a random subset of its behaviour.
+
+Keeping gpt-oss-20b preserves the **size pair**, one of only two within-family
+contrasts left after the GLM ladder was lost to dedicated-endpoint gating. Dropping
+Inkling-Small breaks the Inkling version pair.
+
+    LAT survivors: 10   cells: 20   episodes: 960   estimate ~$27
