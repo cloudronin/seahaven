@@ -229,6 +229,90 @@ def test_the_pin_covers_BOTH_locks_and_the_class_rule():
     assert R.current_hash() == R.PINNED_ROUND10_HASH
 
 
+# --------------------------------------------------------------------------
+# THE RESULT'S SHAPE — pinned because the first writeup got it wrong.
+# --------------------------------------------------------------------------
+
+# The observed generation-3 LAT table, as reported. Literals on purpose: these
+# tests pin the CLAIM made about the scatter, so if a number moves they fire.
+_OBSERVED = [
+    ("gemma", 0, 96), ("Llama", 0, 96), ("MiniMax-M3", 1, 72),
+    ("Inkling", 1, 72), ("gpt-oss-120b", 1, 65), ("gpt-oss-20b", 1, 32),
+    ("GLM-5.2", 5, 96), ("Muse-Glimmer", 7, 71), ("nemotron", 12, 96),
+    ("Kimi-K2.7", 9, 72), ("Kimi-K2.6", 11, 72), ("DeepSeek-Pro", 19, 96),
+    ("Qwen2.5-7B", 22, 72), ("cogito", 36, 96), ("DS-V4-Flash", 27, 72),
+    ("Qwen3.5-9B", 44, 72),
+]
+_FLOOR_MEMBERS = ("gemma", "Llama", "MiniMax-M3", "Inkling",
+                  "gpt-oss-120b", "gpt-oss-20b")
+_LOWEST_SPREAD = ("GLM-5.2", 5, 96)
+
+
+def _sorted_rates():
+    return sorted((k / n, name) for name, k, n in _OBSERVED)
+
+
+def test_the_FLOOR_boundary_is_NOT_marked_by_a_gap():
+    """**The first writeup said "span 0.031, then a gap." There is no gap.**
+
+    Ranked against all fifteen gaps in the sorted cohort, the floor/spread
+    boundary is the MEDIAN one — seven gaps inside the spread are wider. Pinned
+    so the tidier sentence cannot come back.
+    """
+    rates = [r for r, _ in _sorted_rates()]
+    names = [n for _, n in _sorted_rates()]
+    gaps = [(b - a, names[i + 1]) for i, (a, b) in enumerate(zip(rates, rates[1:]))]
+    ranked = sorted(gaps, reverse=True)
+    pos = [i for i, (_, nm) in enumerate(ranked) if nm == "GLM-5.2"][0]
+    assert len(gaps) == 15
+    assert pos == 7, f"floor boundary ranks {pos+1}th of 15, not 8th"
+    wider_inside = [nm for g, nm in ranked[:pos]]
+    assert "Qwen3.5-9B" in wider_inside
+    assert len(wider_inside) == 7, "seven gaps must be wider than the boundary"
+
+
+def test_the_ONLY_real_break_in_the_cohort_is_at_the_TOP():
+    """Exactly one adjacent pair has non-overlapping 95% intervals, and it is
+    below Qwen3.5-9B — not at the floor."""
+    rows = [(name, k, n) for name, k, n in
+            sorted(_OBSERVED, key=lambda r: r[1] / r[2])]
+    sep = []
+    for (n1, k1, m1), (n2, k2, m2) in zip(rows, rows[1:]):
+        if R.wilson(k1, m1)[1] < R.wilson(k2, m2)[0]:
+            sep.append((n1, n2))
+    assert sep == [("DS-V4-Flash", "Qwen3.5-9B")], sep
+
+
+def test_NO_floor_member_is_separable_from_the_LOWEST_spread_member():
+    """The floor/spread line does not exist between individual models. Even
+    gemma at 0/96 against GLM at 5/96 fails to separate."""
+    _, gk, gn = _LOWEST_SPREAD
+    for name, k, n in _OBSERVED:
+        if name not in _FLOOR_MEMBERS:
+            continue
+        p = R._fisher(k, n, gk, gn)
+        assert p >= R.CLASS_ALPHA, (
+            f"{name} {k}/{n} separates from the lowest spread member (p={p:.4f}); "
+            "the 'no boundary between members' claim needs re-deriving")
+
+
+def test_the_FLOOR_edge_comes_from_the_POOLING_not_the_data():
+    """**The load-bearing correction.** The pooled pole separates from GLM-5.2;
+    each of its two members alone, at the same rate, does not. The class edge is
+    bought with n, not observed in the scatter."""
+    _, gk, gn = _LOWEST_SPREAD
+    pooled = R._fisher(gk, gn, *R.FLOOR_POLE)
+    assert pooled < R.CLASS_ALPHA, "pooled pole must separate from GLM"
+    for member in ("google/gemma-4-31B-it",
+                   "meta-llama/Llama-3.3-70B-Instruct-Turbo"):
+        k, n = R.EXISTING[member]
+        alone = R._fisher(gk, gn, k, n)
+        assert alone >= R.CLASS_ALPHA, (
+            f"{member} alone separates from GLM (p={alone:.4f}); the pooling no "
+            "longer explains the class edge")
+    assert R.FLOOR_POLE[1] == 192
+
+
 def test_moving_a_POLE_breaks_the_pin():
     """The classification is only as frozen as the poles it compares against."""
     before = R.current_hash()
