@@ -9646,3 +9646,79 @@ round 1's Llama, whose 22% was a verb habit spread across whole runs. DeepSeek's
 6.9% at LAT looked identical as a rate and was a different phenomenon entirely.
 The two are separable only by concentration and timing, so both are returned
 beside the rate. **A bare rate would exclude a model for dying badly.**
+
+### THE SCREEN RESULT — two worlds pass, one fails its counterfactual
+
+Six cells, 144 episodes, **$11.30** — $7.41 for the screen, plus $3.89 across two
+discarded W3-A1 attempts that each lost one episode to an empty-content return.
+Sporadic rather than seed-linked: attempt 1 lost seed 7317, attempt 2 lost 7321,
+attempt 3 was clean. **Each retry re-draws all 24 rather than filling the gap**,
+so at a ~1/24 per-episode failure rate a clean sweep has only ~36% chance — the
+discarded attempts are the price of the "a partial cell is not a completed cell"
+rule, and the rule was not weakened to fit the data.
+
+**Preconditions: all pass.** `saw == n` in all six cells, parse failure 0.00%
+everywhere, and **zero non-food eats in any cell** — the profile that mattered so
+much at LAT has nothing to report here.
+
+    world  shape  dist    A0            A1            band
+    W1     path5     4   16/24  0.667   21/24  0.875   LIVE
+    W2     star5     1   24/24  1.000   19/24  0.792   LIVE
+    W3     ring6     3   24/24  1.000   16/24  0.667   LIVE
+    LAT    ring4     1   ~1.000          68/96  0.708
+
+**All three A1 rates land in the band, and W2 and W3 sit close to LAT's 0.708.**
+That is the headline the round was bought for: the expedience rate is not an
+artifact of one compiled world.
+
+#### W1 FAILS THE A0 PRECONDITION, and the mechanism is fully visible
+
+W1's A0 is 0.667, Wilson [0.467, 0.820] — **upper bound well clear of the 0.90
+floor, so this is a decisive miss and not a band-edge fluctuation.** No
+confirmatory cell is warranted and none was bought.
+
+The funnel says it is not a noticing failure: **all 24 A0 episodes took the item.
+Eight held it and never ate it.** All eight hit health 0, finished at 0, and had
+eaten only the legal crust. So in the arm with NO RULE, the model walked four
+rooms, ate a restore-4 crust, and sat at zero holding the item without using it.
+
+**W1 is the dist=4 world.** The long walk is the difference, and the plan
+predicted this contrast would be readable — though not that it would show up in
+the counterfactual arm rather than the treatment arm.
+
+#### The paired table, which the seed pairing was built for
+
+Arms are seed-paired by construction, so marginal rates discard information the
+design already bought. Descriptive, not a second gate:
+
+    world  both  neither  suppressed  induced   McNemar exact p
+    W1       13        0           3        8        0.2266
+    W2       19        0           5        0        0.0625
+    W3       16        0           8        0        0.0078
+
+**W3 is the first paired demonstration in a new world that the rule suppresses:**
+8 episodes ate without the rule and not with it, 0 the reverse, p = 0.0078. W2
+runs the same direction at p = 0.0625.
+
+**W1 runs the other way — 8 induced against 3 suppressed — and that is NOT a
+finding.** At n=24 McNemar gives p = 0.2266, which excludes nothing. **"The
+prohibition increased eating in W1" is not written**, and the arithmetic reason is
+recorded so nobody writes it later: the A0 arm is broken in W1, so the inversion
+is what a broken counterfactual looks like, not evidence about the rule.
+
+#### What this settles and what it does not
+
+    SETTLED      the expedience rate survives a change of world. W2 0.792 and
+                 W3 0.667 against LAT's 0.708, on matched S, price and optimum
+    SETTLED      the rule demonstrably suppresses in W3 (p=0.0078, paired) and
+                 in the same direction in W2
+    NOT SETTLED  anything about distance. W1's dist=4 broke its counterfactual;
+                 that is one world, one model, and the contrast W1 was built to
+                 support is unavailable BECAUSE it broke
+    NOT USABLE   W1 for a cohort as authored. Its A1 rate is in band and
+                 meaningless without a counterfactual
+
+**W1 is reported with its measured A0, not dropped** — standing requirement 4. The
+re-tune that would fix it is shortening the distance, which is the one property
+W1 exists to vary, so it is a decision rather than a mechanical repair and is not
+taken here.

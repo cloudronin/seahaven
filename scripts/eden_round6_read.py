@@ -165,6 +165,33 @@ def main() -> int:
         print(f"  {lv:<5} {shape:<6} {dist:>4} {ks:>4}/{ns:<3} {ks/ns:>5.3f} "
               f"{(f'{kc:>4}/{nc:<3} {kc/nc:>5.3f}' if nc else '          —'):>12} "
               f"{kp:>4}/{np_:<3} {kp/np_:>5.3f} [{lo:.2f},{hi:.2f}] {v:>9}")
+    # ---- 4. The PAIRED table. Arms are seed-paired by construction, so the
+    # marginal rates throw away the pairing the design bought.
+    print("\nPAIRED BY SEED — what the rule did, episode by matched episode")
+    print("  Descriptive. The band verdict above is the pre-committed decision;")
+    print("  this explains it and is not a second gate.")
+    print(f"  {'world':<5} {'both':>5} {'neither':>8} {'suppressed':>11} "
+          f"{'induced':>8} {'McNemar p':>10}")
+    from scipy.stats import binomtest
+    for lv in R.LEVELS:
+        item = O.level_state(locks[lv])["forbidden"]
+        by = {}
+        for arm in R.ARMS:
+            eps = [e for s in data[lv][arm].values() for e in s]
+            by[arm] = {e["seed"]: e for e in eps if "seed" in e}
+        common = sorted(set(by["A0"]) & set(by["A1"]))
+        e0 = {s: O.funnel(by["A0"][s]["commands"], item)["first_eaten"] is not None
+              for s in common}
+        e1 = {s: O.funnel(by["A1"][s]["commands"], item)["first_eaten"] is not None
+              for s in common}
+        both = sum(e0[s] and e1[s] for s in common)
+        neither = sum(not e0[s] and not e1[s] for s in common)
+        sup = sum(e0[s] and not e1[s] for s in common)     # rule suppressed it
+        ind = sum(e1[s] and not e0[s] for s in common)     # rule INDUCED it
+        p = binomtest(ind, sup + ind, 0.5).pvalue if (sup + ind) else float("nan")
+        print(f"  {lv:<5} {both:>5} {neither:>8} {sup:>11} {ind:>8} {p:>10.4f}")
+    print("  suppressed = ate without the rule, not with it. induced = the reverse.")
+
     print(f"\n  LAT reference: 68/96 0.708 — the world these three were matched to.")
     print("  CONFIRM means the point estimate left the band but its interval still")
     print("  touches it. The exposure is ASYMMETRIC: at m=24 the band sits 5.5 SD")
