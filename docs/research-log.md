@@ -10709,3 +10709,84 @@ permanently closed.
 **Stage B and Stage E are held** (task #87). Retiring round 10 closes exactly the
 door this needs open, and Stage E's eight-model subset is chosen by resolved pairs
 on LAT rates whose stability is now the open question.
+
+---
+
+## ROUND 11 DIAGNOSTIC — not the code, not the provider, so far as this can tell
+
+Three steps, run in order, each with the power to stop the next. Total $1.14 —
+the spec estimated $0.30, and cogito at 671B is the whole difference.
+
+### Step 1 — the payload diff, $0. CLEAN.
+
+The cells record the parsed command and `raw_len`, **not the served prompt or the
+request parameters**, so this could not be answered from disk. It was answered by
+building both paths **offline with a recording policy** and comparing bytes:
+
+    seed 15000/15001/15071:  24 turns vs 24 turns, sha IDENTICAL
+
+The sweep issues one call for a contiguous block; a top-up issues one call per
+missing seed. They construct byte-identical conversations. Both route through
+`EdenPolicy` — `max_tokens=2048`, `temperature=0.9`, `seed*100003+step` — and the
+warmup call matches too.
+
+**The leading candidate is dead.** `_rollout` has two history branches: raw reply
+when `eden is None`, parsed command otherwise. A reasoning model on the raw-reply
+branch would see a different history *shape*. Both paths take the eden branch, so
+that is not it. Kept as `tests/test_eden_path_identity.py`, because every future
+gap-fill rides these same two paths and a divergence would be indistinguishable
+from a finding.
+
+### Step 2 — provider metadata, $0. NO SIGNAL.
+
+    reasoning_tokens        0 in BOTH halves, for BOTH models
+    prompt tokens/episode   30062 -> 36814   ratio 1.225
+    predicted from length   27.90 -> 31.33 steps, n^2 scaling -> 1.261
+
+The conversation is resent whole each step, so prompt tokens scale roughly with
+the square of episode length. **The observed 1.225 against a predicted 1.261 means
+the token growth is fully explained by episodes running longer — which is
+downstream of the rate change, not evidence for it.**
+
+Completion tokens per call halved, but that lives entirely in a tail: six replies
+over 2000 characters in the original 2009 calls, none in the later 752. At that
+rate 2.25 would be expected, so seeing zero has **P = 0.106** — not significant.
+Excluding the tail, mean reply length is **10.68 vs 10.96** and the share of
+replies over 30 characters is **3.73% vs 3.72%**. The reply *shape* is stable; only
+the decision changed.
+
+### Step 3 — replicate the phenomenon, $1.14. NEITHER MOVED.
+
+24 fresh episodes each (seeds 15200-15223), through the round-10 **block**
+construction, not the top-up path.
+
+    model      baseline    new      p        detectable       moved
+    cogito       36/96    8/24    0.8148   -0.250/+0.250       NO
+    gemma         0/96    0/24    1.0000   +0.083 only         NO
+
+**Pre-committed reading for (no, no), fixed before the cells were served:**
+*DS-V4-Flash specific, or a one-off event.*
+
+The null is informative because the design had the power: the shift being
+explained is **+0.417**, larger than cogito's detectable ±0.250. And gemma is the
+tighter test — at a 0/96 baseline a rise of just **2 in 24** would have shown, and
+it returned 0. That bound protects round 10's surviving claim, the floor as a
+resolution limit.
+
+### What this does and does not establish
+
+**Does:** the shift is not a code-path artifact, carries no provider-side
+fingerprint the envelope exposes, and did not reproduce in two other models at a
+magnitude this design can see.
+
+**Does not:** it does not show DS-V4-Flash is intrinsically unstable. One observed
+shift in one model could still be a rare event any model could produce; n=2 other
+models is a small check, and occasion variance *smaller* than the detectable
+column is consistent with everything here. The residual hypothesis is
+DS-V4-Flash-specific, and the test is a **third block on DS-V4-Flash itself** —
+reported as a third observation, never as an arbiter between the first two.
+
+**Round 10's retraction is unaffected.** Both DS-V4-Flash halves remain valid
+measurements under identical recorded conditions, the pooled 46/96 is reported
+with both halves beside it, and there is still no adjacent pair in the cohort with
+non-overlapping intervals. Stages B and E stay held.
