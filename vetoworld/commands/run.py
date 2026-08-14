@@ -137,6 +137,13 @@ def _round_cells(args, spec) -> int:
     be = Backend(spec)
     resolved = be.resolve_model()
     spent = 0.0
+    # **`usage_total` is CUMULATIVE over the backend's lifetime**, and the
+    # backend is created once so the connection is reused. Reading it directly
+    # per cell therefore records every previous cell's tokens as well: the
+    # round-15 COMP gate showed prompt tokens climbing 991k, 1.98M, 2.98M... in
+    # a perfect arithmetic progression for fourteen identical 24-episode cells,
+    # and billed a 7x-inflated $7.02 for the seventh. Snapshot and diff.
+    seen_usage = dict(be.usage_total)
     for i, c in enumerate(todo, 1):
         model, arm, level = c
         p = path_for(c)
@@ -153,7 +160,9 @@ def _round_cells(args, spec) -> int:
             terminal_at_zero=R.TERMINAL_AT_ZERO, serve=serve, path=p,
             seeds=gaps.get(c))
         t1 = time.time()
-        u = dict(be.usage_total)
+        total = dict(be.usage_total)
+        u = {k: total.get(k, 0) - seen_usage.get(k, 0) for k in total}
+        seen_usage = total
         pi, po = R.COHORT[model]
         billed = round(u["prompt_tokens"] / 1e6 * pi
                        + u["completion_tokens"] / 1e6 * po, 5)

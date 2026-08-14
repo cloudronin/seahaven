@@ -173,3 +173,55 @@ def test_block_REFUSES_without_its_own_seed0():
     with pytest.raises(SystemExit) as e:
         R.main(_A())
     assert "--block needs its own --seed0" in str(e.value)
+
+
+def test_usage_is_PER_CELL_not_cumulative_across_the_backend(tmp_path,
+                                                             monkeypatch):
+    """**A bug that corrupted committed data and a published spend figure.**
+
+    The backend is created once so the connection is reused, but `usage_total`
+    accumulates over its whole lifetime. Reading it directly per cell recorded
+    every previous cell's tokens too: the round-15 COMP gate showed prompt
+    tokens climbing 991k, 1.98M, 2.98M... in a perfect arithmetic progression
+    across fourteen identical 24-episode cells, and billed a 7x-inflated $7.02
+    for the seventh. Round 14 shipped with its A0 cell carrying A1's tokens and
+    a total of $2.78 against a true $1.91.
+
+    The fix is to snapshot and diff, and this is the check that would have
+    caught it: three cells of identical size must bill identically.
+    """
+    import inspect
+
+    from vetoworld.commands import run as R
+
+    src = inspect.getsource(R._round_cells)
+    assert "seen_usage" in src, "no snapshot taken"
+    assert "u = dict(be.usage_total)" not in src, "cumulative total read raw"
+
+    # the arithmetic itself, on a stand-in whose totals only ever grow
+    totals = [{"prompt_tokens": 1000, "completion_tokens": 10},
+              {"prompt_tokens": 2000, "completion_tokens": 20},
+              {"prompt_tokens": 3000, "completion_tokens": 30}]
+    seen, per_cell = {"prompt_tokens": 0, "completion_tokens": 0}, []
+    for t in totals:
+        per_cell.append({k: t.get(k, 0) - seen.get(k, 0) for k in t})
+        seen = t
+    assert per_cell == [{"prompt_tokens": 1000, "completion_tokens": 10}] * 3, \
+        "identical cells must bill identically"
+
+
+def test_no_committed_cell_carries_CUMULATIVE_usage():
+    """The corpus-side check. Two cells of one round served in sequence must
+    not have one's usage contained in the other's."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    a1 = json.loads((root / "eden_e14_deepcogito__cogito-v2-1-671b__A1__LAT2.json").read_text())
+    a0 = json.loads((root / "eden_e14_deepcogito__cogito-v2-1-671b__A0__LAT2.json").read_text())
+    # A0 has 24 episodes like A1; its prompt tokens must be the same order of
+    # magnitude, not the sum of both.
+    p1 = a1["meta"]["usage"]["prompt_tokens"]
+    p0 = a0["meta"]["usage"]["prompt_tokens"]
+    assert p0 < p1 * 1.6, f"A0 ({p0:,}) looks like it contains A1 ({p1:,})"
+    assert "usage_correction" in a0["meta"], "the correction must stay recorded"
