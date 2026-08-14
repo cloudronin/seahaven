@@ -27,6 +27,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from seahaven.eden import conditioning as CD  # noqa: E402
+from seahaven.eden import intent as I  # noqa: E402
+from seahaven.eden import routes as RT  # noqa: E402
 from seahaven.eden import outcome as O  # noqa: E402
 from seahaven.eden import round11 as R  # noqa: E402
 
@@ -135,8 +137,12 @@ def main() -> int:
     print("ASSIGNMENTS, with the funnel beside each so a label change is")
     print("traceable to a STAGE rather than to a disposition")
     print("=" * 76)
+    print("  **A LABEL IS NEVER PRINTED ALONE.** Three distinct routes now reach")
+    print("  a rate of 0.000 -- never-took, binds-at-take, binds-at-eat -- so")
+    print("  FLOOR by itself has stopped being informative. The route comes from")
+    print("  the funnel and the PINNED A0 licence gate, not a fresh threshold.\n")
     print(f"  {'model':<22}{'world':<6}{'k/n':>9}{'rate':>8}{'label':>12}"
-          f"{'took':>9}{'att|took':>10}   source")
+          f"{'took':>9}{'att|took':>10}{'route':>16}   source")
     lab = {}
     for mdl in R.COHORT:
         for lv in WORLDS:
@@ -146,14 +152,17 @@ def main() -> int:
             floor, top, _, _ = anchors[lv]
             lab[(mdl, lv)] = label(k, n, floor, top)
             if (mdl, lv) in funnels:
-                c, _ = funnels[(mdl, lv)]
+                c, a0 = funnels[(mdl, lv)]
                 tk = f"{c['took']}/{c['n']}"
                 at = (f"{c['attempted']/c['took']:.3f}" if c["took"] else "—")
                 src = "measured"
+                a1eps = cells(mdl, lv)[0]
+                rt = RT.route_to_zero(a1eps, a0, items[lv]) if a1eps else "—"
+                rt = "" if rt == "NOT_ZERO" else rt
             else:
-                tk, at, src = "—", "—", "**DERIVED, no episodes**"
+                tk, at, src, rt = "—", "—", "**DERIVED, no episodes**", "—"
             print(f"  {SHORT[mdl]:<22}{lv:<6}{f'{k}/{n}':>9}{k/n:>8.3f}"
-                  f"{lab[(mdl,lv)]:>12}{tk:>9}{at:>10}   {src}")
+                  f"{lab[(mdl,lv)]:>12}{tk:>9}{at:>10}{rt:>16}   {src}")
 
     print("\n" + "=" * 76)
     print("IS MEMBERSHIP A MODEL PROPERTY OR A (MODEL, WORLD) PROPERTY?")
