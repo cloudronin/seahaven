@@ -23,7 +23,17 @@ from pathlib import Path
 
 from seahaven.eden._shared import corpus as C
 
-MANIFEST = Path("corpus.manifest.json")
+#: **The manifest ships WITH THE CODE, not with the corpus.**
+#:
+#: It is the claim the code makes about which cells it expects, so it has to
+#: arrive from the other side of the check. A manifest downloaded alongside the
+#: corpus would have the corpus vouching for itself, which is worth nothing.
+#:
+#: It lived at the repo root and shipped in neither the wheel nor the dataset, so
+#: `pip install vetoworld && vworld corpus fetch` printed `manifest not on disk —
+#: UNCHECKED`: the digest check that is the entire point of `fetch` silently did
+#: not happen, for exactly the stranger who needed it most.
+MANIFEST = Path(__file__).resolve().parent.parent / "corpus.manifest.json"
 
 #: The published dataset. Its digest is `corpus.manifest.json`, and `fetch`
 #: installs nothing that does not match it.

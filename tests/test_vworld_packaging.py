@@ -113,3 +113,36 @@ def test_every_FREE_verb_exits_zero_with_no_provider_key(monkeypatch):
     assert seeds.main(_A()) == 0
     assert worlds.main(_A()) == 0
     assert verify.main(_A()) == 0
+
+
+def test_the_MANIFEST_ships_in_the_wheel_or_fetch_cannot_check_anything():
+    """**The gap the first PyPI install exposed.**
+
+    `pip install vetoworld && vworld corpus fetch` printed `manifest not on disk
+    — UNCHECKED`: the manifest lived at the repo root and shipped in neither the
+    wheel nor the dataset, so the digest check that is the whole point of the
+    command silently did not run.
+
+    It must ship with the CODE and not with the corpus. A manifest downloaded
+    beside the cells would have the corpus vouching for itself.
+    """
+    import json
+
+    from vetoworld.commands import corpus as CO
+
+    assert CO.MANIFEST.exists(), CO.MANIFEST
+    assert CO.MANIFEST.is_absolute(), "must not depend on the working directory"
+    assert "vetoworld" in CO.MANIFEST.parts, "must live inside the package"
+    d = json.loads(CO.MANIFEST.read_text())
+    assert len(d["digest"]) == 64 and d["cells"] > 0
+
+
+def test_the_manifest_is_declared_as_PACKAGE_DATA():
+    """Being inside the package directory is not enough — setuptools ships only
+    what `package-data` names, and a .json is not code."""
+    import tomllib
+    from pathlib import Path
+    cfg = tomllib.loads(
+        (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())
+    pkg = cfg["tool"]["setuptools"]["package-data"]["vetoworld"]
+    assert "corpus.manifest.json" in pkg, pkg

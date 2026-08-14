@@ -137,7 +137,8 @@ publish 2,385 unrelated files under this dataset's name.
     ST=/tmp/vetoworld-corpus
     mkdir -p $ST/results
     cp results/eden_e*.json           $ST/results/
-    cp -r worlds corpus.manifest.json $ST/
+    cp -r worlds $ST/
+    cp vetoworld/corpus.manifest.json $ST/
     cp docs/vetoworld-corpus-card.md  $ST/README.md
     rm -rf $ST/worlds/__pycache__ $ST/worlds/*.py     # code, not data
     (cd $ST && vworld corpus status)                  # digest must MATCH first
