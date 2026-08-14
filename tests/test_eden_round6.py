@@ -140,12 +140,24 @@ def test_every_pre_round6_level_still_sits_on_THE_RING():
     """
     ring_rooms = tuple(n for n, _ in _B.ROOMS)
     for level in _B.all_levels():
-        if level in _B.EXTRA:
+        if level in _B.EXTRA or level in _B.LATENCY_CORRECTED:
+            # EXTRA is round 6's own new topologies. LATENCY_CORRECTED is round
+            # 11's LAT2, which sits on `ring4c` -- the ring with `tallow` removed
+            # from the Store. Named explicitly rather than loosening the check:
+            # the point of this assertion is that a NEW site cannot silently
+            # capture an OLD world, and LAT2 is a new world.
             continue
         assert _B._site_for(level) is _B.SITES["ring4"], f"{level} left the ring"
         w = _B.eden_world(level)
         assert w.rooms == ring_rooms, f"{level}: rooms are {w.rooms}"
         assert w.start == "Hall", f"{level}: start moved to {w.start}"
+
+    # And the corrected ring must be the ring in EVERY respect but the one word,
+    # so LAT2 stays directly comparable with LAT.
+    assert tuple(n for n, _ in _B.ROOMS_CORRECTED) == ring_rooms
+    diff = [(a, b) for (_, a), (_, b) in zip(_B.ROOMS, _B.ROOMS_CORRECTED)
+            if a != b]
+    assert len(diff) == 1 and "tallow" in diff[0][0] and "tallow" not in diff[0][1]
 
 
 def test_the_new_worlds_did_not_disturb_the_LOCKS_already_on_disk():
