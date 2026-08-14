@@ -104,7 +104,7 @@ python -m pytest -q          # 1532 tests, no model and no GPU
 vworld doctor                # pins, corpus, keys
 ```
 
-Read [AGENTS.md](AGENTS.md) before adding a measurement, changing a metric, or
+Read [AGENTS.md](https://github.com/cloudronin/vetoworld/blob/main/AGENTS.md) before adding a measurement, changing a metric, or
 believing a number. The single rule, if you read nothing else:
 
 > **Every claim needs a null condition that must fail.** If you cannot name the
@@ -119,10 +119,10 @@ their *paths* are hashed into eleven frozen pins, so renaming them would
 invalidate every freeze in the programme. **"eden" and "expedientbench" appear on
 no user-facing surface**, enforced by a test on word boundaries. Reasoning for
 every rejected name — including why the command is not `vw` or `veto` — is in
-[docs/naming.md](docs/naming.md); argue with the reason, not the name.
+[docs/naming.md](https://github.com/cloudronin/vetoworld/blob/main/docs/naming.md); argue with the reason, not the name.
 
 Full chronology, including every trap and retraction, in
-[`docs/research-log.md`](docs/research-log.md).
+[`docs/research-log.md`](https://github.com/cloudronin/vetoworld/blob/main/docs/research-log.md).
 
 ---
 
@@ -168,7 +168,7 @@ none is submitted to raidex. Three things did survive and stand on their own —
 self-report completeness declines as agents do more (behavioural, not
 arithmetic); string detectors are structurally blind on the stratum that decides
 between them; and a six-lab LLM judge panel is markedly more reliable in
-aggregate (0.795) than pairwise (0.675). See **[docs/findings.md](docs/findings.md)**.
+aggregate (0.795) than pairwise (0.675). See **[docs/findings.md](https://github.com/cloudronin/vetoworld/blob/main/docs/findings.md)**.
 
 **4. Mistral is measurable after all.** Its self-accounts had been commands —
 *"examine coil of rope; examine store; go south."* — because the action system
@@ -184,9 +184,9 @@ donor control: a run given *another run's* narrative behaves identically
 not self-authorship.
 
 Full chronology, including sixteen `[TRAP]` entries and five retractions, in
-[`docs/research-log.md`](docs/research-log.md); current direction in
-[`docs/plan.md`](docs/plan.md). All documents indexed in
-[`docs/`](docs/README.md).
+[`docs/research-log.md`](https://github.com/cloudronin/vetoworld/blob/main/docs/research-log.md); current direction in
+[`docs/plan.md`](https://github.com/cloudronin/vetoworld/blob/main/docs/plan.md). All documents indexed in
+[`docs/`](https://github.com/cloudronin/vetoworld/blob/main/docs/README.md).
 
 ## The tool
 
@@ -209,7 +209,7 @@ fidelity    = 100 x ( (1 - omission) + (1 - fabrication) ) / 2
 
 100 means the account names what happened and nothing else; 50 means reading it
 tells you nothing about the run. See
-[`seahaven/fidelity/README.md`](seahaven/fidelity/README.md).
+[`seahaven/fidelity/README.md`](https://github.com/cloudronin/vetoworld/blob/main/seahaven/fidelity/README.md).
 
 **It is not leaderboard-ready.** Reliability is unproven, and this project's
 previous statistic moved 0.28 to 0.66 between adjacent runs of the same model.
@@ -218,7 +218,7 @@ variance share, per-model numbers must not be published.
 
 ## Working in this repo
 
-Read [AGENTS.md](AGENTS.md) before adding a measurement, changing a metric, or
+Read [AGENTS.md](https://github.com/cloudronin/vetoworld/blob/main/AGENTS.md) before adding a measurement, changing a metric, or
 believing a number. It collects sixteen documented traps and the rules derived
 from them. The single rule, if you read nothing else:
 
@@ -255,7 +255,7 @@ hypothesis is answered in the negative; two positive directions are open.
 | `scripts/` | Setup, world builds, sweeps, verification. |
 | `archive/` | 44 superseded one-offs, with a README saying what each produced. |
 | `tests/` | Hermetic suite; no model, no GPU. `-m slow` for the rest. |
-| `docs/` | Research log, plan, specs — see [docs/README.md](docs/README.md). |
+| `docs/` | Research log, plan, specs — see [docs/README.md](https://github.com/cloudronin/vetoworld/blob/main/docs/README.md). |
 | `results/` | Raw result artifacts, one JSON per experiment. |
 
 ## Setup
@@ -374,4 +374,4 @@ conda run -n seahaven-dev python -m pytest
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/cloudronin/vetoworld/blob/main/LICENSE).

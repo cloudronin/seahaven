@@ -146,3 +146,48 @@ def test_the_manifest_is_declared_as_PACKAGE_DATA():
         (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())
     pkg = cfg["tool"]["setuptools"]["package-data"]["vetoworld"]
     assert "corpus.manifest.json" in pkg, pkg
+
+
+def _project():
+    import tomllib
+    from pathlib import Path
+    return tomllib.loads(
+        (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())["project"]
+
+
+def test_the_package_DECLARES_a_readme_or_PyPI_renders_nothing():
+    """**0.1.0 and 0.1.1 both shipped with a blank PyPI page.** The README
+    existed and was simply never referenced, so the metadata carried no
+    description at all and nobody landing on the project page learned what it
+    was."""
+    from pathlib import Path
+    d = _project()
+    assert d.get("readme"), "no readme declared; the PyPI page will be empty"
+    assert (Path(__file__).resolve().parents[1] / d["readme"]).exists()
+
+
+def test_the_README_has_NO_RELATIVE_LINKS_because_PyPI_cannot_resolve_them():
+    """The same file renders on GitHub and on PyPI, and PyPI has no repository
+    to resolve a relative path against — every one of them 404s there."""
+    import re
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / _project()["readme"]).read_text()
+    rel = [m for m in re.findall(r"\]\(([^)]+)\)", src)
+           if not m.startswith(("http", "#", "mailto:"))]
+    assert not rel, f"relative links break on PyPI: {rel}"
+
+
+def test_the_metadata_points_at_the_repo_and_the_dataset():
+    """A benchmark whose page does not link its corpus is not replicable from
+    the page."""
+    urls = _project()["urls"]
+    assert "huggingface.co/datasets" in urls["Dataset"]
+    assert "github.com" in urls["Repository"]
+
+
+def test_no_license_CLASSIFIER_beside_the_license_EXPRESSION():
+    """setuptools rejects the two together under PEP 639 — the build fails
+    outright, which is how this was found."""
+    d = _project()
+    assert d["license"] == "MIT"
+    assert not [c for c in d.get("classifiers", []) if c.startswith("License ::")]
