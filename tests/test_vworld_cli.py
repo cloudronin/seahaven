@@ -160,3 +160,38 @@ def test_the_HELP_TEXT_carries_the_public_name_and_not_the_old_one(capsys):
     out = capsys.readouterr().out
     assert not _leaks(out), f"help text leaked: {_leaks(out)}"
     assert "VetoWorld" in out
+
+
+def test_a_FAILED_builder_import_names_the_DEPENDENCY_not_a_symptom(monkeypatch):
+    """**What the first CI release run reported, and why it was misleading.**
+
+    `worlds` loads the world builder to enumerate authored levels. The loader
+    registered the module in `sys.modules` before executing it, so a missing
+    `textworld` left a half-built module cached — and the NEXT call skipped the
+    load and failed with `no attribute 'all_levels'`, a symptom two steps
+    downstream of the cause. The cache must be cleared on failure, and the
+    message must name the dependency and the way around it.
+    """
+    import builtins
+    import sys
+
+    from vetoworld.commands import worlds as W
+
+    real = builtins.__import__
+
+    def blind(name, *a, **k):
+        if name == "textworld":
+            raise ModuleNotFoundError("nope", name="textworld")
+        return real(name, *a, **k)
+
+    sys.modules.pop("_vworld_builder", None)
+    monkeypatch.setattr(builtins, "__import__", blind)
+    try:
+        for _ in range(2):          # twice: the second is where caching bit
+            with pytest.raises(SystemExit) as e:
+                W._levels(_A(level=None))
+            assert "textworld" in str(e.value)
+            assert "--level" in str(e.value), "must name the way around it"
+            assert "_vworld_builder" not in sys.modules, "cache was poisoned"
+    finally:
+        sys.modules.pop("_vworld_builder", None)

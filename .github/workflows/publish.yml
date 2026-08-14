@@ -16,14 +16,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # **Full history, not a shallow clone.** `emit corrections` verifies
+          # every row against the commit it cites, and at depth 1 those commits
+          # are simply absent — the artifact then reports its own ledger as
+          # unverifiable, which is a fact about the checkout, not the ledger.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pytest pytest-timeout scipy
-      # The full suite needs TextWorld and the compiled worlds; the packaging
-      # and register tests are the ones that gate a release and run anywhere.
+      # `worlds` loads the world BUILDER to enumerate authored levels, and that
+      # imports textworld. The first version of this job installed neither and
+      # the gate failed on a missing dependency rather than on the code.
+      - run: pip install pytest pytest-timeout scipy textworld jericho
       - run: python -m pytest tests/test_vworld_packaging.py
                               tests/test_vworld_cli.py
+                              tests/test_vworld_verify.py
+                              tests/test_vworld_artifacts.py
+                              tests/test_occasions.py
                               tests/test_pin_invariance.py
                               tests/test_layering.py -q
 

@@ -27,8 +27,24 @@ def _levels(args):
         sp = importlib.util.spec_from_file_location(
             key, _root_for_builder() / "worlds/build_eden_worlds.py")
         m = importlib.util.module_from_spec(sp)
+        # **Registered before exec so the module can import itself, and REMOVED
+        # if exec fails.** Leaving a half-built module cached makes the next
+        # call skip the load entirely and fail with `no attribute 'all_levels'`
+        # — which is what CI reported when `textworld` was absent, hiding the
+        # actual cause behind a symptom two steps downstream.
         sys.modules[key] = m
-        sp.loader.exec_module(m)
+        try:
+            sp.loader.exec_module(m)
+        except ModuleNotFoundError as e:
+            del sys.modules[key]
+            raise SystemExit(
+                f"listing every authored world needs the world-BUILDING "
+                f"dependencies, and {e.name!r} is not installed.\n"
+                "  Validating a world does not: pass --level LAT (repeatable) "
+                "to check specific worlds without them.") from e
+        except BaseException:
+            del sys.modules[key]
+            raise
     B = sys.modules[key]
     root = _root_for_builder()
     return [lv for lv in B.all_levels()
