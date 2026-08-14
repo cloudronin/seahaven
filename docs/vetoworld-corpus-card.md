@@ -3,10 +3,25 @@
 This file **is** the dataset card. Publishing copies it to the dataset repo's
 `README.md`; it lives here so it is versioned with the corpus it describes.
 
-    huggingface-cli upload <owner>/vetoworld-corpus . . --repo-type=dataset
+**The corpus is 107 MB** — 259 `eden_e*.json` cells (100,517,734 bytes, the
+number the manifest digests) plus 11 MB of compiled worlds. It is **not**
+`results/`, which holds 2,644 files and 247 MB because the Seahaven programme's
+artifacts live there too. Staging is explicit for that reason: a bare
+`upload . .` would publish 2,385 unrelated files under this dataset's name.
 
-**Not yet pushed.** Publishing 247 MB under a name is an outward-facing act and
-needs a decision, not a default.
+    mkdir -p /tmp/vetoworld-corpus/results
+    cp results/eden_e*.json          /tmp/vetoworld-corpus/results/
+    cp -r worlds corpus.manifest.json /tmp/vetoworld-corpus/
+    cp docs/vetoworld-corpus-card.md /tmp/vetoworld-corpus/README.md
+    huggingface-cli upload <owner>/vetoworld-corpus /tmp/vetoworld-corpus . \
+        --repo-type=dataset
+
+Then check the staged copy against the committed digest before pushing:
+
+    cd /tmp/vetoworld-corpus && expdx corpus status
+
+**Not yet pushed.** Publishing under a name is an outward-facing act and needs a
+decision, not a default.
 
 ---
 
