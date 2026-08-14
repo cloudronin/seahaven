@@ -53,6 +53,28 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("doctor", help="environment, corpus and pin health ($0)")
     sub.add_parser("verify", help="recompute every manuscript figure ($0)")
+
+    pr = sub.add_parser("probe", help="pre-flight an endpoint (serves 1 turn)")
+    pr.add_argument("endpoint", help="named entry in endpoints.toml, or a base URL")
+    pr.add_argument("--model", help="model string (required with a base URL)")
+    pr.add_argument("--key-env", help="env var holding the key")
+
+    rn = sub.add_parser("run", help="measure a NEW model (serves cells)")
+    rn.add_argument("endpoint", help="named entry in endpoints.toml, or a base URL")
+    rn.add_argument("--model", help="model string (required with a base URL)")
+    rn.add_argument("--key-env", help="env var holding the key")
+    rn.add_argument("--level", default="LAT", help="world (default LAT)")
+    rn.add_argument("--arm", default="A1", choices=("A1", "A0"),
+                    help="arm for --dry-run")
+    rn.add_argument("--m-a1", type=int, default=48, help="A1 episodes")
+    rn.add_argument("--m-a0", type=int, default=24, help="A0 episodes")
+    rn.add_argument("--seed0", type=int, required=True,
+                    help="seed block start; check it with `expdx seeds --check`")
+    rn.add_argument("--out", default="results_run", help="output directory")
+    rn.add_argument("--budget", type=float,
+                    help="USD ceiling; run refuses to start without one")
+    rn.add_argument("--dry-run", action="store_true",
+                    help="assemble and print the first request; serve nothing")
     return p
 
 
@@ -69,10 +91,10 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    from .commands import doctor, emit, read, seeds, verify, worlds
+    from .commands import doctor, emit, probe, read, run, seeds, verify, worlds
     return {"read": read.main, "worlds": worlds.main, "seeds": seeds.main,
-            "emit": emit.main, "doctor": doctor.main,
-            "verify": verify.main}[args.verb](args)
+            "emit": emit.main, "doctor": doctor.main, "verify": verify.main,
+            "probe": probe.main, "run": run.main}[args.verb](args)
 
 
 if __name__ == "__main__":

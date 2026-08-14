@@ -1,0 +1,19 @@
+# Named endpoints. Keys come from the environment ONLY — never from this file.
+#
+# Conversation assembly is shared and provider-agnostic; a fixture seed must
+# produce byte-identical messages regardless of which entry is used. Any
+# parameter a provider refuses (see `temperature` below) is a recorded deviation,
+# not a silent one.
+
+[endpoints.together]
+base_url = "https://api.together.xyz/v1"
+key_env = "TOGETHER_API_KEY"
+model = "deepcogito/cogito-v2-1-671b"
+notes = "the published open cohort's provider"
+
+[endpoints.terra]
+base_url = "https://api.openai.com/v1"
+key_env = "OPENAI_API_KEY"
+model = "gpt-5.6-terra"
+temperature = 1.0
+notes = "rejects temperature 0.9 outright — model constraint, deviation pinned in round 13"
