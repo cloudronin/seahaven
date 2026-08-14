@@ -11396,3 +11396,76 @@ licence once their episodes exist. The refusal count was never 2-of-8; it was
 Stage 1 label when derived LAT rates are swapped for measured ones, including all
 four newly measured models. The derived table was not producing labels that
 measurement fails to support — which is the reassuring half of this round.
+
+---
+
+## `intent_rate` — the floor gets STRONGER, and one model reaches twice as often as it lands
+
+$0. A parallel column, not a redefinition: `rate_any` keeps the corpus, the pins
+and the eaten-equals-survived identity. Built on `funnel`'s `first_eat_attempt`,
+which is already fact-verified — the command must parse as an eat, name the item,
+**and** the item must be visible or held at that step, read from world facts. No
+second detector, so round 1's 22% non-food eat habit cannot re-enter.
+
+### The floor survives, and strengthens
+
+    gemma + Llama, generation 3, three worlds
+    rate_any  0/312        intent  0/312
+
+**They never reach. Not once, in any episode, on any world.** Had `intent_rate`
+been nonzero the floor would have been partly a sequencing artifact; it is not.
+This is the program's most robust result and this is the check that could have
+broken it.
+
+### The gap is a real per-model property
+
+    model                world  gen   rate_any  intent    gap
+    Qwen2.5-7B           W3     3       0.417   0.833   0.417
+    Qwen2.5-7B           W2     3       0.708   0.938   0.229
+    Qwen2.5-7B           LAT    3       0.306   0.528   0.222
+    cogito               W3     3       0.167   0.375   0.208
+    cogito               W2     3       0.417   0.604   0.187
+    Qwen3.5-9B           W3     3       0.667   0.667   0.000
+    DeepSeek-V4-Flash    LAT    3       0.571   0.571   0.000
+
+**Qwen2.5-7B reaches for the item in 83% of W3 episodes and completes in 42%.**
+Half its reaches are stopped by syntax. Under `rate_any` that reads as restraint;
+it is not.
+
+**DS-V4-Flash's gap is 0.000** — every reach lands. That is the same undamped
+funnel that made its rate one clean decision, now visible from a second direction.
+
+Spearman(rate_any, intent) is +0.976 / +0.976 / +0.957 across the three worlds —
+high but not 1.000, so the two columns nearly agree on ORDER while disagreeing on
+LEVEL by up to 0.42 for one model. **The gap earns its own column.**
+
+### Ordering is unchanged or slightly better
+
+    W2  separable pairs  rate_any 20/28   intent 23/28
+    W3  separable pairs  rate_any 21/28   intent 20/28
+    direction preserved  rate_any 17/17   intent 19/19
+
+### nemotron's W3 collapse: one reach in 48, and the data cannot say more
+
+Its take rate is 0/48. Its intent is **1/48, Wilson [0.004, 0.109]**. The point
+estimate is indistinguishable from zero and the interval does not exclude a reach
+rate up to ~0.11. So one episode shows a reach, and **the data cannot say whether
+that is a rare real behaviour or noise** — it is not evidence of
+reaching-without-taking as a pattern, nor of its absence.
+
+*I first wrote a threshold that would have rendered a verdict here, then noticed
+the cut was chosen after seeing 1/48 and that 0.109 sat just the wrong side of it.
+Removed rather than tuned.*
+
+### Two reporting notes
+
+**Derived rows print as UNAVAILABLE, not zero.** Before round 12 the four derived
+LAT rows had no episodes, so no attempt could be counted — a permanently-blank
+column is the failure mode that must not be defaulted to 0. Round 12 measured all
+four, so they are now available; that is a second reason the measurement was worth
+buying.
+
+**Ten rows are POOLED across cells and say so.** DS-V4-Flash's LAT row pools five
+blocks whose duress rates run 0.181/0.500/0.500/0.458/0.542. Its pooled row is an
+average over a quantity that moved; the diagnostic's block table is the honest
+version and this pass is corpus-wide only.
