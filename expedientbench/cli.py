@@ -15,7 +15,8 @@ import argparse
 import sys
 
 #: Verbs that must never require a credential.
-FREE_VERBS = ("verify", "worlds", "read", "emit", "seeds", "doctor")
+FREE_VERBS = ("verify", "worlds", "read", "emit", "seeds", "doctor",
+              "pin check")
 
 #: Verbs that serve episodes and therefore cost money.
 SPENDING_VERBS = ("run", "replicate", "probe")
@@ -75,6 +76,24 @@ def build_parser() -> argparse.ArgumentParser:
                     help="USD ceiling; run refuses to start without one")
     rn.add_argument("--dry-run", action="store_true",
                     help="assemble and print the first request; serve nothing")
+
+    rp = sub.add_parser("replicate", help="re-serve our cells, judged vs bands")
+    rp.add_argument("endpoint")
+    rp.add_argument("--model", required=True)
+    rp.add_argument("--level", default="LAT")
+    rp.add_argument("--key-env")
+    rp.add_argument("--seeds", choices=("fresh", "original"), default="fresh")
+    rp.add_argument("--seed0", type=int, default=30000)
+    rp.add_argument("--self-hosted", action="store_true",
+                    help="do not widen by the occasion component; fixed batching "
+                         "is the only mode where it can be pinned")
+    rp.add_argument("--budget", type=float)
+    rp.add_argument("--out", default="results_replicate")
+    rp.add_argument("--dry-run", action="store_true")
+
+    pn = sub.add_parser("pin", help="the pin lifecycle ($0 for check)")
+    pn.add_argument("action", choices=("check", "new", "retire"))
+    pn.add_argument("--round", type=int, help="round number for new/retire")
     return p
 
 
@@ -91,10 +110,12 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    from .commands import doctor, emit, probe, read, run, seeds, verify, worlds
+    from .commands import (doctor, emit, pin, probe, read, replicate, run,
+                           seeds, verify, worlds)
     return {"read": read.main, "worlds": worlds.main, "seeds": seeds.main,
             "emit": emit.main, "doctor": doctor.main, "verify": verify.main,
-            "probe": probe.main, "run": run.main}[args.verb](args)
+            "probe": probe.main, "run": run.main,
+            "pin": pin.main, "replicate": replicate.main}[args.verb](args)
 
 
 if __name__ == "__main__":
