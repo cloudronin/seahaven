@@ -132,3 +132,57 @@ def test_corpus_digest_is_ORDER_INDEPENDENT(tmp_path):
 def test_corpus_status_REFUSES_when_absent(tmp_path, capsys):
     assert CORPUS.main(_A(action="status", results=str(tmp_path / "no"))) == 2
     assert "NO CORPUS" in capsys.readouterr().out
+
+
+# --- predictions / corrections / related-work -------------------------------
+
+@pytest.mark.parametrize("art", ["predictions", "corrections", "related-work"])
+def test_the_remaining_artifacts_render(art, capsys):
+    assert emit.main(_A(artifact=art)) == 0
+    assert capsys.readouterr().out.strip()
+
+
+def test_predictions_reads_the_PINNED_literal_not_a_retyped_copy():
+    """A prediction typed into the artifact could be retrofitted to its result.
+    Both sides come from elsewhere: the claim from the round module's frozen
+    literal, the outcome recomputed from cells."""
+    import inspect
+
+    from seahaven.eden import round13 as R13
+    src = inspect.getsource(A.predictions)
+    assert "R13.PREDICTION" in src
+    assert R13.PREDICTION not in src, (
+        "the prediction text is inlined here — it must be read from the pin")
+
+
+def test_predictions_reports_the_derivation_as_FIVE_of_SIX(capsys):
+    emit.main(_A(artifact="predictions"))
+    out = capsys.readouterr().out
+    assert "5 of 6 consistent" in out
+    assert "DEVIATES" in out, "the one miss must not be dropped"
+    assert "HELD" in out
+
+
+def test_every_correction_cites_a_REAL_commit(capsys):
+    """**The ledger's evidence is the commit.** A hand-written corrections table
+    can claim anything; this one fails if a SHA does not resolve."""
+    assert emit.main(_A(artifact="corrections")) == 0
+    out = capsys.readouterr().out
+    assert "COMMIT NOT FOUND" not in out
+    assert "0 unverifiable" in out
+
+
+def test_the_corrections_ledger_includes_the_RETRACTED_HEADLINE():
+    claims = [c[0] for c in A.CORRECTIONS]
+    assert any("break" in c for c in claims), (
+        "round 10's retracted break is the most consequential correction and "
+        "must not be missing from its own ledger")
+
+
+def test_related_work_DECLARES_that_it_is_not_computed(capsys):
+    """Every other artifact is derived. This one is asserted, and saying so is
+    the difference between a table and a claim about a table."""
+    emit.main(_A(artifact="related-work"))
+    out = capsys.readouterr().out
+    assert "NOT COMPUTED" in out
+    assert "ENFORCED" in out and "ASSERTED" in out
