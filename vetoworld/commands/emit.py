@@ -14,36 +14,78 @@ ARTIFACTS = ("matrix", "occasions", "seeds", "spend",
 
 
 def _occasions() -> int:
-    """**The mandatory audit**: which comparisons span serving days.
+    """**The mandatory audit**: which FIGURES compare cells across serving days.
 
-    Every row prints its SOURCE. Only the timing-probe cells carry a real
-    serving timestamp; everything else falls back to file mtime, which for a
-    gap-filled cell is its LAST attempt. Rendering the two identically would
-    launder an mtime into a serving date inside the one artifact whose whole
-    purpose is to be trusted about occasions.
+    Per figure, not per cell. A per-cell inventory says when each file was
+    written and leaves the reader to work out which comparisons that endangers;
+    the manuscript needs the answer attached to the figure, because the flag has
+    to travel with the number into the paper.
+
+    Every row prints its SOURCE. Only eight cells carry a real serving timestamp;
+    everything else falls back to file mtime, which for a gap-filled cell is its
+    LAST attempt. Rendering the two identically would launder an mtime into a
+    serving date inside the one artifact whose whole purpose is to be trusted
+    about occasions.
     """
-    rows = []
-    for p, d in C.iter_cells():
-        meta = d.get("meta", {})
-        if not meta.get("eden_level"):
-            continue
-        val, src = C.occasion_of(p, meta)
-        rows.append((val, src, meta.get("served_name", "?"),
-                     meta.get("eden_level"), meta.get("eden_arm"),
-                     C.generation_of(meta)))
-    real = sum(1 for r in rows if r[1] == "wall_start_epoch")
-    print(f"OCCASION AUDIT — {len(rows)} cells, "
-          f"{real} with a REAL serving timestamp, {len(rows)-real} mtime-only\n")
-    print(f"  {'when':<18}{'source':<18}{'model':<26}{'world':<6}{'arm':<5}gen")
-    for val, src, mdl, lv, arm, gen in sorted(rows):
-        print(f"  {val:<18}{src:<18}{mdl.split('/')[-1][:24]:<26}"
-              f"{lv:<6}{str(arm):<5}{gen}")
+    from ..register import occasions as OC
+
+    rows = OC.audit()
+    need = [r for r in rows if r.needs_flag]
+    print(f"OCCASION AUDIT — {len(rows)} registered figures, "
+          f"{len(need)} carrying an occasion flag\n")
+    print(f"  {'figure':<22}{'cells':>6}  {'same occasion?':<15}sweeps")
+    for r in rows:
+        print(f"  {r.fid:<22}{len(r.cells):>6}  {r.verdict:<15}"
+              f"{'e' + ', e'.join(r.sweeps)}")
+        if r.flag:
+            for line in _wrap(r.flag, 68):
+                print(f"        {line}")
+    print()
+
+    consumed = sorted({p for r in rows for p in r.cells})
+    real = sum(1 for p in consumed
+               if C.occasion_of(p, C.load_cell(p).get("meta", {}))[1]
+               == "wall_start_epoch")
+    print(f"  PROVENANCE OF THE {len(consumed)} CELLS THESE FIGURES READ — "
+          f"{real} real, {len(consumed)-real} mtime-only\n")
+    print(f"  {'when':<18}{'source':<18}{'cell'}")
+    for p in consumed:
+        val, src = C.occasion_of(p, C.load_cell(p).get("meta", {}))
+        print(f"  {val:<18}{src:<18}{_cell_id(p)}")
+
     print("\n  **mtime is NOT a serving date.** It is when the file was last")
     print("  written; for a gap-filled cell that is its last attempt, not its")
-    print("  first. Any comparison whose two sides differ in `when` spans")
-    print("  occasions, and the programme measured a 0.319 between-day shift on")
-    print("  one model with the mechanism unresolved.")
+    print("  first. It also UNDER-DETECTS: rounds 11, 12 and 13 were three")
+    print("  sweeps and share one mtime day, so a timestamps-only audit would")
+    print("  call those comparisons clean. The sweep column is the honest")
+    print("  signal — it is recorded in the cell's own name, not inferred.")
+    print("\n  The programme measured a 0.319 between-day shift on one model")
+    print("  with the mechanism unresolved. Batch composition and prefix cache")
+    print("  were ruled out; a deployment change is consistent and untestable")
+    print("  from here. That is why a flag, not a correction.")
     return 0
+
+
+def _wrap(text: str, width: int) -> list[str]:
+    import textwrap
+    return textwrap.wrap(text, width) or [""]
+
+
+def _cell_id(path) -> str:
+    """A cell's PUBLIC identity: sweep, model, arm, world.
+
+    Not its filename. The committed files keep a historical prefix — renaming
+    257 of them would change the corpus digest that `verify` checks against, for
+    a string no reader needs — so the identity is rendered from the parts
+    instead. It is also what a reader actually wants: `e12 cogito A1 LAT` says
+    what the cell is, which the path only implies.
+    """
+    got = C.parse_cell_name(path.name)
+    if not got:
+        return path.stem
+    who = (got["model"] or "?").split("/")[-1]
+    return (f"e{got['round']:<6}{who[:26]:<28}"
+            f"{str(got['arm'] or '-'):<4}{got['level']}")
 
 
 def _spend() -> int:

@@ -47,9 +47,25 @@ def main(_args=None) -> int:
                   f"cells say {got!r} **")
         if c.note:
             print(f"        {c.note}")
-    if bad:
-        print(f"\n{bad} FIGURE(S) DRIFTED. The manuscript and the corpus "
-              "disagree; fix one of them.")
+    # **The occasion regression.** A figure whose cells were served at different
+    # sittings has a second explanation for its difference, and the manuscript
+    # carries that flag in place. Enforced here rather than remembered: the
+    # 0.319 shift was measured, its mechanism was not established, and a new
+    # cross-occasion figure published unmarked is the failure this cannot risk.
+    from ..register import occasions as OC
+    missing = OC.unflagged()
+    if missing:
+        print(f"\n{len(missing)} FIGURE(S) COMPARE CELLS ACROSS SERVING "
+              "OCCASIONS WITH NO FLAG:")
+        for fid in missing:
+            print(f"    {fid}")
+        print("  Add `occasion=` to the claim saying what the reader must know,")
+        print("  or show the cells share a sweep AND a recorded serving time.")
+        print("  `expdx emit occasions` prints what each figure actually reads.")
+    if bad or missing:
+        if bad:
+            print(f"\n{bad} FIGURE(S) DRIFTED. The manuscript and the corpus "
+                  "disagree; fix one of them.")
         return 1
     print(f"\nall {len(rows)} figures recompute.")
     print("  Figures marked DERIVED come from round 9's pre/post-crossing")
