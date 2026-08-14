@@ -226,7 +226,12 @@ def test_the_pin_covers_BOTH_locks_and_the_class_rule():
         "worlds/world_eden_LAT/BUILD.lock.json",
         "worlds/world_eden_COMP/BUILD.lock.json"}
     assert "seahaven/eden/outcome.py" in R.ARTIFACTS
-    assert R.current_hash() == R.PINNED_ROUND10_HASH
+    # **Round 10 is CLOSED** — retired at the LAT2 boundary, which edited
+    # `worldspec.py`. Both locks must still be in the frozen snapshot, and the
+    # snapshot must still reproduce the pin its cells were served under.
+    assert set(R.RETIRED_R10_LOCKS) == set(R.world_lock_paths())
+    assert R.retired_r10_hash() == R.PINNED_ROUND10_HASH
+    assert R.current_hash() != R.PINNED_ROUND10_HASH
 
 
 # --------------------------------------------------------------------------
@@ -320,14 +325,25 @@ def test_the_FLOOR_edge_comes_from_the_POOLING_not_the_data():
 
 
 def test_moving_a_POLE_breaks_the_pin():
-    """The classification is only as frozen as the poles it compares against."""
-    before = R.current_hash()
+    """The classification is only as frozen as the poles it compares against.
+
+    Round 10 is closed, so `assert_pinned` now refuses unconditionally and can no
+    longer witness this. **The payload still can**, and that is the property that
+    mattered: the poles are inside the hashed body, so moving one changes the
+    hash. Asserted against the RETIRED digest as well — a frozen record that did
+    not cover the poles would not be a record of the classification.
+    """
+    before, retired = R.current_hash(), R.retired_r10_hash()
     orig = R.FLOOR_POLE
     try:
         R.FLOOR_POLE = (1, 192)
         assert R.current_hash() != before
-        with pytest.raises(SystemExit, match="ROUND-10 PIN BROKEN"):
+        assert R.retired_r10_hash() != retired, (
+            "the retired snapshot does not cover FLOOR_POLE, so the frozen "
+            "record does not pin the classification it was frozen for")
+        with pytest.raises(SystemExit, match="CLOSED"):
             R.assert_pinned()
     finally:
         R.FLOOR_POLE = orig
     assert R.current_hash() == before
+    assert R.retired_r10_hash() == retired == R.PINNED_ROUND10_HASH

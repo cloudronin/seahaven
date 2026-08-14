@@ -47,9 +47,11 @@ def test_the_FREE_verbs_run_with_NO_KEY_AT_ALL(monkeypatch, capsys):
 def test_doctor_reports_open_and_closed_pins_CORRECTLY(capsys):
     assert doctor.main(_A()) == 0
     out = capsys.readouterr().out
-    assert "round13  OPEN, verifies" in out
+    assert "round2   OPEN, verifies" in out
     assert "round6   CLOSED (refuses, as designed)" in out
-    assert "retired_w_hash:ok" in out
+    # Five closed in one commit at the LAT2 boundary, round 13 among them.
+    assert "round13  CLOSED (refuses, as designed)" in out
+    assert "retired_w_hash:ok" in out and "retired_r13_hash:ok" in out
     assert "DOES NOT RECOMPUTE" not in out
 
 

@@ -22,9 +22,12 @@ class _A:
 def test_pin_check_is_green_and_covers_live_AND_retired(capsys):
     assert pin.main(_A(action="check")) == 0
     out = capsys.readouterr().out
-    assert "round13  OPEN, verifies" in out
+    assert "round2   OPEN, verifies" in out
     assert "CLOSED (refuses, as designed)" in out
-    assert "retired_w_hash:ok" in out
+    # Eleven retired digests across ten rounds after the LAT2 boundary, and
+    # `check` is worthless unless it walks all of them.
+    assert "retired_w_hash:ok" in out and "retired_r13_hash:ok" in out
+    assert out.count("retired_r") >= 5
     assert "DOES NOT RECOMPUTE" not in out
 
 
@@ -33,22 +36,27 @@ def test_pin_new_REFUSES_on_a_dirty_tree(capsys, monkeypatch):
     code was when the cells were served; computing it over uncommitted edits
     makes that claim false at the moment it is written."""
     monkeypatch.setattr(pin, "_dirty", lambda: [" M seahaven/eden/outcome.py"])
-    assert pin.main(_A(action="new", round=13)) == 1
+    assert pin.main(_A(action="new", round=2)) == 1
     out = capsys.readouterr().out
     assert "REFUSING" in out and "Commit first" in out
 
 
 def test_pin_new_on_a_clean_tree_reports_the_hash(capsys, monkeypatch):
     monkeypatch.setattr(pin, "_dirty", lambda: [])
-    assert pin.main(_A(action="new", round=13)) == 0
+    assert pin.main(_A(action="new", round=2)) == 0
     out = capsys.readouterr().out
-    assert "already matches" in out, "round 13 is pinned and should be a no-op"
+    assert "already matches" in out, "round 2 is pinned and should be a no-op"
 
 
 def test_pin_retire_states_the_round6_pattern(capsys):
+    """Both halves: a round already closed says so and stops, and an OPEN round
+    gets the pattern. Round 13 was the open one here until the LAT2 boundary
+    closed it — which is exactly the transition this verb exists to perform."""
     assert pin.main(_A(action="retire", round=6)) == 0
     assert "already CLOSED" in capsys.readouterr().out
     assert pin.main(_A(action="retire", round=13)) == 0
+    assert "already CLOSED" in capsys.readouterr().out
+    assert pin.main(_A(action="retire", round=2)) == 0
     out = capsys.readouterr().out
     assert "recomputable from" in out
     assert "cells stay valid" in out

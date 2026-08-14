@@ -304,18 +304,56 @@ def current_hash() -> str:
     return hashlib.sha256(payload().encode()).hexdigest()
 
 
+#: **ROUND 10 IS CLOSED. Retired at the LAT2 boundary — see `round14.py`.**
+#:
+#: LAT2 is LAT with one phrase corrected: the Store advertised "tallow", which
+#: the world has never implemented, and models typed commands at it. LAT2 could
+#: not be SERVED because `worldspec.SETTINGS` had no entry for it, and
+#: `worldspec.py` is a hashed artifact here. Adding that entry broke this pin.
+#:
+#: **The change is semantically empty and the retirement is still correct**, and
+#: that combination is the point. A key for a world nobody had served alters no
+#: prompt this round used. But a pin says "these bytes produced these numbers",
+#: and the answer to a pin that no longer recomputes is to retire it — never to
+#: assert it is fine. Rounds 3 and 4 were retired for exactly this in round 6.
+#:
+#: Round 10's corpus is the DERIVED generation-3 LAT table plus the COMP gate.
+#: Round 12 measured four of those rows directly; this pin is what says the
+#: derived and the measured were never the same round.
+RETIRED_R10_PIN = PINNED_ROUND10_HASH
+
+RETIRED_R10_SHA256 = {
+    "seahaven/eden/simulate.py":
+        "8c0d05f23eceba0bbe1c76f9624591ff786424340b1ae3fb1f40c7cd711cbc58",
+    "seahaven/eden/outcome.py":
+        "a29e10f6fbcaa05e7c8777b4d332d31cd9399d4fdba2ccdab58574048aa439a3",
+    "seahaven/eden/manifest.py":
+        "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
+    "seahaven/fidelity/worldspec.py":
+        "bba9d54e9e13e31e260efa11d01ba1f2c7007653d62c42870bda5ab7a369bb85",
+}
+RETIRED_R10_LOCKS = {
+    "worlds/world_eden_LAT/BUILD.lock.json":
+        "85f272b569dad254911850a36cefbb73422a7e175d7144d934ad83aadc35b703",
+    "worlds/world_eden_COMP/BUILD.lock.json":
+        "e034719ce5c48bcfc6a0213108982551abd2d4bda493858112980a7cba8bd157",
+}
+
+
+def retired_r10_hash() -> str:
+    """Reproduces `RETIRED_R10_PIN` from the frozen snapshot, permanently."""
+    return hashlib.sha256(
+        _payload_body(dict(RETIRED_R10_SHA256),
+                      dict(RETIRED_R10_LOCKS)).encode()).hexdigest()
+
 def assert_pinned() -> None:
-    if not PINNED_ROUND10_HASH:
-        raise SystemExit(
-            "round-10 pin is EMPTY. Compute it with `current_hash()`, paste it "
-            "into PINNED_ROUND10_HASH, and commit BEFORE running any cell.")
-    got = current_hash()
-    if got != PINNED_ROUND10_HASH:
-        raise SystemExit(
-            f"ROUND-10 PIN BROKEN\n  pinned {PINNED_ROUND10_HASH}\n  actual {got}\n"
-            "  A constant, a measurement module, or a world lock changed after "
-            "the freeze. Either revert it, or re-pin DELIBERATELY and say so in "
-            "the commit.")
+    """**Refuses. Round 10 is closed.** Not a check that always passes."""
+    raise SystemExit(
+        "ROUND 10 IS CLOSED. Its pin is retired as RETIRED_R10_PIN and still "
+        "recomputes via retired_r10_hash(). Round 14 added LAT2 to "
+        "worldspec.SETTINGS, a hashed artifact here, so every round-10 cell was "
+        "played against bytes that no longer exist on disk. Its cells stay valid; "
+        "only ADDING cells is lost. Open a new round with its own pin.")
 
 
 if __name__ == "__main__":

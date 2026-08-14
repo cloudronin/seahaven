@@ -267,9 +267,19 @@ def test_the_LAT_lock_is_byte_identical_no_world_rebuilt():
 
 
 def test_the_round9_pin_covers_the_lock_the_prompt_module_and_the_table():
+    """**Round 9 is CLOSED**, so the check is the retired one.
+
+    It was retired at the LAT2 boundary: `worldspec.py` gained a settings entry
+    so LAT2 could be served, and this pin hashes that file. `current_hash()` is
+    therefore expected to have drifted — the assertion that matters is that the
+    frozen snapshot still reproduces the pin the cells were served under.
+    """
     assert "seahaven/eden/outcome.py" in R9.ARTIFACTS
     assert R9.world_lock_paths() == ("worlds/world_eden_LAT/BUILD.lock.json",)
-    assert R9.current_hash() == R9.PINNED_ROUND9_HASH
+    assert R9.retired_r9_hash() == R9.PINNED_ROUND9_HASH
+    assert R9.current_hash() != R9.PINNED_ROUND9_HASH
+    with pytest.raises(SystemExit, match="CLOSED"):
+        R9.assert_pinned()
 
 
 def test_the_seeds_are_disjoint_from_every_block_on_disk():

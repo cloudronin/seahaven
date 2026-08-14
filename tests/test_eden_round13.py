@@ -93,9 +93,17 @@ def test_seeds_are_disjoint_from_every_burned_block():
 
 def test_round13_pins_the_intent_module_too():
     """`intent_rate` is one of the two headline reads, so the module that
-    computes it belongs in the payload."""
+    computes it belongs in the payload.
+
+    **Round 13 is CLOSED** — retired at the LAT2 boundary one round after it was
+    written, because a boundary does not care how recent a freeze is. The payload
+    still has to cover `intent.py`, and the retired digest still has to reproduce
+    what the Terra cells were served under.
+    """
     assert "seahaven/eden/intent.py" in R.ARTIFACTS
-    assert R.current_hash() == R.PINNED_ROUND13_HASH
+    assert "seahaven/eden/intent.py" in R.RETIRED_R13_SHA256
+    assert R.retired_r13_hash() == R.PINNED_ROUND13_HASH
+    assert R.current_hash() != R.PINNED_ROUND13_HASH
 
 
 # --------------------------------------------------------------------------
