@@ -1,4 +1,4 @@
-"""`expdx worlds` — the $0 validation gates on any lock. No key.
+"""`vworld worlds` — the $0 validation gates on any lock. No key.
 
 The piece most likely to be reused by someone building their own worlds.
 """
@@ -22,7 +22,7 @@ def _levels(args):
     import importlib.util
     import sys
     from pathlib import Path
-    key = "_expdx_builder"
+    key = "_vworld_builder"
     if key not in sys.modules:
         sp = importlib.util.spec_from_file_location(
             key, _root_for_builder() / "worlds/build_eden_worlds.py")

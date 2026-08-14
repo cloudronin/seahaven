@@ -1,4 +1,4 @@
-"""`expdx verify` — and the drift test that proves it can fail.
+"""`vworld verify` — and the drift test that proves it can fail.
 
 A verifier that has never failed is not known to work. This perturbs one cell in
 a scratch copy of the corpus and asserts `verify` notices AND names the figure.

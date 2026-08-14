@@ -1,4 +1,4 @@
-"""`expdx pin`, and the replication bands.
+"""`vworld pin`, and the replication bands.
 
 The bands encode the programme's own finding about itself: a replicator judged
 against a point estimate will "fail" and be wrong about what that means.

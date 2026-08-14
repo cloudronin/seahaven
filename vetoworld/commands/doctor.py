@@ -1,4 +1,4 @@
-"""`expdx doctor` — environment, corpus and pin health. $0, no key."""
+"""`vworld doctor` — environment, corpus and pin health. $0, no key."""
 
 from __future__ import annotations
 

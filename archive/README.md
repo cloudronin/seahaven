@@ -1,6 +1,6 @@
 # archive/ — scripts that produced committed results and are no longer run
 
-These 44 scripts (~8,800 lines) predate the `expdx` CLI. **Nothing here is
+These 44 scripts (~8,800 lines) predate the `vworld` CLI. **Nothing here is
 deleted and nothing is broken**: they produced numbers that are cited in
 `docs/research-log.md` and in some cases still backed by tests, so they are
 kept for provenance rather than for reuse.
@@ -55,11 +55,11 @@ The live eden family stayed in `scripts/` and is being absorbed by the CLI:
 
 | was | now |
 |---|---|
-| `eden_round*_sweep.py` | `expdx run` / `expdx replicate` |
-| `eden_round*_read.py`, `eden_intent_rate.py`, `eden_band_stability.py` | `expdx read` |
-| `eden_cohort_smoke.py`, `eden_runner_smoke.py` | `expdx probe` |
-| `prove_e_worlds.py` | `expdx worlds` |
-| hand-rolled `assert_seeds_free` | `expdx seeds` |
+| `eden_round*_sweep.py` | `vworld run` / `vworld replicate` |
+| `eden_round*_read.py`, `eden_intent_rate.py`, `eden_band_stability.py` | `vworld read` |
+| `eden_cohort_smoke.py`, `eden_runner_smoke.py` | `vworld probe` |
+| `prove_e_worlds.py` | `vworld worlds` |
+| hand-rolled `assert_seeds_free` | `vworld seeds` |
 
 The shared machinery they duplicated — `wilson` ×10, `cell_path` ×14,
 `run_cell` ×10 — now lives once in `seahaven/eden/_shared/`.

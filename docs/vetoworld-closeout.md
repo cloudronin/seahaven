@@ -13,7 +13,7 @@ doomviz. Post-closeout features; nothing below depends on them.
 ## Stage 0 — the rename: VetoWorld
 
 **Public name: VetoWorld. Package: `vetoworld` (checked free on PyPI; re-verify
-at build time in Stage 3). Command: keep `expdx`, or `vw` if preferred — pick
+at build time in Stage 3). Command: keep `vworld`, or `vw` if preferred — pick
 once and stop.**
 
 The name names **the rule** — a world with a veto in it. Record the reasoning in
@@ -75,13 +75,13 @@ The one blocked task. LAT2 is built and correct but unservable: it needs a
 2. Add LAT2's `SETTINGS` entry — its opening line, with the scarcity clause
    byte-identical to the other nineteen worlds, per the round-6 rule.
 3. **Serve the LAT2 acceptance cell**: one model (cogito), A1 + A0, m=24,
-   `terminal_at_zero` TRUE, fresh seeds via `expdx seeds`. Band verdict,
+   `terminal_at_zero` TRUE, fresh seeds via `vworld seeds`. Band verdict,
    preconditions, and the specific check: **zero `eat tallow` in any episode** —
    the defect LAT2 exists to remove, verified in served text, not just in the
    lock.
 4. Confirm LAT's own record is untouched: byte-identical lock, rounds 7/8/10
    digests still recompute.
-5. New pin for the boundary round via `expdx pin new`, dirty-tree refusal and
+5. New pin for the boundary round via `vworld pin new`, dirty-tree refusal and
    all.
 
 This is also the natural commit to fold any other frozen-file debt into — check
@@ -96,7 +96,7 @@ repaired, as decided.
    verify from an installed wheel).
 2. **HuggingFace**: push the corpus under the VetoWorld name
    (`vetoworld-corpus` or similar). The manifest digest (`5678d3e9…`, 257 cells)
-   is the checksum `expdx verify` fetches against. Include: cells, locks, pins,
+   is the checksum `vworld verify` fetches against. Include: cells, locks, pins,
    retired snapshots, the claims register, replication bands, prompt fixtures.
 3. **Tag**: repo tag at the corpus digest; the manuscript cites tag + dataset
    DOI.
@@ -143,5 +143,5 @@ Aggregation across worlds. Any new world beyond LAT2's acceptance cell.
 3. `emit occasions` green and its regression wired into `verify`.
 4. LAT2 acceptance: preconditions pass, zero tallow reaches, LAT record
    untouched.
-5. `expdx verify` green from the installed wheel against the HF-fetched corpus
+5. `vworld verify` green from the installed wheel against the HF-fetched corpus
    — the full stranger path, end to end, once, before submission.

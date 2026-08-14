@@ -11567,7 +11567,7 @@ That is not a bug in the pin design; it is the pin design working. The entry lan
 at the **next round boundary**, deliberately and with a stated re-pin — the same
 rule that governed the tallow fix and every generation change.
 
-So `expdx worlds` now carries a **servable** column:
+So `vworld worlds` now carries a **servable** column:
 
     world          S  optMin  greedy  cross  deadline  servable   checks
     LAT       0.7475     -25     -25     24        22       yes   lock ok; ...
@@ -11598,7 +11598,7 @@ wrong and are corrected below; both mattered before anything was spent.
 veto in it — and `docs/naming.md` records why each alternative was rejected so a
 future contributor argues with the reason rather than the name.
 
-The command stays `expdx`. `vw` was the alternative and it is **Vowpal Wabbit's
+The command stays `vworld`. `vw` was the alternative and it is **Vowpal Wabbit's
 binary**, which sits on exactly the PATHs this tool targets; the sibling rule for
 the console script has always been "no conflicting binary on a clean PATH", so
 `vw` fails on its own terms rather than on taste.
@@ -11726,7 +11726,7 @@ rationing failure. LAT's own generation-3 A0 shows the identical failure at
 round module since round 6, and the reads for rounds 6, 7, 9, 10 and 13 check it.
 **Rounds 11 and 12 never did — and round 12 produced the whole generation-3 LAT
 table.** Across the 35 generation-3 cells that have a forbidden item, three fail
-clearly and seven are marginal. The check now lives in `expdx read`, where every
+clearly and seven are marginal. The check now lives in `vworld read`, where every
 cell passes through it.
 
     CLEAR — the 95% interval EXCLUDES the floor
@@ -11734,7 +11734,7 @@ cell passes through it.
       e11  Qwen2.5-7B-Instruct-Turbo W2    13/24  0.542  [0.351,0.721]
       e14  cogito-v2-1-671b          LAT2  16/24  0.667  [0.467,0.820]
 
-**And `expdx read` was pooling diagnostics into measurements.** It folded round
+**And `vworld read` was pooling diagnostics into measurements.** It folded round
 11's 24-episode occasion probe into round 12's 48-episode LAT cell for the same
 model — averaging away the between-day effect that probe was bought to detect —
 and pooled DeepSeek-V4-Flash's stability blocks into its headline, moving it from

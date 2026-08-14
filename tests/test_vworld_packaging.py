@@ -20,7 +20,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 def test_worlds_ships_as_package_data():
     """**The pins read repo-root-relative paths.** From an installed wheel that
     root is site-packages, so the locks must land beside the code or every pin
-    raises FileNotFoundError and `expdx verify` cannot run at all."""
+    raises FileNotFoundError and `vworld verify` cannot run at all."""
     cfg = tomllib.loads((_ROOT / "pyproject.toml").read_text())
     inc = cfg["tool"]["setuptools"]["packages"]["find"]["include"]
     assert "worlds*" in inc

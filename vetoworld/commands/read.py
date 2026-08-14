@@ -1,4 +1,4 @@
-"""`expdx read` — the standing reads on any corpus. $0, no key.
+"""`vworld read` — the standing reads on any corpus. $0, no key.
 
 Fourteen scripts re-implemented this: glob the cells, rebuild
 `{model: {level: {arm: episodes}}}`, compute rates, print aligned tables. The
@@ -145,7 +145,7 @@ def main(args) -> int:
                   f"e{', e'.join(sweeps)}")
         print("    Different sweeps are different sittings, and the programme")
         print("    measured a 0.319 between-day shift with the mechanism")
-        print("    unresolved. `expdx emit occasions` audits this per figure.")
+        print("    unresolved. `vworld emit occasions` audits this per figure.")
 
     if floor_misses:
         print(f"\n  {len(floor_misses)} CELL(S) BELOW THE A0 FLOOR OF "

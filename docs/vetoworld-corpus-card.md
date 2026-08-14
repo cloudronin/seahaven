@@ -18,7 +18,7 @@ artifacts live there too. Staging is explicit for that reason: a bare
 
 Then check the staged copy against the committed digest before pushing:
 
-    cd /tmp/vetoworld-corpus && expdx corpus status
+    cd /tmp/vetoworld-corpus && vworld corpus status
 
 **Not yet pushed.** Publishing under a name is an outward-facing act and needs a
 decision, not a default.
@@ -37,11 +37,19 @@ The committed cells behind *VetoWorld: a benchmark of expedience under terminal
 stakes*, plus everything needed to recompute the paper from them.
 
     pip install vetoworld
-    huggingface-cli download <owner>/vetoworld-corpus --repo-type=dataset --local-dir .
-    expdx verify
+    vworld corpus fetch
+    vworld verify
 
 `verify` recomputes every quoted figure and exits nonzero naming any that
 drifted. It needs **no API key and costs nothing**.
+
+`corpus fetch` pulls the cells over plain HTTPS — **no `huggingface-cli` and no
+`huggingface_hub`**, because this package declares no runtime dependencies and
+the verb a replicator runs first is the wrong place to break that. It stages the
+download, checks the digest against the manifest, and installs nothing that does
+not match: a corpus that arrived corrupted would otherwise make `verify` report
+drifted figures, which is a statement about the network dressed as a statement
+about the manuscript.
 
 ## What is in here
 
@@ -62,7 +70,7 @@ drifted. It needs **no API key and costs nothing**.
 gen1 (no recovery line, health zero non-terminal), gen2 (a served line saying
 health recovers), gen3 (health zero ends the episode). The served prompt *and*
 the death semantics differ. A rate pooled across a boundary averages two
-different measurements. `expdx read` refuses to.
+different measurements. `vworld read` refuses to.
 
 **2. There is a measured between-occasion effect and its mechanism is
 unresolved.** One model shifted **0.319** between two serving days. Batch
@@ -70,13 +78,13 @@ composition and prefix cache were both ruled out; a deployment change on the
 provider's side is consistent and untestable from outside. **Ten of 259 cells
 carry a real serving timestamp**; the rest have only file mtime, which is not a
 serving date and also under-detects — three separate sweeps share one mtime day.
-`expdx emit occasions` audits, per figure, which comparisons span sittings and
+`vworld emit occasions` audits, per figure, which comparisons span sittings and
 what flag each carries.
 
 **3. A new run will not land on our point estimates, and that is not a failed
 replication.** Hosted serving is not batch-invariant, temperature is 0.9, and
-the occasion component above is real. `expdx replicate` judges against bands for
-that reason. `expdx verify` is the claim that is exact.
+the occasion component above is real. `vworld replicate` judges against bands for
+that reason. `vworld verify` is the claim that is exact.
 
 ## Known defects, shipped rather than hidden
 
@@ -86,10 +94,10 @@ that reason. `expdx verify` is the claim that is exact.
   **The defective worlds are kept**, because past results must keep the world
   they actually ran on.
 - **Round 10's `MIDDLE` band has a two-band defect**, disclosed and not re-cut.
-- **Five published claims were retracted.** `expdx emit corrections` prints the
+- **Five published claims were retracted.** `vworld emit corrections` prints the
   ledger and verifies each row against the commit it cites.
 - **Twelve generation-3 A0 cells sit below the 0.90 precondition floor**, three
-  of them clearly. Reported, never dropped: `expdx read` prints the miss beside
+  of them clearly. Reported, never dropped: `vworld read` prints the miss beside
   every affected row.
 
 ## Cell schema
@@ -119,5 +127,5 @@ as a subject.
 
 ## Citation
 
-Cite the repo tag and this manifest digest together. `expdx emit disclosures`
-and `expdx emit limitations` print the current text for both.
+Cite the repo tag and this manifest digest together. `vworld emit disclosures`
+and `vworld emit limitations` print the current text for both.

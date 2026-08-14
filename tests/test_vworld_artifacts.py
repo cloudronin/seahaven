@@ -186,3 +186,115 @@ def test_related_work_DECLARES_that_it_is_not_computed(capsys):
     out = capsys.readouterr().out
     assert "NOT COMPUTED" in out
     assert "ENFORCED" in out and "ASSERTED" in out
+
+
+# --- corpus fetch ----------------------------------------------------------
+
+def test_fetch_REFUSES_to_clobber_a_corpus_that_is_already_there(tmp_path,
+                                                                 capsys):
+    """A replicator who already has cells and re-runs fetch out of habit should
+    not silently lose a corpus they may have verified."""
+    from vetoworld.commands import corpus as CO
+
+    (tmp_path / "eden_e14_x__A1__LAT2.json").write_text('{"runs":[]}')
+
+    class _A:
+        action, results, force = "fetch", str(tmp_path), False
+        repo = CO.DATASET
+    assert CO.main(_A()) == 1
+    assert "Refusing to overwrite" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("code", [401, 403, 404])
+def test_fetch_EXPLAINS_an_unreadable_dataset_instead_of_leaking_the_status(
+        code, tmp_path, capsys, monkeypatch):
+    """**HuggingFace answers 401, not 404, for a dataset that does not exist.**
+
+    Checked against the live API: a nonsense repo and this unpublished one both
+    return 401, because HF will not leak whether a private dataset exists. The
+    first version of this command handled 404 alone, so the state it is actually
+    in today produced a bare "Unauthorized" — accurate and useless. All three
+    codes are one case, and the message names the alternative.
+    """
+    import urllib.error
+
+    from vetoworld.commands import corpus as CO
+
+    def _raise(_repo):
+        raise urllib.error.HTTPError(_repo, code, "nope", {}, None)
+    monkeypatch.setattr(CO, "_listing", _raise)
+
+    class _A:
+        action, results, force = "fetch", str(tmp_path / "none"), False
+        repo = CO.DATASET
+    assert CO.main(_A()) == 2
+    out = capsys.readouterr().out
+    assert f"HTTP {code}" in out and "not published" in out
+    assert "does not exist or it is private" in out
+
+
+def test_fetch_INSTALLS_NOTHING_when_the_digest_does_not_match(tmp_path,
+                                                              capsys,
+                                                              monkeypatch):
+    """**The check the whole command exists for.** A corpus that fetched cleanly
+    but hashes differently is not the one the manuscript was computed from, and
+    installing it would make `verify` report drift caused by the download."""
+    from vetoworld.commands import corpus as CO
+
+    monkeypatch.setattr(CO, "_listing", lambda repo: ["eden_e14_x__A1__LAT2.json"])
+    monkeypatch.setattr(CO, "_get", lambda url, timeout=60: b'{"runs": []}')
+    monkeypatch.setattr(CO, "MANIFEST", tmp_path / "m.json")
+    (tmp_path / "m.json").write_text(json.dumps({"digest": "0" * 64, "cells": 1}))
+
+    dest = tmp_path / "results"
+
+    class _A:
+        action, results, force = "fetch", str(dest), False
+        repo = "someone/mirror"
+    assert CO.main(_A()) == 1
+    out = capsys.readouterr().out
+    assert "DIGEST MISMATCH" in out
+    assert not dest.exists(), "a mismatched corpus must not be installed"
+    assert (tmp_path / "results.partial").exists(), "and must be left for inspection"
+
+
+def test_fetch_INSTALLS_when_the_digest_matches(tmp_path, capsys, monkeypatch):
+    """The other half: the check has to pass on a good fetch, or it is just a
+    command that always fails."""
+    from vetoworld.commands import corpus as CO
+
+    body = b'{"runs": []}'
+    monkeypatch.setattr(CO, "_listing", lambda repo: ["eden_e14_x__A1__LAT2.json"])
+    monkeypatch.setattr(CO, "_get", lambda url, timeout=60: body)
+    monkeypatch.setattr(CO, "MANIFEST", tmp_path / "m.json")
+
+    h = hashlib.sha256()
+    h.update(b"eden_e14_x__A1__LAT2.json")
+    h.update(hashlib.sha256(body).digest())
+    (tmp_path / "m.json").write_text(json.dumps({"digest": h.hexdigest()}))
+
+    dest = tmp_path / "results"
+
+    class _A:
+        action, results, force = "fetch", str(dest), False
+        repo = "someone/mirror"
+    assert CO.main(_A()) == 0
+    assert (dest / "eden_e14_x__A1__LAT2.json").read_bytes() == body
+    assert not (tmp_path / "results.partial").exists(), "staging must be gone"
+    assert "MATCHES" in capsys.readouterr().out
+
+
+def test_fetch_pulls_NO_provider_sdk_into_the_import_path():
+    """The package declares zero runtime dependencies so it installs anywhere a
+    model is being served. The verb a replicator runs FIRST must not be the one
+    that breaks that."""
+    import ast
+    from pathlib import Path
+    src = Path(__file__).resolve().parents[1] / "vetoworld/commands/corpus.py"
+    names = set()
+    for n in ast.walk(ast.parse(src.read_text())):
+        if isinstance(n, ast.Import):
+            names |= {a.name.split(".")[0] for a in n.names}
+        elif isinstance(n, ast.ImportFrom) and n.module and n.level == 0:
+            names.add(n.module.split(".")[0])
+    assert "huggingface_hub" not in names and "requests" not in names, names

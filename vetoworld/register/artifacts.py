@@ -19,7 +19,7 @@ WORLDS = ("LAT", "W2", "W3")
 
 
 #: One definition, in the corpus layer that owns cell metadata. It lived here
-#: while `expdx read` had its own (absent) notion of the same thing, and read
+#: while `vworld read` had its own (absent) notion of the same thing, and read
 #: went on pooling the occasion probe into round 12's LAT measurement for
 #: exactly as long as that lasted.
 DIAGNOSTIC_STAGES = C.DIAGNOSTIC_STAGES

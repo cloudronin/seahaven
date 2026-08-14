@@ -1,4 +1,4 @@
-"""The `expdx` front door: the $0 verbs, and the guarantees they carry."""
+"""The `vworld` front door: the $0 verbs, and the guarantees they carry."""
 
 from __future__ import annotations
 

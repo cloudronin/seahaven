@@ -1,9 +1,8 @@
-"""`expdx` — one front door to VetoWorld.
+"""`vworld` — one front door to VetoWorld.
 
-**The command keeps its name and the package does not.** `vw` was the alternative
-and it is Vowpal Wabbit's binary, which sits on exactly the PATHs this tool
-targets; a two-letter collision in the same field is not worth the tidiness.
-
+**The command and the package point at each other**, which the previous name did
+not: `pip install vetoworld` used to hand you `expdx`. `vw` lost to Vowpal
+Wabbit's binary and `veto` to a package already on PyPI — see `docs/naming.md`.
 
 Modelled on `seahaven/fidelity/cli.py`, the one place in the repo that already
 did argparse subcommands properly. Fourteen scripts used raw `sys.argv` checks
@@ -29,7 +28,7 @@ SPENDING_VERBS = ("run", "replicate", "probe")
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="expdx",
+        prog="vworld",
         description="VetoWorld — a benchmark of expedience under terminal "
                     "stakes. Recompute the paper, or measure a model.")
     p.add_argument("--version", action="store_true",
@@ -84,7 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
                     help="serve a PINNED round's grid into the corpus; takes "
                          "its cohort, worlds, m and seed0 from the round module")
     rn.add_argument("--seed0", type=int,
-                    help="seed block start; check it with `expdx seeds --check`. "
+                    help="seed block start; check it with `vworld seeds --check`. "
                          "Not used with --round, which carries its own.")
     rn.add_argument("--out", default="results_run", help="output directory")
     rn.add_argument("--budget", type=float,
@@ -107,8 +106,12 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--dry-run", action="store_true")
 
     cp = sub.add_parser("corpus", help="fetch/checksum the committed cells ($0)")
-    cp.add_argument("action", choices=("status", "manifest"))
+    cp.add_argument("action", choices=("fetch", "status", "manifest"))
     cp.add_argument("--results", default="results")
+    cp.add_argument("--repo", default=None,
+                    help="dataset to fetch from (default: the published one)")
+    cp.add_argument("--force", action="store_true",
+                    help="replace a corpus that is already on disk")
 
     pn = sub.add_parser("pin", help="the pin lifecycle ($0 for check)")
     pn.add_argument("action", choices=("check", "new", "retire"))
@@ -128,6 +131,9 @@ def main(argv: list[str] | None = None) -> int:
     if not args.verb:
         parser.print_help()
         return 1
+    if getattr(args, "repo", None) is None and args.verb == "corpus":
+        from .commands.corpus import DATASET
+        args.repo = DATASET
 
     from .commands import (corpus, doctor, emit, pin, probe, read, replicate,
                            run, seeds, verify, worlds)

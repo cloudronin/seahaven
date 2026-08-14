@@ -16,7 +16,7 @@ success criteria.
 
 ## Commands
 
-### `expdx verify` — recompute the paper, $0
+### `vworld verify` — recompute the paper, $0
 
 - Fetches the committed corpus on first run (see Packaging).
 - Recomputes **every figure that appears in the manuscript** from cells on disk:
@@ -28,7 +28,7 @@ success criteria.
 
 This is the strong replication claim and it is exact.
 
-### `expdx replicate` — serve new cells, judged against bands
+### `vworld replicate` — serve new cells, judged against bands
 
 - Runs any cell (model, world, arm, m) against a provider with the **user's own
   key**. Same `EdenPolicy` assembly, same pins, same preconditions, same seed
@@ -54,7 +54,7 @@ Durability facts, stated in the docs rather than discovered in issues:
 - The **temperature deviation** on the Terra corpus (1.0 vs 0.9) is carried in
   the cell metadata and printed by any command that touches those cells.
 
-### `expdx worlds` — the $0 gates, standalone
+### `vworld worlds` — the $0 gates, standalone
 
 Runs the full world-validation stack on any lock, ours or a new one:
 
@@ -68,7 +68,7 @@ Runs the full world-validation stack on any lock, ours or a new one:
 
 This is the piece most likely to be reused by other people building worlds.
 
-### `expdx read` — the standing reads on any corpus
+### `vworld read` — the standing reads on any corpus
 
 Funnel decomposition, `rate_any` and `intent_rate` with the gap, the A0 licence
 gate (suppressing `ate_given_took` on failure), mode split with the pinned
@@ -78,7 +78,7 @@ labels. Works on our corpus or on cells the user generated with `replicate`.
 ## The claims register (build this first)
 
 One module: every figure in the manuscript is emitted by a named function from
-committed cells. The manuscript cites the function; `expdx verify` recomputes all
+committed cells. The manuscript cites the function; `vworld verify` recomputes all
 of them; a regression fails if any quoted figure drifts.
 
 Register rows carry: figure id, value, emitting function, cells consumed,
@@ -89,7 +89,7 @@ what would have caught "then a gap" and 93-vs-92 mechanically.
 
 ### Register outputs — the paper's tables, emitted not maintained
 
-`expdx emit <artifact>` renders each of these from the register; `expdx verify`
+`vworld emit <artifact>` renders each of these from the register; `vworld verify`
 recomputes them all. None of these is a hand-maintained document.
 
 | Artifact | Content |
@@ -119,7 +119,7 @@ recomputes them all. None of these is a hand-maintained document.
 
 ## Naming
 
-- **Package: `expedientbench`. Console command: `expdx`.** The public name carries
+- **Package: `expedientbench`. Console command: `vworld`.** The public name carries
   the construct (expedience), not the estimator — `intent_rate` is the current
   primary metric and estimators have changed four times; the construct has not.
 - **Do not** name anything public after "intent": it is a mental-state noun the
@@ -131,13 +131,13 @@ recomputes them all. None of these is a hand-maintained document.
   dataset, or docs.
 - HuggingFace dataset name matches the package: `expedientbench-corpus` or
   similar, not `eden-*`.
-- **Verify `expedientbench` is free on PyPI at build time** (and `expdx` as the
+- **Verify `expedientbench` is free on PyPI at build time** (and `vworld` as the
   console script has no conflicting binary on a clean PATH). Tonight's search
   established `xbench` is taken by an existing AI-evals framework and `eden` was
   never a candidate; the final string still gets checked against the index, not
   against a conversation.
 
-### `expdx run` — new cells on any model, including yours
+### `vworld run` — new cells on any model, including yours
 
 `replicate` re-serves **our** cells and judges against bands. `run` measures a
 **new** model — one we never ran — with the same instrument: any world, any arm,
@@ -190,12 +190,12 @@ fine-tuned models.
 
 ## Packaging
 
-- **pip-installable**, console command `expdx`. The repo's existing modules become the
+- **pip-installable**, console command `vworld`. The repo's existing modules become the
   library; the CLI is a thin layer over functions that already exist
   (`eden_read`, the simulator, the gates, the pins).
 - **Corpus on HuggingFace** (the raidex pattern): all committed cells, locks,
   BUILD.lock files, pins, the claims register, and the replication bands.
-  `expdx verify` fetches and checksums it. The paper cites the dataset DOI and
+  `vworld verify` fetches and checksums it. The paper cites the dataset DOI and
   the repo tag.
 - **Repo tag at submission**: code + corpus hash pinned in the manuscript.
 - Keys via environment only. `verify`, `worlds`, and `read` must run with **no
@@ -204,12 +204,12 @@ fine-tuned models.
 ## Verification for this work itself
 
 1. Full suite must not drop; the CLI is a layer, not a rewrite — a test asserts
-   `expdx read` output matches the existing round-read output byte-for-byte on a
+   `vworld read` output matches the existing round-read output byte-for-byte on a
    fixture cell.
-2. `expdx verify` green on the committed corpus before the manuscript quotes it.
+2. `vworld verify` green on the committed corpus before the manuscript quotes it.
 3. A synthetic drift test: perturb one cell in a scratch copy, `verify` must
    fail and name the figure.
-4. `expdx replicate --dry-run` and `expdx run --dry-run` assemble and print a
+4. `vworld replicate --dry-run` and `vworld run --dry-run` assemble and print a
    cell's first request without serving it (the payload-diff machinery, reused) —
    against any configured backend, including a custom `--base-url`.
 5. Prompt fixtures: assembled A1/A0 bytes per world per generation, committed,

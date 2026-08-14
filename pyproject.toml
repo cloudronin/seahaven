@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 # It ships three import packages: `vetoworld` (the CLI and register), `seahaven`
 # (the internal library, whose paths are hashed into every round pin and are
 # therefore never renamed), and `worlds` (the compiled worlds, needed as package
-# data or `expdx verify` cannot read a single lock).
+# data or `vworld verify` cannot read a single lock).
 name = "vetoworld"
 version = "0.1.0"
 license = "MIT"
@@ -23,7 +23,7 @@ dependencies = []
 # at runtime: it talks to an OpenAI-compatible endpoint over urllib so it can be
 # installed anywhere a model is being served, without dragging in a provider SDK.
 [project.scripts]
-expdx = "vetoworld.cli:main"
+vworld = "vetoworld.cli:main"
 seahaven-fidelity = "seahaven.fidelity.cli:main"
 
 [tool.setuptools.packages.find]
@@ -39,7 +39,7 @@ timeout = 120
 
 [tool.setuptools.package-data]
 # The pins hash these at repo-root-relative paths, so they must ship
-# beside the code or `expdx verify` cannot read a single lock.
+# beside the code or `vworld verify` cannot read a single lock.
 "worlds" = ["**/BUILD.lock.json", "**/*.json", "**/*.z8", "**/*.ni"]
 # The assembled A1/A0 prompt bytes per world per generation. Data, not code, so
 # it needs saying explicitly or the wheel ships a package that cannot check its

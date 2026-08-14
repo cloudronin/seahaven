@@ -1,4 +1,4 @@
-"""`expdx seeds` — the burned-block registry as an operation. $0, no key."""
+"""`vworld seeds` — the burned-block registry as an operation. $0, no key."""
 
 from __future__ import annotations
 

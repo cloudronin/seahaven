@@ -1,4 +1,4 @@
-"""`expdx pin` — the pin lifecycle, done by hand eleven times.
+"""`vworld pin` — the pin lifecycle, done by hand eleven times.
 
 **This is where "never re-pin to make it green" stops being a habit.**
 

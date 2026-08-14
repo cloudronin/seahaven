@@ -1,4 +1,4 @@
-"""`expdx emit <artifact>` — render a register artifact. $0, no key.
+"""`vworld emit <artifact>` — render a register artifact. $0, no key.
 
 None of these is a hand-maintained document; each is computed from committed
 cells so it cannot drift from what the corpus says.

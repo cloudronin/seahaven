@@ -1,4 +1,4 @@
-"""`expdx replicate` — re-serve our cells, judged against bands.
+"""`vworld replicate` — re-serve our cells, judged against bands.
 
 **Two claims, two success criteria.** `verify` recomputes the paper from
 committed cells and is byte-exact, achievable by anyone, $0. This is the other
@@ -55,7 +55,7 @@ def main(args) -> int:
     ours = _ours(args.model, args.level)
     if not ours:
         print(f"no committed generation-3 cell for {args.model} at {args.level};"
-              " there is nothing to replicate. Use `expdx run` instead.")
+              " there is nothing to replicate. Use `vworld run` instead.")
         return 1
     k_o, n_o, tag = ours
     lo, hi = band(k_o, n_o, hosted=not args.self_hosted)
@@ -110,7 +110,7 @@ def main(args) -> int:
     out.mkdir(exist_ok=True)
     res["meta"] = {"served_name": resolved, "eden_level": args.level,
                    "eden_arm": "A1", "terminal_at_zero": True, "seed0": seed0,
-                   "stage": "expdx_replicate", "replicating_round": tag,
+                   "stage": "vworld_replicate", "replicating_round": tag,
                    "ours": [k_o, n_o], "band": [blo, bhi], "verdict": verdict,
                    "wall_start_epoch": round(t0),
                    "wall_end_epoch": round(time.time()),

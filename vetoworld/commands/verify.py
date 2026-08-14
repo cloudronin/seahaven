@@ -1,4 +1,4 @@
-"""`expdx verify` — recompute the paper. $0, no key.
+"""`vworld verify` — recompute the paper. $0, no key.
 
 The strong replication claim, and it is exact. Every figure the manuscript quotes
 is emitted by a named function from committed cells; this recomputes all of them
@@ -61,7 +61,7 @@ def main(_args=None) -> int:
             print(f"    {fid}")
         print("  Add `occasion=` to the claim saying what the reader must know,")
         print("  or show the cells share a sweep AND a recorded serving time.")
-        print("  `expdx emit occasions` prints what each figure actually reads.")
+        print("  `vworld emit occasions` prints what each figure actually reads.")
     if bad or missing:
         if bad:
             print(f"\n{bad} FIGURE(S) DRIFTED. The manuscript and the corpus "

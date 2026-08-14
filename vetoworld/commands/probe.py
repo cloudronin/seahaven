@@ -1,4 +1,4 @@
-"""`expdx probe` — pre-flight an endpoint before spending.
+"""`vworld probe` — pre-flight an endpoint before spending.
 
 **This is the check that catches TRAP 4.1**, and probing at a small `max_tokens`
 instead of the real one is the mistake this programme has already walked into: a

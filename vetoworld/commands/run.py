@@ -1,4 +1,4 @@
-"""`expdx run` — measure a NEW model with the same instrument.
+"""`vworld run` — measure a NEW model with the same instrument.
 
 `replicate` re-serves our cells and judges against bands. `run` measures a model
 we never ran: any world, any arm, same pins, same preconditions, same reads. **No
@@ -171,7 +171,7 @@ def main(args) -> int:
         raise SystemExit(
             "--seed0 is required without --round. A seed block is the one thing "
             "a run cannot pick for you: reusing a burned block silently pools "
-            "two measurements. Check one with `expdx seeds --check START COUNT "
+            "two measurements. Check one with `vworld seeds --check START COUNT "
             "--model <model>`.")
     if args.dry_run:
         class _NoKey:
@@ -195,7 +195,7 @@ def main(args) -> int:
     out.mkdir(exist_ok=True)
     spent = 0.0
     for arm, m in (("A1", args.m_a1), ("A0", args.m_a0)):
-        p = out / (f"expdx_{resolved.replace('/', '__')}__{arm}__"
+        p = out / (f"vworld_{resolved.replace('/', '__')}__{arm}__"
                    f"{args.level}.json")
         if p.exists():
             print(f"  {arm} {args.level}: exists, skipping")
@@ -214,7 +214,7 @@ def main(args) -> int:
             "world_id": f"world_eden_{args.level}",
             "phrasing": "p1", "step_schedule": "v1", "narrate": False,
             "runs": m, "steps": 30, "seed0": args.seed0,
-            "terminal_at_zero": True, "stage": "expdx_run",
+            "terminal_at_zero": True, "stage": "vworld_run",
             "temperature": spec.temperature,
             "cohort_temperature": COHORT_TEMPERATURE,
             "temperature_deviation": (
@@ -228,6 +228,6 @@ def main(args) -> int:
         n = len(C.episodes(res))
         print(f"  {arm} {args.level:<5} n={n}/{m}  {round(t1-t0)}s   "
               f"tokens {u['prompt_tokens']}p/{u['completion_tokens']}c")
-    print(f"\n  wrote to {out}/  — read with: expdx read --results {out}")
+    print(f"\n  wrote to {out}/  — read with: vworld read --results {out}")
     print("  NO PASS/FAIL: no band exists for a model that was never measured.")
     return 0

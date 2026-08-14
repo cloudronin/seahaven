@@ -8,7 +8,7 @@ endpoint — including fine-tuned models.
 
 Conversation assembly is shared and provider-agnostic: it happens upstream in the
 rollout, so no backend can change it. A fixture seed must produce byte-identical
-messages regardless of endpoint, and `tests/test_expdx_backends.py` asserts it.
+messages regardless of endpoint, and `tests/test_vworld_backends.py` asserts it.
 """
 
 from .base import Backend, EndpointSpec, resolve

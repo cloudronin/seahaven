@@ -10,20 +10,21 @@ episode with the rule removed — not a separate group.
 
 ```bash
 pip install vetoworld
-expdx verify        # recompute every figure in the paper. $0, no key.
-expdx read          # both metrics, the funnel, the routes, the occasion labels
-expdx worlds        # the world-validation gates on any lock, ours or yours
-expdx emit matrix   # the paper's tables, computed rather than maintained
-expdx run <endpoint> --model <m> --seed0 N --budget 5   # measure a new model
+vworld corpus fetch  # pull the 259 committed cells and checksum them
+vworld verify        # recompute every figure in the paper. $0, no key.
+vworld read          # both metrics, the funnel, the routes, the occasion labels
+vworld worlds        # the world-validation gates on any lock, ours or yours
+vworld emit matrix   # the paper's tables, computed rather than maintained
+vworld run <endpoint> --model <m> --seed0 N --budget 5   # measure a new model
 ```
 
 ## Two replication claims, and they are not the same claim
 
-**1. The paper says what the data says.** `expdx verify` recomputes every quoted
+**1. The paper says what the data says.** `vworld verify` recomputes every quoted
 figure from the committed cells and exits nonzero naming any that drifted. Exact,
 $0, achievable by anyone, no credentials.
 
-**2. A new run lands where ours did.** `expdx replicate` re-serves our cells and
+**2. A new run lands where ours did.** `vworld replicate` re-serves our cells and
 judges them **against a pre-computed band, never a point estimate** — a Wilson
 interval widened by the measured between-occasion component. The programme's own
 findings force this: a **0.319 between-day level shift** on one model with the
@@ -44,12 +45,12 @@ commands with two success criteria.
   models change band label across the occasion-clean world pair.
 - **A published break did not survive its own top-up.** Buying 24 more episodes
   to strengthen round 10's only clean separation destroyed it. That correction,
-  and four others, are emitted as data: `expdx emit corrections` verifies every
+  and four others, are emitted as data: `vworld emit corrections` verifies every
   row against the commit it cites.
 
 ## Contributor notes on naming
 
-The public surface is **VetoWorld** / `vetoworld` / `expdx`. The internal library
+The public surface is **VetoWorld** / `vetoworld` / `vworld`. The internal library
 is `seahaven/` with `eden_*` modules, and it keeps those names permanently —
 their *paths* are hashed into eleven frozen pins, so renaming them would
 invalidate every freeze in the programme. **"eden" and "expedientbench" appear on
@@ -184,7 +185,7 @@ hypothesis is answered in the negative; two positive directions are open.
 | `env/` | Conda environments. Dev (local, arm64) and CUDA (rented H100). |
 | `worlds/` | Compiled world artifacts — `.z8` + `.json` sidecar, committed. |
 | `seahaven/` | The internal library. Hashed into pins; never renamed. |
-| `vetoworld/` | The public package: the `expdx` CLI and the claims register. |
+| `vetoworld/` | The public package: the `vworld` CLI and the claims register. |
 | `scripts/` | Setup, world builds, sweeps, verification. |
 | `archive/` | 44 superseded one-offs, with a README saying what each produced. |
 | `tests/` | Hermetic suite; no model, no GPU. `-m slow` for the rest. |

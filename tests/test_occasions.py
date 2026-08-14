@@ -51,7 +51,7 @@ def test_MTIME_can_never_produce_a_same_occasion_verdict():
 
 
 #: The sweeps whose cells recorded a real serving timestamp. Round 13's spec
-#: required one; round 14 got one because `expdx run --round` now writes it for
+#: required one; round 14 got one because `vworld run --round` now writes it for
 #: every cell. Everything earlier has only mtime, permanently — a timestamp
 #: cannot be recovered after the fact.
 _TIMESTAMPED = {"13", "14", "11tA", "11tB"}

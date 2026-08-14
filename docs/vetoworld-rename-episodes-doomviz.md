@@ -10,7 +10,7 @@ spec's naming section and adds two commands.
 ## 1. The rename: VetoWorld
 
 **Public name: VetoWorld. Package: `vetoworld` (verified free on PyPI — re-check
-at build time as always). Command: keep `expdx`, or `vw` if preferred — the
+at build time as always). Command: keep `vworld`, or `vw` if preferred — the
 command was never the public face; pick once and stop.**
 
 The name names **the rule** — a world with a veto in it. It deliberately does not
@@ -40,7 +40,7 @@ Propagation:
 
 ---
 
-## 2. `expdx episodes` — browse, filter, select (the primitive)
+## 2. `vworld episodes` — browse, filter, select (the primitive)
 
 A standalone $0, no-key command over any corpus: ours, a `replicate` output, or
 a stranger's `run` output.
@@ -92,7 +92,7 @@ seed-partner in A0 and emits both.
 
 ---
 
-## 3. `expdx doomviz` — one renderer over `episodes`
+## 3. `vworld doomviz` — one renderer over `episodes`
 
 **A thin alias**: `doomviz <selection>` requires the selection to resolve to
 exactly one episode (or one pair with `--paired`); if it matches several, it

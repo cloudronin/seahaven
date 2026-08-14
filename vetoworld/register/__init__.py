@@ -2,7 +2,7 @@
 
 **The structural-rigor principle applied to the paper itself.** A figure that
 appears in the manuscript must be recomputable from committed cells by a function
-that lives here, and `expdx verify` recomputes all of them and fails naming any
+that lives here, and `vworld verify` recomputes all of them and fails naming any
 that drift.
 
 This is what would have caught "then a gap" and 93-vs-92 mechanically rather than

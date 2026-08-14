@@ -1,6 +1,6 @@
 # Naming — VetoWorld, and why each alternative was rejected
 
-**Public name: VetoWorld. Distribution: `vetoworld`. Command: `expdx`.**
+**Public name: VetoWorld. Distribution: `vetoworld`. Command: `vworld`.**
 
 Tagline: *a benchmark of expedience under terminal stakes.*
 
@@ -30,13 +30,25 @@ the compiled `.z8` worlds are the artifact other people are most likely to reuse
 The benchmark claim lives in the tagline instead, where it can be stated in full
 rather than compressed into a four-letter suffix.
 
-## Why the command stayed `expdx`
+## Why the command is `vworld`
 
-`vw` was the alternative and it is **Vowpal Wabbit's command-line binary**, which
-sits on exactly the PATHs this tool targets. A two-letter collision inside the
-same field is a worse defect than a command whose name does not match its
-package, and the sibling rule for the console script has always been "no
-conflicting binary on a clean PATH". Picked once; not revisited.
+Three candidates, and the two that lost did so on checkable facts rather than
+taste. The standing rule for a console script is **no conflicting binary on a
+clean PATH**, and the new one added here is **the command and the package must
+point at each other** — a user who meets one has to be able to guess the other.
+
+| rejected | why |
+|---|---|
+| `vw` | **Vowpal Wabbit's command-line binary.** It sits on exactly the PATHs this tool targets, so the collision is inside our own field rather than at its edge. Free on PyPI, which is irrelevant: the clash is on `$PATH`, not the index. |
+| `veto` | **Taken on PyPI** (`pypi.org/pypi/veto` returns 200). Nothing stops a console script called `veto`, but then `pip install veto` hands a user someone else's project, and the guess a short command invites is the wrong one. |
+| `expdx` | The original, from `expedientbench`. It survived the first pass because "the command was never the public face" — but `pip install vetoworld` giving you `expdx` fails the point-at-each-other rule, and nothing was published yet, so the change was still free. |
+
+`vworld` is free on PyPI and on PATH, is the obvious contraction of `vetoworld`,
+and keeps the `world` that the suffix argument above turns on.
+
+**This is the last time it moves.** It was reopened only because nothing had
+been published; once the name is on an index and in a paper, a rename costs
+other people's installs rather than an afternoon.
 
 ## What the rename did and did not touch
 
@@ -55,7 +67,7 @@ HuggingFace dataset name, repo tag, paper title, every user-facing doc.
 
 - **Committed cell filenames** — the 257 files in the corpus keep their
   historical `eden_e{round}_...` prefix. Renaming them would change the corpus
-  manifest digest that `expdx verify` checks a fetched corpus against, and it
+  manifest digest that `vworld verify` checks a fetched corpus against, and it
   would break the join to thirteen rounds of research log, all to alter a string
   no reader needs to type. They are archive data, not tool vocabulary. Where a
   command shows a cell it renders the **public identity** — sweep, model, arm,
@@ -63,7 +75,7 @@ HuggingFace dataset name, repo tag, paper title, every user-facing doc.
 
 The rule that follows: **"eden" and "expedientbench" appear on no user-facing
 surface**, and `seahaven` appears on none either. That is enforced by
-`tests/test_expdx_cli.py::test_no_user_facing_string_names_the_internal_package`,
+`tests/test_vworld_cli.py::test_no_user_facing_string_names_the_internal_package`,
 on word boundaries — an earlier version matched the substring and fired on the
 word "credentials", and a check that flags an ordinary English word is a check
 people learn to ignore.
