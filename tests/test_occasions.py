@@ -165,16 +165,26 @@ def test_the_COUNTS_IN_THE_PROSE_are_what_the_corpus_says():
     """
     from pathlib import Path
 
+    import re
+
     real = tot = 0
     for _p, d in C.iter_cells():
         tot += 1
         real += bool(d.get("meta", {}).get("wall_start_epoch"))
     root = Path(__file__).resolve().parents[1]
-    words = {8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve"}
+
+    # **Word boundaries, not substrings.** The first version searched for
+    # "8 of 357" and found it inside "108 of 357" — the same collision that
+    # made the vocabulary-leak check fire on the word "credentials". A guard
+    # against stale prose is worth nothing if it cannot read its own numbers.
+    def states(src, k):
+        return re.search(rf"\b{k} of {tot}\b", src) is not None
+
     for rel in ("vetoworld/register/occasions.py", "vetoworld/commands/emit.py",
                 "vetoworld/commands/run.py", "docs/vetoworld-corpus-card.md"):
-        src = (root / rel).read_text().lower()
-        assert f"{real} of {tot}" in src or words.get(real, "?") in src, (
+        src = re.sub(r"\s+", " ", (root / rel).read_text().lower())
+        assert states(src, real), (
             f"{rel} does not state the current count of {real} of {tot}")
-        for wrong in (n for n in words if n != real):
-            assert f"{wrong} of {tot}" not in src, f"{rel} states {wrong} of {tot}"
+        for wrong in (real - 1, real + 1, 8, 10, 12):
+            if wrong != real:
+                assert not states(src, wrong), f"{rel} states {wrong} of {tot}"

@@ -43,7 +43,7 @@ about the manuscript.
 
 | | |
 |---|---|
-| `results/` | **259 cells**, one JSON per (round, model, arm, world). Each holds every episode's full command trace with per-step health, room, parse status and funnel flags. |
+| `results/` | **357 cells**, one JSON per (round, model, arm, world). Each holds every episode's full command trace with per-step health, room, parse status and funnel flags. |
 | `worlds/` | The compiled `.z8` worlds, their `.json` sidecars, and `BUILD.lock.json` per world — topology, larder, params, derived block, and the `.z8` sha256. |
 | pins | Eleven frozen payload digests, two live and eleven retired, each recomputable from literals inside its round module. |
 | claims register | One named function per manuscript figure. The paper cites the function; `verify` runs it. |
@@ -63,7 +63,7 @@ different measurements. `vworld read` refuses to.
 **2. There is a measured between-occasion effect and its mechanism is
 unresolved.** One model shifted **0.319** between two serving days. Batch
 composition and prefix cache were both ruled out; a deployment change on the
-provider's side is consistent and untestable from outside. **Ten of 259 cells
+provider's side is consistent and untestable from outside. **108 of 357 cells
 carry a real serving timestamp**; the rest have only file mtime, which is not a
 serving date and also under-detects — three separate sweeps share one mtime day.
 `vworld emit occasions` audits, per figure, which comparisons span sittings and
@@ -100,7 +100,7 @@ Each cell is `{"runs": [...], "meta": {...}}`. An episode carries `seed`,
 sweep recorded one — `wall_start_epoch`.
 
 Filenames keep a historical `eden_e*` prefix. It is archive vocabulary: renaming
-259 files would change the digest `verify` checks against, for a string nobody
+357 files would change the digest `verify` checks against, for a string nobody
 needs to type.
 
 ## Disclosures

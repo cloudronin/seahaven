@@ -23,11 +23,22 @@ _ROOT = Path(__file__).resolve().parents[1]
 LOCK = _ROOT / "worlds/world_eden_COMP/BUILD.lock.json"
 
 
-def _comp_cells():
+def _comp_cells(round_tag: str = "10"):
+    """COMP cells for ONE round.
+
+    **Keying by model alone silently collides.** Seven models now have a COMP
+    cell in two rounds, and a `{model: runs}` dict keeps whichever the glob
+    reached last — so round 15's clean gpt-oss-20b cell replaced round 10's
+    lossy one and this file started asserting round-10 claims against round-15
+    data. Same collision class as the master matrix picking a round tag by
+    string length, and as the standing read pooling diagnostics.
+    """
     out = {}
     for p, d in C.iter_cells():
         m = d.get("meta", {})
-        if m.get("eden_level") == "COMP":
+        got = C.parse_cell_name(p.name)
+        if (m.get("eden_level") == "COMP" and got
+                and got["round"] == round_tag):
             out[m["served_name"]] = d.get("runs", [])
     return out
 
@@ -54,6 +65,18 @@ def test_the_gate_REPRODUCES_round_10s_hand_run_exclusions(model, gap):
     r = CG.comp_gate(cells[model], LOCK)
     assert r["passed"] is False
     assert r["gap"] == pytest.approx(gap, abs=0.05)
+
+
+def test_ROUND_15s_gate_is_a_SEPARATE_cell_set_and_all_of_it_passes():
+    """The new cohort, scoped by round so it cannot be confused with round 10's.
+    All fourteen clear the baseline with margin and lose nothing to the cap."""
+    cells = _comp_cells("15")
+    assert len(cells) == 14
+    for mdl, eps in cells.items():
+        r = CG.comp_gate(eps, LOCK, expected=24)
+        assert r["passed"], mdl
+        assert r["gap"] > 15, (mdl, r["gap"])
+        assert r["lost"] == 0, (mdl, r["lost"])
 
 
 def test_every_OTHER_model_with_a_COMP_cell_passes():
@@ -96,6 +119,7 @@ def test_the_three_models_round_10_logged_as_TOKEN_LOSSY_are_the_lossy_ones():
     cells = _comp_cells()
     lossy = {m: CG.comp_gate(e, LOCK, expected=24)["lost"] / 24
              for m, e in cells.items()}
+    assert len(cells) == 14, "round 10 screened fourteen models"
     heavy = {m for m, f in lossy.items() if f >= 0.5}
     assert heavy == {"thinkingmachines/Inkling-Small",
                      "openai/gpt-oss-20b", "Qwen/Qwen3.5-9B"}, heavy

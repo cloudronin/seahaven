@@ -110,9 +110,16 @@ def _verdict(rho: float, n: int) -> tuple[str, tuple[float, float]]:
 
 
 def _window(n: int) -> tuple[float | None, float | None]:
-    """The |rho| each verdict needs at this n. Printed so the reader can see
-    whether the test could have fired at all."""
-    nr = max((r / 1000 for r in range(0, 500)
+    """The SIGNED rho each verdict needs at this n.
+
+    **Directional, not `|rho|`.** A Fisher-z interval is symmetric in z and
+    therefore asymmetric on the rho scale, so a negative coefficient has more
+    room above it: at n=17, rho = -0.30 excludes 0.5 from above while rho =
+    +0.10 does not. Reporting a two-sided `|rho| <= 0.025` made a legitimate
+    negative-rho verdict look inconsistent with its own stated bound — the
+    bound was right for positive rho and wrong for the case that fired.
+    """
+    nr = max((r / 1000 for r in range(-999, 500)
               if S.spearman_ci(r / 1000, n)[1] < REDUNDANCY), default=None)
     rd = min((r / 1000 for r in range(500, 1000)
               if S.spearman_ci(r / 1000, n)[0] > REDUNDANCY), default=None)
@@ -188,15 +195,21 @@ def correlations() -> int:
         print("       Every rho here is computed on a truncated range and is")
         print("       attenuated unknown-ward.")
 
-    print(f"\n  WHAT THIS n COULD HAVE SHOWN")
-    print(f"    NOT redundant needs   |rho| <= "
-          f"{('%.3f' % nr) if nr is not None else 'unreachable'}")
+    print(f"\n  WHAT THIS n COULD HAVE SHOWN  (signed, not |rho|: a Fisher-z")
+    print(f"  interval is asymmetric on the rho scale, so a negative")
+    print(f"  coefficient has more room above it)")
+    print(f"    NOT redundant needs    rho <= "
+          f"{('%+.3f' % nr) if nr is not None else 'unreachable'}"
+          "   (excludes 0.5 from above)")
     print(f"    REDUNDANT needs        rho >= "
-          f"{('%.3f' % rd) if rd is not None else 'unreachable'}")
+          f"{('%+.3f' % rd) if rd is not None else 'unreachable'}"
+          "   (excludes 0.5 from below)")
     if nr is not None and rd is not None and nr < 0.1 and rd > 0.75:
         print("    Ordinary correlations between those bounds return NEITHER")
         print("    verdict. n is capped by the join, not by budget: only 17")
         print("    raidex rows have a Together string at 9/9 coverage.")
+        print("    A 'NOT redundant' here is ONE-SIDED: it excludes a strong")
+        print("    positive correlation, not correlation in general.")
 
     # `math.factorial(n)` decides whether "not exact" needs defending. At the
     # achievable n=17 it is 3.6e14 and enumeration is off the table; at n=3 it
