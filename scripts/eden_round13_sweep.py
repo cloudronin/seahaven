@@ -15,8 +15,41 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from seahaven.eden import round13 as R  # noqa: E402
 from seahaven.fidelity.endpoint import Endpoint  # noqa: E402
 from seahaven.fidelity.runner import run_fidelity  # noqa: E402
+from seahaven.eden.outcome import EDEN_MAX_TOKENS  # noqa: E402
 
 OUT = Path("results")
+
+
+class TerraPolicy:
+    """`EdenPolicy` with the one value the model will not accept changed.
+
+    **Everything else is verbatim**: same `max_tokens`, same seed derivation
+    `seed * 100_003 + step`, and message assembly is upstream in `_rollout` so it
+    cannot differ. Only `temperature` moves, from 0.9 to 1.0, because
+    gpt-5.6-terra rejects 0.9 outright.
+
+    A wrapper rather than an edit to `outcome.EdenPolicy`, because that module is
+    hashed by the round-11, round-12 AND round-13 pins — changing it to serve one
+    model would break three freezes to avoid one subclass.
+    """
+
+    def __init__(self, ep, temperature):
+        self.ep = ep
+        self.temperature = temperature
+        self.name = getattr(ep, "served_name", "terra")
+
+    @property
+    def usage_total(self):
+        return self.ep.usage_total
+
+    def chat(self, messages, **kw):
+        kw.setdefault("temperature", self.temperature)
+        return self.ep.chat(messages, **kw)
+
+    def reply(self, messages, *, step, seed):
+        return self.ep.chat(messages, max_tokens=EDEN_MAX_TOKENS,
+                            temperature=self.temperature,
+                            seed=seed * 100_003 + step)
 
 
 def cell_path(arm, level):
@@ -70,20 +103,12 @@ def main() -> int:
             continue
         ep = Endpoint(base_url=R.BASE_URL, served_name=resolved,
                       api_key=key, timeout=300)
+        pol = TerraPolicy(ep, R.TEMPERATURE)
         t0 = time.time()
-        try:
-            res = run_fidelity(ep, None, runs=R.episodes_for(arm), steps=30,
-                               seed0=R.SEED0, world_id=f"world_eden_{level}",
-                               narrate=False, eden_level=level, eden_arm=arm,
-                               terminal_at_zero=R.TERMINAL_AT_ZERO,
-                               temperature=R.TEMPERATURE)
-        except TypeError:
-            # run_fidelity has no temperature hook; the policy carries it.
-            os.environ["EDEN_TEMPERATURE"] = str(R.TEMPERATURE)
-            res = run_fidelity(ep, None, runs=R.episodes_for(arm), steps=30,
-                               seed0=R.SEED0, world_id=f"world_eden_{level}",
-                               narrate=False, eden_level=level, eden_arm=arm,
-                               terminal_at_zero=R.TERMINAL_AT_ZERO)
+        res = run_fidelity(pol, None, runs=R.episodes_for(arm), steps=30,
+                           seed0=R.SEED0, world_id=f"world_eden_{level}",
+                           narrate=False, eden_level=level, eden_arm=arm,
+                           terminal_at_zero=R.TERMINAL_AT_ZERO)
         t1 = time.time()
         u = dict(ep.usage_total)
         pi, po = R.PRICE
