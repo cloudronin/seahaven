@@ -152,3 +152,29 @@ def test_occasion_labels_come_from_the_CORPUS_LAYER_not_a_second_detector():
     p = next(iter(OC.audit_claim(_claim("terra.floor.total")).cells))
     assert OC._label(p) == C.occasion_of(Path(p),
                                          C.load_cell(p).get("meta", {}))
+
+
+def test_the_COUNTS_IN_THE_PROSE_are_what_the_corpus_says():
+    """**Prose numbers drift; this programme has paid for that repeatedly.**
+
+    Three files state how many cells carry a real serving timestamp, and round
+    14 moved it from 8 to 10 the moment it recorded one. A docstring the code
+    contradicts is worse than no docstring, so the figures are asserted here and
+    a future sweep that records timestamps will fail this test rather than
+    quietly make three files wrong.
+    """
+    from pathlib import Path
+
+    real = tot = 0
+    for _p, d in C.iter_cells():
+        tot += 1
+        real += bool(d.get("meta", {}).get("wall_start_epoch"))
+    root = Path(__file__).resolve().parents[1]
+    words = {8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve"}
+    for rel in ("vetoworld/register/occasions.py", "vetoworld/commands/emit.py",
+                "vetoworld/commands/run.py", "docs/vetoworld-corpus-card.md"):
+        src = (root / rel).read_text().lower()
+        assert f"{real} of {tot}" in src or words.get(real, "?") in src, (
+            f"{rel} does not state the current count of {real} of {tot}")
+        for wrong in (n for n in words if n != real):
+            assert f"{wrong} of {tot}" not in src, f"{rel} states {wrong} of {tot}"

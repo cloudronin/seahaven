@@ -141,8 +141,8 @@ def _round_cells(args, spec) -> int:
                 else f"served at {spec.temperature}, cohort is "
                      f"{COHORT_TEMPERATURE}"),
             # **A real serving timestamp, not an mtime.** The occasion audit can
-            # only call a comparison clean when the cells carry this; eight of
-            # 257 committed cells did, and every new one should.
+            # only call a comparison clean when the cells carry this; ten of
+            # 259 committed cells do, and every new one should.
             "wall_start_epoch": round(t0), "wall_end_epoch": round(t1),
             "wall_s": round(prior.get("wall_s", 0) + (t1 - t0)),
             "usage": u, "price_per_m": {"prompt": pi, "completion": po},

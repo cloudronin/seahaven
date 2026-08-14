@@ -18,8 +18,8 @@ and the audit would keep describing the old one. Instead each claim is run with
 figure cannot lie about its own inputs.
 
 **2. `mtime` is not a serving date, so it can never produce a "same occasion"
-verdict.** Real serving timestamps exist on **8 of 257** cells — the round-13
-frontier cells and the two timing probes. Everything else falls back to file
+verdict.** Real serving timestamps exist on **10 of 259** cells — rounds 13 and
+14 and the two timing probes. Everything else falls back to file
 last-written, which for a gap-filled cell is its *last* attempt, not its first.
 Two mtimes that happen to agree are not evidence that two cells were served
 together, so the verdict is `unknown-mtime` and the flag says the corpus cannot

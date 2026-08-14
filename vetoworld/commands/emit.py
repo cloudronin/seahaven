@@ -21,7 +21,7 @@ def _occasions() -> int:
     the manuscript needs the answer attached to the figure, because the flag has
     to travel with the number into the paper.
 
-    Every row prints its SOURCE. Only eight cells carry a real serving timestamp;
+    Every row prints its SOURCE. Only ten cells carry a real serving timestamp;
     everything else falls back to file mtime, which for a gap-filled cell is its
     LAST attempt. Rendering the two identically would launder an mtime into a
     serving date inside the one artifact whose whole purpose is to be trusted
@@ -75,7 +75,7 @@ def _cell_id(path) -> str:
     """A cell's PUBLIC identity: sweep, model, arm, world.
 
     Not its filename. The committed files keep a historical prefix — renaming
-    257 of them would change the corpus digest that `verify` checks against, for
+    259 of them would change the corpus digest that `verify` checks against, for
     a string no reader needs — so the identity is rendered from the parts
     instead. It is also what a reader actually wants: `e12 cogito A1 LAT` says
     what the cell is, which the path only implies.

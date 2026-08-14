@@ -96,9 +96,10 @@ def main(args) -> int:
               f"{('yes' if servable else 'NO'):>10}   {'; '.join(notes)}")
     print(f"\n{bad} failing check(s)")
     print("  servable=NO means the world validates but has no setting sentence")
-    print("  registered, so no episode can run on it. That registry is hashed by")
-    print("  three live pins, so adding one is a deliberate round-boundary change,")
-    print("  not a fix to slip in.")
+    print("  registered, so no episode can run on it. That registry is hashed")
+    print("  WHOLE by every live pin, so registering one world retires all of")
+    print("  them — LAT2 cost five. It is a deliberate round-boundary change,")
+    print("  never a fix to slip in, and the next world will cost the same.")
     print("  crossing is the formula form; a per-episode crossing comes from the")
     print("  recorded health trace and is what derived tables actually use.")
     return 1 if bad else 0
