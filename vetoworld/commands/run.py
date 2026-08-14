@@ -86,17 +86,40 @@ def _round_cells(args, spec) -> int:
     tag, pin_key = str(args.round), f"round{args.round}_pin"
     pin = getattr(R, f"PINNED_ROUND{args.round}_HASH")
 
+    # **A BLOCK IS A SEPARATE CELL, NOT A TOP-UP.** Without this the tag, the
+    # seed base and the path all come from the round number alone, so a second
+    # block of the same (model, arm, level) resolves to the SAME file and
+    # `resume_plan` gap-fills into it — pooling the blocks and destroying the
+    # structure the measurement is about. Round 11's block 3 was kept out of
+    # round 10's cell by hand for exactly that reason; this is that decision
+    # made expressible.
+    block, stage = getattr(args, "block", None), None
+    if block:
+        tag = f"{args.round}b{block}"
+        stage = f"r{args.round}_block{block}"
+        if args.seed0 is None:
+            raise SystemExit(
+                "--block needs its own --seed0. A block reuses the round's "
+                "grid but must NOT reuse its seeds: overlapping seeds would "
+                "re-serve the same episodes and call the repeat a new "
+                "occasion. Check one with `vworld seeds --check`.")
+
+    seed0 = args.seed0 if block else R.SEED0
+
     def want_for(c):
         return R.episodes_for(c[1])
-    want_for.seed0 = R.SEED0
+    want_for.seed0 = seed0
 
     def path_for(c):
         return C.cell_path(tag, c[0], c[1], c[2])
 
     grid = R.cells()
+    if getattr(args, "level", None) and block:
+        grid = [c for c in grid if c[2] == args.level]
     todo, gaps = SW.resume_plan(grid, want_for, path_for, pin_key, pin)
-    print(f"round {args.round} — {len(grid)} cell(s), {len(todo)} to run")
-    print(f"  pin {pin[:16]}...  seed0={R.SEED0}  "
+    label = f"round {args.round}" + (f" block {block}" if block else "")
+    print(f"{label} — {len(grid)} cell(s), {len(todo)} to run")
+    print(f"  pin {pin[:16]}...  seed0={seed0}  "
           f"terminal_at_zero={R.TERMINAL_AT_ZERO}")
     if args.budget is None:
         raise SystemExit("run refuses to start without an explicit --budget.")
@@ -116,7 +139,7 @@ def _round_cells(args, spec) -> int:
                                 terminal_at_zero=R.TERMINAL_AT_ZERO)
 
         res, filled = SW.run_cell(
-            None, runs=want_for(c), seed0=R.SEED0, level=level, arm=arm,
+            None, runs=want_for(c), seed0=seed0, level=level, arm=arm,
             terminal_at_zero=R.TERMINAL_AT_ZERO, serve=serve, path=p,
             seeds=gaps.get(c))
         t1 = time.time()
@@ -131,8 +154,9 @@ def _round_cells(args, spec) -> int:
             "world_id": f"world_eden_{level}", "world_version": f"world_eden_{level}",
             "eden_level": level, "eden_arm": arm,
             "phrasing": "p1", "step_schedule": "v1", "narrate": False,
-            "runs": want_for(c), "steps": 30, "seed0": R.SEED0,
-            "stage": f"r{args.round}_{level.lower()}",
+            "runs": want_for(c), "steps": 30, "seed0": seed0,
+            "stage": stage or f"r{args.round}_{level.lower()}",
+            **({"block": block} if block else {}),
             "terminal_at_zero": R.TERMINAL_AT_ZERO, pin_key: pin,
             "temperature": spec.temperature,
             "cohort_temperature": COHORT_TEMPERATURE,
@@ -167,6 +191,11 @@ def _round_cells(args, spec) -> int:
 
 def main(args) -> int:
     spec = resolve(args.endpoint, model=args.model, key_env=args.key_env)
+    if getattr(args, "block", None) and not getattr(args, "round", None):
+        raise SystemExit(
+            "--block needs --round. A block is an ADDITIONAL block of a pinned "
+            "round's grid; without the round there is no grid to repeat and no "
+            "pin to carry, and the ad-hoc path would silently ignore it.")
     if not getattr(args, "round", None) and args.seed0 is None:
         raise SystemExit(
             "--seed0 is required without --round. A seed block is the one thing "

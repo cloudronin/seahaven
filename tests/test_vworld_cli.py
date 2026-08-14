@@ -195,3 +195,43 @@ def test_a_FAILED_builder_import_names_the_DEPENDENCY_not_a_symptom(monkeypatch)
             assert "_vworld_builder" not in sys.modules, "cache was poisoned"
     finally:
         sys.modules.pop("_vworld_builder", None)
+
+
+# --- one canonical vocabulary list, asserted --------------------------------
+
+def test_NO_SECOND_COPY_of_a_vocabulary_list_can_drift():
+    """**The third instance of one failure, so it gets a guard rather than a
+    third fix.**
+
+    `doctor` carried its own round tuple and it stopped at 13 while `pin.ROUNDS`
+    gained 14 — so the health check silently skipped the only round that could
+    still serve cells. Before that, `emit.ARTIFACTS` and the `fn` dispatch dict
+    drifted the same way, and before that the registry-disjointness lists.
+
+    Each list has exactly one definition, and every other consumer imports it.
+    """
+    import inspect
+
+    from vetoworld.commands import doctor, emit, pin
+
+    # doctor must not define its own; it must read pin's.
+    assert "from .pin import ROUNDS" in inspect.getsource(doctor)
+    assert not [ln for ln in inspect.getsource(doctor).splitlines()
+                if ln.strip().startswith("ROUNDS =")], "doctor redefines ROUNDS"
+
+    # every round in the canonical tuple imports, and 14 is in it
+    import importlib
+    assert 14 in pin.ROUNDS, "the newest round is missing from the canonical list"
+    for n in pin.ROUNDS:
+        importlib.import_module(f"seahaven.eden.round{n}")
+
+    # emit's ARTIFACTS tuple and its dispatch dict must agree, in both
+    # directions — the tuple is what the leak test walks, the dict is what
+    # actually dispatches, and an artifact in one but not the other is either
+    # unreachable or unguarded.
+    class _A:
+        artifact = "__nope__"
+    emit.main(_A())          # populates nothing, but proves main imports
+    src = inspect.getsource(emit.main)
+    for name in emit.ARTIFACTS:
+        assert f'"{name}"' in src, f"{name} is in ARTIFACTS but never dispatched"

@@ -10,7 +10,8 @@ from seahaven.eden._shared import corpus as C
 
 ARTIFACTS = ("matrix", "occasions", "seeds", "spend",
              "floor-mechanisms", "generations", "limitations",
-             "disclosures", "predictions", "corrections", "related-work")
+             "disclosures", "predictions", "corrections", "related-work",
+             "correlations", "convergence")
 
 
 def _occasions() -> int:
@@ -119,11 +120,13 @@ def _seeds() -> int:
 
 def main(args) -> int:
     from ..register import artifacts as A
+    from ..register import correlations as CO
     fn = {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
           "matrix": A.matrix, "floor-mechanisms": A.floor_mechanisms,
           "generations": A.generations, "limitations": A.limitations,
           "disclosures": A.disclosures, "predictions": A.predictions,
-          "corrections": A.corrections, "related-work": A.related_work}
+          "corrections": A.corrections, "related-work": A.related_work,
+          "correlations": CO.correlations, "convergence": CO.candidate_convergence}
     if args.artifact not in fn:
         print(f"unknown artifact {args.artifact!r}; have: {', '.join(sorted(fn))}")
         return 1

@@ -122,3 +122,88 @@ def test_fisher_matches_every_round_modules_copy(k1, n1, k2, n2):
     want = S.fisher(k1, n1, k2, n2)
     assert R10._fisher(k1, n1, k2, n2) == want
     assert R13._fisher(k1, n1, k2, n2) == want
+
+
+# --- rank correlation: the first live one in the programme -------------------
+
+@pytest.mark.parametrize("x,y", [
+    ([1, 2, 3, 4, 5], [2, 1, 4, 3, 5]),
+    ([100, 100, 100, 86, 82, 55, 29, 23, 91], [5, 3, 9, 1, 7, 2, 8, 4, 6]),
+    ([1, 1, 2, 2, 3, 3], [6, 5, 4, 3, 2, 1]),
+    ([0.0, 0.0, 0.0, 0.5, 1.0], [1, 2, 3, 4, 5]),
+])
+def test_spearman_matches_scipy_INCLUDING_ties(x, y):
+    """Ties are not an edge case here: a third of the veto-hold cohort sits at
+    exactly 100.0, so midrank handling decides whether the coefficient is even
+    defined. Checked against scipy rather than against intuition."""
+    from scipy.stats import spearmanr
+    assert abs(S.spearman_rho(x, y) - spearmanr(x, y).statistic) < 1e-12
+
+
+def test_spearman_is_NAN_when_one_side_is_constant():
+    """Three models at exactly 100.0 is a real corpus state. A constant vector
+    has no ranks to correlate, and nan propagates it as absent rather than as 0
+    — which a reader would take for 'uncorrelated'."""
+    import math
+    assert math.isnan(S.spearman_rho([1.0, 1.0, 1.0, 1.0], [1, 2, 3, 4]))
+
+
+def test_permutation_p_is_DETERMINISTIC_under_a_fixed_seed():
+    """**Why the seed exists at all.** `verify` recomputes every register figure
+    and compares with `==`. A sampled p-value that moved between runs could not
+    be a claim, so the seed is required and lives in the round pin."""
+    a = S.permutation_p([1, 2, 3, 4, 5], [2, 1, 4, 3, 5], n_shuffles=500, seed=7)
+    b = S.permutation_p([1, 2, 3, 4, 5], [2, 1, 4, 3, 5], n_shuffles=500, seed=7)
+    c = S.permutation_p([1, 2, 3, 4, 5], [2, 1, 4, 3, 5], n_shuffles=500, seed=8)
+    assert a == b
+    assert a != c, "a different seed must actually resample"
+
+
+def test_permutation_p_is_NEVER_ZERO():
+    """Davison-Hinkley: the observed statistic is one of the permutations, so
+    p=0 from a finite sample would claim more than the sampling supports."""
+    p = S.permutation_p([1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+                        n_shuffles=200, seed=1)
+    assert p > 0 and p == pytest.approx(1 / 201, abs=1e-12)
+
+
+def test_n_shuffles_and_seed_are_REQUIRED_like_mds_alpha():
+    """A parameter that changes what the test means may not have a silent
+    default — the rule `mds(alpha=)` was written to enforce."""
+    with pytest.raises(TypeError):
+        S.permutation_p([1, 2, 3], [3, 2, 1], n_shuffles=10)
+    with pytest.raises(TypeError):
+        S.permutation_p([1, 2, 3], [3, 2, 1], seed=1)
+
+
+def test_spearman_ci_is_what_stops_an_UNDERPOWERED_NULL(capsys):
+    """**The MDS-class error, prevented rather than repeated.**
+
+    At n=17 an observed rho of 0 carries a 95% CI of about [-0.48, +0.48]. The
+    spec read |rho| < 0.5 as evidence the index lacks the dimension — a null
+    claimed from an interval containing 0.45.
+    """
+    lo, hi = S.spearman_ci(0.0, 17)
+    assert lo < -0.47 and hi > 0.47
+    assert lo < 0.45 < hi, "0.45 sits inside the interval, which is the point"
+    # and the interval narrows with n, as it must
+    assert S.spearman_ci(0.0, 40)[1] < S.spearman_ci(0.0, 17)[1]
+
+
+def test_the_E1_VERDICT_WINDOW_at_the_achievable_n():
+    """**Measured before spending, and it constrains what E1 may claim.**
+
+    n=17 is a hard ceiling: only 17 raidex rows have a Together string at 9/9.
+    At that n the CI-form test needs |rho| <= ~0.03 to call a dimension
+    non-redundant, and rho >= ~0.79 to call it redundant. Ordinary correlations
+    in between return NEITHER verdict, so E1 ships coefficients and an explicit
+    'underpowered' label rather than a verdict.
+    """
+    not_redundant = max((r / 1000 for r in range(0, 500)
+                         if S.spearman_ci(r / 1000, 17)[1] < 0.5), default=None)
+    redundant = min((r / 1000 for r in range(500, 1000)
+                     if S.spearman_ci(r / 1000, 17)[0] > 0.5), default=None)
+    assert not_redundant is not None and not_redundant < 0.05
+    assert redundant is not None and redundant > 0.75
+    # the spec's 0.7 threshold does not reach a verdict at this n
+    assert S.spearman_ci(0.7, 17)[0] < 0.5

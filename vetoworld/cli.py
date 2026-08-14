@@ -82,6 +82,10 @@ def build_parser() -> argparse.ArgumentParser:
     rn.add_argument("--round", type=int,
                     help="serve a PINNED round's grid into the corpus; takes "
                          "its cohort, worlds, m and seed0 from the round module")
+    rn.add_argument("--block", type=str,
+                    help="serve an ADDITIONAL block of a round's grid as "
+                         "separate cells (tag e.g. 15b2). Needs its own "
+                         "--seed0; never gap-fills into the round's own cell")
     rn.add_argument("--seed0", type=int,
                     help="seed block start; check it with `vworld seeds --check`. "
                          "Not used with --round, which carries its own.")

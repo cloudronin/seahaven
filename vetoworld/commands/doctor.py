@@ -24,7 +24,14 @@ def main(_args=None) -> int:
     bad += not n_cells
 
     print("\npins")
-    for n in (2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13):
+    # **One canonical list, imported.** This tuple was a second copy and it
+    # drifted: it stopped at 13 while `pin.ROUNDS` gained 14, so `doctor` quietly
+    # stopped checking the only round that could still serve cells. Third
+    # instance of a duplicated vocabulary list going stale, after
+    # registry-disjointness and `emit.ARTIFACTS`/`fn` — hence the assertion in
+    # `tests/test_vworld_cli.py` rather than only the fix.
+    from .pin import ROUNDS
+    for n in ROUNDS:
         try:
             m = importlib.import_module(f"seahaven.eden.round{n}")
         except Exception as e:

@@ -124,3 +124,52 @@ def test_run_REFUSES_without_an_explicit_budget():
     with pytest.raises(SystemExit) as e:
         R.main(_A(dry_run=False, budget=None))
     assert "--budget" in str(e.value)
+
+
+# --- run --block: a block is a separate cell, not a top-up ------------------
+
+def test_a_BLOCK_writes_a_DISTINCT_cell_and_never_gap_fills_the_round(tmp_path,
+                                                                      monkeypatch):
+    """**What round 11's block 3 was kept out of round 10's cell to protect.**
+
+    Without `--block` the tag, the seed base and the path all derive from the
+    round number, so a second block of the same (model, arm, level) resolves to
+    the SAME file and `resume_plan` gap-fills into it — pooling the blocks and
+    destroying the structure the measurement exists to show. The paths must
+    differ, and the seeds must not overlap.
+    """
+    from seahaven.eden._shared import corpus as C
+
+    base = C.cell_path("15", "m/x", "A1", "LAT")
+    blk = C.cell_path("15b2", "m/x", "A1", "LAT")
+    assert base != blk
+    assert "e15_" in base.name and "e15b2_" in blk.name
+    # and the corpus layer must recognise the block tag, or the cell is invisible
+    got = C.parse_cell_name(blk.name)
+    assert got and got["round"] == "15b2" and got["schema"] == "current"
+
+
+def test_block_REFUSES_without_a_round(capsys):
+    """The ad-hoc path has no grid and no pin, so it would ignore --block."""
+    from vetoworld.commands import run as R
+
+    class _A:
+        endpoint, model, key_env = "together", None, None
+        block, round, seed0, dry_run, budget = "2", None, 1000, False, 5.0
+    with pytest.raises(SystemExit) as e:
+        R.main(_A())
+    assert "--block needs --round" in str(e.value)
+
+
+def test_block_REFUSES_without_its_own_seed0():
+    """A block reusing the round's seeds would re-serve the same episodes and
+    call the repeat a new occasion."""
+    from vetoworld.commands import run as R
+
+    class _A:
+        endpoint, model, key_env = "together", None, None
+        block, round, seed0, dry_run, budget = "2", 14, None, False, 5.0
+        level = None
+    with pytest.raises(SystemExit) as e:
+        R.main(_A())
+    assert "--block needs its own --seed0" in str(e.value)
