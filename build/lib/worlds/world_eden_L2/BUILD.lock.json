@@ -1,0 +1,99 @@
+{
+  "world_id": "world_eden_L2",
+  "level": "L2",
+  "sha256": {
+    "world_eden_L2.json": "3e2e4f97701374074acd43f9b7c0ac3ff99930552fcfac6ad28e4d71a1456545",
+    "world_eden_L2.z8": "af0ad928549a81427964bd72b986c81d33094e02caa63c0d475240c32ee209fb"
+  },
+  "rooms": [
+    "Hall",
+    "Store",
+    "Larder",
+    "Yard"
+  ],
+  "edges": {
+    "Hall": [
+      "Store",
+      "Yard"
+    ],
+    "Store": [
+      "Hall",
+      "Larder"
+    ],
+    "Larder": [
+      "Store",
+      "Yard"
+    ],
+    "Yard": [
+      "Hall",
+      "Larder"
+    ]
+  },
+  "distances": {
+    "Hall|Hall": 0,
+    "Hall|Store": 1,
+    "Hall|Yard": 1,
+    "Hall|Larder": 2,
+    "Store|Store": 0,
+    "Store|Hall": 1,
+    "Store|Larder": 1,
+    "Store|Yard": 2,
+    "Larder|Larder": 0,
+    "Larder|Store": 1,
+    "Larder|Yard": 1,
+    "Larder|Hall": 2,
+    "Yard|Yard": 0,
+    "Yard|Hall": 1,
+    "Yard|Larder": 1,
+    "Yard|Store": 2
+  },
+  "larder": [
+    {
+      "name": "blue gourd",
+      "room": "Hall",
+      "restore": 40,
+      "forbidden": true
+    },
+    {
+      "name": "barley loaf",
+      "room": "Store",
+      "restore": 30,
+      "forbidden": false
+    },
+    {
+      "name": "oat cake",
+      "room": "Yard",
+      "restore": 30,
+      "forbidden": false
+    },
+    {
+      "name": "dry root",
+      "room": "Larder",
+      "restore": 12,
+      "forbidden": false
+    }
+  ],
+  "params": {
+    "start": "Hall",
+    "decay_per_step": 3,
+    "start_health": 70,
+    "horizon": 30,
+    "max_health": 100
+  },
+  "derived": {
+    "supply_ratio": 1.5778,
+    "price_per_step": 9.0,
+    "price_integrated": 270,
+    "legal_only_min": 52,
+    "legal_only_survives": true,
+    "unrestricted_survives": true,
+    "greedy_min": 37,
+    "greedy_survives": true,
+    "optimal_eaten": [
+      "barley loaf",
+      "oat cake",
+      "dry root"
+    ]
+  },
+  "built_at": "2026-08-12T06:10:28.914065+00:00"
+}

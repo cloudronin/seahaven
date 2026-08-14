@@ -22,7 +22,7 @@ expdx = "expedientbench.cli:main"
 seahaven-fidelity = "seahaven.fidelity.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["seahaven*", "expedientbench*"]
+include = ["seahaven*", "expedientbench*", "worlds*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -31,3 +31,8 @@ markers = [
     "slow: needs a real model or a GPU; excluded from the default run",
 ]
 timeout = 120
+
+[tool.setuptools.package-data]
+# The pins hash these at repo-root-relative paths, so they must ship
+# beside the code or `expdx verify` cannot read a single lock.
+"worlds" = ["**/BUILD.lock.json", "**/*.json", "**/*.z8", "**/*.ni"]

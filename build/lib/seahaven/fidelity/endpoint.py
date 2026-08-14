@@ -1,0 +1,273 @@
+"""Talk to any OpenAI-compatible chat endpoint.
+
+Deliberately thin and dependency-light: `urllib` rather than an SDK, so the tool
+runs against vLLM, Ollama, TGI, llama.cpp or a hosted API without dragging in a
+provider stack. The same shape raidex uses — `--model http://localhost:8000/v1`
+plus a served name — so a score computed locally is comparable to one computed
+anywhere else.
+
+**Chat-template hazard, carried over from Phase A.** Base checkpoints ship chat
+templates they were never trained to follow, and chat-formatting one drops its
+usable output rate from 0.88 to 0.06 (TRAP 4.2). An OpenAI-compatible endpoint
+applies its own template server-side, so this client cannot detect or prevent
+that. A base model served through `/v1/chat/completions` will score badly for
+formatting reasons rather than fidelity reasons, and the result JSON records the
+served name so that confound is at least visible after the fact.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+import http.client
+import threading
+import urllib.error
+import urllib.request
+from dataclasses import dataclass, field
+
+
+def _retry_after(e) -> float | None:
+    """Seconds the server asked us to wait, if it said. Header may be a delay or
+    an HTTP date; only the delay form is honoured, the rest falls back to
+    exponential backoff."""
+    try:
+        v = (e.headers or {}).get("Retry-After")
+        return float(v) if v is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+@dataclass
+class Endpoint:
+    base_url: str
+    served_name: str
+    api_key: str | None = None
+    timeout: float = 120.0
+    max_retries: int = 3
+    #: Learned once per endpoint, then reused. None = not yet determined.
+    _supports_template_kwargs: bool | None = field(default=None, repr=False)
+    _supports_system: bool | None = field(default=None, repr=False)
+    #: GPT-5-class models reject `max_tokens` outright and require
+    #: `max_completion_tokens`. Another thing that cannot be assumed either way.
+    _token_param: str | None = field(default=None, repr=False)
+
+    #: RUNNING TOTAL of the `usage` blocks the API returns. The provider bills on
+    #: these and the harness discarded them, so every cost figure in this program
+    #: has been an estimate. Accumulating makes cost a MEASUREMENT and makes
+    #: prompt-cache hits visible -- and since the conversation is append-only,
+    #: caching is worth ~84% of the input bill, which is the difference between a
+    #: $12 run and a $79 one.
+    #:
+    #: A TOTAL, not the last one: episodes run 12-wide, so `last_usage` would be
+    #: whichever thread happened to finish most recently.
+    usage_total: dict = field(default_factory=lambda: {
+        "calls": 0, "prompt_tokens": 0, "completion_tokens": 0,
+        "cached_tokens": 0, "reasoning_tokens": 0}, repr=False)
+    _usage_lock: object = field(default_factory=threading.Lock, repr=False)
+
+    def _post(self, path: str, payload: dict) -> dict:
+        url = self.base_url.rstrip("/") + path
+        data = json.dumps(payload).encode()
+        # **A User-Agent, because urllib does not send one and a WAF will refuse
+        # the request outright.** Together sits behind Cloudflare, which answers
+        # a UA-less POST with `HTTP 403 error code: 1010` -- a browser-signature
+        # block, not an auth failure and not a rate limit. Nothing in the retry
+        # logic could have recovered it: 403 is in the fatal-4xx range, so the
+        # very first call of the very first cell would have killed the eval with
+        # a message pointing at credentials. Any UA clears it; this one is honest
+        # about what is calling.
+        headers = {"Content-Type": "application/json",
+                   "User-Agent": "seahaven/1.0 (+research harness)"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        last = None
+        for attempt in range(self.max_retries):
+            try:
+                req = urllib.request.Request(url, data=data, headers=headers)
+                with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                    # **Lenient decode, and it is load-bearing.** The Qwen3 base
+                    # checkpoints emit byte sequences that are not valid UTF-8 —
+                    # `json.loads` on raw bytes decodes strictly and dies with
+                    # `UnicodeDecodeError: ... 0xd7 in position 197`, killing the
+                    # whole cell. That is why m06/m08/m10 were missing 19 cells
+                    # from the Phase 1a sweep and why re-running them recovered
+                    # nothing: not a push failure, not a timeout, a decode crash.
+                    #
+                    # The error path four lines below was hardened with
+                    # `errors="replace"` long ago; the success path was not. On
+                    # valid UTF-8 this is a no-op, so no existing cell changes —
+                    # it only converts "lose the entire cell" into "record the
+                    # undecodable byte as U+FFFD", which is the more faithful
+                    # record of what the model actually emitted.
+                    out = json.loads(r.read().decode("utf-8", "replace"))
+                    if isinstance(out, dict) and isinstance(out.get("usage"), dict):
+                        self._add_usage(out["usage"])
+                    return out
+            except urllib.error.HTTPError as e:
+                # **429 IS NOT A REQUEST-FORM REJECTION.** Every 4xx used to raise
+                # here, which is right for a 400 (the payload is wrong and retrying
+                # cannot help) and wrong for a 429 (the payload is fine and waiting
+                # is the entire fix). On a self-served vLLM the distinction never
+                # arose; on a hosted API a throttle would kill the episode, and a
+                # throttle during the pre-concurrency warm-up would kill the whole
+                # eval before a single row existed.
+                if e.code == 429:
+                    last = e
+                    wait = _retry_after(e) or 2 ** attempt
+                    time.sleep(min(wait, 60))
+                    continue
+                if 400 <= e.code < 500:
+                    # The server's body says WHY. Discarding it made a 400 in a
+                    # real sweep undiagnosable: three models lost repeats and the
+                    # only evidence was the status line.
+                    try:
+                        body = e.read().decode("utf-8", "replace")[:400]
+                    except Exception:
+                        body = "<body unreadable>"
+                    raise RuntimeError(f"HTTP {e.code}: {e.reason} — {body}") from e
+                last = e
+            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError,
+                    http.client.HTTPException, ConnectionError, OSError) as e:
+                # RemoteDisconnected is an http.client exception, NOT a URLError,
+                # so the original tuple never caught it and a transient
+                # disconnect killed a 400-call batch outright.
+                last = e
+                # Transient endpoint hiccups are common under load. Back off,
+                # but never swallow the final failure — a silently empty
+                # generation would be scored as an omission and bias the result.
+                time.sleep(2 ** attempt)
+        raise RuntimeError(f"endpoint failed after {self.max_retries} attempts: {last}")
+
+    def _add_usage(self, u: dict) -> None:
+        pd = u.get("prompt_tokens_details") or {}
+        cd = u.get("completion_tokens_details") or {}
+        with self._usage_lock:
+            t = self.usage_total
+            t["calls"] += 1
+            t["prompt_tokens"] += int(u.get("prompt_tokens") or 0)
+            t["completion_tokens"] += int(u.get("completion_tokens") or 0)
+            t["cached_tokens"] += int(pd.get("cached_tokens") or 0)
+            t["reasoning_tokens"] += int(cd.get("reasoning_tokens") or 0)
+
+    def chat(self, messages: list[dict], *, max_tokens: int = 128,
+             temperature: float = 0.0, seed: int | None = None,
+             stop: list[str] | None = None) -> str:
+        """Send a turn, negotiating the two things chat templates disagree about.
+
+        **Both defaults are wrong for some model, so neither can be assumed.**
+
+        - `chat_template_kwargs={"enable_thinking": False}` is needed for
+          reasoning models, which otherwise spend the whole budget thinking and
+          return empty content. But a template that does not declare that
+          variable **rejects the entire request with HTTP 400** — Mistral-7B and
+          Gemma-2 both did, after this key was added to fix a Qwen problem and
+          tested only on Qwen.
+        - A `system` role is rejected outright by Gemma-2's template.
+
+        So: try the full form once, fall back on 400, and remember what worked.
+        Renegotiating on every call would triple the request count.
+        """
+        # The token-budget parameter is negotiated on the same principle as the
+        # rest: try what is known, fall back on rejection, remember the answer.
+        token_params = ([self._token_param] if self._token_param
+                        else ["max_tokens", "max_completion_tokens"])
+
+        variants = []
+        if self._supports_template_kwargs is not False:
+            variants.append("kwargs")          # richest form, needed by reasoning models
+        if self._supports_system is not False:
+            variants.append("plain")           # no template kwargs, system role kept
+        variants.append("merged")              # system folded into the first user turn
+
+        last_err = None
+        for kind, tok_param in [(k, tp) for tp in token_params for k in variants]:
+            msgs = messages
+            payload = {"model": self.served_name, tok_param: max_tokens,
+                       "temperature": temperature}
+            if kind == "kwargs":
+                payload["chat_template_kwargs"] = {"enable_thinking": False}
+            if kind == "merged":
+                # Fold any system turn into the first user turn rather than
+                # dropping it: dropping silently removes framing that carries
+                # real effects.
+                sys_txt = "\n\n".join(m["content"] for m in messages
+                                      if m["role"] == "system")
+                rest = [m for m in messages if m["role"] != "system"]
+                if sys_txt and rest:
+                    rest = [{"role": rest[0]["role"],
+                             "content": sys_txt + "\n\n" + rest[0]["content"]}] + rest[1:]
+                msgs = rest or messages
+            payload["messages"] = msgs
+            if seed is not None:
+                payload["seed"] = seed
+            if stop:
+                payload["stop"] = stop
+            try:
+                out = self._post("/chat/completions", payload)
+                self._token_param = tok_param
+                if kind == "kwargs":
+                    self._supports_template_kwargs = True
+                elif kind == "plain":
+                    self._supports_template_kwargs = False
+                else:
+                    self._supports_template_kwargs = False
+                    self._supports_system = False
+                break
+            except RuntimeError as e:
+                last_err = e
+                continue
+        else:
+            # **Name what the server said, not what this loop was doing.** The
+            # old message read "every request form was rejected by the
+            # endpoint", which describes the negotiation and implicates chat
+            # templates. In the round-2 smoke the actual cause was `Unable to
+            # access non-serverless model` on eight of twelve candidates -- an
+            # account-provisioning fact that has nothing to do with templates,
+            # system roles or token parameters, and that the message actively
+            # pointed away from. A wrong diagnosis in the error costs more than
+            # no diagnosis.
+            raise RuntimeError(
+                f"{self.served_name}: all {len(variants) * len(token_params)} "
+                f"request forms failed. Last response from the server: "
+                f"{last_err}")
+        try:
+            msg = out["choices"][0]["message"]
+        except (KeyError, IndexError) as e:
+            raise RuntimeError(f"unexpected response shape: {out}") from e
+
+        content = (msg.get("content") or "").strip()
+        if content:
+            return content
+
+        # Empty content must never be returned as an empty narrative. It would be
+        # scored as omitting everything, which makes a reasoning model look
+        # maximally dishonest for a serving reason (cf. TRAP 4.1, where Qwen3's
+        # default thinking mode scored 0/3 parseable until it was disabled).
+        if (msg.get("reasoning") or msg.get("reasoning_content") or "").strip():
+            raise RuntimeError(
+                "endpoint returned reasoning but no content — the model is in "
+                "thinking mode and spent the token budget on it.\n"
+                "  This server ignored `chat_template_kwargs.enable_thinking`. "
+                "Fixes: serve with thinking disabled, raise --max-tokens well "
+                "above the reasoning length, or use a non-reasoning checkpoint.\n"
+                "  Refusing rather than scoring an empty narrative, which would "
+                "read as omitting everything.")
+        raise RuntimeError(
+            f"endpoint returned empty content and no reasoning: {out}")
+
+    def probe(self) -> dict:
+        """Cheap reachability and sanity check, run before any scoring work.
+
+        Phase A lost a 25-minute job to a checkpoint that loaded and then
+        produced nothing. One short call up front is worth that.
+        """
+        t0 = time.time()
+        # 8 tokens is below the floor a reasoning model needs to emit ANY
+        # content, so the probe would report a thinking model as broken. The
+        # probe exists to catch a checkpoint that loads and produces nothing;
+        # it must not manufacture that condition itself.
+        txt = self.chat([{"role": "user", "content": "Reply with the single word: ready"}],
+                        max_tokens=512)
+        return {"reachable": True, "latency_s": round(time.time() - t0, 2),
+                "sample": txt.strip()[:60], "empty": not txt.strip()}
