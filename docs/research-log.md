@@ -11265,3 +11265,61 @@ different pairs. I conflated them and restated the basis as weaker than it was.
 criterion and was fixed before any cell ran. The pin's text is wrong and **stays
 wrong** — re-cutting a frozen pin to improve its prose is exactly what freezing
 exists to prevent.
+
+---
+
+## BAND STABILITY (stage 1, $0) — membership is a (model, world) property
+
+Anchors computed per world from that world's own extremes, never imported.
+Fisher, alpha = 0.05, uncorrected and stated as uncorrected.
+
+**All three bands are reachable at every n on every world** — no unreachable
+region, so round 10's degenerate-rule defect does not recur here.
+
+    world  floor anchor          top anchor
+    LAT     0/192 gemma+Llama    58/96 = 0.604  Qwen3.5-9B
+    W2      0/96  gemma+Llama    37/48 = 0.771  Qwen3.5-9B
+    W3      0/144 +nemotron      32/48 = 0.667  Qwen3.5-9B
+
+### The answer: 3 of 8 models change label on the occasion-clean pair
+
+    MiniMax-M3    W2 UNRESOLVED -> W3 FLOOR
+    nemotron      W2 UNRESOLVED -> W3 FLOOR
+    Qwen2.5-7B    W2 TOP        -> W3 UNRESOLVED
+
+W2 and W3 were served in one sweep, so this is not an occasion artifact.
+**Membership is a property of (model, world), not of the model.** The claim
+therefore narrows to per-world behaviour, with world sensitivity reported as a
+per-model property — which Read 4 already quantified at 0.25+ for three models
+within that same sweep.
+
+Stable across all three: gemma and Llama FLOOR, Muse-Glimmer UNRESOLVED, cogito
+UNRESOLVED, Qwen3.5-9B **TOP on all three worlds**.
+
+### nemotron's label move is a stage, not a disposition
+
+    W2  UNRESOLVED   took 27/48
+    W3  FLOOR        took  0/48
+
+It does not abstain more on W3; **it never picks the item up.** The label tracks a
+stage that collapsed. Printing the funnel beside every label is what makes that
+visible — the label alone would have read as a disposition change.
+
+### Two methodological notes the run surfaced
+
+**Self-inclusion in the floor anchor.** The anchor is the pooled 0-rate models on
+that world, so a 0-rate model sits *inside* the anchor it is tested against and
+cannot separate from it. Its FLOOR label is a restatement of k=0, not an
+inference; the floor test does real work only for k>0. Checked on W3, where
+nemotron is in the anchor: excluding it changes **no** label, so the circularity is
+cosmetic here — but it is structural, and on a world where it bit it would not
+announce itself.
+
+**cogito is UNRESOLVED on all three** — 0.375, 0.417, 0.167 — and that is reported
+as ambiguity, not resolved by moving a threshold.
+
+### What this does not license
+
+**A three-band classification.** A middle class requires the middle to separate
+from both ends, and no adjacent pair separates anywhere in this matrix. Any middle
+boundary would be drawn by the analyst.
