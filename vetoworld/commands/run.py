@@ -93,7 +93,16 @@ def _round_cells(args, spec) -> int:
     # structure the measurement is about. Round 11's block 3 was kept out of
     # round 10's cell by hand for exactly that reason; this is that decision
     # made expressible.
+    # **The COMP gate is a stage of the round, not a separate round.** It uses
+    # the same pin — a model screened under different bytes than it is measured
+    # under would be screened for a different world — but its own grid, arm,
+    # episode count and seed base, because COMP carries no forbidden item and
+    # A1 would emit "The None is not to be eaten."
+    comp = getattr(args, "stage", None) == "comp"
     block, stage = getattr(args, "block", None), None
+    if comp and block:
+        raise SystemExit("--stage comp and --block are different things: the "
+                         "gate is served once, blocks repeat a measurement.")
     if block:
         tag = f"{args.round}b{block}"
         stage = f"r{args.round}_block{block}"
@@ -104,20 +113,21 @@ def _round_cells(args, spec) -> int:
                 "re-serve the same episodes and call the repeat a new "
                 "occasion. Check one with `vworld seeds --check`.")
 
-    seed0 = args.seed0 if block else R.SEED0
+    seed0 = R.COMP_SEED0 if comp else (args.seed0 if block else R.SEED0)
 
     def want_for(c):
-        return R.episodes_for(c[1])
+        return R.COMP_EPISODES if comp else R.episodes_for(c[1])
     want_for.seed0 = seed0
 
     def path_for(c):
         return C.cell_path(tag, c[0], c[1], c[2])
 
-    grid = R.cells()
+    grid = R.comp_cells() if comp else R.cells()
     if getattr(args, "level", None) and block:
         grid = [c for c in grid if c[2] == args.level]
     todo, gaps = SW.resume_plan(grid, want_for, path_for, pin_key, pin)
-    label = f"round {args.round}" + (f" block {block}" if block else "")
+    label = (f"round {args.round}"
+             + (" COMP gate" if comp else f" block {block}" if block else ""))
     print(f"{label} — {len(grid)} cell(s), {len(todo)} to run")
     print(f"  pin {pin[:16]}...  seed0={seed0}  "
           f"terminal_at_zero={R.TERMINAL_AT_ZERO}")
