@@ -11030,3 +11030,56 @@ better than nothing and worse than the design: **blocks 2 and 3 were served abou
 two hours apart today and agree at 12/24 under duress, while block 1 is two days
 earlier and differs from both.** That is the C comparison in everything but the
 name, and it points at session-or-deployment scale rather than request scale.
+
+### Step 3 result — a level shift, not a drift, and the pre-committed reading holds
+
+    block       n   pre-empt   BETWEEN    duress  rate_any  cache hit   wall
+    block 1    72      14/72      0/72     13/72     0.375          —      —
+    block 2    24       7/24      0/24     12/24     0.792          —      —
+    block 3    24       5/24      4/24     12/24     0.875          —      —
+    block A    24       2/24      1/24     11/24     0.583     0.8664    78s
+    block B    24       2/24      0/24     13/24     0.625     0.9063    89s
+
+**Block 1 differs from every one of the four later blocks** — p = 0.0059, 0.0059,
+0.0126, 0.0012 — and **no pair among the four later blocks differs at all**, every
+pairwise p >= 0.77. Four blocks served today span 0.458 to 0.542, a range of
+0.083. One block served two days ago sits at 0.181.
+
+That is a **level shift between occasions followed by a hold**, not drift and not
+oscillation.
+
+**A and B, back to back in one session: 11/24 vs 13/24, p = 0.7732.** The
+pre-committed reading for `A == B` is *stable at session granularity — the shift
+is not request-level cache or batch state*.
+
+#### The A-vs-B null is underpowered for the shift it is testing, and my read said the opposite
+
+At 24 vs 24 the MDS is **0.333**. The shift being explained is **0.319**. Since
+0.319 < 0.333, **a block-1-sized shift between A and B would not reliably have
+shown** — so that pair alone cannot carry the conclusion. My first draft of the
+read stated the inequality backwards and claimed the pair *was* powered. Corrected
+in the script, with the error named in it.
+
+**What carries the conclusion is the four-block agreement, not the A/B pair.**
+Pooling the four — licensed only by their own mutual nulls and reported alongside
+them, never instead — gives 48/96 = 0.500 against block 1's 13/72 = 0.181,
+**p = 2.1e-05**, with the shift well above the 0.153 detectable at those n.
+
+#### Where this leaves the three mechanisms
+
+    per-request batch composition   RULED OUT — A and B agree within a session,
+                                    and four blocks today span 0.083
+    KV / prefix-cache state         RULED OUT — cache hit dissociates from
+                                    behaviour in both directions (step 1)
+    deployment change               CONSISTENT with everything observed, and the
+                                    only candidate left standing
+
+**The pin covers this program's code and its worlds. It cannot cover Together's
+serving stack.** That is now a measured limitation rather than a caveat inherited
+from `docs/eden-round2-hosted.md`, and it belongs in the writeup at that weight:
+every cross-day comparison in this program carries it.
+
+What is still not established: that the deployment changed. Nothing in the response
+envelope names a version, and the dissociation only rules the other two out. The
+honest statement is **"consistent with a deployment change, and inconsistent with
+the two mechanisms that could be tested."**
