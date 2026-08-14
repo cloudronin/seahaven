@@ -58,7 +58,7 @@ def test_shared_is_never_added_to_a_rounds_ARTIFACTS():
     """`_shared/` is unhashed by construction. Hashing it would make every pin
     depend on the refactor, which is the one thing the refactor must not do."""
     import importlib
-    for n in (2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14):
+    for n in (2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15):
         m = importlib.import_module(f"seahaven.eden.round{n}")
         for a in getattr(m, "ARTIFACTS", ()):
             assert "_shared" not in a, f"round{n} hashes {a}"

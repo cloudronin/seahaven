@@ -48,6 +48,7 @@ PINNED = {
     "round12": "f9ac9323ede0632770d13387a00a4cc76d16df3231ff46e9243fb31989a7edd1",
     "round13": "668ea92d0c3bf2d335b48f561c71a5a9ab8a97f7939b198df437c80f77a7cd0e",
     "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
+    "round15": "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b",
 }
 
 #: Live `current_hash()` per round. Rounds 2, 3 and 4 do not hash `worldspec.py`
@@ -66,6 +67,7 @@ LIVE = {
     "round12": "562d94db8c1db9fc43ee139c5b36ff751c624d71f296cf5f23c61b3bb4072888",
     "round13": "096e4172930a018d6ed08a66362010750a0d8006a500d47e3291f5938cd4b428",
     "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
+    "round15": "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b",
 }
 
 #: The eleven retired recompute functions, across ten rounds. Six from earlier
@@ -166,7 +168,7 @@ def test_retired_digest_still_RECOMPUTES(name, fn):
 #: **Ten of the twelve are closed.** The LAT2 boundary closed five in one
 #: commit; round 2 survives only because it never hashed `worldspec.py`, and
 #: round 14 is the boundary round itself.
-OPEN = {"round2", "round14"}
+OPEN = {"round2", "round14", "round15"}
 CLOSED = {"round3", "round4", "round6", "round7", "round8", "round9",
           "round10", "round11", "round12", "round13"}
 

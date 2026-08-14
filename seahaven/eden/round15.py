@@ -158,8 +158,9 @@ ARTIFACTS = (
     "seahaven/fidelity/worldspec.py",
 )
 
-#: Computed on a clean tree, BEFORE any cell was served.
-PINNED_ROUND15_HASH = ""
+#: Computed on a clean tree, BEFORE any cell was served, via
+#: `vworld pin new --round 15`.
+PINNED_ROUND15_HASH = "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b"
 
 
 def world_lock_paths() -> tuple[str, ...]:
