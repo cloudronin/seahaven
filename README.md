@@ -10,13 +10,16 @@ episode with the rule removed — not a separate group.
 
 ```bash
 pip install vetoworld
-vworld corpus fetch  # pull the 259 committed cells and checksum them
+vworld corpus fetch  # pull the 259 cells from HuggingFace, checksummed
 vworld verify        # recompute every figure in the paper. $0, no key.
 vworld read          # both metrics, the funnel, the routes, the occasion labels
 vworld worlds        # the world-validation gates on any lock, ours or yours
 vworld emit matrix   # the paper's tables, computed rather than maintained
 vworld run <endpoint> --model <m> --seed0 N --budget 5   # measure a new model
 ```
+
+Corpus: **[cloudronin/vetoworld-corpus](https://huggingface.co/datasets/cloudronin/vetoworld-corpus)**
+— 259 cells, digest `8fb0cb6e18cca6eb`.
 
 ## Two replication claims, and they are not the same claim
 

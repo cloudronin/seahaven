@@ -1,34 +1,22 @@
-# VetoWorld corpus — the HuggingFace dataset card
-
-This file **is** the dataset card. Publishing copies it to the dataset repo's
-`README.md`; it lives here so it is versioned with the corpus it describes.
-
-**The corpus is 107 MB** — 259 `eden_e*.json` cells (100,517,734 bytes, the
-number the manifest digests) plus 11 MB of compiled worlds. It is **not**
-`results/`, which holds 2,644 files and 247 MB because the Seahaven programme's
-artifacts live there too. Staging is explicit for that reason: a bare
-`upload . .` would publish 2,385 unrelated files under this dataset's name.
-
-    mkdir -p /tmp/vetoworld-corpus/results
-    cp results/eden_e*.json          /tmp/vetoworld-corpus/results/
-    cp -r worlds corpus.manifest.json /tmp/vetoworld-corpus/
-    cp docs/vetoworld-corpus-card.md /tmp/vetoworld-corpus/README.md
-    huggingface-cli upload <owner>/vetoworld-corpus /tmp/vetoworld-corpus . \
-        --repo-type=dataset
-
-Then check the staged copy against the committed digest before pushing:
-
-    cd /tmp/vetoworld-corpus && vworld corpus status
-
-**Not yet pushed.** Publishing under a name is an outward-facing act and needs a
-decision, not a default.
-
 ---
-
 license: mit
-task_categories: [reinforcement-learning, text-generation]
-tags: [agents, alignment, evaluation, textworld, benchmark]
-
+pretty_name: VetoWorld corpus
+task_categories:
+  - reinforcement-learning
+  - text-generation
+language:
+  - en
+tags:
+  - agents
+  - alignment
+  - evaluation
+  - textworld
+  - benchmark
+size_categories:
+  - n<1K
+configs:
+  - config_name: default
+    data_files: results/*.json
 ---
 
 # VetoWorld corpus
@@ -37,8 +25,8 @@ The committed cells behind *VetoWorld: a benchmark of expedience under terminal
 stakes*, plus everything needed to recompute the paper from them.
 
     pip install vetoworld
-    vworld corpus fetch
-    vworld verify
+    vworld corpus fetch          # this dataset, checksummed on arrival
+    vworld verify                # all 17 figures recompute, $0, no key
 
 `verify` recomputes every quoted figure and exits nonzero naming any that
 drifted. It needs **no API key and costs nothing**.
@@ -129,3 +117,30 @@ as a subject.
 
 Cite the repo tag and this manifest digest together. `vworld emit disclosures`
 and `vworld emit limitations` print the current text for both.
+
+---
+
+## Maintainer notes — how this card and corpus are published
+
+This file is the source of truth for the dataset card; publishing copies it to
+the dataset repo's `README.md`, so it stays versioned with the corpus it
+describes. **The YAML block above must remain the first bytes of the file** —
+HuggingFace reads front matter only at position 0, and an intro above it means
+the card ships with no metadata at all.
+
+The corpus is 107 MB: the 259 `eden_e*.json` cells (100,517,734 bytes, the
+number the manifest digests) plus 11 MB of compiled worlds. It is **not**
+`results/`, which holds 2,644 files and 247 MB because the Seahaven programme's
+artifacts live there too — so staging is explicit, and a bare `upload . .` would
+publish 2,385 unrelated files under this dataset's name.
+
+    ST=/tmp/vetoworld-corpus
+    mkdir -p $ST/results
+    cp results/eden_e*.json           $ST/results/
+    cp -r worlds corpus.manifest.json $ST/
+    cp docs/vetoworld-corpus-card.md  $ST/README.md
+    rm -rf $ST/worlds/__pycache__ $ST/worlds/*.py     # code, not data
+    (cd $ST && vworld corpus status)                  # digest must MATCH first
+    hf upload <owner>/vetoworld-corpus $ST . --repo-type dataset
+
+`hf`, not `huggingface-cli` — the latter is deprecated and now refuses to run.

@@ -210,11 +210,12 @@ def test_fetch_EXPLAINS_an_unreadable_dataset_instead_of_leaking_the_status(
         code, tmp_path, capsys, monkeypatch):
     """**HuggingFace answers 401, not 404, for a dataset that does not exist.**
 
-    Checked against the live API: a nonsense repo and this unpublished one both
-    return 401, because HF will not leak whether a private dataset exists. The
-    first version of this command handled 404 alone, so the state it is actually
-    in today produced a bare "Unauthorized" — accurate and useless. All three
-    codes are one case, and the message names the alternative.
+    Checked against the live API: a nonsense repo and (before it was published)
+    the real one both returned 401, because HF will not leak whether a private
+    dataset exists. The first version of this command handled 404 alone, so the
+    state it was actually in produced a bare "Unauthorized" — accurate and
+    useless. All three codes are one case, and the message must not claim to
+    know WHICH of the two conditions it hit, because HF does not say.
     """
     import urllib.error
 
@@ -229,8 +230,10 @@ def test_fetch_EXPLAINS_an_unreadable_dataset_instead_of_leaking_the_status(
         repo = CO.DATASET
     assert CO.main(_A()) == 2
     out = capsys.readouterr().out
-    assert f"HTTP {code}" in out and "not published" in out
+    assert f"HTTP {code}" in out
     assert "does not exist or it is private" in out
+    assert "not evidence" in out, "must not claim to know which of the two"
+    assert "--repo" in out, "and must name the way out"
 
 
 def test_fetch_INSTALLS_NOTHING_when_the_digest_does_not_match(tmp_path,
@@ -298,3 +301,110 @@ def test_fetch_pulls_NO_provider_sdk_into_the_import_path():
         elif isinstance(n, ast.ImportFrom) and n.module and n.level == 0:
             names.add(n.module.split(".")[0])
     assert "huggingface_hub" not in names and "requests" not in names, names
+
+
+def test_get_RETRIES_transient_failures_instead_of_dying_mid_download(
+        monkeypatch):
+    """**The bug the first live fetch found.** 259 sequential requests make a
+    transient failure the normal case, and the first version had no retry: a real
+    download died on `RemoteDisconnected` partway through, with a urllib
+    traceback where a replicator needed a progress line."""
+    import http.client
+
+    from vetoworld.commands import corpus as CO
+
+    calls = {"n": 0}
+
+    def flaky(req, timeout=None):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise http.client.RemoteDisconnected("closed")
+        class _R:
+            def read(self): return b"ok"
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+        return _R()
+
+    monkeypatch.setattr(CO.urllib.request, "urlopen", flaky)
+    monkeypatch.setattr(CO.time, "sleep", lambda s: None)
+    assert CO._get("https://example/x") == b"ok"
+    assert calls["n"] == 3
+
+
+def test_get_HONOURS_retry_after_rather_than_its_own_backoff(monkeypatch):
+    """The far end saying how long to wait is better information than any curve
+    computed here — the same rule the serving client follows on 429."""
+    from vetoworld.commands import corpus as CO
+
+    waited, calls = [], {"n": 0}
+
+    def limited(req, timeout=None):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise CO.urllib.error.HTTPError(
+                "u", 429, "slow down", {"Retry-After": "7"}, None)
+        class _R:
+            def read(self): return b"ok"
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+        return _R()
+
+    monkeypatch.setattr(CO.urllib.request, "urlopen", limited)
+    monkeypatch.setattr(CO.time, "sleep", waited.append)
+    assert CO._get("https://example/x") == b"ok"
+    assert waited == [7.0], waited
+
+
+def test_a_failed_fetch_KEEPS_the_partial_and_names_the_cell(tmp_path, capsys,
+                                                             monkeypatch):
+    """A re-run must resume, not restart, on a connection already shown to be
+    unreliable — and the message has to name a cell, not a socket."""
+    from vetoworld.commands import corpus as CO
+
+    monkeypatch.setattr(CO, "_listing", lambda repo: ["eden_e1_a.json",
+                                                      "eden_e2_b.json"])
+    n = {"i": 0}
+
+    def one_then_fail(url, timeout=60):
+        n["i"] += 1
+        if n["i"] > 1:
+            raise CO.TransientFetchError("boom — after 5 attempts")
+        return b'{"runs": []}'
+    monkeypatch.setattr(CO, "_get", one_then_fail)
+    monkeypatch.setattr(CO, "MANIFEST", tmp_path / "absent.json")
+
+    dest = tmp_path / "results"
+
+    class _A:
+        action, results, force = "fetch", str(dest), False
+        repo = "someone/mirror"
+    assert CO.main(_A()) == 2
+    out = capsys.readouterr().out
+    assert "eden_e2_b.json" in out and "Re-run to resume" in out
+    assert not dest.exists(), "nothing may be installed on a failed fetch"
+    assert (tmp_path / "results.partial" / "eden_e1_a.json").exists()
+
+
+def test_a_resumed_fetch_SKIPS_what_is_already_staged(tmp_path, capsys,
+                                                      monkeypatch):
+    from vetoworld.commands import corpus as CO
+
+    stage = tmp_path / "results.partial"
+    stage.mkdir()
+    (stage / "eden_e1_a.json").write_text('{"runs": []}')
+    monkeypatch.setattr(CO, "_listing", lambda repo: ["eden_e1_a.json",
+                                                      "eden_e2_b.json"])
+    pulled = []
+
+    def track(url, timeout=60):
+        pulled.append(url.rsplit("/", 1)[-1])
+        return b'{"runs": []}'
+    monkeypatch.setattr(CO, "_get", track)
+    monkeypatch.setattr(CO, "MANIFEST", tmp_path / "absent.json")
+
+    class _A:
+        action, results, force = "fetch", str(tmp_path / "results"), False
+        repo = "someone/mirror"
+    assert CO.main(_A()) == 0
+    assert pulled == ["eden_e2_b.json"], pulled
+    assert "resuming: 1 cell(s) already staged" in capsys.readouterr().out
