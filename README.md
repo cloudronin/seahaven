@@ -10,16 +10,12 @@ episode with the rule removed — not a separate group.
 
 ```bash
 pip install vetoworld
-vworld corpus fetch  # pull the 259 cells from HuggingFace, checksummed
-vworld verify        # recompute every figure in the paper. $0, no key.
-vworld read          # both metrics, the funnel, the routes, the occasion labels
-vworld worlds        # the world-validation gates on any lock, ours or yours
-vworld emit matrix   # the paper's tables, computed rather than maintained
-vworld run <endpoint> --model <m> --seed0 N --budget 5   # measure a new model
+vworld corpus fetch   # pull 259 cells from HuggingFace, checksummed on arrival
+vworld verify         # recompute every figure in the paper. $0, no key.
 ```
 
 Corpus: **[cloudronin/vetoworld-corpus](https://huggingface.co/datasets/cloudronin/vetoworld-corpus)**
-— 259 cells, digest `8fb0cb6e18cca6eb`.
+— 259 cells, digest `8fb0cb6e18cca6eb`. Cite it beside the repo tag.
 
 ## Two replication claims, and they are not the same claim
 
@@ -38,18 +34,82 @@ about what that means.
 Conflating those two is the usual way replication claims go bad, so they are two
 commands with two success criteria.
 
+## The eleven verbs
+
+**Seven cost nothing and require no key at all** — asserted by a test that strips
+every provider variable from the environment first, because a command that costs
+nothing must not need credentials.
+
+| verb | | what it does |
+|---|---|---|
+| `verify` | $0 | Recompute all 17 registered figures; exit nonzero naming any drift. |
+| `read` | $0 | Both metrics with the gap, the funnel, the three routes to zero, the A0 floor, occasion labels with their provenance. |
+| `worlds` | $0 | Held-Karp optima, both necessity legs, lock consistency, head-noun disjointness, the room-text audit, and whether a world can be *served* at all. |
+| `emit` | $0 | Render any of 11 register artifacts — the master matrix, corrections, predictions, occasions, floor mechanisms, spend, seeds, generations, limitations, disclosures, related work. |
+| `seeds` | $0 | The burned-block registry. Seed space is **per model**; four scripts hand-rolled this and two got that wrong. |
+| `corpus` | $0 | `fetch` / `status` / `manifest`. Fetch stages, checksums, and installs nothing that fails the digest. |
+| `doctor` | $0 | Environment, corpus and pin health in one screen. |
+| `pin` | $0 for `check` | `check` / `new` / `retire` — the freeze lifecycle. `new` refuses on a dirty tree. |
+| `probe` | ~$0 | Resolve a model string against the provider, refuse near-misses, serve one turn **at the real token cap**. |
+| `run` | $$ | Measure a new model on any OpenAI-compatible endpoint, or serve a pinned round's grid with `--round`. |
+| `replicate` | $$ | Re-serve our cells, judged PASS / FAIL / VOID against bands. |
+
+Every spending verb refuses to start without an explicit `--budget`, and
+`--dry-run` assembles and prints the first request without serving it.
+
+## What makes it auditable
+
+**Pins.** Before a round serves a single episode, a sha256 over its measurement
+modules, its world locks and the *values* of its constants is computed and
+committed. A round module's own source is deliberately not hashed, so the shared
+machinery can be refactored without touching a freeze. When an artifact must
+change, the round is **retired** — its digest survives as a literal that
+recomputes permanently from a frozen snapshot — never re-pinned to make a check
+green. Twelve rounds, two open, ten closed, eleven retired digests, all
+recomputing.
+
+**A claims register.** Every figure the manuscript quotes is emitted by a named
+function from committed cells. The paper cites the function; `verify` runs it. A
+number that cannot be recomputed does not belong in the paper.
+
+**An occasion audit.** `vworld emit occasions` walks the register and reports,
+per figure, whether the cells it compares were served at the same sitting — and
+the read set is **recorded by wrapping the loader**, not declared, so a figure
+cannot misdescribe its own inputs. `verify` fails on any cross-occasion figure
+without a flag.
+
+**A corrections ledger.** `vworld emit corrections` prints five retracted claims
+and verifies each row against the commit it cites.
+
 ## What it found
 
 - **A floor exists and it is not one behaviour.** Three models sit at a rate of
-  0.000, by three different routes: one never picks the item up, one takes it and
-  never names it, one is stopped at the take. *Same number, opposite conduct* —
-  the label alone stopped being informative once the second route appeared.
+  0.000, by three different routes: one never picks the item up, one takes it in
+  136 of 144 episodes and never names it, one is stopped at the take. *Same
+  number, opposite conduct* — the label alone stopped being informative once the
+  second route appeared.
 - **Membership is a (model, world) property, not a model property.** 3 of 8
   models change band label across the occasion-clean world pair.
 - **A published break did not survive its own top-up.** Buying 24 more episodes
-  to strengthen round 10's only clean separation destroyed it. That correction,
-  and four others, are emitted as data: `vworld emit corrections` verifies every
-  row against the commit it cites.
+  to strengthen round 10's only clean separation destroyed it.
+- **A pre-registered prediction held, by the opposite mechanism.** The frontier
+  cell was predicted to sit at the floor, and did — 0 reaches in 144 — while
+  taking the item in 136 of them.
+
+## Working on it
+
+```bash
+bash scripts/setup_dev_env.sh && conda activate seahaven-dev
+python -m pytest -q          # 1532 tests, no model and no GPU
+vworld doctor                # pins, corpus, keys
+```
+
+Read [AGENTS.md](AGENTS.md) before adding a measurement, changing a metric, or
+believing a number. The single rule, if you read nothing else:
+
+> **Every claim needs a null condition that must fail.** If you cannot name the
+> condition under which your number should *not* appear, and run it, you do not
+> have a measurement.
 
 ## Contributor notes on naming
 
@@ -58,8 +118,11 @@ is `seahaven/` with `eden_*` modules, and it keeps those names permanently —
 their *paths* are hashed into eleven frozen pins, so renaming them would
 invalidate every freeze in the programme. **"eden" and "expedientbench" appear on
 no user-facing surface**, enforced by a test on word boundaries. Reasoning for
-every rejected name is in [docs/naming.md](docs/naming.md); argue with the
-reason, not the name.
+every rejected name — including why the command is not `vw` or `veto` — is in
+[docs/naming.md](docs/naming.md); argue with the reason, not the name.
+
+Full chronology, including every trap and retraction, in
+[`docs/research-log.md`](docs/research-log.md).
 
 ---
 

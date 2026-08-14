@@ -1,0 +1,72 @@
+# Publish `vetoworld` to PyPI via a Trusted Publisher.
+name: publish
+
+# **Tag-triggered, not push-triggered.** A release is a deliberate act; every
+# commit to main is not one. Tags match the repo tag the manuscript cites.
+on:
+  push:
+    tags: ["vetoworld-v*"]
+  workflow_dispatch:
+
+jobs:
+  # **The suite gates the release.** Publishing a wheel whose tests were never
+  # run puts a broken `vworld verify` in front of a replicator, which is the one
+  # command this project asks strangers to trust.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest pytest-timeout scipy
+      # The full suite needs TextWorld and the compiled worlds; the packaging
+      # and register tests are the ones that gate a release and run anywhere.
+      - run: python -m pytest tests/test_vworld_packaging.py
+                              tests/test_vworld_cli.py
+                              tests/test_pin_invariance.py
+                              tests/test_layering.py -q
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build
+      # `worlds/` ships as package data — without it `vworld verify` cannot read
+      # a single lock from an installed wheel. Checked here rather than
+      # discovered by the first person to `pip install`.
+      - name: the wheel must carry the worlds
+        run: |
+          python - <<'PY'
+          import glob, zipfile, sys
+          whl = glob.glob("dist/*.whl")[0]
+          names = zipfile.ZipFile(whl).namelist()
+          locks = [n for n in names if n.endswith("BUILD.lock.json")]
+          print(f"{whl}: {len(names)} files, {len(locks)} world locks")
+          if len(locks) < 20:
+              sys.exit(f"only {len(locks)} locks in the wheel; worlds/ did not ship")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      # The whole point of a Trusted Publisher: GitHub mints a short-lived
+      # OIDC token and PyPI verifies it. No API token is stored anywhere.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
