@@ -10936,3 +10936,45 @@ never conversion-adjusted.
 distribution and ten of twelve models have no pre-emptive mode at all. Carrying it
 cohort-wide would require defining it against the world — a fixed fraction of the
 crossing — not against the model that motivated it.
+
+---
+
+## ROUND 11 STAGE 3 — HALTED. The tallow fix would destroy the record of rounds 7 and 8
+
+The spec says: remove `tallow` from LAT's Store description, retire round 10, done.
+**That accounting is incomplete, and the check that catches it is the program's
+own retired-pin guard.**
+
+### The text is a shared builder constant, not LAT's
+
+`worlds/build_eden_worlds.py:45` supplies the Store description to **sixteen
+worlds**: LAT, COMP, the L1-L5 ladder, NEC, NEC36, SALH, SALX, and the five-world
+Z bracket. W1/W2/W3 do not have a Store and are clean.
+
+### Three rounds hash LAT's lock, and two of them are retired
+
+    round7   hashes LAT's lock   RETIRED_G2_PIN / RETIRED_G2_SHA256 frozen
+    round8   hashes LAT's lock   RETIRED_G2_PIN / RETIRED_G2_SHA256 frozen
+    round10  hashes LAT's lock   PINNED_ROUND10_HASH  (retiring this is intended)
+
+Round 6's guard states the rule this program adopted, in its own error text: *the
+record of what a round was served under has been edited — restore it, do not
+re-freeze.* Editing LAT's lock in place makes rounds 7 and 8 fail exactly that
+check. Retiring round 10 is intended collateral; **breaking the provenance of two
+already-closed rounds is not**, and the spec did not account for it.
+
+### The fix is a NEW WORLD, not an edit to an old one
+
+A historical lock is the record of what was served. Correcting the text in place
+rewrites that record for every round that ever used the world. The corrected world
+should be a new level — LAT's successor — leaving every existing lock byte-identical
+and every retired digest recomputable. Future rounds use the fixed world; past
+results keep the world they actually ran on, defect and all, which is what makes
+them auditable.
+
+That is a design change rather than the one-word edit the spec described, so it is
+**not made unilaterally**. Nothing was edited or recompiled. The Inform toolchain
+IS available (bundled at `textworld/thirdparty/inform7-6M62`), so this is a
+decision, not a capability limit.
+
+**Stage 4 is unaffected** — W2 and W3 carry no Store and no tallow.
