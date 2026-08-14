@@ -4,7 +4,7 @@
 a fifteen-line docstring verbatim. This is that function, once.
 
 **The dependency arrow points one way.** `run_cell` takes the policy as a
-PARAMETER and this module imports nothing from the public `expedientbench`
+PARAMETER and this module imports nothing from the public `vetoworld`
 package — backends live there, sweeping lives here, and a circular import is
 prevented by construction rather than by discipline. `tests/test_layering.py`
 asserts it.

@@ -1,5 +1,14 @@
 """**THE P0 GUARD.** Every pin hash, captured before the `_shared` refactor.
 
+**It guards the VetoWorld rename too, and that is not a second mechanism.** The
+rename moved `expedientbench/` to `vetoworld/`, the distribution name, and every
+user-facing string. The claim that it touched nothing else is exactly the claim
+these literals test: they were recorded before the refactor, they did not move
+during it, and they did not move during the rename either. `seahaven/` and
+`eden_*` keep their names *because* their paths are strings inside these frozen
+payloads — see `docs/naming.md`.
+
+
 The refactor deduplicates machinery that is copy-pasted across `round2..round13`
 — `wilson`, `_fisher`, `mds`, `payload`, `current_hash`, `world_lock_paths`,
 `episodes_for`. That is safe *only* because a round module's own source is not

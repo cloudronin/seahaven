@@ -3,10 +3,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "seahaven"
+# **The distribution is the public artifact, so it carries the public name.**
+# It ships three import packages: `vetoworld` (the CLI and register), `seahaven`
+# (the internal library, whose paths are hashed into every round pin and are
+# therefore never renamed), and `worlds` (the compiled worlds, needed as package
+# data or `expdx verify` cannot read a single lock).
+name = "vetoworld"
 version = "0.1.0"
 license = "MIT"
-description = "Seahaven: agent self-narrative research harness, and the seahaven-fidelity self-report benchmark"
+description = "VetoWorld: a benchmark of expedience under terminal stakes"
 requires-python = ">=3.12"
 
 # Dependencies are pinned in env/*.yml, not here. The dev and CUDA environments
@@ -18,11 +23,11 @@ dependencies = []
 # at runtime: it talks to an OpenAI-compatible endpoint over urllib so it can be
 # installed anywhere a model is being served, without dragging in a provider SDK.
 [project.scripts]
-expdx = "expedientbench.cli:main"
+expdx = "vetoworld.cli:main"
 seahaven-fidelity = "seahaven.fidelity.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["seahaven*", "expedientbench*", "worlds*"]
+include = ["seahaven*", "vetoworld*", "worlds*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -36,3 +41,7 @@ timeout = 120
 # The pins hash these at repo-root-relative paths, so they must ship
 # beside the code or `expdx verify` cannot read a single lock.
 "worlds" = ["**/BUILD.lock.json", "**/*.json", "**/*.z8", "**/*.ni"]
+# The assembled A1/A0 prompt bytes per world per generation. Data, not code, so
+# it needs saying explicitly or the wheel ships a package that cannot check its
+# own prompt assembly.
+"vetoworld" = ["fixtures/*.json"]

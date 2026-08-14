@@ -1,6 +1,6 @@
 """The dependency arrow points one way, and nothing may reverse it.
 
-Backends live in the public `expedientbench` package; sweeping lives in the
+Backends live in the public `vetoworld` package; sweeping lives in the
 internal library. If `seahaven/` ever imports upward, the two become one
 component and the internal library stops being usable without the CLI — which is
 what `verify`, `worlds` and `read` running with no key at all depends on.
@@ -35,7 +35,7 @@ def _imports(py: Path) -> set[str]:
 
 @pytest.mark.parametrize("py", sorted(_LIB.rglob("*.py")), ids=lambda p: p.name)
 def test_the_internal_library_NEVER_imports_the_public_package(py):
-    assert "expedientbench" not in _imports(py), (
+    assert "vetoworld" not in _imports(py), (
         f"{py.relative_to(_ROOT)} imports upward. Backends are injected as "
         "parameters; the library must not reach for them.")
 

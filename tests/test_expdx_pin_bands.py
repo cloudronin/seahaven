@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from expedientbench.commands import pin
-from expedientbench.register import bands as B
+from vetoworld.commands import pin
+from vetoworld.register import bands as B
 
 
 class _A:

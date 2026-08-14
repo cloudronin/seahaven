@@ -6,8 +6,8 @@ import os
 
 import pytest
 
-from expedientbench import cli
-from expedientbench.commands import doctor, emit, read, seeds, worlds
+from vetoworld import cli
+from vetoworld.commands import doctor, emit, read, seeds, worlds
 
 
 class _A:
@@ -104,22 +104,57 @@ def test_worlds_validates_and_names_failures(capsys):
     assert "0 failing check(s)" in out
 
 
+#: The vocabulary that must never reach a user. `seahaven` and `eden_*` are
+#: hashed into pin PATHS and can never be renamed; `expedientbench` is the name
+#: the package had before it became VetoWorld. All three are internal-only, and
+#: the public rule (`docs/naming.md`) is that none of them appears on a
+#: user-facing surface.
+_INTERNAL = r"\bseahaven\b|\beden\b|eden_|world_eden|expedientbench"
+
+
+def _leaks(text: str) -> list[str]:
+    """Matched on WORD BOUNDARIES, not substrings: the first version of this
+    check failed on the word "credentials", which contains "eden". A check that
+    fires on an unrelated English word teaches you to ignore it."""
+    import re
+    # The echoed working directory is the USER'S path, not our vocabulary, and
+    # it happens to be named after the repo. Everything else is ours.
+    body = "\n".join(ln for ln in text.lower().splitlines()
+                     if not ln.startswith("working dir"))
+    return re.findall(_INTERNAL, body)
+
+
 def test_no_user_facing_string_names_the_internal_package(capsys):
     """The internal library keeps its name because pins hash its paths. It must
-    not appear in any command's output.
-
-    Matched on WORD BOUNDARIES, not substrings: the first version of this test
-    failed on the word "credentials", which contains "eden". A check that fires
-    on an unrelated English word teaches you to ignore it.
-    """
-    import re
+    not appear in any command's output."""
     doctor.main(_A())
     seeds.main(_A())
     worlds.main(_A(level=["LAT"]))
     read.main(_A(level=["W2"], generation="gen3"))
-    # The echoed working directory is the USER'S path, not our vocabulary, and
-    # it happens to be named after the repo. Everything else is ours.
-    out = "\n".join(ln for ln in capsys.readouterr().out.lower().splitlines()
-                    if not ln.startswith("working dir"))
-    leaks = re.findall(r"\bseahaven\b|\beden\b|eden_|world_eden", out)
-    assert not leaks, f"internal vocabulary leaked into user-facing output: {leaks}"
+    got = _leaks(capsys.readouterr().out)
+    assert not got, f"internal vocabulary leaked into user-facing output: {got}"
+
+
+def test_EVERY_emitted_artifact_is_clean_too(capsys):
+    """**The artifacts are the manuscript's tables**, so they are the surface a
+    reader is most likely to see and the one a rename is most likely to miss.
+    Checking only the four verbs above would have left eleven printed tables
+    unguarded."""
+    for art in emit.ARTIFACTS:
+        assert emit.main(_A(artifact=art)) == 0, art
+        got = _leaks(capsys.readouterr().out)
+        assert not got, f"`emit {art}` leaked internal vocabulary: {got}"
+
+
+def test_the_HELP_TEXT_carries_the_public_name_and_not_the_old_one(capsys):
+    """Help text is the first thing a stranger reads and it is pure string, so
+    it is exactly what a rename forgets."""
+    p = cli.build_parser()
+    p.print_help()
+    for verb in ("read", "worlds", "emit", "run", "replicate", "probe", "pin",
+                 "seeds", "corpus", "verify", "doctor"):
+        with pytest.raises(SystemExit):
+            p.parse_args([verb, "--help"])
+    out = capsys.readouterr().out
+    assert not _leaks(out), f"help text leaked: {_leaks(out)}"
+    assert "VetoWorld" in out

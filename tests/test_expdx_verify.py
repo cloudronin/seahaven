@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from expedientbench.commands import verify as V
-from expedientbench.register import CLAIMS, recompute_all
+from vetoworld.commands import verify as V
+from vetoworld.register import CLAIMS, recompute_all
 
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -70,7 +70,7 @@ def test_SYNTHETIC_DRIFT_makes_verify_fail_and_NAME_the_figure(tmp_path, capsys,
     # And it must be TARGETED: flipping one episode moves one figure, not all.
     # If the scratch corpus were unreadable every claim would 'drift' and this
     # test would pass for entirely the wrong reason.
-    from expedientbench.register import recompute_all
+    from vetoworld.register import recompute_all
     rows = recompute_all()
     drifting = [c.fid for c, _g, ok in rows if not ok]
     erroring = [c.fid for c, g, _ok in rows if str(g).startswith("ERROR")]

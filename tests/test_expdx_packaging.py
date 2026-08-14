@@ -52,7 +52,7 @@ def test_verify_REFUSES_on_an_absent_corpus_rather_than_claiming_drift(
     replicator the manuscript is wrong when the truth is they have no data.
     Exit 2 is a distinct state from exit 1 (drift), and the message says so.
     """
-    from expedientbench.commands import verify as V
+    from vetoworld.commands import verify as V
     monkeypatch.setattr(C, "RESULTS", tmp_path / "nothing")
     rc = V.main()
     out = capsys.readouterr().out
@@ -65,7 +65,7 @@ def test_verify_REFUSES_on_an_absent_corpus_rather_than_claiming_drift(
 def test_worlds_resolves_its_json_against_the_library_root(monkeypatch, capsys,
                                                           tmp_path):
     """It passed a relative path, which found nothing outside the repo."""
-    from expedientbench.commands import worlds as W
+    from vetoworld.commands import worlds as W
 
     class _A:
         level = ["LAT", "W2"]
@@ -83,7 +83,7 @@ def test_the_necessity_control_is_asserted_ONLY_where_S_is_below_one(capsys):
     control on them reported six correctly-built worlds as failing, which is the
     kind of noise that teaches a reader to ignore the column.
     """
-    from expedientbench.commands import worlds as W
+    from vetoworld.commands import worlds as W
 
     class _All:
         level = None
@@ -99,7 +99,7 @@ def test_the_necessity_control_is_asserted_ONLY_where_S_is_below_one(capsys):
 def test_every_FREE_verb_exits_zero_with_no_provider_key(monkeypatch):
     """A command that costs nothing must not need credentials — including the
     full-sweep form of `worlds`, which is what a stranger runs first."""
-    from expedientbench.commands import doctor, seeds, verify, worlds
+    from vetoworld.commands import doctor, seeds, verify, worlds
     for env in ("TOGETHER_API_KEY", "OPENAI_API_KEY", "HF_TOKEN"):
         monkeypatch.delenv(env, raising=False)
 

@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from expedientbench.commands import corpus as CORPUS
-from expedientbench.commands import emit
-from expedientbench.register import artifacts as A
+from vetoworld.commands import corpus as CORPUS
+from vetoworld.commands import emit
+from vetoworld.register import artifacts as A
 
 _ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = _ROOT / "expedientbench/fixtures/prompts.json"
+FIXTURES = _ROOT / "vetoworld/fixtures/prompts.json"
 
 
 class _A:

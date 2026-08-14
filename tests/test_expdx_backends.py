@@ -7,8 +7,8 @@ import inspect
 
 import pytest
 
-from expedientbench.backends import EndpointSpec, resolve
-from expedientbench.backends.base import COHORT_TEMPERATURE, Backend
+from vetoworld.backends import EndpointSpec, resolve
+from vetoworld.backends.base import COHORT_TEMPERATURE, Backend
 
 
 class _A:
@@ -110,7 +110,7 @@ def test_dry_run_SERVES_NOTHING_and_prints_the_FIRST_request(capsys):
     made every captured request show the final 49-message conversation. The
     recorder copies.
     """
-    from expedientbench.commands import run as R
+    from vetoworld.commands import run as R
     assert R.main(_A()) == 0
     out = capsys.readouterr().out
     assert "nothing served" in out
@@ -120,7 +120,7 @@ def test_dry_run_SERVES_NOTHING_and_prints_the_FIRST_request(capsys):
 
 
 def test_run_REFUSES_without_an_explicit_budget():
-    from expedientbench.commands import run as R
+    from vetoworld.commands import run as R
     with pytest.raises(SystemExit) as e:
         R.main(_A(dry_run=False, budget=None))
     assert "--budget" in str(e.value)
