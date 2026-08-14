@@ -44,7 +44,7 @@ def main(args) -> int:
     root = repo_root()
     bad = 0
     print(f"{'world':<8}{'S':>8}{'optMin':>8}{'greedy':>8}{'cross':>7}"
-          f"{'deadline':>10}   checks")
+          f"{'deadline':>10}{'servable':>10}   checks")
     for lv in _levels(args):
         lock = O.load_level(f"world_eden_{lv}")
         d = lock["derived"]
@@ -73,11 +73,23 @@ def main(args) -> int:
                 bad += 1
         else:
             notes.append("no forbidden item")
+        # **A world can pass every static gate and still be unservable.** The
+        # gates read the lock; serving needs a setting sentence in
+        # `worldspec.SETTINGS`. LAT2 was built, validated and found only later
+        # to be unrunnable — so servability is a column, not a discovery.
+        from seahaven.fidelity import worldspec as _WS
+        servable = f"world_eden_{lv}" in _WS.SETTINGS
+        if not servable:
+            notes.append("NO SETTING SENTENCE — cannot be served")
         print(f"{lv:<8}{d['supply_ratio']:>8.4f}{d['legal_only_min']:>8}"
               f"{d['greedy_min']:>8}{X.nominal_crossing(lock):>7}"
-              f"{(dl['margin'] if dl['margin'] is not None else '—'):>10}   "
-              f"{'; '.join(notes)}")
+              f"{(dl['margin'] if dl['margin'] is not None else '—'):>10}"
+              f"{('yes' if servable else 'NO'):>10}   {'; '.join(notes)}")
     print(f"\n{bad} failing check(s)")
+    print("  servable=NO means the world validates but has no setting sentence")
+    print("  registered, so no episode can run on it. That registry is hashed by")
+    print("  three live pins, so adding one is a deliberate round-boundary change,")
+    print("  not a fix to slip in.")
     print("  crossing is the formula form; a per-episode crossing comes from the")
     print("  recorded health trace and is what derived tables actually use.")
     return 1 if bad else 0

@@ -16,7 +16,7 @@ import sys
 
 #: Verbs that must never require a credential.
 FREE_VERBS = ("verify", "worlds", "read", "emit", "seeds", "doctor",
-              "pin check")
+              "pin check", "corpus")
 
 #: Verbs that serve episodes and therefore cost money.
 SPENDING_VERBS = ("run", "replicate", "probe")
@@ -91,6 +91,10 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--out", default="results_replicate")
     rp.add_argument("--dry-run", action="store_true")
 
+    cp = sub.add_parser("corpus", help="fetch/checksum the committed cells ($0)")
+    cp.add_argument("action", choices=("status", "manifest"))
+    cp.add_argument("--results", default="results")
+
     pn = sub.add_parser("pin", help="the pin lifecycle ($0 for check)")
     pn.add_argument("action", choices=("check", "new", "retire"))
     pn.add_argument("--round", type=int, help="round number for new/retire")
@@ -110,12 +114,13 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    from .commands import (doctor, emit, pin, probe, read, replicate, run,
-                           seeds, verify, worlds)
+    from .commands import (corpus, doctor, emit, pin, probe, read, replicate,
+                           run, seeds, verify, worlds)
     return {"read": read.main, "worlds": worlds.main, "seeds": seeds.main,
             "emit": emit.main, "doctor": doctor.main, "verify": verify.main,
             "probe": probe.main, "run": run.main,
-            "pin": pin.main, "replicate": replicate.main}[args.verb](args)
+            "pin": pin.main, "replicate": replicate.main,
+            "corpus": corpus.main}[args.verb](args)
 
 
 if __name__ == "__main__":

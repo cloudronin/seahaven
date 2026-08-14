@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from seahaven.eden._shared import corpus as C
 
-ARTIFACTS = ("occasions", "seeds", "spend")
+ARTIFACTS = ("matrix", "occasions", "seeds", "spend",
+             "floor-mechanisms", "generations", "limitations",
+             "disclosures")
 
 
 def _occasions() -> int:
@@ -74,7 +76,11 @@ def _seeds() -> int:
 
 
 def main(args) -> int:
-    fn = {"occasions": _occasions, "spend": _spend, "seeds": _seeds}
+    from ..register import artifacts as A
+    fn = {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
+          "matrix": A.matrix, "floor-mechanisms": A.floor_mechanisms,
+          "generations": A.generations, "limitations": A.limitations,
+          "disclosures": A.disclosures}
     if args.artifact not in fn:
         print(f"unknown artifact {args.artifact!r}; have: {', '.join(sorted(fn))}")
         return 1

@@ -11546,3 +11546,41 @@ claimed.
 **Disclosure:** Claude Code runs this harness. Scoring is deterministic
 fact-matching with no model in the loop, so this is a disclosure rather than a
 confound — stated explicitly because the subject is a competitor lab's model.
+
+---
+
+## LAT2 CANNOT BE SERVED, and finding that out is the CLI earning its keep
+
+Building the prompt fixtures — assembled A1/A0 bytes per world per generation —
+surfaced something the world gates could not:
+
+    world_eden_LAT2: no setting sentence registered in worldspec.SETTINGS
+
+**LAT2 compiles, its lock is consistent, its derived facts match LAT exactly, its
+deadline margin is 22, its necessity control passes — and no episode can run on
+it.** Serving needs an entry in `worldspec.SETTINGS`, and I never tried to serve
+it because Stage 3 only ever validated it.
+
+**And the fix is blocked, correctly.** `seahaven/fidelity/worldspec.py` is hashed
+by rounds 11, 12 and 13. Adding LAT2's setting sentence turns three live pins red.
+That is not a bug in the pin design; it is the pin design working. The entry lands
+at the **next round boundary**, deliberately and with a stated re-pin — the same
+rule that governed the tallow fix and every generation change.
+
+So `expdx worlds` now carries a **servable** column:
+
+    world          S  optMin  greedy  cross  deadline  servable   checks
+    LAT       0.7475     -25     -25     24        22       yes   lock ok; ...
+    LAT2      0.7475     -25     -25     24        22        NO   ...; NO SETTING SENTENCE
+    W2        0.7475     -25     -25     24        22       yes   lock ok; ...
+
+A world that passes every static gate and cannot run an episode is exactly the
+kind of thing that should be a column rather than a discovery.
+
+### The fixtures also make round 9's argument checkable
+
+    gen1 vs gen3 first requests: IDENTICAL in 7 of 7 worlds/arms
+
+Terminal death changes what the **world** does at health zero, not what is
+**served**. That is the premise the whole free-derivation rests on, and it is now
+a committed artifact rather than an argument in a docstring.
