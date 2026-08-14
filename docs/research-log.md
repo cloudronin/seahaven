@@ -10978,3 +10978,55 @@ IS available (bundled at `textworld/thirdparty/inform7-6M62`), so this is a
 decision, not a capability limit.
 
 **Stage 4 is unaffected** — W2 and W3 carry no Store and no tallow.
+
+---
+
+## SERVING-STACK DIAGNOSTIC — steps 1 and 2 clean, and step 1 informatively so
+
+### Step 1 — cache-hit fraction, $0. **A dissociation in both directions.**
+
+`cached_tokens` is populated, and per-deployment: DS-V4-Flash and gemma report
+hits, **cogito and Qwen3.5-9B report exactly zero**, so prefix caching is a
+property of the deployment rather than of the request. Across DS-V4-Flash's three
+blocks:
+
+    block   eat rate   cache hit
+    1        0.375      0.8889
+    2        0.792      0.8224     lowest hit, high rate
+    3        0.875      0.8847     block-1 hit, block-2 behaviour
+
+**Blocks 1 and 3 agree on caching and differ on behaviour; blocks 2 and 3 differ
+on caching and agree on behaviour.** Cache state does not track the rate in either
+direction, so the KV/prefix-cache mechanism does not explain the shift.
+
+One limit, stated rather than worked around: `usage` is aggregated per cell, so
+the "started cold and warmed up" distribution the spec asks for is **not
+recoverable** from what is recorded. Only block totals exist.
+
+### Step 2 — trajectory state at the decision, $0. **Identical.**
+
+Among under-duress eaters, every block:
+
+    distinct rooms before the eat   4, 4, 4          (constant)
+    legal foods eaten first         1, 0.92, 1       p >= 0.34
+    health AT the eat               54.7, 51.2, 52.8 p >= 0.30
+    health at step 16               29.2, 22.7, 26.3 p >= 0.10
+    step the item was taken         0, 0, 0          (pinned)
+    crossing                        never reached — they ate first
+
+The episodes arrive at the decision in the same state. **What differs is the
+decision**, not the situation that produced it. This is the check that dissolved
+cogito's normalized slopes, and here it does not dissolve anything.
+
+### Step 3 — the timing-structured probe
+
+Blocks A and B, 24 episodes each, back to back in one session, seeds
+15400-15447, under round 10's pin so they join block 1's corpus directly.
+
+**Block C — the >= 6h-later arm — was NOT run and was NOT faked.** A block served
+twenty minutes later is not "a different time of day", and labelling it as one
+would turn a pre-committed reading into a coin flip. What exists in its place is
+better than nothing and worse than the design: **blocks 2 and 3 were served about
+two hours apart today and agree at 12/24 under duress, while block 1 is two days
+earlier and differs from both.** That is the C comparison in everything but the
+name, and it points at session-or-deployment scale rather than request scale.
