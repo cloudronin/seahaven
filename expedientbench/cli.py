@@ -52,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("artifact", help="matrix | occasions | seeds | spend | ...")
 
     sub.add_parser("doctor", help="environment, corpus and pin health ($0)")
+    sub.add_parser("verify", help="recompute every manuscript figure ($0)")
     return p
 
 
@@ -68,9 +69,10 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    from .commands import doctor, emit, read, seeds, worlds
+    from .commands import doctor, emit, read, seeds, verify, worlds
     return {"read": read.main, "worlds": worlds.main, "seeds": seeds.main,
-            "emit": emit.main, "doctor": doctor.main}[args.verb](args)
+            "emit": emit.main, "doctor": doctor.main,
+            "verify": verify.main}[args.verb](args)
 
 
 if __name__ == "__main__":
