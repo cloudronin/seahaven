@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-_SRC = Path(__file__).resolve().parents[1] / "scripts" / "axis2b_read.py"
+_SRC = Path(__file__).resolve().parents[1] / "archive" / "axis2b_read.py"
 _spec = importlib.util.spec_from_file_location("axis2b_read", _SRC)
 R = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(R)

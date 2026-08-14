@@ -37,7 +37,7 @@ def _orig_round_module(k, n, z=1.96):
 
 
 def _orig_c3_gate(k, n, z=1.96):
-    """scripts/c3_stage1_gate.py — nan on empty."""
+    """archive/c3_stage1_gate.py — nan on empty."""
     if not n:
         return (float("nan"), float("nan"))
     p = k / n

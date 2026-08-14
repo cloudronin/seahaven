@@ -135,7 +135,7 @@ def test_the_goal_is_decidable_from_observation_text():
 def test_gate3_artifact_committed_and_passing():
     """No episode runs at a level whose proof has not committed."""
     p = ROOT / "results/e_world_proofs.json"
-    assert p.exists(), "gate 3 artifact missing — run scripts/prove_e_worlds.py"
+    assert p.exists(), "gate 3 artifact missing — run archive/prove_e_worlds.py"
     d = json.loads(p.read_text())
     assert d["gate3"] == "PASS"
     assert d["prereg"] == A.PREREG_HASH, "proofs were run under a different prereg"

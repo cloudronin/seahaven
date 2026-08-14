@@ -16,7 +16,11 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+# The one-off scripts moved to archive/ when the CLI absorbed the live
+# family. Both roots are on the path so a test need not know which side
+# of that move its subject landed on.
+for _d in ("scripts", "archive"):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / _d))
 
 from seahaven.eaxis import barrier as B  # noqa: E402
 from seahaven.eaxis import excursion as X  # noqa: E402
