@@ -90,7 +90,31 @@ def fetch() -> list[tuple[str, dict]]:
     return recs
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    # **THE POOL IS A FROZEN AXIS, NOT A CACHE.**
+    #
+    # Every raidex correlate — round 10's, and round 15's E1 — plots vworld
+    # rates against these scores. Re-running this against a changed upstream
+    # would move the x-axis under results that are already published, silently,
+    # with no pin breaking: the pool is data, not a hashed artifact, so nothing
+    # else would notice.
+    #
+    # So a rebuild is now a deliberate act. Same refusal `corpus fetch` makes
+    # about an existing corpus, for the same reason.
+    import sys
+    argv = sys.argv[1:] if argv is None else argv
+    if OUT.exists() and "--force" not in argv:
+        have = json.loads(OUT.read_text())
+        print(f"REFUSING: {OUT} already exists "
+              f"({have.get('n_models')} models, retrieved {have.get('retrieved')}).")
+        print("\n  This file is the frozen x-axis of every raidex correlate.")
+        print("  Rebuilding it against a changed upstream would move the axis")
+        print("  under results already published, and no pin would break —")
+        print("  the pool is data, so nothing else would notice.")
+        print("\n  Pass --force if you mean to re-freeze it, and re-run every")
+        print("  correlate that cites it in the same commit.")
+        return 1
+
     recs = fetch()
     tg = together_strings()
     by_norm: dict[str, list[str]] = {}

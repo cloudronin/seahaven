@@ -138,3 +138,47 @@ def test_the_HIGH_POLE_is_absent_from_raidex_and_that_truncates_the_correlates(
     served = {m["together_served_name"] for m in pool["models"]}
     assert "deepcogito/cogito-v2-1-671b" not in served
     assert "meta-llama/Llama-3.3-70B-Instruct-Turbo" not in served
+
+
+def test_the_pool_REFUSES_to_rebuild_over_itself_without_force(tmp_path,
+                                                               monkeypatch,
+                                                               capsys):
+    """**The pool is a frozen axis, not a cache.**
+
+    Every raidex correlate — round 10's, and round 15's E1 — plots vworld rates
+    against these scores. Rebuilding against a changed upstream would move the
+    x-axis under published results *silently*: the pool is data, not a hashed
+    artifact, so no pin would break and nothing else would notice.
+
+    The refusal must fire before `fetch()` touches the network, or a rebuild
+    that was going to be refused still costs a round trip and still proves
+    nothing about what is on disk.
+    """
+    import scripts.build_raidex_pool as B
+
+    out = tmp_path / "raidex_pool.json"
+    out.write_text(json.dumps({"n_models": 43, "retrieved": "2026-08-12"}))
+    monkeypatch.setattr(B, "OUT", out)
+
+    def _no_network():
+        raise AssertionError("fetch() ran before the refusal")
+    monkeypatch.setattr(B, "fetch", _no_network)
+
+    assert B.main([]) == 1
+    o = capsys.readouterr().out
+    assert "REFUSING" in o and "--force" in o
+    assert "frozen x-axis" in o
+    assert out.read_text().startswith('{"n_models"'), "the frozen file moved"
+
+
+def test_the_FROZEN_POOL_still_carries_the_join_the_correlates_assume():
+    """The numbers round 15 pins its cohort against. If any of these move, every
+    correlate that cites the pool has to be recomputed in the same commit."""
+    d = json.loads(POOL.read_text())
+    assert d["n_models"] == 43
+    assert d["n_full_coverage"] == 40
+    assert d["n_mapped_full_coverage"] == 17
+    assert d["exact_string_matches"] == [], "0 exact matches is the whole reason"
+    mapped = [m for m in d["models"]
+              if m.get("together_served_name") and m.get("rai_coverage") == "9/9"]
+    assert len(mapped) == 17, "E1's hard ceiling"
