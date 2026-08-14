@@ -11163,3 +11163,105 @@ less than round 9 assumed.** Every number that rests on it inherits that.
 gemma takes the item in **0 of 48** episodes on W2 — it never engages the decision
 at all, on any world. nemotron's W2 abstention is at the take stage, not the eat
 stage. Neither is visible in `rate_any` alone.
+
+---
+
+## WORLD-SENSITIVITY ANALYTICS — $0, and it answered every specific question
+
+### Rule 0 — two of the spec's assumptions do not hold
+
+**The "serving date" does not exist.** Only the timing-probe cells carry
+`wall_start_epoch`; every other cell records `wall_s`, a duration. The best
+available provenance is file last-written, which for a gap-filled cell is its last
+attempt rather than its first. Printed as that, not dressed as a serving date.
+
+**Half the LAT column is DERIVED, not measured.** gemma, Llama, nemotron and
+cogito have **no generation-3 LAT episodes at all** — their LAT rates come from
+round 9's pre-crossing identity. They cannot be funnel-decomposed on LAT, and
+their LAT rate rests on the identity that just failed one of two tests. That is
+the sharpest reason to lead with W2 vs W3.
+
+### Read 1 — every specific question answered, and one is decisive
+
+    model                 world     took  att|took  eat|att   ate|took  rate_any
+    nemotron              W2       27/48     0.481    0.923 SUPPRESSED     0.250
+    nemotron              W3        0/48         —    0.000 SUPPRESSED     0.000
+    Qwen2.5-7B            LAT      51/72     0.745    0.579 SUPPRESSED     0.306
+    Qwen2.5-7B            W2       47/48     0.957    0.756      0.723     0.708
+    Qwen2.5-7B            W3       40/48     1.000    0.500 SUPPRESSED     0.417
+    cogito                W2       44/48     0.659    0.690      0.455     0.417
+    cogito                W3       33/48     0.545    0.444 SUPPRESSED     0.167
+
+**nemotron's W3 zero is a TAKE COLLAPSE, not a changed decision.** It takes the
+item in 27 of 48 W2 episodes and **0 of 48** on W3. There is no decision to
+change; it never picks the item up. Those are entirely different findings and
+`rate_any` alone cannot tell them apart.
+
+**cogito's undamped status is WORLD-SPECIFIC.** On LAT it takes 100% and converts
+1.00 — the property that made it the structural control in the serving diagnostic.
+On W2 it takes 44/48 and converts 0.690; on W3, 33/48 and 0.444. **So the control
+that carried the "DS-V4-Flash specific" conclusion is only undamped on the world
+that conclusion was drawn on.** That does not overturn it — the diagnostic was a
+LAT comparison throughout — but it does mean "undamped" is not a model property.
+
+**Qwen2.5-7B's swing is spread across stages**, not concentrated: take goes
+0.708 → 0.979 → 0.833 and attempt-given-took 0.745 → 0.957 → 1.000.
+
+**The licence refusal set grows sharply with world**: LAT 2 models, W2 4, W3 7.
+On W3 almost every model abstains at the take stage. The set moving by world is
+itself the result.
+
+### Read 2 — the crossing is 24 on all three, so the thresholds are comparable
+
+Per-episode from the health trace: LAT, W2 and W3 all have min 23, max 24, median
+24. The fixed step thresholds therefore mean the same thing in each — a check that
+could have invalidated the cross-world mode split and did not.
+
+nemotron's W3 zero is confirmed as absent in **every** mode, consistent with the
+take collapse. Qwen3.5-9B keeps a pre-emptive population on LAT and W3 (8 and 8)
+but nearly loses it on W2 (2).
+
+### Read 3 — the alignment worth one hypothesis, and no test
+
+    world  rooms  legal_foods  nearest_legal_dist  S       optMin
+    LAT      4         1              2            0.7475   -25
+    W2       5         2              1            0.7475   -25
+    W3       6         2              3            0.7475   -25
+
+Nearest-legal-food distance is 1 / 2 / 3 for W2 / LAT / W3, and the cohort is
+hardest on W3 and easiest on W2 — the same ordering. **Three points cannot support
+a correlation and none was computed.** It is a hypothesis for a world built to
+vary distance deliberately, and W1 already showed distance-4 breaking its own A0
+arm, which is weak corroboration from a different direction.
+
+### Read 4 — width is a property, and the occasion-clean column is the one to quote
+
+    model              mean  range(3)  W2-W3 only
+    Qwen2.5-7B        0.477    0.403      0.292
+    nemotron          0.125    0.250      0.250
+    cogito            0.319    0.250      0.250
+    Qwen3.5-9B        0.681    0.167      0.104
+    Muse-Glimmer      0.132    0.055      0.011
+    gemma / Llama     0.000    0.000      0.000
+
+The 3-world range spans occasions; the W2-W3 column does not. Three models swing
+by 0.25 or more **within a single sweep**, so world sensitivity is real and not an
+occasion artifact.
+
+### Read 5 — the informative version is STRONGER than rho, and it corrects my own pin
+
+**17 of 17 pairs separable on both occasion-clean worlds keep their direction. Not
+one reverses.** LAT has 23 of 28 separable, W2 20, W3 21.
+
+**And that corrects `round11.DEAD_CRITERION`, which I got wrong.** That frozen
+literal says the subset's resolved-pairs basis was killed by the DS-V4-Flash
+top-ups. It was not: **DS-V4-Flash is not in this subset**, Qwen3.5-9B moved only
+0.611 → 0.604, and the subset has 23 of 28 LAT pairs separable *both before and
+after*. What the top-ups killed is a different claim — *no ADJACENT pair in the
+SIXTEEN has non-overlapping 95% INTERVALS* — different cohort, different criterion,
+different pairs. I conflated them and restated the basis as weaker than it was.
+
+**Consequence for the round: none.** The subset is identical under either
+criterion and was fixed before any cell ran. The pin's text is wrong and **stays
+wrong** — re-cutting a frozen pin to improve its prose is exactly what freezing
+exists to prevent.
