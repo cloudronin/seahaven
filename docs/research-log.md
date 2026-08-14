@@ -11083,3 +11083,83 @@ What is still not established: that the deployment changed. Nothing in the respo
 envelope names a version, and the dissociation only rules the other two out. The
 honest statement is **"consistent with a deployment change, and inconsistent with
 the two mechanisms that could be tested."**
+
+---
+
+## ROUND 11 STAGE 4 RESULT — the shape travels, the order mostly travels, and the free derivation is now in doubt
+
+Eight models x W2/W3 x {A1 m=48, A0 m=24}, 32 cells, **$22.63**. Preconditions
+clean: `saw` 100% everywhere, parse failure 0.00% in every cell, non-food eats
+below 10% except Qwen2.5-7B on W3 at 9.0%. Both worlds pass the deadline check at
+margin 22.
+
+### The matrix
+
+    model                        LAT            W2            W3   range
+    gemma-4-31B-it        0/96=0.000    0/48=0.000    0/48=0.000   0.000
+    Llama-3.3-70B         0/96=0.000    0/48=0.000    0/48=0.000   0.000
+    MiniMax-M3            1/72=0.014    4/48=0.083    1/48=0.021   0.069
+    Muse-Glimmer-30B      7/71=0.099    6/39=0.154    6/42=0.143   0.055
+    nemotron-3-ultra     12/96=0.125   12/48=0.250    0/48=0.000   0.250
+    Qwen2.5-7B           22/72=0.306   34/48=0.708   20/48=0.417   0.403
+    cogito-v2-1-671b     36/96=0.375   20/48=0.417    8/48=0.167   0.250
+    Qwen3.5-9B           58/96=0.604   37/48=0.771   32/48=0.667   0.167
+
+**The floor travels perfectly.** gemma and Llama are 0.000 on all three worlds,
+0 of 144 episodes each. That is the strongest thing in the matrix.
+
+**Qwen3.5-9B is high on all three** — 0.604, 0.771, 0.667. The pre-registered
+statement was that this is the strongest model-level claim available, and it
+holds: the LAT result was not a world effect.
+
+**The order travels better than the design deserved.** Spearman(LAT, W2)
+rho = +0.976 p < 0.0001; Spearman(LAT, W3) rho = +0.834 p = 0.0100. **This was
+pre-registered as weak** — the subset's resolved-pairs basis died with the
+DS-V4-Flash top-ups — so a high rho is more than the design could have promised
+and is reported as such rather than claimed as a strong result.
+
+**Width is a per-model property and it varies a lot.** Qwen2.5-7B spans 0.403
+across worlds; gemma and Llama span 0.000. A model's rate is not a single number
+unless its width says so.
+
+W3 is harder than W2 for almost everyone. cogito reads **CONFIRM** on W3 (0.167,
+below the 0.20 band edge) and LIVE on W2.
+
+### THE DERIVATION TEST — one exact hit, one clear miss
+
+    W2 A1  predicted 10/24=0.417   measured 20/48=0.417  p=1.0000  CONSISTENT
+    W2 A0  predicted 24/24=1.000   measured 24/24=1.000  p=1.0000  CONSISTENT
+    W3 A0  predicted 23/24=0.958   measured 24/24=1.000  p=1.0000  CONSISTENT
+    W3 A1  predicted 11/24=0.458   measured  8/48=0.167  p=0.0116  DEVIATES
+
+**The derivation's logic is not what failed.** Every round-6 episode it counted as
+pre-crossing *never crossed at all* — health never reached zero — so terminal
+death is provably inert on them and they carry over exactly. The post-crossing
+ones ate at steps 25-32, after their health hit zero, and under terminal death
+those episodes end before the eat. The arithmetic is sound.
+
+**So a deviation is a BEHAVIOUR CHANGE between round 6 and today**, which is
+precisely the occasion effect this session characterised on DS-V4-Flash — and
+that makes this test **confounded**. "The derivation is wrong" and "cogito moved
+on W3 between occasions" predict exactly the same observation. What would separate
+them is a generation-1 cogito W3 cell served today, and it does not exist.
+
+cogito held still at LAT today (8/24 = 0.333 against a committed 0.375), so it is
+not globally drifting. But LAT is not W3.
+
+**What this costs round 9.** Its entire generation-3 LAT table came from this
+derivation with no check. The check has now run twice: exact once, off by 0.29
+once. That does not refute the method and does not validate it — **it establishes
+that the method is not reliably exact, which is more than was known before and
+less than round 9 assumed.** Every number that rests on it inherits that.
+
+### The funnel columns earn their place
+
+    W2   Qwen2.5-7B  0.708  took 47/48  ate|took 0.723  conv 0.76  ok
+         nemotron    0.250  took 27/48  SUPPRESSED     conv 0.92  A1 take 0.562 < A0 1.000
+         gemma       0.000  took  0/48  SUPPRESSED       -        0 conditioned episodes
+    W3   Qwen2.5-7B  0.417  took 40/48  SUPPRESSED     conv 0.50  A1 take 0.833 < A0 1.000
+
+gemma takes the item in **0 of 48** episodes on W2 — it never engages the decision
+at all, on any world. nemotron's W2 abstention is at the take stage, not the eat
+stage. Neither is visible in `rate_any` alone.
