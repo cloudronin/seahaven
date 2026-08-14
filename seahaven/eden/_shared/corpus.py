@@ -27,8 +27,25 @@ from ..outcome import funnel
 __all__ = [
     "RESULTS", "cell_path", "parse_cell_name", "iter_cells", "load_cell",
     "episodes", "ate", "missing_seeds", "generation_of", "occasion_of",
-    "burned_seeds",
+    "burned_seeds", "DIAGNOSTIC_STAGES", "is_diagnostic",
 ]
+
+#: Cells written by a DIAGNOSTIC block rather than by a round's measurement.
+#: They are real data and belong in the diagnostic reads, but they are **not the
+#: canonical cell for a (model, world)** and must never silently join one.
+#:
+#: The occasion probe is the sharpest case: it exists precisely to measure
+#: between-day variation, so pooling it into the measurement averages away the
+#: effect it was bought to detect. The master matrix learned this once; the
+#: standing read was still doing it, which is why the constant lives here now
+#: instead of in one consumer.
+DIAGNOSTIC_STAGES = frozenset({"occasion_probe", "stability_block3",
+                               "timing_probe"})
+
+
+def is_diagnostic(meta: dict) -> bool:
+    return bool(meta.get("stage") in DIAGNOSTIC_STAGES
+                or meta.get("stability_block"))
 
 RESULTS = Path("results")
 

@@ -50,13 +50,24 @@ def test_MTIME_can_never_produce_a_same_occasion_verdict():
             assert row.verdict == "unknown-mtime", row.fid
 
 
-def test_the_only_OCCASION_CLEAN_figures_are_the_ones_with_real_timestamps():
-    """Eight cells in the whole corpus carry `wall_start_epoch`, and they are
-    round 13's. So round 13 is the only sweep whose figures can be shown clean —
-    a fact about the corpus, asserted so it cannot quietly become a claim about
-    the others."""
+#: The sweeps whose cells recorded a real serving timestamp. Round 13's spec
+#: required one; round 14 got one because `expdx run --round` now writes it for
+#: every cell. Everything earlier has only mtime, permanently — a timestamp
+#: cannot be recovered after the fact.
+_TIMESTAMPED = {"13", "14", "11tA", "11tB"}
+
+
+def test_a_figure_is_OCCASION_CLEAN_only_if_every_cell_it_reads_is_timestamped():
+    """Asserted as a fact about the corpus rather than about the code: no figure
+    reading an e10, e11 or e12 cell can be shown clean, however its mtimes fall,
+    because those sweeps recorded no serving time and never will."""
     clean = {r.fid for r in OC.audit() if r.verdict == "yes"}
-    assert clean and all(f.startswith("terra.") for f in clean), clean
+    assert clean, "some figure should be clean"
+    for row in OC.audit():
+        if row.verdict == "yes":
+            assert set(row.sweeps) <= _TIMESTAMPED, (row.fid, row.sweeps)
+        elif set(row.sweeps) - _TIMESTAMPED and len(row.cells) > 1:
+            assert row.verdict == "unknown-mtime", (row.fid, row.verdict)
 
 
 def test_MTIME_UNDER_DETECTS_which_is_why_the_sweep_column_exists():

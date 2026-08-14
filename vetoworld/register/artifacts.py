@@ -18,10 +18,11 @@ from seahaven.eden._shared import stats as S
 WORLDS = ("LAT", "W2", "W3")
 
 
-#: Cells written by a DIAGNOSTIC block rather than by a round's measurement.
-#: They are real data and belong in the diagnostic reads, but they are not the
-#: canonical cell for a (model, world) and must never silently replace one.
-DIAGNOSTIC_STAGES = {"occasion_probe", "stability_block3", "timing_probe"}
+#: One definition, in the corpus layer that owns cell metadata. It lived here
+#: while `expdx read` had its own (absent) notion of the same thing, and read
+#: went on pooling the occasion probe into round 12's LAT measurement for
+#: exactly as long as that lasted.
+DIAGNOSTIC_STAGES = C.DIAGNOSTIC_STAGES
 
 
 def _cells(level, arm="A1"):

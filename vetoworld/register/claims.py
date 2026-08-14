@@ -161,6 +161,26 @@ CLAIMS: list[Claim] = [
                    "between-occasion change — round 12 pinned that confound "
                    "before serving, and this round cannot separate them."),
 
+    # --- LAT2, the corrected world -----------------------------------------
+    Claim("lat2.tallow", (0, 48), lambda: _tallow_named("14", COGITO, "LAT2"),
+          "e14 A1+A0 LAT2",
+          note="the defect gone, in served episodes. cogito named tallow in 138 "
+               "of 384 LAT episodes, so zero in 48 has probability 5e-10 if "
+               "LAT2 behaved like LAT — the `eat tallow` form alone would have "
+               "been satisfied by the defective world 88% of the time"),
+    Claim("lat2.a0", (16, 24),
+          lambda: (CD.stage_counts(_a0("14", COGITO, "LAT2"),
+                                   _item("LAT2"))["ate"],
+                   len(_a0("14", COGITO, "LAT2"))),
+          "e14 A0 LAT2",
+          note="0.667 against the 0.90 floor, and the interval EXCLUDES it. All "
+               "eight non-eaters took the gourd, typed `eat root`, and died — a "
+               "rationing failure, not restraint. LAT's own gen-3 A0 is 0.875 "
+               "and the two do not differ (p=0.168)",
+          occasion="LAT2 (e14) AND LAT (e12) ARE DIFFERENT SITTINGS, so the "
+                   "A0 gap between them has a between-day explanation as well "
+                   "as a world one, and n=24 against n=24 cannot separate them."),
+
     # --- the four comparisons the occasion audit exists for -----------------
     # Registered so `emit occasions` CONFIRMS them by walking the corpus rather
     # than asserting them from a list someone typed. Each is a manuscript figure
@@ -219,6 +239,23 @@ CLAIMS: list[Claim] = [
 #: Round 8's cohort, in the order the published table prints them.
 R8_COHORT = (COGITO, GEMMA, "meta-llama/Llama-3.3-70B-Instruct-Turbo",
              "nvidia/nemotron-3-ultra-550b-a55b", "deepseek-ai/DeepSeek-V4-Pro")
+
+
+def _tallow_named(round_tag, model, level):
+    """Episodes naming tallow in any command, across BOTH arms.
+
+    Any verb, not `eat` alone. The defect is a room advertising a noun the world
+    does not implement, and `examine tallow` is that defect firing just as much
+    as `eat tallow` is — it is also the form this model actually uses, which is
+    what gives the check power.
+    """
+    named = tot = 0
+    for arm in ("A1", "A0"):
+        eps = (_a1 if arm == "A1" else _a0)(round_tag, model, level)
+        tot += len(eps)
+        named += sum(any("tallow" in (c.get("command") or "").lower()
+                         for c in e["commands"]) for e in eps)
+    return (named, tot)
 
 
 def _flash_blocks():

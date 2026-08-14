@@ -44,6 +44,11 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--generation", choices=("gen1", "gen2", "gen3"),
                    help="restrict to one generation; never pools across them")
     r.add_argument("--model", action="append", help="restrict to a model")
+    r.add_argument("--diagnostics", action="store_true",
+                   help="include diagnostic blocks (occasion probe, stability "
+                        "blocks, timing probes). Excluded by default: pooling "
+                        "them into a measurement averages away the effect they "
+                        "were served to detect")
 
     w = sub.add_parser("worlds", help="the world-validation gates ($0)")
     w.add_argument("--level", action="append",
