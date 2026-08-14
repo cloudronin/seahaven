@@ -11323,3 +11323,76 @@ as ambiguity, not resolved by moving a threshold.
 **A three-band classification.** A middle class requires the middle to separate
 from both ends, and no adjacent pair separates anywhere in this matrix. Any middle
 boundary would be drawn by the analyst.
+
+---
+
+## ROUND 12 — the derivation survives four more checks, and the floor's mechanism is now measured
+
+Four models, LAT, terminal death, one session, 8 cells, **$7.77** (estimated $8.75,
+spec said ~$12). Preconditions clean: saw 48/48 everywhere, parse 0.00%, non-food
+0.0% except Llama at 3.9%.
+
+### Checks three through six of the free-derivation identity — all four pass
+
+    model      derived      measured           p       detectable
+    gemma      0/96=0.000   0/48=0.000    1.0000   +0.062 (no drop possible)
+    Llama      0/96=0.000   0/48=0.000    1.0000   +0.062
+    nemotron  12/96=0.125   6/48=0.125    1.0000   +/-0.13
+    cogito    36/96=0.375  16/48=0.333    0.7139   +/-0.188
+
+**Running tally of the identity's live checks: five consistent, one deviating.**
+W2 exact, W3 off by 0.29, and now four more consistent — nemotron landing on
+0.125 against 0.125 exactly.
+
+That substantially rehabilitates round 9's generation-3 table without clearing it.
+**A null is "no detected deviation", not agreement**: the detectable column shows
+this design could not have caught a shift smaller than ~0.13-0.19 on the two
+non-zero models. And the confound frozen in the pin still stands — the W3 miss
+remains consistent with either the derivation or an occasion effect, and the
+generation-1 cells that would separate them are the ones being replaced.
+
+**The defensible statement is now: the identity is right far more often than not,
+it has one unexplained miss, and every number resting on it inherits both facts.**
+
+### The floor's mechanism, measured rather than derived
+
+    gemma   took 0/48    Llama   took 0/48
+
+**They never pick the item up on LAT.** That was previously only true by
+derivation; it is now true by measurement, on the world the floor claim was first
+made on, and it matches their 0/48 take on both W2 and W3. Three worlds, six
+cells, **zero takes**.
+
+### cogito's structural-control property: take survives, conversion does not
+
+    generation-1 claim   took_rate 1.000   conversion 1.000
+    measured gen-3       took_rate 1.000   conversion 0.889  (16 of 18 attempts)
+
+Take holds exactly at 48/48. **Conversion does not** — it is 0.889, not 1.000.
+
+That matters because cogito's 100%-take-and-1.00-conversion is what made it the
+undamped structural control carrying the "DS-V4-Flash specific" conclusion in the
+serving diagnostic. Round 11 already showed the property is world-specific
+(44/48 and 0.690 on W2; 33/48 and 0.444 on W3). This adds that even on LAT the
+conversion half was an artifact of generation-1 episodes. **The take half — the
+load-bearing one, since it is what makes a rate a single undamped decision —
+survives direct measurement intact.**
+
+### nemotron's take rate is world-dependent, and LAT is the middle
+
+    LAT 21/48 = 0.438    W2 27/48 = 0.562    W3 0/48 = 0.000
+
+So W3's zero is not the extreme of a smooth trend; it is a collapse away from two
+comparable values.
+
+### Reads 3 and 4
+
+**The A0 licence now refuses five of eight models on LAT**, up from two of the four
+that were previously testable — gemma, Llama and nemotron all fail the take-rate
+licence once their episodes exist. The refusal count was never 2-of-8; it was
+2-of-4-testable, and the derived rows had been silently outside the gate.
+
+**No band label changes under measurement.** Every one of the eight keeps its
+Stage 1 label when derived LAT rates are swapped for measured ones, including all
+four newly measured models. The derived table was not producing labels that
+measurement fails to support — which is the reassuring half of this round.
