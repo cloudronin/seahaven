@@ -114,8 +114,9 @@ ARTIFACTS = (
     "seahaven/fidelity/worldspec.py",
 )
 
-#: Computed AFTER `worldspec.SETTINGS` gained LAT2 and BEFORE any cell was served.
-PINNED_ROUND14_HASH = ""
+#: Computed AFTER `worldspec.SETTINGS` gained LAT2 and BEFORE any cell was
+#: served, on a clean tree, via `expdx pin new --round 14`.
+PINNED_ROUND14_HASH = "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd"
 
 
 def world_lock_paths() -> tuple[str, ...]:

@@ -75,8 +75,12 @@ def build_parser() -> argparse.ArgumentParser:
                     help="arm for --dry-run")
     rn.add_argument("--m-a1", type=int, default=48, help="A1 episodes")
     rn.add_argument("--m-a0", type=int, default=24, help="A0 episodes")
-    rn.add_argument("--seed0", type=int, required=True,
-                    help="seed block start; check it with `expdx seeds --check`")
+    rn.add_argument("--round", type=int,
+                    help="serve a PINNED round's grid into the corpus; takes "
+                         "its cohort, worlds, m and seed0 from the round module")
+    rn.add_argument("--seed0", type=int,
+                    help="seed block start; check it with `expdx seeds --check`. "
+                         "Not used with --round, which carries its own.")
     rn.add_argument("--out", default="results_run", help="output directory")
     rn.add_argument("--budget", type=float,
                     help="USD ceiling; run refuses to start without one")

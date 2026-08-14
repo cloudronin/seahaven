@@ -47,6 +47,7 @@ PINNED = {
     "round11": "eb4b8befbc84dc1263ac66cf187f9d9a190c6ab55e79447b7d48ff5ae54bc048",
     "round12": "f9ac9323ede0632770d13387a00a4cc76d16df3231ff46e9243fb31989a7edd1",
     "round13": "668ea92d0c3bf2d335b48f561c71a5a9ab8a97f7939b198df437c80f77a7cd0e",
+    "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
 }
 
 #: Live `current_hash()` per round. Rounds 2, 3 and 4 do not hash `worldspec.py`
@@ -64,6 +65,7 @@ LIVE = {
     "round11": "40f3b4fb9ef8966b6a8b2d7825c533dcfaf763202ee9366da5278ed8d2037bf7",
     "round12": "562d94db8c1db9fc43ee139c5b36ff751c624d71f296cf5f23c61b3bb4072888",
     "round13": "096e4172930a018d6ed08a66362010750a0d8006a500d47e3291f5938cd4b428",
+    "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
 }
 
 #: The eleven retired recompute functions, across ten rounds. Six from earlier
@@ -94,23 +96,31 @@ RETIRED = {
         "668ea92d0c3bf2d335b48f561c71a5a9ab8a97f7939b198df437c80f77a7cd0e",
 }
 
-#: The files whose BYTES are hashed by a LIVE pin. **After the LAT2 boundary that
-#: is round 2 alone**, and `worldspec.py` is momentarily hashed by nothing live —
-#: every round that hashed it is closed. Its pre-boundary bytes survive inside
-#: each retired snapshot. Round 14 puts it back under a live pin next commit.
+#: The files whose BYTES are hashed by a LIVE pin — rounds 2 and 14 — with their
+#: current digests. Editing one breaks a freeze; put the change in a NEW module.
+#: `worldspec.py` carries its POST-boundary digest here; its pre-boundary bytes
+#: survive inside every retired snapshot that hashed them.
 FROZEN_ARTIFACTS = {
     "docs/eden-round2-hosted.md":
         "d36beb6b507b9a3934c1451fe6c94b2aeb7e612de6e749981393db5f9b4f68d2",
     "docs/edenbench-spec.md":
         "27b79a6666f4d8b902f3fa01a6babacbc6b0173a2cd2a695816128aea6cf7e78",
+    "seahaven/eden/conditioning.py":
+        "a7a91dcce4da9c220298e35ab565057d3a08de02129fc523253be4fa0b7e16f7",
+    "seahaven/eden/crossing.py":
+        "73c08d2a93d90f9ef0757559b163e48149692d6618c8752a920c6061807748a7",
+    "seahaven/eden/intent.py":
+        "a1074aec3523d512ed3fce926be8f25fe073f5f013d130804c2ead01990584c1",
     "seahaven/eden/manifest.py":
         "3ee32edfcc83ac15e9a003bcefa226cd610c458600e0b16e497c0aceb33dd79c",
     "seahaven/eden/outcome.py":
         "a29e10f6fbcaa05e7c8777b4d332d31cd9399d4fdba2ccdab58574048aa439a3",
     "seahaven/eden/simulate.py":
         "8c0d05f23eceba0bbe1c76f9624591ff786424340b1ae3fb1f40c7cd711cbc58",
+    "seahaven/fidelity/worldspec.py":
+        "9746c2ffb8ec7c9eab8a1748c0995c1d18572c92f44fe3195bf46382b7624c69",
     "worlds/build_eden_worlds.py":
-        "7b08d0d7d0dda94a88d907636389037caa8cd322344a0985820b1c6df7f8267d"
+        "7b08d0d7d0dda94a88d907636389037caa8cd322344a0985820b1c6df7f8267d",
 }
 
 
@@ -153,10 +163,10 @@ def test_retired_digest_still_RECOMPUTES(name, fn):
 #: literal — that drift is *why* it was retired, and the retired digest is the
 #: preserved record. Conflating the two states is a mistake this file made once.
 #:
-#: **Ten of the eleven are closed.** The LAT2 boundary closed five in one commit;
-#: round 2 survives only because it never hashed `worldspec.py`. Round 14 lands
-#: in the next commit, with its pin computed from a clean tree.
-OPEN = {"round2"}
+#: **Ten of the twelve are closed.** The LAT2 boundary closed five in one
+#: commit; round 2 survives only because it never hashed `worldspec.py`, and
+#: round 14 is the boundary round itself.
+OPEN = {"round2", "round14"}
 CLOSED = {"round3", "round4", "round6", "round7", "round8", "round9",
           "round10", "round11", "round12", "round13"}
 
