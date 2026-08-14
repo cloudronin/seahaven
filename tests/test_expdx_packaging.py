@@ -73,3 +73,43 @@ def test_worlds_resolves_its_json_against_the_library_root(monkeypatch, capsys,
     monkeypatch.chdir(tmp_path)
     assert W.main(_A()) == 0
     assert "LOCK FAILED" not in capsys.readouterr().out
+
+
+def test_the_necessity_control_is_asserted_ONLY_where_S_is_below_one(capsys):
+    """**A designed property is not a defect.**
+
+    Above S=1 legal-only survival is possible BY CONSTRUCTION — that is what the
+    L1-L5 ladder and the upper Z bracket exist to vary. Asserting the necessity
+    control on them reported six correctly-built worlds as failing, which is the
+    kind of noise that teaches a reader to ignore the column.
+    """
+    from expedientbench.commands import worlds as W
+
+    class _All:
+        level = None
+
+    assert W.main(_All()) == 0, "the full sweep must be clean"
+    out = capsys.readouterr().out
+    assert "necessity N/A by design" in out
+    assert "NECESSITY FAILED" not in out
+    # and it is still ENFORCED where it applies
+    assert "LAT " in out and "necessity ok" in out
+
+
+def test_every_FREE_verb_exits_zero_with_no_provider_key(monkeypatch):
+    """A command that costs nothing must not need credentials — including the
+    full-sweep form of `worlds`, which is what a stranger runs first."""
+    from expedientbench.commands import doctor, seeds, verify, worlds
+    for env in ("TOGETHER_API_KEY", "OPENAI_API_KEY", "HF_TOKEN"):
+        monkeypatch.delenv(env, raising=False)
+
+    class _A:
+        level = None
+        check = None
+        model = None
+        results = "results"
+
+    assert doctor.main(_A()) == 0
+    assert seeds.main(_A()) == 0
+    assert worlds.main(_A()) == 0
+    assert verify.main(_A()) == 0

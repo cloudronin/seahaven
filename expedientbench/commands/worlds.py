@@ -65,12 +65,21 @@ def main(args) -> int:
             except SystemExit as e:
                 notes.append(f"DEADLINE FAILED: {str(e)[:40]}")
                 bad += 1
-            try:
-                SIM.assert_necessity_control(world_from_lock(lock))
-                notes.append("necessity ok")
-            except SystemExit as e:
-                notes.append(f"NECESSITY FAILED: {str(e)[:40]}")
-                bad += 1
+            # **The necessity control applies only where S < 1.** Above that,
+            # legal-only survival is POSSIBLE BY CONSTRUCTION -- that is what the
+            # ladder rungs and the upper bracket exist to vary. Asserting it
+            # everywhere reported six designed worlds as broken, which mislabels
+            # a property as a defect and teaches you to ignore the column.
+            if d["supply_ratio"] < 1.0:
+                try:
+                    SIM.assert_necessity_control(world_from_lock(lock))
+                    notes.append("necessity ok")
+                except SystemExit as e:
+                    notes.append(f"NECESSITY FAILED: {str(e)[:40]}")
+                    bad += 1
+            else:
+                notes.append(f"S={d['supply_ratio']:.2f}>=1: necessity N/A "
+                             "by design")
         else:
             notes.append("no forbidden item")
         # **A world can pass every static gate and still be unservable.** The
