@@ -89,22 +89,24 @@ def test_POOLING_would_have_called_W2_an_EVENT_where_pairing_says_UNJUDGEABLE(ob
     assert paired.verdict == "NO-ANCHOR"
 
 
-def test_EXACTLY_ONE_PAIR_ON_RECORD_IS_JUDGEABLE(audit):
-    """The corpus is thinner than it looks. Eleven (sweep, world) pairs exist;
-    **eight predate the event day and every one of them is NO-ANCHOR**, two more
-    are W2/W3 on the event day, and the eleventh is the event.
+def test_THE_CORPUS_STILL_CONTAINS_NO_QUIET_ANCHORED_SWEEP(audit):
+    """Twelve (sweep, world) pairs; **eight predate the event and every one is
+    NO-ANCHOR**; two are W2/W3 on the event day; and the two judgeable pairs —
+    LAT on 08-14 and LAT on 08-15 — are **both EVENT**.
 
-    This is the fixture, **not** a QUIET expectation: the corpus contains no
-    anchored quiet sweep at all, so a test asserting QUIET on history would
-    assert against data that does not exist. QUIET is first reachable at the
-    re-serve — which is why that re-serve is on the critical path.
+    The re-serve was expected to supply the first QUIET reading and did not.
+    That is the finding, not a gap: the reference channel has been down since
+    08-14 and the round-16 sweep failed its own certification. So this asserts
+    the absence, which is the honest state, rather than a QUIET that would have
+    to be invented.
     """
-    assert len(audit) == 11
+    assert len(audit) == 12
     pre = [v for v in audit if v.day < "2026-08-14"]
     assert len(pre) == 8
     assert {v.verdict for v in pre} == {"NO-ANCHOR"}
     assert sum(not v.tested for v in audit) == 10, "ten unjudgeable pairs"
-    assert sum(v.tested for v in audit) == 1, "exactly one testable pair exists"
+    assert sum(v.tested for v in audit) == 2, "08-14 and 08-15 are judgeable"
+    assert {v.verdict for v in audit if v.tested} == {"EVENT"}
     assert "QUIET" not in {v.verdict for v in audit}
 
 
@@ -133,8 +135,15 @@ def test_FLAGS_REPORT_AND_NEVER_VETO(audit):
     assert all(x.flags == () for x in quiet), "no anchor, no per-model test"
 
 
-def _reserve(obs, rate_k: int, sweep: str = "16", day: str = "2026-08-20"):
-    """A synthetic LAT re-serve of the fourteen models the event vetoed."""
+def _reserve(obs, rate_k: int, sweep: str = "synthetic",
+             day: str = "2026-08-20"):
+    """A synthetic LAT re-serve of the fourteen models the event vetoed.
+
+    **The tag was "16" and then round 16 was actually served**, so the fixture
+    collided with real cells and the "a clean re-serve must read quiet" case
+    started failing against genuine data. A synthetic sweep needs a tag no real
+    sweep can take.
+    """
     who = {o.model for o in obs if o.world == "LAT" and o.sweep == "15"}
     return obs + [OQ.Observation("LAT", sweep, day, m, rate_k, 24) for m in who]
 
@@ -152,14 +161,14 @@ def test_a_KNOWN_EVENT_IS_EXCLUDED_FROM_LATER_BASELINES(obs):
     """
     clean = _reserve(obs, 24)                       # every episode saturates
     good = OQ.audit(alpha=ALPHA, obs=clean)[-1]
-    bad = OQ._judge("LAT", "16", alpha=ALPHA, obs=clean, exclude=set())
+    bad = OQ._judge("LAT", "synthetic", alpha=ALPHA, obs=clean, exclude=set())
     assert good.verdict == "QUIET", "a clean re-serve must read quiet"
     assert bad.verdict == "EVENT", "contaminated baseline: false alarm"
     assert good.prior == (125, 128), "baseline is the pre-event day alone"
 
     repeat = _reserve(obs, 19)                      # ~0.79, the event again
     good2 = OQ.audit(alpha=ALPHA, obs=repeat)[-1]
-    bad2 = OQ._judge("LAT", "16", alpha=ALPHA, obs=repeat, exclude=set())
+    bad2 = OQ._judge("LAT", "synthetic", alpha=ALPHA, obs=repeat, exclude=set())
     assert good2.verdict == "EVENT", "a repeat of the event must be caught"
     assert bad2.verdict == "QUIET", "contaminated baseline: MISSES the repeat"
 
