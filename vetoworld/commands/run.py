@@ -227,7 +227,22 @@ def main(args) -> int:
             pass
         be = _NoKey()
         be.spec = spec
-        return _dry_run(be, args.level, args.arm, args.seed0)
+        # **`--dry-run` did not know about `--round`.** It was checked first, so
+        # `run --round 16 --dry-run` never reached the round path and died on
+        # `seed0=None` inside the runner — a traceback from the one verb whose
+        # whole purpose is to be safe to call before spending. The round carries
+        # its own level and seed base; take them rather than requiring the
+        # caller to restate constants the pin already fixes.
+        level, arm, seed0 = args.level, args.arm, args.seed0
+        if getattr(args, "round", None):
+            import importlib
+            R = importlib.import_module(f"seahaven.eden.round{args.round}")
+            level = getattr(R, "LEVEL", None) or R.LEVELS[0]
+            seed0 = R.COMP_SEED0 if getattr(args, "stage", None) == "comp" \
+                else R.SEED0
+            print(f"round {args.round} — assembling {level} {arm} at "
+                  f"seed0={seed0}; nothing is served")
+        return _dry_run(be, level, arm, seed0)
 
     if getattr(args, "round", None):
         return _round_cells(args, spec)
