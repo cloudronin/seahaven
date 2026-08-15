@@ -49,7 +49,7 @@ PINNED = {
     "round13": "668ea92d0c3bf2d335b48f561c71a5a9ab8a97f7939b198df437c80f77a7cd0e",
     "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
     "round15": "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b",
-    "round16": "643e782d60cbca3084a1a8ccbb5476344da86aad8ac906eca5e8f8e45ebb58a3",
+    "round16": "cf72ca823f26e0c238b4deb2db7ce9f0bc858d31558f249d5b0f0c3277ede501",
 }
 
 #: Live `current_hash()` per round. Rounds 2, 3 and 4 do not hash `worldspec.py`
@@ -69,7 +69,7 @@ LIVE = {
     "round13": "096e4172930a018d6ed08a66362010750a0d8006a500d47e3291f5938cd4b428",
     "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
     "round15": "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b",
-    "round16": "643e782d60cbca3084a1a8ccbb5476344da86aad8ac906eca5e8f8e45ebb58a3",
+    "round16": "cf72ca823f26e0c238b4deb2db7ce9f0bc858d31558f249d5b0f0c3277ede501",
 }
 
 #: The eleven retired recompute functions, across ten rounds. Six from earlier
