@@ -70,12 +70,12 @@ LIVE = {
     "round11": "40f3b4fb9ef8966b6a8b2d7825c533dcfaf763202ee9366da5278ed8d2037bf7",
     "round12": "562d94db8c1db9fc43ee139c5b36ff751c624d71f296cf5f23c61b3bb4072888",
     "round13": "096e4172930a018d6ed08a66362010750a0d8006a500d47e3291f5938cd4b428",
-    "round14": "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
-    "round15": "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b",
-    "round16": "cf72ca823f26e0c238b4deb2db7ce9f0bc858d31558f249d5b0f0c3277ede501",
-    "round17": "b339e8000c398ecd005c11ca5009b9bc62edba15c4dea39ebab74be6c3e43a0a",
-    "round18": "37bf3d72faabb66e568771018a1a1dffea8595c4afd6eb28b2f0078b6c6cacc6",
-    "round19": "8b6f596186458efab19701b3f0c066a12e5b1e874900787bd7e26893ee179372",
+    "round14": "6d2459c7325cc18e1f7795eabab22c92280058eecb6284f726a0d2edf1546509",
+    "round15": "031e7fc5f72ca53453609e4a9202b6542549bc37a541ca87c0f024b7c39468b0",
+    "round16": "ac5bc5949ae18b83b48ec14ec5c8738ee76fb14dae0371fa8d65cf6babc0970e",
+    "round17": "6124a82bd40b7f728cddecf938b5705cba5e78f74998b71200e43438371645ea",
+    "round18": "907d43b503d75b642959122b04341b7b8eda48ef3d191eae2a7d1c00cd7d910b",
+    "round19": "f8d8696695f6713d2652f84b0fe5070d2e30b4591158638a77a01dcfc960c140",
 }
 
 #: The eleven retired recompute functions, across ten rounds. Six from earlier
@@ -104,6 +104,25 @@ RETIRED = {
         "f9ac9323ede0632770d13387a00a4cc76d16df3231ff46e9243fb31989a7edd1",
     ("round13", "retired_r13_hash"):
         "668ea92d0c3bf2d335b48f561c71a5a9ab8a97f7939b198df437c80f77a7cd0e",
+    # --- the worldspec boundary: six pins retired at once ----------------
+    # `worldspec.py` was hashed WHOLE and `SETTINGS` inside it is a registry
+    # keyed by world, so registering any new world broke every live pin for
+    # reasons no served prompt depended on. Round 14 recorded the defect,
+    # named this fix, and predicted the recurrence. These six are the bill,
+    # paid once: the payload now carries a PER-WORLD derived digest and a
+    # stranger cannot move it. Cells are untouched and stay valid.
+    ("round14", "retired_r14_hash"):
+        "b17ed49e0032b6329f4d87552ebd6a42b67eb038a8f6409b8b68a601df95f8fd",
+    ("round15", "retired_r15_hash"):
+        "d553a4e590979bee3b067c5338ef86c27bb752e051468a22fd58fe1e6760ee6b",
+    ("round16", "retired_r16_hash"):
+        "cf72ca823f26e0c238b4deb2db7ce9f0bc858d31558f249d5b0f0c3277ede501",
+    ("round17", "retired_r17_hash"):
+        "b339e8000c398ecd005c11ca5009b9bc62edba15c4dea39ebab74be6c3e43a0a",
+    ("round18", "retired_r18_hash"):
+        "37bf3d72faabb66e568771018a1a1dffea8595c4afd6eb28b2f0078b6c6cacc6",
+    ("round19", "retired_r19_hash"):
+        "8b6f596186458efab19701b3f0c066a12e5b1e874900787bd7e26893ee179372",
 }
 
 #: The files whose BYTES are hashed by a LIVE pin — rounds 2 and 14 — with their
@@ -176,9 +195,10 @@ def test_retired_digest_still_RECOMPUTES(name, fn):
 #: **Ten of the twelve are closed.** The LAT2 boundary closed five in one
 #: commit; round 2 survives only because it never hashed `worldspec.py`, and
 #: round 14 is the boundary round itself.
-OPEN = {"round2", "round14", "round15", "round16", "round17", "round18", "round19"}
+OPEN = {"round2"}
 CLOSED = {"round3", "round4", "round6", "round7", "round8", "round9",
-          "round10", "round11", "round12", "round13"}
+          "round10", "round11", "round12", "round13", "round14", "round15",
+          "round16", "round17", "round18", "round19"}
 
 
 def test_every_round_is_classified_exactly_once():
@@ -256,3 +276,65 @@ def test_no_frozen_artifact_is_EDITED_without_a_boundary(rel, want):
         f"{rel} was EDITED. It is hashed into a LIVE pin, so this breaks a "
         "freeze. Put the change in a NEW module — or, if this really is a round "
         "boundary, retire every live pin that hashes it in the same commit.")
+
+
+def test_REGISTERING_A_NEW_WORLD_MOVES_NO_PIN():
+    """**The defect this boundary was paid to repair, asserted so it stays
+    repaired.**
+
+    `worldspec.SETTINGS` is a registry keyed by world and `worldspec.py` was
+    hashed WHOLE, so adding a world nobody had served broke every live pin —
+    five when LAT2 landed in round 14, and it would have been six here. Round 6
+    hit the identical shape in `build_eden_worlds.py` and fixed it by hashing
+    each world's own lock; the same fix is now applied to the second registry,
+    per-world and derived rather than per-file.
+
+    This is the test that would have failed before the fix and must never fail
+    again. It registers a stranger and requires every OPEN pin to hold.
+    """
+    import importlib
+
+    import seahaven.fidelity.worldspec as WS
+
+    live = {n: _mod(n).current_hash() for n in sorted(OPEN)}
+    WS.SETTINGS["world_eden_STRANGER_FOR_TEST"] = (
+        "You are alone in a stone farmstead at the end of the season.")
+    WS.load.cache_clear()
+    try:
+        after = {n: importlib.import_module(
+            f"seahaven.eden.{n}").current_hash() for n in sorted(OPEN)}
+    finally:
+        del WS.SETTINGS["world_eden_STRANGER_FOR_TEST"]
+        WS.load.cache_clear()
+
+    moved = [n for n in live if live[n] != after[n]]
+    assert not moved, f"registering a world moved these pins: {moved}"
+
+
+def test_the_WORLDSPEC_DIGEST_still_catches_what_the_file_hash_caught():
+    """The other half. A guard that ignores strangers is worthless if it also
+    ignores real changes, so both directions are asserted: the setting sentence
+    and `match_forms` must each move it."""
+    import seahaven.fidelity.worldspec as WS
+    from seahaven.eden._shared import pinning as P
+
+    base = P.worldspec_digest(("LAT",))["world_eden_LAT"]
+
+    original = dict(WS.SETTINGS)
+    WS.load.cache_clear()
+    WS.SETTINGS["world_eden_LAT"] = "You are somewhere else entirely."
+    try:
+        assert P.worldspec_digest(("LAT",))["world_eden_LAT"] != base
+    finally:
+        WS.SETTINGS.clear(); WS.SETTINGS.update(original); WS.load.cache_clear()
+
+    real = WS.match_forms
+    WS.match_forms = lambda n: (n.lower(), "sentinel")
+    try:
+        assert P.worldspec_digest(("LAT",))["world_eden_LAT"] != base, (
+            "match_forms reaches detectors.py and adherence.py at MEASUREMENT "
+            "time and neither is in any ARTIFACTS — it must travel in the pin")
+    finally:
+        WS.match_forms = real
+
+    assert P.worldspec_digest(("LAT",))["world_eden_LAT"] == base

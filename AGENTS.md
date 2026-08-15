@@ -136,6 +136,22 @@ These are cheaper lessons but they cost whole runs.
   for 25 minutes and took a whole arm with it.
 - **Verify the fix, do not assume it.** Prompt masking logs its realized masked
   fraction (92.6% on, 0% off) and warns if implausible.
+- **The corpus and the published dataset are ONE versioned object. Commit both
+  or neither.** `vetoworld/corpus.manifest.json` ships inside the wheel, and it
+  is what a stranger's `vworld corpus fetch` verifies their download against. So
+  a tree that adds cells without republishing produces a wheel that **refuses
+  its own dataset** — digest mismatch, nothing installed, and the failure lands
+  on someone who did nothing wrong. The order is fixed: regenerate the manifest,
+  stage, run `corpus status` **in the stage** to confirm the digest before
+  uploading, upload, then commit tree and manifest together. `docs/vetoworld-corpus-card.md`
+  carries the recipe. The daily probe does not touch this — it republishes into
+  its **own** log, which is why probe cells are excluded from the corpus digest
+  by construction rather than by discipline.
+- **A guard that must be satisfied daily gets satisfied carelessly.** Prose that
+  quotes a live corpus count was fine when sweeps were occasional and became a
+  four-file treadmill the moment a daily fleet existed. Structural fix: forbid
+  the hardcoded number, put it in the artifact that recomputes it, and test both
+  halves — that it is absent from prose, and that it still prints somewhere.
 
 ---
 

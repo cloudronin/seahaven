@@ -18,8 +18,10 @@ and the audit would keep describing the old one. Instead each claim is run with
 figure cannot lie about its own inputs.
 
 **2. `mtime` is not a serving date, so it can never produce a "same occasion"
-verdict.** Real serving timestamps exist on **108 of 357** cells — rounds 13,
-14 and 15, plus the two timing probes. It was 10 of 259 until `run --round`
+verdict.** Real serving timestamps exist on a MINORITY of cells — the sweeps
+served after `run --round` began stamping them. `emit occasions` prints the
+current split; this docstring deliberately does not, because a corpus that
+grows daily makes any figure written here wrong within a day
 started stamping every cell it writes. Everything else falls back to file
 last-written, which for a gap-filled cell is its *last* attempt, not its first.
 Two mtimes that happen to agree are not evidence that two cells were served

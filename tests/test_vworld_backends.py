@@ -161,18 +161,47 @@ def test_block_REFUSES_without_a_round(capsys):
     assert "--block needs --round" in str(e.value)
 
 
-def test_block_REFUSES_without_its_own_seed0():
-    """A block reusing the round's seeds would re-serve the same episodes and
-    call the repeat a new occasion."""
-    from vetoworld.commands import run as R
-
+def _run_args(**kw):
     class _A:
         endpoint, model, key_env = "together", None, None
-        block, round, seed0, dry_run, budget = "2", 14, None, False, 5.0
+        block, round, seed0, dry_run, budget = "2", 2, None, False, 5.0
         level = None
+    for k, v in kw.items():
+        setattr(_A, k, v)
+    return _A()
+
+
+def test_block_REFUSES_without_its_own_seed0():
+    """A block reusing the round's seeds would re-serve the same episodes and
+    call the repeat a new occasion.
+
+    **Uses round 2 because it is the only OPEN round.** This named round 14,
+    which the worldspec boundary closed; `assert_pinned()` then refused first
+    and the guard under test was never reached. See the companion below — that
+    ordering is correct, not a bug, and is now asserted rather than tripped over.
+    """
+    from vetoworld.commands import run as R
+
     with pytest.raises(SystemExit) as e:
-        R.main(_A())
+        R.main(_run_args(round=2))
     assert "--block needs its own --seed0" in str(e.value)
+
+
+def test_a_CLOSED_round_refuses_BEFORE_the_block_guard_is_reached():
+    """The ordering, asserted so the next closure does not look like a
+    regression in the guard.
+
+    `run.py` calls `R.assert_pinned()` before it validates `--block`/`--seed0`,
+    so for a closed round the block guard is unreachable by construction. That
+    is right: a round whose payload shape no longer exists cannot serve cells
+    for any reason, valid seeds or not.
+    """
+    from vetoworld.commands import run as R
+
+    with pytest.raises(SystemExit) as e:
+        R.main(_run_args(round=14))
+    assert "CLOSED" in str(e.value)
+    assert "--block needs its own --seed0" not in str(e.value)
 
 
 def test_usage_is_PER_CELL_not_cumulative_across_the_backend(tmp_path,

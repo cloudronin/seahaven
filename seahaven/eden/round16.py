@@ -256,8 +256,17 @@ ARTIFACTS = (
     "seahaven/eden/crossing.py",
     "seahaven/eden/conditioning.py",
     "seahaven/eden/intent.py",
-    "seahaven/fidelity/worldspec.py",
 )
+
+#: **THE PRE-BOUNDARY ARTIFACT TUPLE.** `worldspec.py` was hashed WHOLE,
+#: and `SETTINGS` inside it is a registry keyed by world — so registering
+#: any new world broke this pin for reasons no served prompt depended on.
+#: Kept so the retired hash below stays permanently recomputable.
+RETIRED_ARTIFACTS = ARTIFACTS + ("seahaven/fidelity/worldspec.py",)
+
+#: The pin as frozen before the worldspec boundary. RESTORED, NOT RE-FROZEN.
+RETIRED_R16_PIN = "cf72ca823f26e0c238b4deb2db7ce9f0bc858d31558f249d5b0f0c3277ede501"
+
 
 #: Computed on a clean tree, BEFORE any cell was served, via
 #: `vworld pin new --round 16`.
@@ -290,7 +299,8 @@ def assert_generation3(meta: dict) -> None:
             f"terminal_at_zero={meta.get('terminal_at_zero')!r}")
 
 
-def _payload_body(art: dict, locks: dict) -> str:
+def _payload_body(art: dict, locks: dict,
+                  specs: dict | None = None) -> str:
     import json
     return json.dumps({
         "base_url": BASE_URL, "level": LEVEL, "arms": ARMS,
@@ -317,12 +327,25 @@ def _payload_body(art: dict, locks: dict) -> str:
                   "seed0": RIDER_SEED0, "cohort": sorted(RIDER_COHORT),
                   "reading": RIDER_READING},
         "artifacts": art, "locks": locks,
+        **({"worldspec": specs} if specs is not None else {}),
     }, sort_keys=True)
 
 
 def payload() -> str:
     return _payload_body(P.digest_files(_ROOT, ARTIFACTS),
-                         P.digest_files(_ROOT, world_lock_paths()))
+                         P.digest_files(_ROOT, world_lock_paths()),
+                         P.worldspec_digest((LEVEL, RIDER_LEVEL)))
+
+
+def retired_r16_hash() -> str:
+    """Recomputes the PRE-BOUNDARY payload, byte-for-byte.
+
+    A retired pin is restored, never re-frozen: the digest it produced
+    must stay computable forever or the record is a number nobody can
+    check."""
+    return P.hash_payload(_payload_body(
+        P.digest_files(_ROOT, RETIRED_ARTIFACTS),
+        P.digest_files(_ROOT, world_lock_paths())))
 
 
 def current_hash() -> str:
@@ -330,9 +353,23 @@ def current_hash() -> str:
 
 
 def assert_pinned() -> None:
-    P.assert_hash(current_hash(), PINNED_ROUND16_HASH, "ROUND-16",
-                  empty_hint="round-16 pin is EMPTY. Compute, paste, commit "
-                             "FIRST — before any cell is served.")
+    """**Refuses. Round 16 is closed by the worldspec boundary.**
+
+    Not a check that always passes. Every round-16 cell was played
+    against a payload that hashed `worldspec.py` WHOLE, and that shape
+    no longer exists: the payload now carries a PER-WORLD derived
+    digest so registering a world cannot break unrelated pins.
+
+    **Re-pinning this round would have been wrong.** Its cells carry
+    `RETIRED_R16_PIN`, so a new hash would govern nothing — the same
+    reasoning round 14 applied when it closed rounds 9-13 rather than
+    re-freezing them. The cells stay valid; only ADDING cells is lost.
+    """
+    raise SystemExit(
+        "ROUND 16 IS CLOSED by the worldspec boundary. Its pin is "
+        "retired as RETIRED_R16_PIN and still recomputes via "
+        "retired_r16_hash(). Its cells stay valid; only ADDING cells "
+        "is lost. Open a new round with its own pin.")
 
 
 if __name__ == "__main__":

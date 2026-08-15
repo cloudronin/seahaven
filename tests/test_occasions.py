@@ -196,37 +196,48 @@ def test_occasion_labels_come_from_the_CORPUS_LAYER_not_a_second_detector():
                                          C.load_cell(p).get("meta", {}))
 
 
-def test_the_COUNTS_IN_THE_PROSE_are_what_the_corpus_says():
-    """**Prose numbers drift; this programme has paid for that repeatedly.**
+def test_NO_PROSE_HARDCODES_A_LIVE_CELL_COUNT():
+    """**Inverted, because the corpus now grows daily.**
 
-    Three files state how many cells carry a real serving timestamp, and round
-    14 moved it from 8 to 10 the moment it recorded one. A docstring the code
-    contradicts is worse than no docstring, so the figures are asserted here and
-    a future sweep that records timestamps will fail this test rather than
-    quietly make three files wrong.
+    This asserted four files state the CURRENT "N of M" split of timestamped
+    cells, so a sweep that recorded timestamps failed rather than quietly making
+    three files wrong. That was right when sweeps were occasional. The daily
+    probe fleet turns it into a four-file treadmill every twenty-four hours, and
+    a guard that must be satisfied daily gets satisfied carelessly.
+
+    So the rule flips: prose may not carry a live count at all. The count is
+    computed and printed by `emit occasions`, which cannot go stale because it
+    reads the corpus every time. Prose that states no number cannot state a
+    wrong one.
     """
+    import re
     from pathlib import Path
 
-    import re
-
-    real = tot = 0
-    for _p, d in C.iter_cells():
-        tot += 1
-        real += bool(d.get("meta", {}).get("wall_start_epoch"))
+    tot = sum(1 for _p, _d in C.iter_cells())
     root = Path(__file__).resolve().parents[1]
 
-    # **Word boundaries, not substrings.** The first version searched for
-    # "8 of 357" and found it inside "108 of 357" — the same collision that
-    # made the vocabulary-leak check fire on the word "credentials". A guard
-    # against stale prose is worth nothing if it cannot read its own numbers.
-    def states(src, k):
-        return re.search(rf"\b{k} of {tot}\b", src) is not None
-
+    #: "N of M" where M is plausibly a corpus size. Small ratios such as
+    #: "2 of 3 worlds" or "5 of 6" are not cell counts and stay legal.
+    pat = re.compile(r"\b(\d+) of (\d{3,})\b")
+    bad = []
     for rel in ("vetoworld/register/occasions.py", "vetoworld/commands/emit.py",
                 "vetoworld/commands/run.py", "docs/vetoworld-corpus-card.md"):
         src = re.sub(r"\s+", " ", (root / rel).read_text().lower())
-        assert states(src, real), (
-            f"{rel} does not state the current count of {real} of {tot}")
-        for wrong in (real - 1, real + 1, 8, 10, 12):
-            if wrong != real:
-                assert not states(src, wrong), f"{rel} states {wrong} of {tot}"
+        bad += [f"{rel}: {g.group(0)!r}" for g in pat.finditer(src)
+                if int(g.group(1)) <= int(g.group(2))]
+    assert not bad, (
+        "prose hardcodes a live cell count, which the daily probe makes wrong "
+        f"within a day: {bad}. State the fact, not the figure — "
+        "`emit occasions` prints the current split.")
+
+
+def test_emit_occasions_STILL_PRINTS_the_live_split(capsys):
+    """The other half of the inversion. Removing counts from prose is only safe
+    while the artifact still reports them, or the number stops existing."""
+    from vetoworld.commands import emit
+
+    class _A:
+        artifact = "occasions"
+    assert emit.main(_A()) == 0
+    out = capsys.readouterr().out
+    assert "real," in out and "mtime-only" in out

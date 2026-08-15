@@ -16,8 +16,13 @@ from vetoworld.register import correlations as CO
 EVENT_DAY = "2026-08-14"
 
 
-def test_the_pin_verifies():
-    R.assert_pinned()
+def test_the_round_is_CLOSED_by_the_worldspec_boundary():
+    """Its cells carry `RETIRED_R16_PIN`, which still recomputes byte-for-byte.
+    A new pin would have governed nothing — the reasoning round 14 used when it
+    closed rounds 9-13 rather than re-freezing them."""
+    assert R.retired_r16_hash() == R.RETIRED_R16_PIN == R.PINNED_ROUND16_HASH
+    with pytest.raises(SystemExit, match="CLOSED"):
+        R.assert_pinned()
 
 
 def test_the_COHORT_is_round_15s_and_not_a_retyped_copy():
@@ -99,7 +104,8 @@ def test_the_BASE_RATE_AT_PIN_describes_the_corpus_AS_IT_WAS_AT_PIN_TIME():
     So the corpus is filtered back to pin time instead, and the round's own
     cells are what get excluded.
     """
-    obs = [o for o in OQ.observations() if o.sweep != "16"]
+    post = {"16", "17", "18", "19"}
+    obs = [o for o in OQ.observations() if o.sweep not in post]
     audit = OQ.audit(alpha=R.OCCASION_ALPHA, obs=obs)
     assert R.BASE_RATE_AT_PIN == {
         "pairs": len(audit),

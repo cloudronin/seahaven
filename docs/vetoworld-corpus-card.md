@@ -63,7 +63,7 @@ different measurements. `vworld read` refuses to.
 **2. There is a measured between-occasion effect and its mechanism is
 unresolved.** One model shifted **0.319** between two serving days. Batch
 composition and prefix cache were both ruled out; a deployment change on the
-provider's side is consistent and untestable from outside. **108 of 357 cells
+provider's side is consistent and untestable from outside. **A minority of cells
 carry a real serving timestamp**; the rest have only file mtime, which is not a
 serving date and also under-detects — three separate sweeps share one mtime day.
 `vworld emit occasions` audits, per figure, which comparisons span sittings and

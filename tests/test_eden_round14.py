@@ -82,6 +82,14 @@ def _cogito_lat_rates():
         m = d.get("meta", {})
         if m.get("eden_level") != "LAT" or m.get("served_name") != R.SERVED_NAME:
             continue
+        #: **The literal is a historical record and must NOT be updated.** It was
+        #: computed from the corpus as it stood when round 14 was frozen. Round 18
+        #: later served cogito at LAT again, taking the denominator 384 -> 408, and
+        #: rewriting the pin to match would turn a pre-registration into a running
+        #: total. So the corpus is filtered back to pin time instead.
+        got = C.parse_cell_name(_p.name)
+        if not got or not got["round"][:2].isdigit() or int(got["round"][:2]) >= 14:
+            continue
         for r in C.episodes(d):
             tot += 1
             cmds = [(c.get("command") or "").lower() for c in r["commands"]]
@@ -135,10 +143,29 @@ def test_LATs_lock_is_BYTE_IDENTICAL_and_its_closed_rounds_still_recompute():
     assert R10.retired_r10_hash() == R10.PINNED_ROUND10_HASH
 
 
-def test_the_pin_covers_LAT2s_LOCK_and_the_settings_file_that_cost_five_pins():
+def test_the_pin_covers_LAT2s_LOCK_and_its_SETTING_after_the_boundary():
+    """**The settings coverage survived; the mechanism changed.**
+
+    This asserted `worldspec.py in ARTIFACTS`, which was the file-hash that made
+    registering ANY world break five pins — the defect this round documented and
+    predicted would recur. At the worldspec boundary the file left `ARTIFACTS`
+    and the payload gained a PER-WORLD derived digest instead, so the setting is
+    still covered and a stranger no longer moves it.
+
+    The old pin is not lost: `retired_r14_hash()` recomputes it byte-for-byte
+    from `RETIRED_ARTIFACTS`, and `test_pin_invariance` checks that rather than
+    merely storing it.
+    """
     assert R.world_lock_paths() == ("worlds/world_eden_LAT2/BUILD.lock.json",)
-    assert "seahaven/fidelity/worldspec.py" in R.ARTIFACTS
-    R.assert_pinned()
+    assert "seahaven/fidelity/worldspec.py" not in R.ARTIFACTS
+    assert "seahaven/fidelity/worldspec.py" in R.RETIRED_ARTIFACTS
+    assert '"worldspec"' in R.payload(), "the per-world digest must travel"
+    assert R.retired_r14_hash() == R.RETIRED_R14_PIN
+    #: Round 14 is CLOSED by the boundary: its cells were played against a
+    #: payload shape that no longer exists, and re-pinning would have created a
+    #: hash governing no cells.
+    with pytest.raises(SystemExit, match="CLOSED"):
+        R.assert_pinned()
 
 
 def test_the_seed_block_is_disjoint_from_every_OTHER_cogito_block_on_disk():

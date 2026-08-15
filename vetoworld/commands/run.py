@@ -185,8 +185,8 @@ def _round_cells(args, spec) -> int:
                      f"{COHORT_TEMPERATURE}"),
             # **A real serving timestamp, not an mtime.** The occasion audit
             # can only call a comparison clean when the cells carry this.
-            # 108 of 357 committed cells do, and every new one should — it
-            # was 10 of 259 before this path started stamping them.
+            # Only cells served through this path carry one, and every new
+            # cell should — the live split is what `emit occasions` prints.
             "wall_start_epoch": round(t0), "wall_end_epoch": round(t1),
             "wall_s": round(prior.get("wall_s", 0) + (t1 - t0)),
             "usage": u, "price_per_m": {"prompt": pi, "completion": po},

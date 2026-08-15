@@ -22,7 +22,7 @@ def _occasions() -> int:
     the manuscript needs the answer attached to the figure, because the flag has
     to travel with the number into the paper.
 
-    Every row prints its SOURCE. 108 of 357 cells carry a real serving timestamp;
+    Every row prints its SOURCE. A minority of cells carry a real serving timestamp;
     everything else falls back to file mtime, which for a gap-filled cell is its
     LAST attempt. Rendering the two identically would launder an mtime into a
     serving date inside the one artifact whose whole purpose is to be trusted

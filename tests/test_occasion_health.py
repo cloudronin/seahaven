@@ -100,14 +100,36 @@ def test_THE_CORPUS_STILL_CONTAINS_NO_QUIET_ANCHORED_SWEEP(audit):
     the absence, which is the honest state, rather than a QUIET that would have
     to be invented.
     """
-    assert len(audit) == 12
+    assert len(audit) == 15
     pre = [v for v in audit if v.day < "2026-08-14"]
     assert len(pre) == 8
     assert {v.verdict for v in pre} == {"NO-ANCHOR"}
     assert sum(not v.tested for v in audit) == 10, "ten unjudgeable pairs"
-    assert sum(v.tested for v in audit) == 2, "08-14 and 08-15 are judgeable"
+    assert sum(v.tested for v in audit) == 5, "three LAT + W2 + W3, all 08-14/15"
     assert {v.verdict for v in audit if v.tested} == {"EVENT"}
     assert "QUIET" not in {v.verdict for v in audit}
+
+    #: **Two of the five EVENTs point UP.** W2 and W3 on 08-15 rose for a
+    #: cohort disjoint from the one falling at LAT, which is the contrast that
+    #: killed the provider-degradation account. EVENT means MOVED, and reading
+    #: it as "fell" inverted this exact result once.
+    up = [v for v in audit if v.tested and v.rates()[0] > v.rates()[1]]
+    assert {v.world for v in up} == {"W2", "W3"}
+    down = [v for v in audit if v.tested and v.rates()[0] < v.rates()[1]]
+    assert {v.world for v in down} == {"LAT"}
+
+
+def test_the_channel_does_NOT_cover_LAT2(obs):
+    """A scoping fact worth asserting now that LAT2 is served.
+
+    `occasion.WORLDS` is the three-world suite, so LAT2 cells never enter the
+    paired channel and `emit occasion-health` has no LAT2 row. Round 19 computed
+    its LAT-vs-LAT2 contrast directly for that reason. Recorded as a known gap
+    rather than discovered later by someone expecting a verdict that cannot
+    exist.
+    """
+    assert "LAT2" not in OQ.WORLDS
+    assert not [o for o in obs if o.world == "LAT2"]
 
 
 def test_a_SAME_DAY_sweep_is_not_a_prior_occasion(obs):
