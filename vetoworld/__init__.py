@@ -14,4 +14,29 @@ user-facing output names it. `docs/naming.md` records why each candidate name wa
 rejected, so a future contributor does not relitigate it.
 """
 
-__version__ = "0.1.0"
+def _version() -> str:
+    """**Derived, never declared twice.**
+
+    This was a literal `"0.1.0"` while `pyproject.toml` said `0.1.2`, so
+    `vworld --version` reported a release that had not existed for two
+    publishes. Harmless until the scheduled probe pins
+    `vetoworld[probe]==<version>` — at which point a job would install one
+    version and a row would record another.
+
+    Installed: the package metadata, which is what `pip` actually resolved.
+    From a source checkout: `pyproject.toml`, the single place the number is
+    written. Two sources, one fact, and neither is a second copy to maintain.
+    """
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        return version("vetoworld")
+    except PackageNotFoundError:
+        import tomllib
+        from pathlib import Path
+        pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+        if not pyproject.exists():          # installed oddly, no metadata
+            return "0+unknown"
+        return tomllib.loads(pyproject.read_text())["project"]["version"]
+
+
+__version__ = _version()

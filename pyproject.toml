@@ -33,6 +33,19 @@ classifiers = [
 # together; expressing them as extras would invite exactly that.
 dependencies = []
 
+# **The daily probe is the one verb that WRITES to HuggingFace**, and an
+# authenticated upload cannot reuse `corpus fetch`'s hand-rolled unauthenticated
+# urllib path. So it gets an extra rather than a runtime dependency: `vworld
+# corpus fetch` — the verb a replicator runs first — still installs anywhere with
+# nothing behind it, and only the scheduled job pulls the SDK.
+#
+# This does NOT reopen the decision above. That refuses extras for the dev and
+# CUDA *environments*, which conflict with each other and must never resolve
+# together. One leaf SDK, imported by exactly one module, is a different thing —
+# and `test_ONLY_the_publish_module_may_import_the_HF_SDK` names which module.
+[project.optional-dependencies]
+probe = ["huggingface_hub>=0.24"]
+
 [project.urls]
 Homepage = "https://github.com/cloudronin/vetoworld"
 Repository = "https://github.com/cloudronin/vetoworld"

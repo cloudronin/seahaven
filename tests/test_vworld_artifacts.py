@@ -299,20 +299,56 @@ def test_fetch_INSTALLS_when_the_digest_matches(tmp_path, capsys, monkeypatch):
     assert "MATCHES" in capsys.readouterr().out
 
 
-def test_fetch_pulls_NO_provider_sdk_into_the_import_path():
-    """The package declares zero runtime dependencies so it installs anywhere a
-    model is being served. The verb a replicator runs FIRST must not be the one
-    that breaks that."""
+#: The ONE module permitted to import the HuggingFace SDK. It is behind the
+#: `probe` extra, so importing it anywhere else would make a base install of
+#: `vetoworld` fail at import time for a verb that has nothing to do with it.
+_HF_SDK_MODULE = "vetoworld/publish.py"
+
+
+def _imports(path):
     import ast
-    from pathlib import Path
-    src = Path(__file__).resolve().parents[1] / "vetoworld/commands/corpus.py"
     names = set()
-    for n in ast.walk(ast.parse(src.read_text())):
+    for n in ast.walk(ast.parse(path.read_text())):
         if isinstance(n, ast.Import):
             names |= {a.name.split(".")[0] for a in n.names}
         elif isinstance(n, ast.ImportFrom) and n.module and n.level == 0:
             names.add(n.module.split(".")[0])
+    return names
+
+
+def test_fetch_pulls_NO_provider_sdk_into_the_import_path():
+    """The package declares zero runtime dependencies so it installs anywhere a
+    model is being served. The verb a replicator runs FIRST must not be the one
+    that breaks that."""
+    from pathlib import Path
+    src = Path(__file__).resolve().parents[1] / "vetoworld/commands/corpus.py"
+    names = _imports(src)
     assert "huggingface_hub" not in names and "requests" not in names, names
+
+
+def test_ONLY_the_publish_module_may_import_the_HF_SDK():
+    """**Widened from one file to the whole package**, because the daily probe
+    adds a module that legitimately needs the SDK and a guard watching only
+    `corpus.py` would not notice it appearing anywhere else.
+
+    `huggingface_hub` is behind the `probe` extra. A base `pip install
+    vetoworld` does not have it, so any module that imports it at top level
+    breaks every verb that imports THAT module — including the $0 ones a
+    replicator runs before they have any credentials at all.
+    """
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    offenders = []
+    for src in sorted((root / "vetoworld").rglob("*.py")):
+        rel = src.relative_to(root).as_posix()
+        if rel == _HF_SDK_MODULE:
+            continue
+        if "huggingface_hub" in _imports(src):
+            offenders.append(rel)
+    assert not offenders, (
+        f"{offenders} import huggingface_hub, which is behind the `probe` "
+        f"extra. Only {_HF_SDK_MODULE} may; everything else must reach it "
+        "through that module or go without.")
 
 
 def test_get_RETRIES_transient_failures_instead_of_dying_mid_download(
