@@ -229,9 +229,14 @@ def test_NO_SECOND_COPY_of_a_vocabulary_list_can_drift():
     # directions — the tuple is what the leak test walks, the dict is what
     # actually dispatches, and an artifact in one but not the other is either
     # unreachable or unguarded.
+    #
+    # **This was a substring search over `main`'s source**, which is a proxy for
+    # the property and not the property: it broke the moment the dict moved into
+    # its own function, and it could never have caught a key present in the dict
+    # but absent from the tuple. `registry()` exists so the sets can be compared
+    # directly, in both directions, which is what the comment above always said.
     class _A:
         artifact = "__nope__"
-    emit.main(_A())          # populates nothing, but proves main imports
-    src = inspect.getsource(emit.main)
-    for name in emit.ARTIFACTS:
-        assert f'"{name}"' in src, f"{name} is in ARTIFACTS but never dispatched"
+    assert emit.main(_A()) == 1, "an unknown artifact must be refused"
+    assert set(emit.ARTIFACTS) == set(emit.registry()), (
+        set(emit.ARTIFACTS) ^ set(emit.registry()))

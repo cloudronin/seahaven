@@ -50,11 +50,53 @@ def test_MTIME_can_never_produce_a_same_occasion_verdict():
             assert row.verdict == "unknown-mtime", row.fid
 
 
-#: The sweeps whose cells recorded a real serving timestamp. Round 13's spec
-#: required one; round 14 got one because `vworld run --round` now writes it for
-#: every cell. Everything earlier has only mtime, permanently — a timestamp
-#: cannot be recovered after the fact.
-_TIMESTAMPED = {"13", "14", "11tA", "11tB"}
+def _timestamped_sweeps() -> set[str]:
+    """The sweeps whose cells recorded a real serving timestamp — **derived from
+    the corpus, never declared.**
+
+    Round 13's spec required one; round 14 got one because `vworld run --round`
+    now writes it for every cell. Everything earlier has only mtime,
+    permanently: a timestamp cannot be recovered after the fact.
+
+    This was a hand-typed literal, `{"13", "14", "11tA", "11tB"}`, and it went
+    stale the moment round 15 landed — all 98 e15 cells carry
+    `wall_start_epoch` and the literal did not know it, so the clean-figure
+    assertion below was checking a claim about four sweeps against a corpus
+    containing five. **That is the duplicated-vocabulary drift already seen in
+    doctor's `ROUNDS` and in `ARTIFACTS`/`fn`**, in a file whose own docstring
+    says it asserts facts about the corpus. A fact about the corpus should be
+    read off the corpus.
+
+    A sweep counts only if EVERY one of its cells is timestamped. Today `all`
+    and `any` select the same five sweeps, but a partially-instrumented sweep is
+    not one whose figures can be shown clean, and the strict reading is the one
+    the assertion below needs.
+    """
+    total: dict[str, int] = {}
+    stamped: dict[str, int] = {}
+    for path, cell in C.iter_cells():
+        got = C.parse_cell_name(path.name)
+        if not got or got["schema"] != "current":
+            continue
+        rnd = got["round"]
+        total[rnd] = total.get(rnd, 0) + 1
+        if cell.get("meta", {}).get("wall_start_epoch"):
+            stamped[rnd] = stamped.get(rnd, 0) + 1
+    return {r for r, n in total.items() if stamped.get(r, 0) == n}
+
+
+_TIMESTAMPED = _timestamped_sweeps()
+
+
+def test_the_TIMESTAMPED_derivation_DISCRIMINATES():
+    """The cost of deriving a set instead of declaring it is that a broken
+    derivation returns everything, or nothing, and every assertion built on it
+    passes vacuously. So: it must be non-empty, and it must exclude somebody."""
+    every = {got["round"] for path, _c in C.iter_cells()
+             if (got := C.parse_cell_name(path.name))
+             and got["schema"] == "current"}
+    assert _TIMESTAMPED, "no sweep reads as timestamped — derivation is broken"
+    assert _TIMESTAMPED < every, "every sweep reads as timestamped — no discrimination"
 
 
 def test_a_figure_is_OCCASION_CLEAN_only_if_every_cell_it_reads_is_timestamped():

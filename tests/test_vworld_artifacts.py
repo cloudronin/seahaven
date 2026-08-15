@@ -24,10 +24,22 @@ class _A:
         self.__dict__.update(kw)
 
 
-@pytest.mark.parametrize("art", ["matrix", "floor-mechanisms", "generations",
-                                 "limitations", "disclosures", "occasions",
-                                 "spend", "seeds"])
+def test_ARTIFACTS_and_the_DISPATCH_TABLE_cannot_fork():
+    """**The single-source assertion, added at the third instance.**
+
+    `ARTIFACTS` (what `--help` lists) and the dispatch dict were separate hand-
+    maintained literals. An artifact in the dict but not the tuple never got
+    rendered by a test; one in the tuple but not the dict would advertise a verb
+    that exits 1. Neither is detectable by reading either list alone.
+    """
+    assert set(emit.ARTIFACTS) == set(emit.registry())
+
+
+@pytest.mark.parametrize("art", sorted(emit.ARTIFACTS))
 def test_every_artifact_renders(art, capsys):
+    """Parametrized over `ARTIFACTS` itself rather than a retyped subset. The
+    retyped version covered 11 of 14 — `correlations`, `convergence` and
+    `occasion-health` all escaped it."""
     assert emit.main(_A(artifact=art)) == 0
     assert capsys.readouterr().out.strip()
 

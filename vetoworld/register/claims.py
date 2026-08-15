@@ -182,11 +182,15 @@ CLAIMS: list[Claim] = [
                    "as a world one, and n=24 against n=24 cannot separate them."),
 
     # --- the raidex dimension (round 15) ------------------------------------
-    Claim("vetohold.cohort", (23, 17),
+    Claim("vetohold.cohort", (9, 3),
           lambda: _vetohold_counts(), "e15 x 14 + the 9 with prior suites",
-          note="23 models carry a published veto-hold score; 17 of them join "
-               "raidex. The score cohort and the correlate cohort are "
-               "deliberately different sets — the dimension stands alone",
+          note="**WAS (23, 17) BEFORE THE ADMISSION GATE.** 9 models carry a "
+               "published veto-hold score and 3 of them join raidex. The 14 "
+               "vetoed by the 2026-08-14 LAT occasion event are exactly the 14 "
+               "that joined, so the join collapses with the cohort rather than "
+               "beside it. Vetoed, never corrected: the re-serve restores both "
+               "or neither. The score cohort and the correlate cohort remain "
+               "deliberately different sets",
           occasion="ASSEMBLED FROM SIX SWEEPS (e10-e15). Every cross-model "
                    "comparison here spans sittings; the score is a "
                    "single-occasion estimate per model and the card carries "
@@ -204,13 +208,18 @@ CLAIMS: list[Claim] = [
                "every correlation the dimension enters",
           occasion="THE THREE COME FROM THREE DIFFERENT SWEEPS (e11, e12, "
                    "e13), so their tie is not an artifact of one sitting."),
-    Claim("rule5.separating_pairs", 2, lambda: _separating_pairs(),
+    Claim("rule5.separating_pairs", 3, lambda: _separating_pairs(),
           "every complete three-world suite",
-          note="RULE 5 ACTIVATES: fewer than 3 adjacent pairs separate, so the "
-               "dimension ships ordinal or informational and composite "
-               "inclusion stays deferred. It was exactly 3 at n=9 — the "
-               "boundary — which is why the pin deferred this evaluation to "
-               "the final cohort rather than freezing it early",
+          note="**RULE 5 IS DORMANT AGAIN, AND THE REASON IS THE GATE.** It "
+               "read 2 on the ungated 23-model cohort, which ACTIVATED rule 5; "
+               "on the 9 admitted models it reads 3, which does not. Round 15 "
+               "pinned this to evaluate on the final cohort at that round's m, "
+               "and the admitted cohort is what that now means — so this is the "
+               "pin being obeyed, not overridden. It is recorded rather than "
+               "quietly updated because a pre-registered decision rule changing "
+               "outcome is exactly the event a pre-registration exists to make "
+               "visible. The re-serve moves it again, and that reading is fixed "
+               "in advance: whatever the restored cohort gives is the answer",
           occasion="THE ORDERING IS ASSEMBLED FROM SIX SWEEPS, so every "
                    "adjacent pair may be a cross-occasion pair. That cuts one "
                    "way: an occasion component can only widen intervals, so it "

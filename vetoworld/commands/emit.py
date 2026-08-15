@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from seahaven.eden._shared import corpus as C
 
-ARTIFACTS = ("matrix", "occasions", "seeds", "spend",
+ARTIFACTS = ("matrix", "occasions", "occasion-health", "seeds", "spend",
              "floor-mechanisms", "generations", "limitations",
              "disclosures", "predictions", "corrections", "related-work",
              "correlations", "convergence")
@@ -118,15 +118,32 @@ def _seeds() -> int:
     return seeds_main(_A())
 
 
-def main(args) -> int:
+def registry() -> dict:
+    """The dispatch table, **exposed so the vocabulary cannot fork.**
+
+    `ARTIFACTS` is what `--help` and the tests enumerate; this dict is what
+    actually dispatches. They were two literals maintained by hand, and an
+    artifact added to one escaped the other — `correlations` and `convergence`
+    dispatched for weeks without ever being rendered by a test. That is the same
+    duplicated-vocabulary drift as doctor's `ROUNDS` and `test_occasions`'
+    `_TIMESTAMPED`, which is three instances, so this one is asserted rather
+    than merely fixed: `test_ARTIFACTS_and_the_DISPATCH_TABLE_cannot_fork`.
+    """
     from ..register import artifacts as A
     from ..register import correlations as CO
-    fn = {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
-          "matrix": A.matrix, "floor-mechanisms": A.floor_mechanisms,
-          "generations": A.generations, "limitations": A.limitations,
-          "disclosures": A.disclosures, "predictions": A.predictions,
-          "corrections": A.corrections, "related-work": A.related_work,
-          "correlations": CO.correlations, "convergence": CO.candidate_convergence}
+    from ..register import occasion_health as OH
+    return {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
+            "occasion-health": OH.occasion_health,
+            "matrix": A.matrix, "floor-mechanisms": A.floor_mechanisms,
+            "generations": A.generations, "limitations": A.limitations,
+            "disclosures": A.disclosures, "predictions": A.predictions,
+            "corrections": A.corrections, "related-work": A.related_work,
+            "correlations": CO.correlations,
+            "convergence": CO.candidate_convergence}
+
+
+def main(args) -> int:
+    fn = registry()
     if args.artifact not in fn:
         print(f"unknown artifact {args.artifact!r}; have: {', '.join(sorted(fn))}")
         return 1

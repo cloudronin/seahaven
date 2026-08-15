@@ -11750,3 +11750,120 @@ one definition, and `read` flags any row that pools more than one sweep.
 
 1520 tests, 17 register figures, 12 rounds (2 open, 10 closed), 11 retired
 digests. Corpus 259 cells, digest `8fb0cb6e18cca6eb`. Programme total **$244.86**.
+
+---
+
+## 2026-08-14 — the A0 reference channel: a paired detector, and a retraction
+
+The counterfactual arm carries no treatment and sits near ceiling by design, so
+movement in it is environment. Building that into a gate turned up a defect in
+our own published prose, and the correction is the most important thing here.
+
+### **[TRAP] "W2/W3 held steady the same day" was never a comparison**
+
+**Finding.** On 2026-08-14 the LAT A0 channel dropped and W2/W3 did not. That
+was reported repeatedly — including by me, in this session's predecessor — as
+the co-located-detector argument: two detectors on the same rack stayed quiet,
+so the LAT move is world-specific rather than a serving event. **W2 and W3 had
+zero returning models that day.** Fourteen new models each, scored against a
+historical cohort of different models.
+
+**Evidence.** W2 e15: 14 models, 0 previously served at W2. W3 e15: identical.
+Pooled two-sided Fisher on W2's event-day cells against W2's history returns
+p < 0.05 in the **upward** direction, because the new cohort scores higher than
+the old one — so the same pooled construction that called them QUIET also calls
+them significantly changed, depending only on which tail you look at. Three
+readings of one dataset, and the only true one is that there is nothing to read.
+
+**Consequence.** Withdrawn. The verdict vocabulary gains `NO-ANCHOR`, which is
+not a weaker QUIET but a different statement: no comparison exists. It **admits
+with a flag**, by reductio — the first sweep at any world has no anchor by
+definition, so vetoing NO-ANCHOR would make the first observation of everything
+permanently inadmissible. Ten of the eleven (sweep, world) pairs on record are
+NO-ANCHOR; that rule would have vetoed the corpus.
+
+### The certified event, and what pooling hid
+
+**Finding.** The LAT event is real and smaller in scope than reported.
+
+**Evidence.** Paired on the six returning models: 0.977 [0.933, 0.992] ->
+0.819 [0.749, 0.874], intervals separating, Fisher p = 1.7e-05. The published
+pooled figure of 0.756 was six returning models at 0.819 **plus eight models
+never served at LAT before, sitting at 0.708**.
+
+**Consequence.** The certified claim is six models at magnitude ~0.16. Nothing
+is claimed about the other eight. **The clean weak-tier baseline at W2 is also
+0.708**, and that coincidence may mean "13 of 14 below 0.90" was mostly
+composition — weak models idling on the one-food world as their normal. Only a
+re-serve decides, so the reading is frozen in `round16.FORK` before it runs.
+
+### **[TRAP] A detector calibrated on the event it is catching**
+
+**Finding.** Eight of the fourteen models due for re-serve have exactly one
+prior LAT A0 cell and it is the event day. Pooling all earlier days puts the
+0.819 event inside the reference the re-serve is judged against.
+
+**Evidence.** Synthetic re-serve at 1.000: excluded baseline -> QUIET;
+contaminated baseline (0.817) -> EVENT. Synthetic re-serve repeating the event
+at 0.792: excluded -> EVENT (p = 1.2e-06); contaminated -> QUIET (p = 0.42).
+**Both directions invert** — a clean day reads as an event, and a repeat of the
+event reads as clean.
+
+**Consequence.** `event_pairs()` propagates taint oldest-first; EVENT sweeps are
+dropped from every later baseline. Caught before the pin, not after.
+
+### Three constructions that did not survive measurement
+
+- **"The licence gate's 0.90" does not exist.** `take_licence` is a one-sided
+  Fisher test on *take* rates with no 0.90 in it; `A0_FLOOR` is a separate,
+  report-only floor on `rate_any`. Two mechanisms wearing one name — the same
+  label-versus-mechanism error the recorded-read wrapper was built to catch.
+- **A band floored at 0.90 never clears.** Clean weak-tier baselines are 0.708
+  at W2 and 0.875 at W3; such a band reads EVENT forever on a still channel.
+- **No tier survives an honest boundary.** Veto-hold is circular (it is the
+  score the band gates) and predicts clean A0 at rho +0.174. COMP is not
+  circular and reaches +0.503 pooled, but at the lock-derived boundary
+  (`greedy_min`/2 = 14) its bands overlap in all three worlds and invert in two.
+  A boundary that separated would have to be chosen after seeing A0.
+  **Pairing removes the need for a tier at all**, because the composition
+  confound tiers were patching is what pairing eliminates.
+
+### What the gate costs, stated rather than softened
+
+23 models scored ungated; **9 scored, 14 UNSCORED** under the gate at 3/3
+admission. The 14 raidex-joinable models are exactly the 14 vetoed, so E1's n
+falls from 17 to 3 and **no coefficient is reportable** — below n=4 a Fisher-z
+interval is a division by zero, and this module's first rule is that no
+coefficient ships without its interval. `emit correlations` now prints the
+non-result and why, instead of a rho beside `[nan, nan]`.
+
+### **[TRAP] The pin refused a byte-identical refactor, correctly**
+
+`conditioning.take_licence` imports `_fisher` from the closed `round10`, whose
+`assert_pinned()` raises unconditionally — a retired module is a live runtime
+dependency of the licence gate. The identical function is in `_shared.stats`.
+Swapping the import broke round 14's pin: `conditioning.py` is a hashed ARTIFACT
+of rounds 11-15, and round 15's cells are served. **Reverted.** The file cannot
+even carry a comment about it, for the same reason, so the note lives in
+`round16`'s docstring. Five live pins are worth more than one tidy import.
+
+### Duplicated vocabulary, instances four and five
+
+`test_occasions._TIMESTAMPED` was a hand-typed set of four sweeps while the
+corpus held five — all 98 e15 cells carry `wall_start_epoch`. And `emit`'s
+`ARTIFACTS` tuple had drifted from its dispatch dict, so `correlations`,
+`convergence` and the new `occasion-health` dispatched without any test ever
+rendering them. Both are now **derived, with an assertion that they cannot
+fork** — `_TIMESTAMPED` is read off the corpus, and `registry()` is exposed so
+`set(ARTIFACTS) == set(registry())` is a test.
+
+### Cost
+
+$0. Every number above is from committed cells.
+
+### Where it leaves the programme
+
+The re-serve is on the critical path rather than beside it: it is the corpus's
+**second** judgeable (sweep, world) pair out of eleven, the gate's first
+out-of-sample test, and the only thing that decides the composition fork. Round
+16 is pinned at `643e782d`, cells unserved.
