@@ -105,9 +105,25 @@ def test_THE_RUNNER_NOW_BUILDS_ONE_BACKEND_PER_MODEL():
     for mod, name in ((run, "run"), (probe, "probe")):
         src = inspect.getsource(mod)
         assert "def backend_for(" in src, f"{name} has no per-model backend"
-        assert "resolved != model" in src, (
+        #: **The comparison must exist; its exact form may move.** It was
+        #: `resolved != model`. Round 21 routes through a proxy that echoes the
+        #: model with its `:provider` suffix stripped, so the raw strings differ
+        #: on every routed cell while naming the same model, and the comparison
+        #: became `bare_model(resolved) != bare_model(model)`.
+        #:
+        #: Asserting the literal string would have made this test fail for a
+        #: correct change — and the temptation then is to delete the assertion.
+        #: What must hold is that BOTH sides are compared and that any
+        #: normalisation goes through the one shared helper, never an inline
+        #: `startswith` that would be a second, looser identity rule.
+        compared = ("resolved != model" in src
+                    or "bare_model(resolved) != ID.bare_model(model)" in src)
+        assert compared, (
             f"{name} does not compare the resolved model to the intended one — "
             "that comparison is the guard that would have caught 161 cells")
+        assert "startswith" not in src.split("SERVED THE WRONG MODEL")[0][-400:], (
+            f"{name} appears to normalise model ids inline; stripping belongs "
+            "in `_shared.identity.bare_model` and nowhere else")
 
 
 def test_A_SINGLE_BACKEND_CANNOT_SERVE_TWO_MODELS():

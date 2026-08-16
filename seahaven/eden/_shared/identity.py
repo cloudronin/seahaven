@@ -42,7 +42,7 @@ from typing import NamedTuple
 __all__ = [
     "VERIFIED", "CORRECTED", "UNVERIFIED", "MISLABELLED", "READABLE",
     "Identity", "model_identity", "assert_identity", "IdentityViolation",
-    "CORRECTION_KEY", "ISSUE",
+    "CORRECTION_KEY", "ISSUE", "bare_model",
 ]
 
 VERIFIED = "VERIFIED"
@@ -80,6 +80,28 @@ ISSUE = 113
 #: The reference channel still READS them, and correctly reports them as one
 #: model going quiet. Judging a sweep and crediting a model are different acts.
 RETRACTED_SWEEPS = frozenset({"15", "16", "17", "18", "19"})
+
+
+def bare_model(name: str | None) -> str | None:
+    """A model id with any routing suffix removed. **The one place that strips.**
+
+    The HuggingFace router takes `org/model:provider` to pin which third party
+    serves the call, and echoes back `org/model` — so a naive
+    `requested == served` comparison fails on every routed cell, and the
+    tempting fix is a `startswith` at the comparison site. That would be a
+    second, weaker identity rule living next to the strict one, which is how
+    the first one rotted.
+
+    So stripping happens here, once, and the strict comparison is performed on
+    the results. A suffix is only recognised after the LAST `/`, because model
+    ids carry `/` themselves and splitting the whole string would mangle any id
+    holding a colon before the final segment.
+    """
+    if not name:
+        return name
+    org, _, rest = name.rpartition("/")
+    base = rest.split(":", 1)[0] if ":" in rest else rest
+    return f"{org}/{base}" if org else base
 
 
 class IdentityViolation(RuntimeError):

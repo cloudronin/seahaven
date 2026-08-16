@@ -51,6 +51,16 @@ class Endpoint:
     #: `max_completion_tokens`. Another thing that cannot be assumed either way.
     _token_param: str | None = field(default=None, repr=False)
 
+    #: **Which provider actually answered the last request.**
+    #:
+    #: `None` on a direct endpoint — Together answers for itself and sends no
+    #: such header, so None means "not routed", not "unknown". On the
+    #: HuggingFace router it is the `x-inference-provider` value, e.g.
+    #: `deepinfra`, and it is the ONLY attestation in the exchange that the
+    #: intended third party served the call: the response body echoes the model
+    #: with the `:provider` suffix stripped, so the body alone cannot tell you.
+    last_provider: str | None = field(default=None, repr=False)
+
     #: RUNNING TOTAL of the `usage` blocks the API returns. The provider bills on
     #: these and the harness discarded them, so every cost figure in this program
     #: has been an estimate. Accumulating makes cost a MEASUREMENT and makes
@@ -101,6 +111,20 @@ class Endpoint:
                     # undecodable byte as U+FFFD", which is the more faithful
                     # record of what the model actually emitted.
                     out = json.loads(r.read().decode("utf-8", "replace"))
+                    # **The provider that actually answered, from the wire.**
+                    #
+                    # A router serves a model through a third party and names
+                    # the model in the body but the PROVIDER only in a header.
+                    # Reading only the body would leave every cell asserting a
+                    # provider we asked for rather than recording one that
+                    # answered — the same shape as #113, where the model a cell
+                    # claimed came from the request and not the response.
+                    #
+                    # Captured on the response object rather than returned, so
+                    # no caller's shape changes and a direct endpoint (which
+                    # sends no such header) simply leaves it None.
+                    self.last_provider = (r.headers or {}).get(
+                        "x-inference-provider")
                     if isinstance(out, dict) and isinstance(out.get("usage"), dict):
                         self._add_usage(out["usage"])
                     return out

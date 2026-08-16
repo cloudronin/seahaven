@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 from seahaven.eden._shared import corpus as C
+from seahaven.eden._shared import identity as ID
 from ..backends import Backend, resolve
 from ..backends.base import COHORT_TEMPERATURE
 
@@ -151,7 +152,14 @@ def _round_cells(args, spec) -> int:
 
     def backend_for(model: str) -> Backend:
         if model not in backends:
-            backends[model] = Backend(dataclasses.replace(spec, model=model))
+            # **A round may pin WHICH PROVIDER serves it.** Round 21 routes
+            # through the HuggingFace router, where `org/model:provider` selects
+            # the third party; without the suffix the router picks "fastest
+            # available" per request and a round whose provider varies request
+            # to request is not one measurement. `served_id` is the round's own
+            # translation, so a round with no routing leaves the id untouched.
+            wire = R.served_id(model) if hasattr(R, "served_id") else model
+            backends[model] = Backend(dataclasses.replace(spec, model=wire))
         return backends[model]
 
     # **AVAILABILITY PRE-FLIGHT, before the first cell.** A provider can move a
@@ -233,17 +241,49 @@ def _round_cells(args, spec) -> int:
         seen_usage = total
         # **The cell records what was SERVED, and refuses if that is not what
         # was asked for.** The guard that would have caught the 161.
-        if resolved != model:
+        # **Compared on BARE ids.** A routed request pins its provider with a
+        # `:provider` suffix that the response echoes stripped, so the raw
+        # strings differ on every routed cell while naming the same model.
+        # `ID.bare_model` is the single place that strips; doing it inline here
+        # would put a second, looser identity rule beside the strict one.
+        if ID.bare_model(resolved) != ID.bare_model(model):
             raise SystemExit(
                 f"SERVED THE WRONG MODEL: asked for {model!r}, the endpoint "
                 f"resolved {resolved!r}. A cell that records one model and "
                 "was served by another is not a measurement. Refusing.")
+
+        # **Which provider answered, taken from the wire, not from intent.**
+        # `None` on a direct endpoint. On a router it is the attestation, and a
+        # round that pinned a provider must get the one it pinned — otherwise
+        # the cells record a provider we asked for, which is precisely the
+        # class of claim #113 was.
+        served_provider = getattr(be.ep, "last_provider", None) \
+            if hasattr(be, "ep") else None
+        want_provider = getattr(R, "PROVIDER", None)
+        if want_provider and served_provider and served_provider != want_provider:
+            raise SystemExit(
+                f"SERVED BY THE WRONG PROVIDER: round {args.round} pins "
+                f"{want_provider!r}, the router reports {served_provider!r}. "
+                "Refusing rather than recording a provider that did not serve.")
+        if want_provider and not served_provider:
+            raise SystemExit(
+                f"NO PROVIDER ATTESTATION: round {args.round} pins "
+                f"{want_provider!r} but the response carried no "
+                "`x-inference-provider` header, so nothing in the exchange "
+                "shows who served it. Refusing rather than asserting it.")
+
         pi, po = R.COHORT[model]
         billed = round(u["prompt_tokens"] / 1e6 * pi
                        + u["completion_tokens"] / 1e6 * po, 5)
         prior = C.load_cell(p).get("meta", {}) if filled else {}
         res["meta"] = {
             "served_name": model, "resolved_model_string": resolved,
+            #: **Provenance, per cell.** `served_provider` is what the wire
+            #: attested; `pinned_provider` is what the round required. Both are
+            #: written so a reader can see they agreed rather than trusting
+            #: that they must have. None/None is a direct endpoint.
+            "served_provider": served_provider,
+            "pinned_provider": want_provider,
             "base_url": spec.base_url, "endpoint": spec.base_url,
             "world_id": f"world_eden_{level}", "world_version": f"world_eden_{level}",
             "eden_level": level, "eden_arm": arm,

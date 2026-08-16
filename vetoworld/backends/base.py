@@ -29,6 +29,19 @@ class EndpointSpec:
     temperature: float = COHORT_TEMPERATURE
     notes: str = ""
 
+    #: **Hosts whose model strings are checkable against a published record.**
+    #:
+    #: This was `"together" in base_url or "openai.com" in base_url`, written
+    #: when Together was the only provider. A second provider would have
+    #: silently fallen through to the RECORD-AND-PIN branch — skipping catalogue
+    #: verification without saying so, which is the quiet half of exactly the
+    #: failure mode #113 was.
+    #:
+    #: `router.huggingface.co` is included because it publishes per-model,
+    #: per-provider availability at `/v1/models` and answers `model_not_available`
+    #: for anything it will not serve, which is the property this flag is about.
+    CATALOGUED_HOSTS = ("together", "openai.com", "router.huggingface.co")
+
     @property
     def catalogued(self) -> bool:
         """Whether a provider availability record exists for this endpoint.
@@ -39,7 +52,7 @@ class EndpointSpec:
         version identifier, write it into every cell, and refuse to pool cells
         whose recorded strings differ.
         """
-        return "together" in self.base_url or "openai.com" in self.base_url
+        return any(h in self.base_url for h in self.CATALOGUED_HOSTS)
 
 
 def resolve(name_or_url: str, *, model: str | None = None,
@@ -99,11 +112,27 @@ class Backend:
         A near-miss is the failure this program has already paid for: serving a
         different variant than the one named looks like a result and is not.
         """
+        from seahaven.eden._shared.identity import bare_model
+
         ids = self.list_models()
         if ids is None:
             return self.spec.model            # uncatalogued: record-and-pin
         if self.spec.model in ids:
             return self.spec.model
+
+        # **A ROUTING SUFFIX IS NOT A NEAR MISS.** A router takes
+        # `org/model:provider` to choose which third party serves the call and
+        # catalogues the model as `org/model`. Compared raw, the exact string is
+        # absent and the near-miss branch fires — refusing the correct model for
+        # naming the provider, which is the opposite of what that branch is for.
+        #
+        # Stripped through the SAME helper the identity guard uses, so the
+        # catalogue and the served-model check can never disagree about what
+        # two ids being "the same model" means.
+        want = bare_model(self.spec.model)
+        if want in ids:
+            return self.spec.model
+
         near = [i for i in ids if self.spec.model.lower() in i.lower()
                 or i.lower() in self.spec.model.lower()]
         raise SystemExit(
