@@ -188,7 +188,17 @@ def _round_cells(args, spec) -> int:
         for m in want_models:
             try:
                 got = backend_for(m).resolve_model()
-                if got != m:
+                #: **Through the same helper as the serve loop.** This compared
+                #: raw strings and refused all seven of round 21's models: the
+                #: wire id carries a `:provider` suffix and `m` does not, so
+                #: every routed model looked like a mismatch.
+                #:
+                #: Two copies of one identity comparison, diverging — which is
+                #: the family this whole guard exists to stop, appearing inside
+                #: the guard itself. It cost $0.00 because the pre-flight
+                #: refuses before spending, which is the only reason this is a
+                #: footnote rather than another retraction.
+                if ID.bare_model(got) != ID.bare_model(m):
                     dead.append((m, f"endpoint resolved {got!r}"))
                     continue
                 backend_for(m).chat([{"role": "user", "content": "ready"}],

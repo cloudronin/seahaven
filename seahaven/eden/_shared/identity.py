@@ -139,7 +139,20 @@ def model_identity(meta: dict) -> Identity:
     resolved = meta.get("resolved_model_string")
     if resolved is None:
         return Identity(requested, requested, UNVERIFIED)
-    if resolved == requested:
+
+    # **Compared on BARE ids, like every other requested-vs-resolved check.**
+    #
+    # A routed cell records the wire id — `org/model:provider` — as resolved,
+    # because that is genuinely what was sent and the provider directive is
+    # worth keeping. The requested name is the bare cohort id. Compared raw,
+    # every routed cell classifies MISLABELLED and `assert_identity` then
+    # refuses to measure it.
+    #
+    # This is the SIXTH site of one comparison: serve loop, pre-flight,
+    # catalogue check, and here. Each was fixed as it was found, which is the
+    # slow way — the reason they diverged at all is that normalisation was
+    # introduced without sweeping every place the comparison happens.
+    if bare_model(resolved) == bare_model(requested):
         return Identity(requested, resolved, VERIFIED)
     return Identity(requested, resolved, MISLABELLED)
 

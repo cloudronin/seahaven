@@ -125,6 +125,60 @@ def test_THE_RUNNER_NOW_BUILDS_ONE_BACKEND_PER_MODEL():
             f"{name} appears to normalise model ids inline; stripping belongs "
             "in `_shared.identity.bare_model` and nowhere else")
 
+    #: **EVERY comparison of a requested id to a resolved one, not just the
+    #: one at serve time.**
+    #:
+    #: The serve-loop check was moved to `bare_model` and the PRE-FLIGHT check
+    #: was left comparing raw strings — so the pre-flight refused all seven of
+    #: round 21's models, every one of them correctly resolved. Two copies of
+    #: one identity comparison diverging, inside the guard built to stop
+    #: exactly that.
+    #:
+    #: It cost nothing because the pre-flight refuses before spending. This
+    #: asserts the count instead of the site: if a third comparison appears, it
+    #: must go through the helper too.
+    src = inspect.getsource(run)
+    resolved_cmps = src.count("resolve_model()")
+    normalised = src.count("ID.bare_model(")
+    assert normalised >= resolved_cmps, (
+        f"run.py resolves a model {resolved_cmps} time(s) but normalises "
+        f"{normalised} — a comparison somewhere is using raw strings")
+
+
+def test_A_ROUTED_CELL_IS_VERIFIED_not_MISLABELLED():
+    """**The classifier compares bare ids, like every other check. Six sites.**
+
+    A routed cell records the wire id `org/model:provider` as resolved — that
+    is genuinely what was sent, and the provider directive is worth keeping —
+    against a bare requested name. Compared raw it classifies MISLABELLED, and
+    `assert_identity` then refuses to MEASURE it: round 21's cells would have
+    been unreadable while being perfectly good data.
+
+    One comparison lived at six sites — serve loop, pre-flight, catalogue
+    check, classifier — and each was fixed as it was found, which is the slow
+    way. They diverged because a normalisation was introduced without sweeping
+    every place the comparison happens. This asserts the end state directly on
+    committed cells rather than on any one site's source.
+    """
+    from seahaven.eden._shared import identity as ID
+
+    routed = [(p, cell["meta"]) for p, cell in C.iter_cells()
+              if ":" in (cell.get("meta", {}).get("resolved_model_string") or "")]
+    if not routed:
+        pytest.skip("no routed cells committed yet")
+
+    for p, m in routed:
+        ident = ID.model_identity(m)
+        assert ident.status == "VERIFIED", (
+            f"{p.name}: routed cell classified {ident.status} — "
+            f"requested {ident.requested!r} vs served {ident.served!r}")
+        #: The provider directive is PRESERVED in the record, not stripped on
+        #: write. Normalisation is a read-time comparison concern only.
+        assert ":" in ident.served
+        #: And the attestation is present: a routed cell must say who answered.
+        assert m.get("served_provider"), f"{p.name} has no provider attestation"
+        assert m["served_provider"] == m.get("pinned_provider")
+
 
 def test_A_SINGLE_BACKEND_CANNOT_SERVE_TWO_MODELS():
     """The property underneath, asserted on the class rather than inferred:
