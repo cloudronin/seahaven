@@ -175,6 +175,23 @@ FLASH_ANCHOR_RULE = (
     "interval overlap the chain is [2,3,4,5], four occasions. The pooled figure "
     "still understates the spread, so FLASH_ENVELOPE bounds the verdict.")
 
+#: **MEASURED: at m=24 and alpha=0.01 the envelope cannot bite.** Fisher against
+#: 69/96 fires only for k <= 10 (rate <= 0.417) or k = 24; the envelope covers
+#: k in [14, 21]. The sets are DISJOINT, so nothing that could land inside the
+#: envelope is significant in the first place — the low power is not "mostly"
+#: protecting this channel, it is protecting it completely.
+#:
+#: The envelope is therefore belt-and-braces against a future where m rises or
+#: alpha loosens. Stated here so no reader assumes it is doing work today, and
+#: asserted in `test_THE_ENVELOPE_IS_CURRENTLY_INERT_AND_THAT_IS_THE_FINDING`
+#: so that if it ever becomes active somebody learns it from a failing test
+#: rather than from a verdict.
+FLASH_ENVELOPE_INERT_AT_PIN = (
+    "At m=24 and alpha=0.01 no value inside FLASH_ENVELOPE is significant "
+    "against FLASH_ANCHOR, so the envelope suppresses nothing today. It is a "
+    "guard for a future m or alpha, not an active filter. If m or alpha change, "
+    "re-read FLASH_ANCHOR_RULE before trusting a verdict on this channel.")
+
 # --- providers ----------------------------------------------------------------
 
 PROVIDERS = {
@@ -261,7 +278,7 @@ ARTIFACTS = (
 )
 
 #: Computed on a clean tree, BEFORE any cell was served.
-PINNED_PROBE_HASH = "39a67858c3c113c62c50573a649bafa56a47c3e3c09b09316089ed2aad6f4f19"
+PINNED_PROBE_HASH = "53cdd3feaf8f6d34bb994fbd4edc1b1267c44029ab03c55512faf1815c5cf82d"
 
 
 def world_lock_paths() -> tuple[str, ...]:
@@ -299,7 +316,8 @@ def _payload_body(art: dict, locks: dict, specs: dict) -> str:
                      "anchor_blocks": list(FLASH_ANCHOR_BLOCKS),
                      "anchor": list(FLASH_ANCHOR),
                      "envelope": list(FLASH_ENVELOPE),
-                     "rule": FLASH_ANCHOR_RULE},
+                     "rule": FLASH_ANCHOR_RULE,
+                     "envelope_inert_at_pin": FLASH_ENVELOPE_INERT_AT_PIN},
         "providers": PROVIDERS, "providers_waiting": PROVIDERS_WAITING,
         "levels_rule": LEVELS_RULE,
         "seeds": {"base": SEED_BASE, "stride": SEED_STRIDE,
