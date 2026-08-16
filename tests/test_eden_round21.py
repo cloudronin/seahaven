@@ -152,6 +152,17 @@ def test_MINIMAX_IS_ADMITTED_WITH_ITS_DEVIATION_STATED():
     #: Only the models that actually deviate carry one.
     assert set(R.DEVIATIONS) == {"MiniMaxAI/MiniMax-M2.7"}
 
+    #: **And it is written AT SERVE TIME, not annotated afterwards.** Terra's
+    #: precedent is that the deviation is born with the cell; a flag attached
+    #: later can be forgotten for as long as nobody looks, and until then the
+    #: row reads as comparable to rows that are not.
+    import inspect
+
+    from vetoworld.commands import run
+    src = inspect.getsource(run)
+    assert '"served_deviation": getattr(R, "DEVIATIONS", {}).get(model)' in src, (
+        "the round's DEVIATIONS must reach the cell's meta at serve time")
+
 
 def test_the_ROUND_SAYS_IT_SETTLES_NOTHING_ABOUT_TOGETHER():
     """Registered before serving, because after serving is when a

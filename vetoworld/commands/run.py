@@ -298,6 +298,19 @@ def _round_cells(args, spec) -> int:
                 None if spec.temperature == COHORT_TEMPERATURE
                 else f"served at {spec.temperature}, cohort is "
                      f"{COHORT_TEMPERATURE}"),
+            #: **A served-artifact deviation is BORN WITH THE CELL.**
+            #:
+            #: Terra's temperature deviation set the precedent: recorded at
+            #: serve time, carried by every figure quoting it, never annotated
+            #: afterwards. A flag attached later is a flag that can be
+            #: forgotten for exactly as long as nobody looks — and until
+            #: someone does, the row reads as comparable to rows that are not.
+            #:
+            #: Round 21's MiniMax-M2.7 is the live case: it ignores
+            #: `enable_thinking=False` and emits reasoning that every other
+            #: cell in this corpus suppresses, so its reasoning tokens are
+            #: generated and billed where others' are not.
+            "served_deviation": getattr(R, "DEVIATIONS", {}).get(model),
             # **A real serving timestamp, not an mtime.** The occasion audit
             # can only call a comparison clean when the cells carry this.
             # Only cells served through this path carry one, and every new
