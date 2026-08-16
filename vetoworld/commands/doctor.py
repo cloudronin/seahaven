@@ -30,7 +30,7 @@ def main(_args=None) -> int:
     # instance of a duplicated vocabulary list going stale, after
     # registry-disjointness and `emit.ARTIFACTS`/`fn` — hence the assertion in
     # `tests/test_vworld_cli.py` rather than only the fix.
-    from .pin import ROUNDS
+    from .pin import ROUNDS, STANDING
     for n in ROUNDS:
         try:
             m = importlib.import_module(f"seahaven.eden.round{n}")
@@ -56,6 +56,22 @@ def main(_args=None) -> int:
             extra += f"  {fn}:{'ok' if ok else '** DOES NOT RECOMPUTE **'}"
             bad += not ok
         print(f"  round{n:<4}{state}{extra}")
+
+    # **Standing instruments are pins too.** The daily probe has no round
+    # number, so a loop over `ROUNDS` alone would leave the one pin that a
+    # scheduled job depends on unwatched by the health check people run first.
+    for name in STANDING:
+        try:
+            m = importlib.import_module(f"seahaven.eden.{name}")
+            m.assert_pinned()
+            state = "OPEN, verifies"
+        except SystemExit as e:
+            state = ("CLOSED (refuses, as designed)"
+                     if "CLOSED" in str(e) else "** BROKEN **")
+            bad += "BROKEN" in state
+        except Exception as e:
+            state, bad = f"IMPORT FAILED: {e}", bad + 1
+        print(f"  {name:<9}{state}")
 
     print("\nprovider keys visible (never printed, only presence)")
     for env, name in PROVIDERS.items():

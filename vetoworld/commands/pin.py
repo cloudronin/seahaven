@@ -19,8 +19,19 @@ import subprocess
 ROUNDS = (2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
 
 
+#: **Pins that are not rounds.** A round has a number, a
+#: `PINNED_ROUNDN_HASH` and an end; the daily probe is a standing instrument
+#: with neither. It still has to appear here, or it is a pin only its own tests
+#: watch — and `doctor` and `pin check` are where anyone looks first.
+STANDING = ("probe",)
+
+
 def _mod(n):
     return importlib.import_module(f"seahaven.eden.round{n}")
+
+
+def _standing_mod(name):
+    return importlib.import_module(f"seahaven.eden.{name}")
 
 
 def _dirty() -> list[str]:
@@ -52,6 +63,18 @@ def _check() -> int:
                 bad += not ok
                 notes.append(f"{a}:{'ok' if ok else '** DOES NOT RECOMPUTE **'}")
         print(f"  round{n:<4}{state:<32}{'  '.join(notes)}")
+
+    for name in STANDING:
+        m = _standing_mod(name)
+        try:
+            m.assert_pinned()
+            state = "OPEN, verifies"
+        except SystemExit as e:
+            state = ("CLOSED (refuses, as designed)"
+                     if "CLOSED" in str(e) else "** BROKEN **")
+            bad += "BROKEN" in state
+        print(f"  {name:<9}{state:<32}standing instrument, not a round")
+
     print(f"\n  {bad} problem(s)")
     if bad:
         print("  A broken pin means the code moved after the cells were served.")
