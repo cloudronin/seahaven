@@ -1,12 +1,19 @@
 # AGENTS.md — how to work in this repo without producing confident nonsense
 
-Written after sixteen documented traps, five of which required retracting a
-result that had already been reported. Read this before adding a measurement,
-changing a metric, or believing a number.
+Written after thirty-two documented traps and twelve retractions, every one of
+them a result that had already been reported. Read this before adding a
+measurement, changing a metric, or believing a number.
 
 The failure mode here is **not** code that crashes. It is code that returns a
 plausible number that is wrong. Nothing in the test suite or the type system
 catches that. These rules do, for the classes we have already hit.
+
+**Nothing here was foreseen.** Every rule is an autopsy. The rule that would
+have prevented the largest retraction — check that the model you name is the
+model that answered — had been half-written for three rounds, applied to one
+model, and never generalised. If a rule below looks obvious, that is what a
+rule looks like *after* the fact; assume the next one is equally obvious and
+equally unwritten.
 
 ---
 
@@ -144,6 +151,114 @@ agent's own conversation history.
 
 ---
 
+## Reading your own instruments
+
+Every rule here was paid for by believing a tool that was answering a different
+question than the one asked. They are the cheapest rules in the file to follow
+and the most expensive to skip, because each one produces a *confident* wrong
+answer rather than an error.
+
+**Run the suite the way the README says to run it.** It says:
+
+    conda run -n vetoworld-dev python -m pytest
+
+A whole session's work was validated with bare `python -m pytest` in base conda
+instead. `textworld` is not installed there, so **83 tests never executed** —
+they surfaced as collection errors that looked like optional-dependency noise.
+Two commits were pushed and a retraction was published on the strength of a
+suite that was missing a third of itself. `tests/conftest.py` now refuses to
+collect at all in an interpreter without `textworld`, because 83 legible-looking
+errors are dismissible and a hard stop is not.
+
+**A failure you have explained away twice is a failure you have stopped
+reading.** The same 83 errors were described as "pre-existing environment gaps"
+three times, in three reports, without once checking whether they were
+pre-existing *or* whether they mattered. They were pre-existing. They also meant
+the machine could not serve a single episode, which is how it was finally
+discovered: a $7.86 probe run failed on all 17 cells.
+
+**A baseline in the wrong environment answers a different question.** Comparing
+before-and-after in the same broken interpreter does correctly show that a
+change introduced nothing new — and says nothing about the absolute state. State
+which of the two you have. "No regressions" and "green" are not synonyms.
+
+**Report the exit code of the command, not of the pipe.** `cmd | tail` returns
+`tail`'s status. A 7-failure run was once reported as passing on that basis. In
+zsh it is `${pipestatus[1]}`; better, redirect to a file and check `$?` directly.
+
+**Verify a publish from the published side.** Fetch the artifact back down and
+assert on what the far end actually serves. An upload tool reporting success is
+a claim about a request, not about what a stranger will now download.
+
+---
+
+## When a result is withdrawn
+
+A retraction is a measurement too, and it has a discipline of its own. This
+section exists because the twelfth one propagated further than expected.
+
+**Frozen literals stay frozen. The tests flip to asserting the disagreement.**
+A pre-registration records what was believed *at pin time*; rewriting it to
+match a corrected corpus turns a pre-registration into a running total and
+destroys the reason the round exists. Precedent: `DEAD_CRITERION`'s wrong text
+stays wrong, round 10's `MIDDLE` defect was disclosed rather than re-cut. The
+tests move from `assert literal == corpus` to `assert corpus != literal` plus
+the issue number where the disagreement lives.
+
+**The reading that replaces a retracted one is not thereby certified.** When the
+identity fix turned round 16's failed self-certification into a pass, the pass
+was worthless: it was one model paired with itself. EVENT retracting to nothing
+does not earn QUIET. State it as "the claim's subject never existed", not as a
+new finding.
+
+**Retracted data supplies no canonical measurement — and this compounds
+silently if you skip it.** Rounds 15-19 collapsed to one model, which handed
+cogito 14 tied candidates for "canonical cell" at one (world, arm, round). The
+picker took one arbitrarily and it displaced cogito's genuine round-12 cell,
+moving a *pinned pre-registered* prediction check from "5 of 6 consistent" to
+"6 of 6". An error that improves a frozen result is the worst-flavoured error
+there is. `_shared/identity.RETRACTED_SWEEPS` is the exclusion.
+
+**A ticket whose premise dies VOIDS; it does not resolve.** Two open tickets
+were waiting on a re-serve to settle sealed scores — but the models had never
+been measured, so nothing was pending. Close them as void, say what the dead
+premise was, and do not quietly re-scope them into something still answerable.
+
+**Keep the data, fix the label.** The 166 mislabelled cells were relabelled, not
+deleted: they are valid data about the model that really served them, and they
+turned out to contain the only identical-input repeatability study the programme
+has. Deleting data to hide a mistake also deletes whatever it can still tell you.
+
+---
+
+## Tests that survive their subject
+
+**A machinery test calibrated on a finding dies when the finding does.** The
+taint-law fixture was built from the real event's cohort; when that event was
+retracted the fixture evaporated, and the test had to be rebuilt mid-retraction.
+This is the same error as calibrating a detector on the event it is catching —
+one level up, in the test suite. Machinery gets synthetic fixtures with every
+number stated in the file.
+
+**Assert the property, not the day's verdicts.** `assert ("LAT","15") in tainted`
+encoded one afternoon's conclusions into a test of the exclusion *rule*. When the
+conclusions changed, the test failed for a reason it was not about. Write what
+must always hold: no anchor cell comes from any flagged sweep, whatever that set
+turns out to be.
+
+**Timing is a constraint. Write it down where it bites.** A test running 82s
+under a 120s timeout is not passing, it is queuing to fail — and it presented as
+an unexplained flake in two full runs. Corpus-wide tests grow with the corpus:
+give them an explicit timeout with the measured numbers in a comment beside it,
+and leave the short default where it does its real job of catching hangs.
+
+**Before blaming nondeterminism, measure it.** That flake was checked against
+`PYTHONHASHSEED` 0/1/42/12345 (byte-identical), the `copytree` (2.2s of the 82),
+and module-level caches (one, world-keyed) before the boring answer was accepted.
+"Flaky" is a hypothesis, not a diagnosis.
+
+---
+
 ## Infrastructure rules
 
 These are cheaper lessons but they cost whole runs.
@@ -230,8 +345,14 @@ rewriting the record.
 3. Does a second instrument produce the same *ranking*?
 4. What is n — the runs, or the events I actually conditioned on?
 5. Is any part of this answer already present in the prompt?
-6. If I re-word my question, does the result move?
-7. Have I computed the superlative, or recalled it?
+6. Is any part of this n the same input counted twice?
+7. Did the thing I am naming actually produce the number?
+8. If I re-word my question, does the result move?
+9. Have I computed the superlative, or recalled it?
+10. **Is this suspiciously tidy?** Eight different models agreeing to within
+    1.09× on prompt tokens was read as a strong cohort-wide effect. It was one
+    model served eight times. Uniformity across things that should differ is a
+    symptom to explain, never a result to report.
 
 ---
 

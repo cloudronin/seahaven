@@ -145,6 +145,50 @@ def test_no_user_facing_string_names_the_internal_package(capsys):
     assert not got, f"internal vocabulary leaked into user-facing output: {got}"
 
 
+def test_THE_CONTRIBUTOR_SURFACE_IS_CLEAN_TOO_not_just_the_command_output():
+    """**The naming rule applied where its own guard could not see.**
+
+    `docs/naming.md` says `seahaven` appears on no user-facing surface, and the
+    tests above enforce that across command output, artifacts and help text —
+    every string a *reader* sees. It never checked the strings a *contributor*
+    types, so the development environment stayed `seahaven-dev` through the
+    whole rename, in a README line that tells people exactly what to run.
+
+    That is not cosmetic. Running the suite in the wrong interpreter silently
+    skipped 83 tests for a session, and the env name sitting in three README
+    lines is the thing a contributor copies. Setup files, environment names and
+    the commands the README hands out are a user-facing surface.
+    """
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    files = [root / "README.md", root / "scripts/setup_dev_env.sh",
+             root / "env/vetoworld-dev.yml"]
+
+    #: **`seahaven-fidelity` is a deliberate exception, recorded rather than
+    #: skipped.** It is a declared console script (`pyproject.toml`), a separate
+    #: standalone tool that installs anywhere a model is being served and
+    #: depends on nothing beyond the standard library. Renaming it is a
+    #: packaging decision about a different distribution, not rename fallout.
+    #: It does sit in tension with naming.md's rule; the tension is the reason
+    #: this is written down instead of pattern-matched away.
+    ALLOWED = ("seahaven-fidelity",)
+
+    bad = []
+    for f in files:
+        assert f.exists(), f"{f.name} moved; update this test deliberately"
+        for i, line in enumerate(f.read_text().splitlines(), 1):
+            #: `seahaven/` the package PATH is permanent and legitimate — pins
+            #: hash it. What must not appear is the internal name used as
+            #: TOOL VOCABULARY: an env to activate, a command to run.
+            hit = [m for m in ("seahaven-", "seahaven_dev", "-n seahaven")
+                   if m in line]
+            if hit and not any(a in line for a in ALLOWED):
+                bad.append(f"{f.name}:{i}: {line.strip()[:70]}")
+    assert not bad, (
+        "internal name used as contributor vocabulary — see docs/naming.md:\n  "
+        + "\n  ".join(bad))
+
+
 def test_EVERY_emitted_artifact_is_clean_too(capsys):
     """**The artifacts are the manuscript's tables**, so they are the surface a
     reader is most likely to see and the one a rename is most likely to miss.

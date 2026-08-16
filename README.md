@@ -99,7 +99,7 @@ and verifies each row against the commit it cites.
 ## Working on it
 
 ```bash
-bash scripts/setup_dev_env.sh && conda activate seahaven-dev
+bash scripts/setup_dev_env.sh && conda activate vetoworld-dev
 python -m pytest -q          # 1532 tests, no model and no GPU
 vworld doctor                # pins, corpus, keys
 ```
@@ -264,7 +264,7 @@ hypothesis is answered in the negative; two positive directions are open.
 bash scripts/setup_dev_env.sh
 ```
 
-Then `conda activate seahaven-dev`.
+Then `conda activate vetoworld-dev`.
 
 ## Two architecture facts that will bite you
 
@@ -369,7 +369,7 @@ between any two of them produces a null that looks like "training did nothing."
 ## Testing
 
 ```bash
-conda run -n seahaven-dev python -m pytest
+conda run -n vetoworld-dev python -m pytest
 ```
 
 ## License

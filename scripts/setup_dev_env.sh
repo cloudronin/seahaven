@@ -20,7 +20,7 @@
 set -euo pipefail
 
 CONDA="${CONDA_BIN:-$HOME/miniconda3/bin/conda}"
-ENV_NAME="seahaven-dev"
+ENV_NAME="vetoworld-dev"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [ ! -x "$CONDA" ]; then
@@ -35,7 +35,7 @@ if ! /usr/bin/pgrep -q oahd; then
 fi
 
 echo "Creating $ENV_NAME as osx-arm64 ..."
-CONDA_SUBDIR=osx-arm64 "$CONDA" env create -f "$REPO_ROOT/env/seahaven-dev.yml" --yes
+CONDA_SUBDIR=osx-arm64 "$CONDA" env create -f "$REPO_ROOT/env/vetoworld-dev.yml" --yes
 
 PY="$("$CONDA" info --base)/envs/$ENV_NAME/bin/python"
 
