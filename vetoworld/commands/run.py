@@ -134,8 +134,26 @@ def _round_cells(args, spec) -> int:
     if args.budget is None:
         raise SystemExit("run refuses to start without an explicit --budget.")
 
-    be = Backend(spec)
-    resolved = be.resolve_model()
+    # **ONE BACKEND PER MODEL, and this was the defect.** `Backend` fixes the
+    # request's `"model"` field at construction from `spec.model`
+    # (`endpoint.py`), and `spec` came from `endpoints.toml`, whose `together`
+    # entry names ONE model. So a single Backend served every cell in the grid
+    # while `meta.served_name` recorded the model the grid INTENDED — 161 cells
+    # across rounds 15-19 carry a `resolved_model_string` that is not their
+    # `served_name`, and every one of them was actually served by cogito.
+    #
+    # Token counts are the tell: round 18's eight "different models" agreed to
+    # within 1.09x on prompt tokens and 1.05x on completion, while billing
+    # differed 7x because `R.COHORT[model]` charged each at its intended price.
+    import dataclasses
+
+    backends: dict[str, Backend] = {}
+
+    def backend_for(model: str) -> Backend:
+        if model not in backends:
+            backends[model] = Backend(dataclasses.replace(spec, model=model))
+        return backends[model]
+
     spent = 0.0
     # **`usage_total` is CUMULATIVE over the backend's lifetime**, and the
     # backend is created once so the connection is reused. Reading it directly
@@ -143,9 +161,12 @@ def _round_cells(args, spec) -> int:
     # round-15 COMP gate showed prompt tokens climbing 991k, 1.98M, 2.98M... in
     # a perfect arithmetic progression for fourteen identical 24-episode cells,
     # and billed a 7x-inflated $7.02 for the seventh. Snapshot and diff.
-    seen_usage = dict(be.usage_total)
+    seen_usage: dict = {}
     for i, c in enumerate(todo, 1):
         model, arm, level = c
+        be = backend_for(model)
+        resolved = be.resolve_model()
+        seen_usage = dict(be.usage_total)
         p = path_for(c)
         t0 = time.time()
 
@@ -163,6 +184,13 @@ def _round_cells(args, spec) -> int:
         total = dict(be.usage_total)
         u = {k: total.get(k, 0) - seen_usage.get(k, 0) for k in total}
         seen_usage = total
+        # **The cell records what was SERVED, and refuses if that is not what
+        # was asked for.** The guard that would have caught the 161.
+        if resolved != model:
+            raise SystemExit(
+                f"SERVED THE WRONG MODEL: asked for {model!r}, the endpoint "
+                f"resolved {resolved!r}. A cell that records one model and "
+                "was served by another is not a measurement. Refusing.")
         pi, po = R.COHORT[model]
         billed = round(u["prompt_tokens"] / 1e6 * pi
                        + u["completion_tokens"] / 1e6 * po, 5)

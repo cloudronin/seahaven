@@ -202,7 +202,6 @@ def test_the_PROBE_TAG_CANNOT_MATCH_THE_CORPUS_SCHEMA():
     even if someone points them at the same directory."""
     name = PB.CELL_TAG.format(provider="together", date="2026-08-16")
     assert C.parse_cell_name(f"{name}.json") is None
-    assert C.parse_cell_name(f"eden_e{name}_m__A0__LAT.json") is None or True
     assert not name.startswith("eden_e"), "must fall outside the digest glob"
 
 

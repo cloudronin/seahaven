@@ -80,10 +80,38 @@ def _daily(args) -> int:
         print("  already complete for this date — no-op.")
         status, spent, failed = "OK", 0.0, []
     else:
-        be = Backend(resolve(provider, model=args.model, key_env=args.key_env))
-        resolved = be.resolve_model()
-        seen, spent, failed = dict(be.usage_total), 0.0, []
+        # **ONE BACKEND PER MODEL.** `Backend` fixes the request's "model"
+        # field at construction, so a single Backend would serve every cell in
+        # the fleet with one model while the filename claimed eight — the
+        # defect that put 161 mislabelled cells in rounds 15-19. The fleet
+        # would have inherited it on day one.
+        #
+        # The endpoint's base_url and key_env come from the PIN, not from
+        # `endpoints.toml`, which is CWD-relative and absent in a `pip install`
+        # container — so the scheduled job needs no config file at all.
+        import dataclasses
+
+        from ..backends.base import EndpointSpec
+
+        cfg = PB.PROVIDERS[provider]
+        base = EndpointSpec(name=provider, base_url=cfg["base_url"],
+                            key_env=cfg["key_env"], model="")
+        backends: dict = {}
+
+        def backend_for(model):
+            if model not in backends:
+                backends[model] = Backend(dataclasses.replace(base, model=model))
+            return backends[model]
+
+        spent, failed = 0.0, []
         for model, arm, level in todo:
+            be = backend_for(model)
+            resolved = be.resolve_model()
+            if resolved != model:
+                print(f"  SERVE_FAIL {model}: endpoint resolved {resolved!r}")
+                failed.append((model, arm, level, "SERVE_FAIL"))
+                continue
+            seen = dict(be.usage_total)
             if spent >= ceiling:
                 print(f"  BUDGET_REFUSED at ${spent:.2f} of ${ceiling:.2f}")
                 failed.append((model, arm, level, "BUDGET_REFUSED"))
