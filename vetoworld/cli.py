@@ -20,7 +20,7 @@ import sys
 
 #: Verbs that must never require a credential.
 FREE_VERBS = ("verify", "worlds", "read", "emit", "seeds", "doctor",
-              "pin check", "corpus")
+              "pin check", "corpus", "occasion")
 
 #: Verbs that serve episodes and therefore cost money.
 SPENDING_VERBS = ("run", "replicate", "probe")
@@ -65,10 +65,35 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="environment, corpus and pin health ($0)")
     sub.add_parser("verify", help="recompute every manuscript figure ($0)")
 
-    pr = sub.add_parser("probe", help="pre-flight an endpoint (serves 1 turn)")
+    pr = sub.add_parser("probe", help="pre-flight an endpoint, or serve the "
+                                     "daily fleet with --daily")
     pr.add_argument("endpoint", help="named entry in endpoints.toml, or a base URL")
     pr.add_argument("--model", help="model string (required with a base URL)")
     pr.add_argument("--key-env", help="env var holding the key")
+    # **`--daily` is a flag on the existing verb, not a new one.** `probe`
+    # already takes a required positional `endpoint`, so `probe daily` would
+    # collide with it. One invocation per provider also keeps columns
+    # independent at the PROCESS level: a hung provider cannot take a sibling's
+    # row down with it.
+    pr.add_argument("--daily", action="store_true",
+                    help="serve the pinned daily fleet at this endpoint, "
+                         "compute verdicts, and push the row")
+    pr.add_argument("--date", help="serving date (default: today, UTC)")
+    pr.add_argument("--budget", type=float,
+                    help="USD ceiling for --daily; the pin's per-day gate applies too")
+    pr.add_argument("--dry-run", action="store_true",
+                    help="print every would-be request and serve nothing")
+    pr.add_argument("--no-push", action="store_true",
+                    help="serve and verdict locally, push nothing")
+
+    oc = sub.add_parser("occasion", help="the seismograph's $0 reads")
+    oc.add_argument("action", choices=("verdict", "gate"))
+    oc.add_argument("--for", dest="for_",
+                    choices=("spend", "event-probe", "fork-reopen"),
+                    help="gate purpose (default: spend)")
+    oc.add_argument("--date", help="restrict `verdict` to one date")
+    oc.add_argument("--provider", help="default: together")
+    oc.add_argument("--results", help="cell directory (default: results)")
 
     rn = sub.add_parser("run", help="measure a NEW model (serves cells)")
     rn.add_argument("endpoint", help="named entry in endpoints.toml, or a base URL")
@@ -143,9 +168,10 @@ def main(argv: list[str] | None = None) -> int:
         from .commands.corpus import DATASET
         args.repo = DATASET
 
-    from .commands import (corpus, doctor, emit, pin, probe, read, replicate,
-                           run, seeds, verify, worlds)
+    from .commands import (corpus, doctor, emit, occasion, pin, probe, read,
+                           replicate, run, seeds, verify, worlds)
     return {"read": read.main, "worlds": worlds.main, "seeds": seeds.main,
+            "occasion": occasion.main,
             "emit": emit.main, "doctor": doctor.main, "verify": verify.main,
             "probe": probe.main, "run": run.main,
             "pin": pin.main, "replicate": replicate.main,

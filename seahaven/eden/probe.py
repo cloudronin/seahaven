@@ -227,7 +227,7 @@ LEVELS_RULE = (
 SEED_BASE = 100_000
 SEED_STRIDE = 864                    # per day, across four providers
 SEED_BLOCK = (100_000, 151_839)      # 60 days of headroom
-SEED_EPOCH = "2026-08-16"
+SEED_EPOCH = "2026-08-15"
 
 #: **Measured, not estimated.** From committed billing on these exact models at
 #: these exact worlds: LAT A0 x 8 = $3.67 (round 18 actuals), W2 A0 x 8 = $4.07
@@ -278,7 +278,7 @@ ARTIFACTS = (
 )
 
 #: Computed on a clean tree, BEFORE any cell was served.
-PINNED_PROBE_HASH = "53cdd3feaf8f6d34bb994fbd4edc1b1267c44029ab03c55512faf1815c5cf82d"
+PINNED_PROBE_HASH = "956f9059871c87961495d4c861c367c7578c9821f4dc0bf709e851931e845471"
 
 
 def world_lock_paths() -> tuple[str, ...]:
@@ -293,10 +293,27 @@ def cells(provider: str = "together"):
 
 
 def seed_for(provider: str, model: str, level: str, arm: str, day: int) -> int:
-    """Same date -> same seeds, per provider. Deterministic and reproducible."""
+    """Same date -> same seeds, per provider. Deterministic and reproducible.
+
+    **Refuses outside `SEED_BLOCK`.** A dry run on the day before the epoch
+    produced day=-1 and a seed of 99136 — below the reserved block, in space
+    the block exists to keep clear. The invariant has to be enforced where the
+    number is made, not assumed by the test that checks the block is free.
+    """
     idx = sorted({(m, a, lv) for m, a, lv in cells()}).index((model, arm, level))
     off = sorted(PROVIDERS).index(provider) * (len(cells()) * EPISODES)
-    return SEED_BASE + day * SEED_STRIDE + off + idx * EPISODES
+    seed = SEED_BASE + day * SEED_STRIDE + off + idx * EPISODES
+    lo, hi = SEED_BLOCK
+    if not (lo <= seed and seed + EPISODES - 1 <= hi):
+        raise SystemExit(
+            f"seed {seed}..{seed + EPISODES - 1} for {provider} {model} "
+            f"{arm} {level} on day {day} falls OUTSIDE the reserved block "
+            f"{lo}-{hi}. Day {day} is "
+            + ("before the seed epoch " + SEED_EPOCH if day < 0 else
+               "past the block's horizon")
+            + "; extend the block deliberately at a pin boundary rather than "
+              "serving into unreserved seed space.")
+    return seed
 
 
 def _payload_body(art: dict, locks: dict, specs: dict) -> str:

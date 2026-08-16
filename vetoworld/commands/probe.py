@@ -28,7 +28,167 @@ PROBE_MESSAGES = [
 ]
 
 
+def _daily(args) -> int:
+    """Serve the pinned fleet for one provider-day, verdict it, push the row.
+
+    **Idempotent by (provider, date).** A cell already on disk for this date is
+    a no-op, so a mid-day crash re-serves only what is missing on the SAME
+    date-derived seeds and pushes once.
+
+    **`VERDICT_FAIL` is a distinct status.** A day where serving succeeded and
+    verdict computation failed must never read as QUIET, and must stay
+    distinguishable from a provider outage. That is the tail-exit-code lesson:
+    the success signal has to be the inner step's own, not the wrapper's.
+    """
+    import datetime as dt
+    import json
+    import time
+
+    from seahaven.eden import probe as PB
+    from seahaven.eden._shared import corpus as C
+    from seahaven.eden._shared import probe_channel as PC
+    from seahaven.eden._shared import sweep as SW
+    from seahaven.fidelity.runner import run_fidelity
+
+    PB.assert_pinned()
+    provider = args.endpoint
+    date = getattr(args, "date", None) or dt.date.today().isoformat()
+    day = (dt.date.fromisoformat(date)
+           - dt.date.fromisoformat(PB.SEED_EPOCH)).days
+    root = C.RESULTS
+    grid = PB.cells(provider)
+
+    def path_for(model, arm, level):
+        return root / PC.cell_name(provider, date, model, arm, level)
+
+    todo = [c for c in grid if not path_for(*c).exists()]
+    print(f"probe {provider} {date} — {len(grid)} cell(s), {len(todo)} to run")
+    print(f"  pin {PB.PINNED_PROBE_HASH[:16]}...  seed day {day}  "
+          f"alpha {PB.ALPHA}")
+
+    if args.dry_run:
+        for model, arm, level in grid:
+            print(f"  would serve {model:<44}{arm}  {level:<5} "
+                  f"seed0={PB.seed_for(provider, model, level, arm, day)}  "
+                  f"m={PB.EPISODES}")
+        print(f"\n  DRY RUN — nothing served, $0.00 spent. "
+              f"{len(grid) * PB.EPISODES} episodes would run.")
+        return 0
+
+    ceiling = min(args.budget or PB.BUDGET_PER_DAY, PB.BUDGET_PER_DAY)
+    if not todo:
+        print("  already complete for this date — no-op.")
+        status, spent, failed = "OK", 0.0, []
+    else:
+        be = Backend(resolve(provider, model=args.model, key_env=args.key_env))
+        resolved = be.resolve_model()
+        seen, spent, failed = dict(be.usage_total), 0.0, []
+        for model, arm, level in todo:
+            if spent >= ceiling:
+                print(f"  BUDGET_REFUSED at ${spent:.2f} of ${ceiling:.2f}")
+                failed.append((model, arm, level, "BUDGET_REFUSED"))
+                break
+            seed0 = PB.seed_for(provider, model, level, arm, day)
+            t0 = time.time()
+            try:
+                def serve(runs, seed0, *, _lv=level, _arm=arm, _m=model):
+                    return run_fidelity(be, None, runs=runs, steps=30,
+                                        seed0=seed0,
+                                        world_id=f"world_eden_{_lv}",
+                                        narrate=False, eden_level=_lv,
+                                        eden_arm=_arm, terminal_at_zero=True)
+                res, _filled = SW.run_cell(
+                    None, runs=PB.EPISODES, seed0=seed0, level=level, arm=arm,
+                    terminal_at_zero=True, serve=serve,
+                    path=path_for(model, arm, level), seeds=None)
+            except Exception as e:                          # noqa: BLE001
+                print(f"  SERVE_FAIL {model} {arm} {level}: {e}")
+                failed.append((model, arm, level, "SERVE_FAIL"))
+                continue
+            total = dict(be.usage_total)
+            u = {k: total.get(k, 0) - seen.get(k, 0) for k in total}
+            seen = total
+            pi, po = PB.COHORT.get(model, (0.0, 0.0))
+            billed = round(u["prompt_tokens"] / 1e6 * pi
+                           + u["completion_tokens"] / 1e6 * po, 5)
+            spent += billed
+            res["meta"] = {
+                "served_name": model, "resolved_model_string": resolved,
+                "provider": provider, "probe_date": date,
+                "eden_level": level, "eden_arm": arm, "runs": PB.EPISODES,
+                "steps": 30, "seed0": seed0, "terminal_at_zero": True,
+                "probe_pin": PB.PINNED_PROBE_HASH,
+                "wall_start_epoch": round(t0), "wall_end_epoch": round(time.time()),
+                "usage": u, "price_per_m": {"prompt": pi, "completion": po},
+                "billed_usd": billed,
+            }
+            path_for(model, arm, level).write_text(
+                json.dumps(res, indent=2) + "\n")
+            print(f"  [{len(grid)-len(todo)+todo.index((model,arm,level))+1}"
+                  f"/{len(grid)}] {model.split('/')[-1][:24]:<26}{arm} "
+                  f"{level:<5} ${billed:.3f}  running ${spent:.2f}")
+        status = ("OK" if not failed else
+                  "BUDGET_REFUSED" if any(f[3] == "BUDGET_REFUSED" for f in failed)
+                  else "PARTIAL")
+
+    try:
+        cells = PC.read_cells(root, provider=provider, date=date)
+        rows = []
+        for ch in sorted({PC.channel_key(c.level, c.arm) for c in cells}):
+            level, arm = ch.split(".")
+            epoch = (PB.FLASH_ANCHOR if arm == PB.DECISION_ARM
+                     else PB.EPOCH_ANCHOR.get(level))
+            env = PB.FLASH_ENVELOPE if arm == PB.DECISION_ARM else None
+            hist = PC.read_cells(root, provider=provider)
+            tr = PC.trace(hist, provider=provider, channel=ch, epoch=epoch,
+                          alpha=PB.ALPHA, rolling_k=PB.ROLLING_K,
+                          stale_after_days=PB.STALE_AFTER_DAYS, envelope=env)
+            v = next((x for x in tr if x.date == date), None)
+            if v is None:
+                continue
+            rows.append({
+                "date": date, "provider": provider, "channel": ch,
+                "verdict": v.verdict, "direction": v.direction,
+                "k": v.now[0], "n": v.now[1], "rate": round(v.rate, 4),
+                "wilson": [round(x, 4) for x in v.interval()],
+                "p_epoch": v.p_epoch, "p_rolling": v.p_rolling,
+                "epoch_anchor": list(epoch) if epoch else None,
+                "envelope": list(env) if env else None,
+                "models": list(v.models), "serve_status": status,
+                "spend_usd": round(spent, 4),
+                "pin_digest": PB.PINNED_PROBE_HASH,
+                "substrate_class": PB.PROVIDERS[provider]["substrate"],
+                "levels_rule": PB.LEVELS_RULE,
+            })
+    except Exception as e:                                  # noqa: BLE001
+        print(f"\n  VERDICT_FAIL: {e}")
+        print("  Serving succeeded; verdict computation did not. This is NOT "
+              "a quiet day.")
+        return 1
+
+    print(f"\n  status {status}   spent ${spent:.2f} of ${ceiling:.2f}")
+    for r in rows:
+        print(f"    {r['channel']:<10}{r['verdict']:<11}{r['direction']:<6}"
+              f"{r['k']}/{r['n']}")
+
+    if getattr(args, "no_push", False):
+        print("  --no-push: nothing uploaded")
+        return 0
+    from ..publish import available, push_day
+    ok, why = available()
+    if not ok:
+        print(f"\n  PUSH SKIPPED: {why}")
+        print("  A local-only day is a gap in the record; fix and re-run.")
+        return 1
+    url = push_day(rows, [path_for(*c) for c in grid if path_for(*c).exists()],
+                   provider=provider, date=date)
+    print(f"  pushed -> {url}")
+    return 0
+
+
 def main(args) -> int:
+    if getattr(args, "daily", False):
+        return _daily(args)
     spec = resolve(args.endpoint, model=args.model, key_env=args.key_env)
     be = Backend(spec)
     print(f"PROBE — {spec.model} at {spec.base_url}")
