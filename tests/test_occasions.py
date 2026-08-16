@@ -11,10 +11,20 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from seahaven.eden._shared import corpus as C
 from vetoworld.commands import verify as V
 from vetoworld.register import CLAIMS
 from vetoworld.register import occasions as OC
+
+#: **Corpus-wide tests: not unit tests, not timed like them (#112).** These
+#: recompute every figure over the whole corpus, so they grow with it. The
+#: project default of 120s caught that growth once, as an unexplained flake
+#: rather than as the arithmetic it was. Measured at 425 cells, the slowest here
+#: is ~53s.
+pytestmark = pytest.mark.timeout(600)
+
 
 
 def _claim(fid):

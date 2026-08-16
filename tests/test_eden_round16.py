@@ -288,6 +288,36 @@ def test_the_RIDER_COHORT_was_selected_by_a_RULE_WHOSE_INPUT_IS_RETRACTED():
         "per-model flags were attributions to models that did not serve")
 
 
+def test_the_RIDER_IS_VOID_AND_REFUSES_RATHER_THAN_RETURNING_CELLS():
+    """**#106 closed as void, not as a gap to plumb.**
+
+    `run --stage` accepts `comp` and nothing else, so the rider was never
+    reachable, and that was filed as a CLI defect. It stopped being one: the
+    cohort's selecting rule no longer fires, and every row of `RIDER_READING`
+    is conditioned on a LAT event that does not exist.
+
+    The refusal is asserted so the flag cannot be wired back on without someone
+    reading why it was not.
+    """
+    with pytest.raises(SystemExit, match="VOID"):
+        R.rider_cells()
+
+    #: The CLI surface stays closed, and this is the assertion that keeps the
+    #: two facts in agreement — a refusing function beside a live flag would be
+    #: a worse state than either.
+    from vetoworld.cli import build_parser
+    stage = next(a for a in build_parser()._subparsers._group_actions[0]
+                 .choices["run"]._actions if a.dest == "stage")
+    assert "rider" not in stage.choices, (
+        "the rider flag has been wired up while rider_cells() refuses; "
+        "resolve #106 deliberately or not at all")
+
+    #: The constants stay: they are inside the round's hashed payload, and the
+    #: record of a probe designed and never served is worth keeping.
+    assert R.RIDER_COHORT and R.RIDER_READING
+    assert "rider" in R.payload()
+
+
 def test_the_SEED_BLOCKS_are_disjoint_from_every_committed_cell():
     from seahaven.eden._shared import corpus as C
     #: **Round 16's own cells are now burned**, so this must ask the question it

@@ -286,9 +286,41 @@ def cells():
 
 
 def rider_cells():
-    """LAT2 carries the same forbidden item, but the rider asks only about the
-    reference channel, so A0 is the only arm."""
-    return [(m, "A0", RIDER_LEVEL) for m in RIDER_COHORT]
+    """**VOID (#106, voided by #113). Refuses rather than returns.**
+
+    LAT2 carries the same forbidden item, and the rider asked only about the
+    reference channel, so A0 was the only arm. It was never reachable from the
+    CLI — `run --stage` accepts `comp` and nothing else — and that gap was filed
+    as a defect. It is not one any more.
+
+    Both of the rider's premises are gone:
+
+    - **Its cohort no longer has a selecting rule.** Two of the three were
+      chosen by the per-model flags that ("LAT", "15") raised. Corrected, that
+      sweep reads QUIET and raises **no flags at all**, so the cohort has become
+      three names with no derivation — a probe cohort picked after seeing data,
+      which is exactly what selecting it by rule was meant to avoid.
+    - **There is no LAT state to compare against.** Every reading in
+      `RIDER_READING` is conditioned on LAT having recovered or idled from an
+      event, and the corrected corpus contains no occasion EVENT on any reading.
+
+    So it stays unreachable, deliberately, and says so out loud. Wiring the flag
+    would have been spending money to fill in a table whose rows are all
+    counterfactual.
+
+    **The constants above are NOT removed**: `RIDER_LEVEL`, `RIDER_EPISODES`,
+    `RIDER_SEED0`, `RIDER_COHORT` and `RIDER_READING` are inside this round's
+    hashed payload, and deleting them would change a retired pin. They stay as
+    the record of a probe that was designed and never served.
+    """
+    raise SystemExit(
+        "round 16's rider is VOID — see issue #106, voided by #113.\n"
+        "  Its cohort was selected by per-model flags on (LAT, e15); that "
+        "sweep now reads\n"
+        "  QUIET and raises none, and there is no LAT event for LAT2 to be "
+        "contrasted with.\n"
+        "  Serving it would spend money on a hand-picked cohort answering a "
+        "counterfactual.")
 
 
 def assert_generation3(meta: dict) -> None:

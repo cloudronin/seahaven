@@ -172,11 +172,16 @@ describes. **The YAML block above must remain the first bytes of the file** —
 HuggingFace reads front matter only at position 0, and an intro above it means
 the card ships with no metadata at all.
 
-The corpus is 107 MB: the 259 `eden_e*.json` cells (100,517,734 bytes, the
-number the manifest digests) plus 11 MB of compiled worlds. It is **not**
-`results/`, which holds 2,644 files and 247 MB because the Seahaven programme's
-artifacts live there too — so staging is explicit, and a bare `upload . .` would
-publish 2,385 unrelated files under this dataset's name.
+The corpus is the `eden_e*.json` cells plus ~11 MB of compiled worlds. It is
+**not** `results/`, which holds thousands of files because the Seahaven
+programme's artifacts live there too — so staging is explicit, and a bare
+`upload . .` would publish unrelated files under this dataset's name.
+
+**The cell count and byte total are not written here.** They were, as "259
+cells, 100,517,734 bytes", and the corpus reached 425 cells and 171,503,125
+bytes while the sentence stayed put — the same hand-maintained-number drift the
+programme has now paid for five times. `vetoworld/corpus.manifest.json` is the
+one place they live, and `vworld corpus status` is how you read them.
 
     ST=/tmp/vetoworld-corpus
     mkdir -p $ST/results

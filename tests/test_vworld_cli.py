@@ -9,6 +9,14 @@ import pytest
 from vetoworld import cli
 from vetoworld.commands import doctor, emit, read, seeds, worlds
 
+#: **Corpus-wide tests: not unit tests, not timed like them (#112).** These
+#: recompute every figure over the whole corpus, so they grow with it. The
+#: project default of 120s caught that growth once, as an unexplained flake
+#: rather than as the arithmetic it was. Measured at 425 cells, the slowest here
+#: is ~53s.
+pytestmark = pytest.mark.timeout(600)
+
+
 
 class _A:
     """Minimal args stand-in."""

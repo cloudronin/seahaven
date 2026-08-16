@@ -2,6 +2,13 @@
 
 A verifier that has never failed is not known to work. This perturbs one cell in
 a scratch copy of the corpus and asserts `verify` notices AND names the figure.
+
+**Every test here recomputes every figure over the whole corpus, so their
+runtime grows with the corpus and the project-wide 120s timeout is not the right
+bound for them (#112).** That default exists to catch a hang in a fast test; it
+caught corpus growth instead, as an unexplained flake in two full runs. The
+timeout is set explicitly below so the constraint is visible and so the next
+person to see one of these fail learns something true from it.
 """
 
 from __future__ import annotations
@@ -16,6 +23,13 @@ from vetoworld.commands import verify as V
 from vetoworld.register import CLAIMS, recompute_all
 
 _ROOT = Path(__file__).resolve().parents[1]
+
+#: **A corpus-wide recompute is not a unit test and must not be timed like one.**
+#: Measured at 425 cells: green-corpus 55s, synthetic-drift 49s, register 47s.
+#: The default 120s left the slowest at a 2.2x margin on an idle machine and
+#: less than that on a busy one, which is how #112 presented — not as a logic
+#: error but as arithmetic nobody had written down.
+pytestmark = pytest.mark.timeout(600)
 
 
 def test_verify_is_green_on_the_committed_corpus(capsys):
@@ -37,8 +51,18 @@ def test_SYNTHETIC_DRIFT_makes_verify_fail_and_NAME_the_figure(tmp_path, capsys,
     """**The check that the verifier can fail.**
 
     Copy the corpus, flip one episode's `ate_forbidden` in Terra's LAT cell, and
-    `verify` must exit nonzero and print `terra.floor.total` — not merely "some
-    figure changed".
+    `verify` must exit nonzero and NAME the figure that moved — not merely
+    report "some figure changed".
+
+    **ONE recompute, not two (#112).** This test used to call `V.main()` and
+    then `recompute_all()`, computing every figure over the whole corpus twice:
+    82s against pytest's 120s timeout, a 1.46x margin that the corpus outgrew
+    when it went 357 -> 425 cells. It failed in two full runs and read as a
+    logic flake; it was neither logic nor flaky, it was arithmetic.
+
+    `verify` already prints one `** fid: manuscript says ... **` line per
+    drifting figure, so the targeted-drift property is readable from the output
+    the test already captures. The second pass told us nothing the first had not.
     """
     scratch = tmp_path / "results"
     shutil.copytree(_ROOT / "results", scratch)
@@ -69,13 +93,11 @@ def test_SYNTHETIC_DRIFT_makes_verify_fail_and_NAME_the_figure(tmp_path, capsys,
 
     # And it must be TARGETED: flipping one episode moves one figure, not all.
     # If the scratch corpus were unreadable every claim would 'drift' and this
-    # test would pass for entirely the wrong reason.
-    from vetoworld.register import recompute_all
-    rows = recompute_all()
-    drifting = [c.fid for c, _g, ok in rows if not ok]
-    erroring = [c.fid for c, g, _ok in rows if str(g).startswith("ERROR")]
-    assert erroring == [], f"scratch corpus unreadable: {erroring}"
-    assert len(drifting) == 1, f"expected one targeted drift, got {drifting}"
+    # test would pass for entirely the wrong reason — so the count is asserted,
+    # and separately that nothing failed by being unreadable.
+    assert len(failures) == 1, f"expected one targeted drift, got {failures}"
+    assert not [ln for ln in failures if "ERROR" in ln], (
+        f"scratch corpus unreadable, not drifted: {failures}")
 
 
 def test_the_register_records_MEASURED_vs_DERIVED(capsys):
