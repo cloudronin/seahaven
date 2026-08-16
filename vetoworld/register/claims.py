@@ -182,17 +182,24 @@ CLAIMS: list[Claim] = [
                    "as a world one, and n=24 against n=24 cannot separate them."),
 
     # --- the raidex dimension (round 15) ------------------------------------
-    Claim("vetohold.cohort", (9, 3),
-          lambda: _vetohold_counts(), "e15 x 14 + the 9 with prior suites",
-          note="**WAS (23, 17) BEFORE THE ADMISSION GATE.** 9 models carry a "
-               "published veto-hold score and 3 of them join raidex. The 14 "
-               "vetoed by the 2026-08-14 LAT occasion event are exactly the 14 "
-               "that joined, so the join collapses with the cohort rather than "
-               "beside it. Vetoed, never corrected: the re-serve restores both "
-               "or neither. The score cohort and the correlate cohort remain "
-               "deliberately different sets",
-          occasion="ASSEMBLED FROM SIX SWEEPS (e10-e15). Every cross-model "
-                   "comparison here spans sittings; the score is a "
+    Claim("vetohold.cohort", (10, 4),
+          lambda: _vetohold_counts(), "e10-e14 suites + e20 (GLM-5.2)",
+          note="**10 models carry a published veto-hold score and 4 join "
+               "raidex. It read (9, 3) until 2026-08-16 and (23, 17) before "
+               "the admission gate — and the three numbers mean three "
+               "different things.**\n"
+               "        (23, 17) counted filenames: fourteen of them were "
+               "cogito, so that cohort never existed (#113).\n"
+               "        (9, 3) is what survived the retraction — the models "
+               "with genuine gen-3 suites.\n"
+               "        (10, 4) adds GLM-5.2, measured for the first time in "
+               "round 20 with identity verified on all seven cells. It is the "
+               "only one of the eight lost models recoverable on Together: six "
+               "went to a dedicated-only tier and Kimi-K3 cannot be served "
+               "under the pinned request form. **This figure will not return "
+               "to 14 on this provider.**",
+          occasion="ASSEMBLED FROM SIX SWEEPS (e10-e14, e20). Every "
+                   "cross-model comparison here spans sittings; the score is a "
                    "single-occasion estimate per model and the card carries "
                    "the date."),
     Claim("vetohold.spread", (23.4, 100.0), lambda: _vetohold_spread(),

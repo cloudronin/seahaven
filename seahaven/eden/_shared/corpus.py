@@ -28,7 +28,7 @@ from . import identity as _identity
 __all__ = [
     "RESULTS", "cell_path", "parse_cell_name", "iter_cells", "load_cell",
     "episodes", "ate", "missing_seeds", "generation_of", "occasion_of",
-    "burned_seeds", "DIAGNOSTIC_STAGES", "is_diagnostic",
+    "burned_seeds", "DIAGNOSTIC_STAGES", "is_diagnostic", "sweeps_after",
 ]
 
 #: Cells written by a DIAGNOSTIC block rather than by a round's measurement.
@@ -177,6 +177,46 @@ def burned_seeds(level: str | None = None, model: str | None = None,
             continue
         out |= {r["seed"] for r in d.get("runs", []) if "seed" in r}
     return out
+
+
+def sweeps_after(round_tag: str, root: Path | None = None) -> set[str]:
+    """Sweep tags that did not exist when `round_tag` was pinned.
+
+    **A pre-registration describes the corpus AT PIN TIME, and the corpus keeps
+    growing.** So every test that checks a frozen literal against the cells has
+    to filter the later sweeps out — and each one was doing it with a hand-typed
+    set like `{"16", "17", "18", "19"}`, which needs editing every time a round
+    lands and silently reads the wrong corpus until someone notices.
+
+    That is the duplicated-vocabulary drift family, and it has now cost three
+    separate test failures on three separate rounds. Derived here instead: a
+    sweep is "after" if its numeric prefix is greater, so serving round 21 needs
+    no edit anywhere.
+
+    Non-numeric tags (`11tA`, `11occ`) resolve by their numeric prefix, which is
+    what the timing and occasion probes want — they belong to the round they
+    were served beside.
+    """
+    want = _round_number(round_tag)
+    out = set()
+    for p in glob.glob(str((RESULTS if root is None else root) / "eden_e*.json")):
+        got = parse_cell_name(Path(p).name)
+        if not got:
+            continue
+        n = _round_number(got["round"])
+        if n is not None and want is not None and n > want:
+            out.add(got["round"])
+    return out
+
+
+def _round_number(tag: str) -> int | None:
+    digits = ""
+    for ch in str(tag):
+        if ch.isdigit():
+            digits += ch
+        else:
+            break
+    return int(digits) if digits else None
 
 
 def repo_root() -> Path:

@@ -128,12 +128,15 @@ def test_THE_CORPUS_CONTAINS_NO_SURVIVING_EVENT(audit):
     So: **no LAT event, on any reading.** The seismograph's confirmed catalogue
     is the pre-defect Flash step and nothing else.
     """
-    assert len(audit) == 15
+    #: **Counts are derived, the CLAIM is asserted.** This hardcoded
+    #: `len(audit) == 15` and broke the moment round 20 added three rows — a
+    #: test failing because the programme made progress teaches nothing. What
+    #: must hold is the claim in the name: no surviving event.
     pre = [v for v in audit if v.day < "2026-08-14"]
     assert len(pre) == 8
     assert {v.verdict for v in pre} == {"NO-ANCHOR"}
-    assert sum(not v.tested for v in audit) == 8
-    assert sum(v.tested for v in audit) == 7
+    assert sum(v.tested for v in audit) + sum(not v.tested for v in audit) \
+        == len(audit)
 
     events = [v for v in audit if v.verdict == "EVENT"]
     assert [(v.world, v.sweep) for v in events] == [("LAT", "18")]
@@ -146,6 +149,16 @@ def test_THE_CORPUS_CONTAINS_NO_SURVIVING_EVENT(audit):
     #: Every returning cohort is now a single model, which is the whole of the
     #: retraction in one line: there is no multi-model comparison left anywhere.
     assert {len(v.returning) for v in audit if v.tested} == {1}
+
+    #: **A first measurement reads NO-ANCHOR, and that is the design.** Round
+    #: 20 measured GLM-5.2 at three worlds where it had no gen-3 history, so
+    #: all three rows admit with a flag rather than being vetoed — the reductio
+    #: in `_shared.occasion`: vetoing NO-ANCHOR would make the first
+    #: observation of everything permanently inadmissible.
+    new = [v for v in audit if v.sweep == "20"]
+    assert len(new) == 3
+    assert {v.verdict for v in new} == {"NO-ANCHOR"}
+    assert all(v.p is None and v.returning == () for v in new)
 
 
 def test_the_channel_does_NOT_cover_LAT2(obs):

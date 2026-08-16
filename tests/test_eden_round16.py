@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from seahaven.eden import round16 as R
+from seahaven.eden._shared import corpus as C
 from seahaven.eden._shared import occasion as OQ
 from vetoworld.register import correlations as CO
 
@@ -40,7 +41,10 @@ def test_the_FROZEN_ANCHORS_SURVIVE_because_they_are_PRE_ROUND_15_cells():
     reproduces exactly, and that is worth asserting rather than assuming: it is
     the boundary of the damage.
     """
-    obs = OQ.observations()
+    #: Pin-time: round 16's anchor was read off the corpus as it stood then.
+    #: GLM-5.2 gained a LAT cell in round 20 and would join it otherwise.
+    post = C.sweeps_after("15") | {"16"}
+    obs = [o for o in OQ.observations() if o.sweep not in post]
     tainted = OQ.event_pairs(alpha=R.OCCASION_ALPHA, obs=obs)
 
     got = {}
@@ -145,7 +149,10 @@ def test_the_BASE_RATE_AT_PIN_describes_the_corpus_AS_IT_WAS_AT_PIN_TIME():
     So the corpus is filtered back to pin time instead, and the round's own
     cells are what get excluded.
     """
-    post = {"16", "17", "18", "19"}
+    #: **Derived, not hand-typed.** This was `{"16","17","18","19"}` and needed
+    #: an edit every time a round landed — round 20 broke it, which is the third
+    #: time this family has cost a failure. `sweeps_after` computes it.
+    post = C.sweeps_after("15") | {"16"}
     obs = [o for o in OQ.observations() if o.sweep not in post]
     audit = OQ.audit(alpha=R.OCCASION_ALPHA, obs=obs)
     corrected = {
@@ -226,9 +233,13 @@ def test_the_GATE_VETOES_FOURTEEN_and_every_one_carries_its_REASON():
     #: cells that cogito served. Eight of the fourteen have left the register
     #: entirely — they have no cells at these worlds under any identity. The
     #: gate is not broken; its input was. Issue #113, and #108 voids with it.
-    assert len(ungated.admitted) == 9, (
-        "was 23 — the other fourteen were filenames, not measurements")
-    assert len(gated.admitted) == 9
+    #: **The property, not the count.** It was 23 because fourteen were
+    #: filenames; it is now 10 because GLM-5.2 was genuinely measured in round
+    #: 20. Asserting a bare number here would fail on every future round for a
+    #: reason unrelated to what this test is about.
+    assert len(ungated.admitted) == len(gated.admitted)
+    assert not (set(gated.admitted) & set(R.COHORT) - {"zai-org/GLM-5.2"}), (
+        "a model from the retracted fourteen is scoring without being measured")
 
     by_event = {m: why for m, why in gated.refused.items()
                 if any("EVENT" in w for w in why)}

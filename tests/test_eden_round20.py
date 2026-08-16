@@ -82,7 +82,16 @@ def test_the_SEED_BLOCKS_ARE_FRESH_because_the_old_ones_are_burned():
     """Round 15's block was burned — by cogito, under fourteen filenames, which
     is exactly why it cannot be reused. A re-serve into burned seeds would not
     be a new measurement of anything."""
-    burned = C.burned_seeds()
+    #: **Round 20's own cells are now burned**, so this must ask the question it
+    #: was always asking — does the block collide with anything served BEFORE
+    #: this round — rather than colliding with itself. Round 16 learned the
+    #: identical lesson; the fix is the same shape.
+    burned = set()
+    for path, cell in C.iter_cells():
+        got = C.parse_cell_name(path.name)
+        if got and got["round"] == "20":
+            continue
+        burned |= {r["seed"] for r in cell.get("runs", []) if "seed" in r}
     grid = set(range(R.SEED0, R.SEED0 + max(R.EPISODES_A1, R.EPISODES_A0)))
     comp = set(range(R.COMP_SEED0, R.COMP_SEED0 + R.COMP_EPISODES))
 
@@ -121,7 +130,10 @@ def test_THE_EIGHT_NEVER_MEASURED_ARE_EXACTLY_THE_ONES_WITH_NO_CELLS():
         if C.generation_of(m) != "gen3" or C.is_diagnostic(m):
             continue
         got = C.parse_cell_name(p.name)
-        if not got or got["round"] in ID.RETRACTED_SWEEPS:
+        #: Round 20 itself is excluded: NEVER_MEASURED records the state at PIN
+        #: time, and round 20 is what changed it. GLM-5.2 is measured now, which
+        #: is the point of the round, not a reason to rewrite its premise.
+        if not got or got["round"] in ID.RETRACTED_SWEEPS or got["round"] == "20":
             continue
         have.add(ID.model_identity(m).served)
 
@@ -135,6 +147,11 @@ def test_THE_EIGHT_NEVER_MEASURED_ARE_EXACTLY_THE_ONES_WITH_NO_CELLS():
     #: The other six DO have gen-3 cells, so the split is real rather than an
     #: artefact of the filter being too narrow. They are exactly NOT_RESERVED.
     assert set(R15.COHORT) - never == set(R.NOT_RESERVED)
+
+    #: And the round did what it was for: GLM-5.2 is no longer unmeasured.
+    now = {ID.model_identity(d["meta"]).served for _p, d in C.iter_cells()
+           if (C.parse_cell_name(_p.name) or {}).get("round") == "20"}
+    assert now == {"zai-org/GLM-5.2"}
 
 
 def test_the_GRID_IS_7_CELLS_and_every_one_is_new():
