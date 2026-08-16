@@ -37,8 +37,18 @@ def test_the_COHORT_IS_WHAT_TIERING_LEFT_and_the_rest_is_RECORDED():
     Every one of the fourteen must be accounted for exactly once: served,
     excluded by tiering, or servable-but-deliberately-not-re-served.
     """
-    assert set(R.COHORT) == {"moonshotai/Kimi-K3", "zai-org/GLM-5.2"}
-    assert len(R.EXCLUDED) == 6 and len(R.NOT_RESERVED) == 6
+    assert set(R.COHORT) == {"zai-org/GLM-5.2"}
+    assert len(R.EXCLUDED) == 7 and len(R.NOT_RESERVED) == 6
+
+    #: **The two exclusion reasons must stay distinguishable.** Six are
+    #: commercial (tiering); Kimi-K3 is technical and provider-specific, and
+    #: recoverable elsewhere. Collapsing them would lose the fact that makes
+    #: round 21 worth serving.
+    tiered = [m for m, w in R.EXCLUDED.items() if "non-serverless" in w]
+    assert len(tiered) == 6
+    assert "EMPTY CONTENT" in R.EXCLUDED["moonshotai/Kimi-K3"]
+    assert "NOT a model property" in R.EXCLUDED["moonshotai/Kimi-K3"]
+    assert "DeepInfra" in R.EXCLUDED["moonshotai/Kimi-K3"]
 
     accounted = set(R.COHORT) | set(R.EXCLUDED) | set(R.NOT_RESERVED)
     assert accounted == set(R15.COHORT), (
@@ -55,7 +65,7 @@ def test_the_COHORT_IS_WHAT_TIERING_LEFT_and_the_rest_is_RECORDED():
     #: **Six of the eight the register LOST are unservable**, which is why this
     #: round recovers two and not eight. Asserted so the shortfall is a recorded
     #: consequence rather than a surprise at writeup.
-    assert len(set(R.NEVER_MEASURED) & set(R.EXCLUDED)) == 6
+    assert len(set(R.NEVER_MEASURED) & set(R.EXCLUDED)) == 7
     assert set(R.COHORT) <= set(R.NEVER_MEASURED)
 
     assert R.LEVELS == R15.LEVELS
@@ -127,13 +137,13 @@ def test_THE_EIGHT_NEVER_MEASURED_ARE_EXACTLY_THE_ONES_WITH_NO_CELLS():
     assert set(R15.COHORT) - never == set(R.NOT_RESERVED)
 
 
-def test_the_GRID_IS_14_CELLS_and_every_one_is_new():
-    """2 models x (3 worlds x 2 arms) + 2 COMP = 14. Asserted because the cost
+def test_the_GRID_IS_7_CELLS_and_every_one_is_new():
+    """1 model x (3 worlds x 2 arms) + 1 COMP = 7. Asserted because the cost
     estimate and the budget gate are both derived from it."""
     grid, comp = R.cells(), R.comp_cells()
-    assert len(grid) == 2 * 3 * 2 == 12
-    assert len(comp) == 2
-    assert len(grid) + len(comp) == 14
+    assert len(grid) == 1 * 3 * 2 == 6
+    assert len(comp) == 1
+    assert len(grid) + len(comp) == 7
     assert {lv for _m, _a, lv in comp} == {"COMP"}
     assert {a for _m, a, _lv in comp} == {"A0"}
 
@@ -185,6 +195,8 @@ def test_the_SUPERSEDED_PIN_is_kept_and_governs_nothing():
     exist would be the opposite of this.
     """
     assert R.SUPERSEDED_PIN_14_MODELS != R.PINNED_ROUND20_HASH
+    assert R.SUPERSEDED_PIN_2_MODELS != R.PINNED_ROUND20_HASH
+    assert R.SUPERSEDED_PIN_14_MODELS != R.SUPERSEDED_PIN_2_MODELS
     assert R.PINNED_ROUND20_HASH == R.current_hash()
 
     from seahaven.eden._shared import corpus as C

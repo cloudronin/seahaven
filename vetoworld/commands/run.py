@@ -168,12 +168,23 @@ def _round_cells(args, spec) -> int:
     want_models = sorted({m for m, _a, _lv in [c for c in todo]})
     if want_models:
         print(f"  pre-flight: {len(want_models)} model(s) ...", flush=True)
+        # **The pre-flight must send the REQUEST FORM the round will send.**
+        # A first version called `resolve_model()` only — availability, not
+        # servability — and passed both of round 20's models. The serve then
+        # died on Kimi-K3, because Together truncates its reasoning to 16
+        # tokens under `chat_template_kwargs.enable_thinking=False` and returns
+        # empty content. Availability, identity and servability are three
+        # different questions and only the third needs a real call.
+        from seahaven.eden.outcome import EDEN_MAX_TOKENS
         dead = []
         for m in want_models:
             try:
                 got = backend_for(m).resolve_model()
                 if got != m:
                     dead.append((m, f"endpoint resolved {got!r}"))
+                    continue
+                backend_for(m).chat([{"role": "user", "content": "ready"}],
+                                    max_tokens=EDEN_MAX_TOKENS)
             except Exception as e:                       # noqa: BLE001
                 dead.append((m, str(e).split("\n")[0][:120]))
         if dead:

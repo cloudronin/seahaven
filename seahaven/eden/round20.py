@@ -14,10 +14,14 @@ cells at these worlds under any identity and have left the register entirely.
 **This round is their first measurement.**
 
 **THE COHORT IS NOT ROUND 15'S, AND COULD NOT BE.** Six of its fourteen moved
-to a dedicated-only tier between then and now (see EXCLUDED), and six of the
-eight models the register LOST are among them. Only two are recoverable. The
-other six servable models already have genuine gen-3 cells and are left
-alone deliberately.
+to a dedicated-only tier between then and now, and a seventh cannot be served
+under this programme's pinned request form (see EXCLUDED for both). Six of the
+eight models the register LOST are among them, so **exactly one is recoverable
+on Together: GLM-5.2.** The other six servable models already have genuine
+gen-3 cells and are left alone deliberately.
+
+Round 21 measures the seven on DeepInfra via the HuggingFace router, which is a
+SECOND COLUMN and joins none of these anchors.
 
 **WHAT IS DELIBERATELY UNCHANGED FROM ROUND 15.** The worlds, the
 arms, the episode counts, the score definition, the companion column, the
@@ -68,19 +72,23 @@ COMP_SEED0 = 26500
 COMP_LEVEL = "COMP"
 COMP_EPISODES = 24
 
-#: **The cohort is what this round can actually recover: two models.**
+#: **The cohort is what this round can actually recover ON TOGETHER: one model.**
 #:
-#: Round 15's fourteen were retyped here first, and six of them turned out to
-#: be unservable — see EXCLUDED. Of the eight the register LOST, six are in
-#: that group, so only these two are recoverable at all. The other six servable
-#: models already carry genuine gen-3 cells and do not need re-measuring: the
-#: v1 policy is dated occasions and mixed dates are already legal, so buying
+#: Round 15's fourteen were retyped here first. Six are gone to dedicated-only
+#: tiering and a seventh, Kimi-K3, cannot be served under this programme's
+#: pinned request form — see EXCLUDED for both. The other six servable models
+#: already carry genuine gen-3 cells and do not need re-measuring: the v1
+#: policy is dated occasions and mixed dates are already legal, so buying
 #: occasion-uniformity for them would spend ~$37 on a property the design does
 #: not require.
 #:
+#: So this round is one model, ~$5, and it is worth serving precisely because
+#: it is TOGETHER data: it joins the anchors every other cell in this corpus
+#: was measured against. Round 21 measures the other seven on DeepInfra, which
+#: is a second column and joins nothing.
+#:
 #: Prices are (prompt, completion) USD per million, unchanged from round 15.
 COHORT = {
-    "moonshotai/Kimi-K3": (1.00, 3.00),
     "zai-org/GLM-5.2": (0.60, 2.00),
 }
 
@@ -99,6 +107,13 @@ COHORT = {
 #: The cost is permanent and is stated rather than mourned: **E1's ceiling
 #: shrinks for good.** The correlate study stays underpowered on this cohort
 #: forever — which is what it was pre-registered as, so no reading changes.
+#:
+#: **Two different exclusion reasons, kept distinct.** Six are a commercial
+#: fact about Together's tiering. The seventh is a technical fact about one
+#: provider's handling of one request field, and it is NOT a property of the
+#: model — Kimi-K3 serves correctly on DeepInfra under the identical request
+#: form, which is what round 21 measures. Collapsing the two into "excluded"
+#: would lose exactly the distinction that makes the second one recoverable.
 EXCLUDED = {
     "MiniMaxAI/MiniMax-M2.7": "non-serverless on Together as of 2026-08-16",
     "Qwen/Qwen3.5-397B-A17B": "non-serverless on Together as of 2026-08-16",
@@ -106,6 +121,15 @@ EXCLUDED = {
     "zai-org/GLM-4.6": "non-serverless on Together as of 2026-08-16",
     "zai-org/GLM-5": "non-serverless on Together as of 2026-08-16",
     "zai-org/GLM-5.1": "non-serverless on Together as of 2026-08-16",
+    "moonshotai/Kimi-K3": (
+        "servable on Together, but returns EMPTY CONTENT under this "
+        "programme's pinned request form: with "
+        "chat_template_kwargs.enable_thinking=False, Together truncates its "
+        "reasoning to ~16 tokens and emits no content. Measured 2026-08-16. "
+        "NOT a model property — the identical request succeeds on DeepInfra "
+        "with reasoning suppressed to 0. Measured there in round 21. Serving "
+        "it here with thinking ENABLED was refused: that is a different served "
+        "artifact from every anchor in this corpus"),
 }
 
 #: Servable, already carrying genuine gen-3 cells, deliberately NOT re-served.
@@ -220,17 +244,29 @@ ARTIFACTS = (
 
 #: Computed on a clean tree, BEFORE any cell was served, via
 #: `vworld pin new --round 20`.
-#: **RE-PINNED 2026-08-16, before any cell.** The first pin (f5c77df8) named
-#: round 15's fourteen; six proved unservable and the pin governed nothing
-#: because zero cells had been served under it. Amending before the first
-#: cell is the discipline working; amending after would have broken it.
+#: **RE-PINNED TWICE ON 2026-08-16, both times before any cell.**
+#:
+#:   f5c77df8  round 15's fourteen, frozen before availability was checked
+#:   aa84484d  two, after tiering removed six
+#:   925208 68  one, after Kimi-K3 proved unservable under the pinned
+#:             request form on Together
+#:
+#: Neither superseded pin governed a cell, so neither certified anything and
+#: amending cost nothing. That is the discipline working rather than bending:
+#: the same two edits after serving would have been falsification.
+#:
+#: Both shrinks came from checks that should have run BEFORE the first pin,
+#: and now do — `AVAILABILITY_PREFLIGHT` covers tiering, and its servability
+#: half covers the request form.
 PINNED_ROUND20_HASH = \
-    "aa84484d1fb7de6b7c499ae54229b631a8951e32ff62c45fd5c4b40c24ae4922"
+    "925208685b0c394fa0fa47a7cd95a9eb779a15db97390ad3f730f6d9f2429eaf"
 
-#: The superseded pin, kept so the record of what was frozen first stays
-#: legible. It governed no cell and certifies nothing.
+#: The superseded pins, kept so the record of what was frozen stays legible.
+#: Neither governed a cell.
 SUPERSEDED_PIN_14_MODELS = \
     "f5c77df810d60832e339eaa3e54e0be55f63370aed33159c686d0b3c934723f9"
+SUPERSEDED_PIN_2_MODELS = \
+    "aa84484d1fb7de6b7c499ae54229b631a8951e32ff62c45fd5c4b40c24ae4922"
 
 
 def world_lock_paths() -> tuple[str, ...]:
