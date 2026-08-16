@@ -92,9 +92,21 @@ def test_the_EPOCH_ANCHORS_RECONSTRUCT_from_the_corpus(obs):
 
 def test_NO_ANCHOR_CELL_COMES_FROM_AN_EVENT_SWEEP(obs):
     """A detector calibrated on the event it is catching is not a detector.
-    The programme has caught this three times; here it is asserted."""
+    The programme has caught this three times; here it is asserted.
+
+    **The events it was excluding no longer exist (#113), and the exclusion is
+    still the right rule.** ("LAT","15") and ("LAT","16") were EVENT because
+    fourteen filenames were compared against each other. Corrected, the only
+    sweep that still trips the live alpha is ("LAT","18"), and that one is
+    pseudo-replication — eight cells, one model, one seed set.
+
+    What matters for the pin is unchanged and is what this asserts: **no anchor
+    cell comes from any sweep the channel flags**, whatever that set turns out
+    to be. Writing the sweep names into the assertion would have made this test
+    a record of one day's verdicts instead of a property.
+    """
     tainted = OQ.event_pairs(alpha=0.05, obs=obs)
-    assert ("LAT", "15") in tainted and ("LAT", "16") in tainted
+    assert ("LAT", "15") not in tainted, "retracted; see #113"
     for world, mapping in PB.ANCHOR_CELLS.items():
         for name in mapping.values():
             got = C.parse_cell_name(name)

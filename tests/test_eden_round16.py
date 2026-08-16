@@ -32,17 +32,16 @@ def test_the_COHORT_is_round_15s_and_not_a_retyped_copy():
     assert len(R.COHORT) == 14
 
 
-def test_the_FROZEN_ANCHORS_match_the_corpus_and_EXCLUDE_the_event():
-    """**The literal is the detector's reference; if it drifts, so does every
-    later verdict.** Recomputed here from committed cells rather than trusted.
+def test_the_FROZEN_ANCHORS_SURVIVE_because_they_are_PRE_ROUND_15_cells():
+    """**The half of round 16 that the identity defect did not touch.**
 
-    The exclusion is the load-bearing half: eight of the fourteen have no LAT A0
-    except the event day, so a baseline built from "all earlier days" would
-    contain the very drop the re-serve is meant to test against.
+    `CLEAN_LAT_ANCHOR` is built only from cells served before round 15, so every
+    one of them was served by the model its name claims. The literal still
+    reproduces exactly, and that is worth asserting rather than assuming: it is
+    the boundary of the damage.
     """
     obs = OQ.observations()
     tainted = OQ.event_pairs(alpha=R.OCCASION_ALPHA, obs=obs)
-    assert ("LAT", "15") in tainted, "the known event must be excluded"
 
     got = {}
     for model in R.COHORT:
@@ -51,31 +50,73 @@ def test_the_FROZEN_ANCHORS_match_the_corpus_and_EXCLUDE_the_event():
         if cells:
             got[model] = (sum(o.ate for o in cells), sum(o.n for o in cells))
     assert got == R.CLEAN_LAT_ANCHOR
-    assert len(got) == 6, "six of the fourteen carry a clean LAT anchor"
-
-    k = sum(a for a, _n in got.values())
-    n = sum(b for _a, b in got.values())
-    assert (k, n) == R.ANCHOR_POOLED
-
-    #: No frozen anchor may contain a cell from the event day.
-    for model in R.CLEAN_LAT_ANCHOR:
-        days = {o.day for o in obs if o.world == "LAT" and o.model == model
-                and (o.world, o.sweep) not in tainted}
-        assert EVENT_DAY not in days, model
+    assert len(got) == 6
+    assert (sum(a for a, _n in got.values()),
+            sum(b for _a, b in got.values())) == R.ANCHOR_POOLED
 
 
-def test_the_EVENT_DAY_LITERALS_are_the_ones_the_FORK_turns_on():
-    """0.708 appears twice — the eight unanchored models on the event day, and
-    the clean weak-tier baseline at W2. That coincidence is the whole reason
-    the fork exists, so both numbers are frozen rather than remembered."""
+def test_THE_EVENT_THE_ROUND_WAS_BUILT_AROUND_DOES_NOT_EXIST():
+    """**The retraction, asserted. See issue #113.**
+
+    Round 16 exists because ("LAT", "15") read EVENT. Under corrected identity
+    it does not, and neither does anything else at the retrospective standard:
+    every "model" in round 15 was cogito, so the sweep that looked like a
+    cohort-wide drop was one model compared against fourteen others.
+
+    The frozen literals are NOT updated. They are the record of what was
+    believed when the seal happened, and rewriting them would erase the reason
+    the round exists. This test asserts the DISAGREEMENT instead.
+    """
     obs = OQ.observations()
+    tainted = OQ.event_pairs(alpha=R.OCCASION_ALPHA, obs=obs)
+    assert ("LAT", "15") not in tainted, (
+        "round 15 read EVENT only because 14 filenames were compared against "
+        "each other; corrected, it is one model and it is QUIET")
+
+    #: The frozen literal stays as written, and no longer describes the corpus.
     ev = [o for o in obs if o.world == "LAT" and o.sweep == "15"]
-    assert (sum(o.ate for o in ev), sum(o.n for o in ev)) == R.EVENT_DAY_ALL_14
+    assert (sum(o.ate for o in ev), sum(o.n for o in ev)) == R.EVENT_DAY_ALL_14, (
+        "the POOLED event-day figure is identity-independent — same cells, "
+        "same episodes, only the attribution changed")
 
     un = [o for o in ev if o.model not in R.CLEAN_LAT_ANCHOR]
-    got = (sum(o.ate for o in un), sum(o.n for o in un))
-    assert got == R.EVENT_DAY_UNANCHORED_8
-    assert got[0] / got[1] == pytest.approx(0.708, abs=0.001)
+    corrected = (sum(o.ate for o in un), sum(o.n for o in un))
+    assert R.EVENT_DAY_UNANCHORED_8 == (136, 192), "the literal is unchanged"
+    assert corrected != R.EVENT_DAY_UNANCHORED_8, (
+        "the 'eight models never served at LAT before' were one model served "
+        "fourteen times; the split the fork turns on is not a real partition")
+    assert corrected == (254, 336)
+
+
+def test_THE_ONE_APPARENT_EVENT_IS_PSEUDO_REPLICATION():
+    """**A second defect the same hoist produced, recorded rather than fixed
+    silently.**
+
+    At the live per-sweep alpha ("LAT", "18") still reads EVENT, p=0.0336. It
+    should not. Its eight cells are ONE model on ONE 24-seed set, so pooling
+    them to n=192 counts the same seeds eight times. Judged individually, **not
+    one of the eight fires** — p runs 0.054 to 0.809.
+
+    The detector pools by (world, sweep) without asking whether the cells are
+    independent draws. With requested-equals-served enforced that cannot recur,
+    because eight cells at one sweep will be eight different models. It is
+    asserted here so the inflation is a known quantity rather than a surprise.
+    """
+    from seahaven.eden._shared.stats import fisher
+
+    obs = OQ.observations()
+    e18 = [o for o in obs if o.world == "LAT" and o.sweep == "18"]
+    assert len({o.model for o in e18}) == 1, "one model wearing eight names"
+
+    prior = (275, 360)
+    pooled = (sum(o.ate for o in e18), sum(o.n for o in e18))
+    assert pooled == (130, 192)
+    assert fisher(*pooled, *prior) == pytest.approx(0.0336, abs=0.001)
+
+    each = [fisher(o.ate, o.n, *prior) for o in e18]
+    assert not [p for p in each if p < R.OCCASION_ALPHA], (
+        f"no single replicate fires; p range {min(each):.3f}-{max(each):.3f}. "
+        "The pooled significance is an artefact of the shared seed set.")
 
 
 def test_the_FORK_is_pinned_with_no_pre_written_winner():
@@ -107,41 +148,68 @@ def test_the_BASE_RATE_AT_PIN_describes_the_corpus_AS_IT_WAS_AT_PIN_TIME():
     post = {"16", "17", "18", "19"}
     obs = [o for o in OQ.observations() if o.sweep not in post]
     audit = OQ.audit(alpha=R.OCCASION_ALPHA, obs=obs)
-    assert R.BASE_RATE_AT_PIN == {
+    corrected = {
         "pairs": len(audit),
         "anchored": sum(v.tested for v in audit),
         "events": sum(v.verdict == "EVENT" for v in audit),
         "no_anchor": sum(not v.tested for v in audit),
     }
+    #: **Frozen, and now wrong — deliberately both.** The pair count is
+    #: identity-independent and still agrees. The other three do not: under
+    #: corrected identity three pairs are anchored rather than one (cogito
+    #: returns to worlds its aliases had made look like newcomers), and the one
+    #: EVENT is gone. Issue #113. The literal is not updated; it records what
+    #: the corpus was believed to be at pin time, which is the only thing a
+    #: pre-registration can honestly claim.
+    assert R.BASE_RATE_AT_PIN == {"pairs": 11, "anchored": 1, "events": 1,
+                                  "no_anchor": 10}
+    assert corrected == {"pairs": 11, "anchored": 3, "events": 0,
+                         "no_anchor": 8}
+    assert corrected["pairs"] == R.BASE_RATE_AT_PIN["pairs"]
+    assert corrected["events"] == 0 < R.BASE_RATE_AT_PIN["events"]
 
 
-def test_THE_ROUND_FAILED_ITS_OWN_SELF_CERTIFICATION():
-    """**The result of the round, asserted rather than remembered.**
+def test_THE_CERTIFICATIONS_SUBJECT_NEVER_EXISTED():
+    """**The round's headline was that it FAILED its own certification. That
+    retracts, and the pass that replaces it is not a finding.**
 
-    SELF_CERTIFY pins the order: the six anchored models are read first, and
-    EVENT means the serving day is itself anomalous and the fourteen are not
-    interpreted. It fired. The anchored six went 0.9766 -> 0.7292 against their
-    clean baseline, which is *below* the event day that prompted the re-serve,
-    so the channel had not recovered — it had fallen further.
+    The certification read six anchored models against their clean baseline and
+    fired EVENT. Six of the "models" it read were cogito. Corrected, the sweep
+    has ONE returning model — cogito paired with cogito — and reads QUIET.
+
+    **QUIET here certifies nothing.** A one-model self-comparison cannot say the
+    serving day was normal; it says one model matched itself. EVENT retracts to
+    nothing, and QUIET is not thereby earned. The honest statement is that the
+    certification's subject — a six-model cohort — never existed. Issue #113.
     """
     v = OQ.verdict_for("LAT", "16", alpha=R.OCCASION_ALPHA)
-    assert v.verdict == "EVENT", "the round did not certify; that is the finding"
-    assert len(v.returning) == 6
-    assert v.prior == R.ANCHOR_POOLED, "judged against the frozen clean anchor"
+    assert v.verdict == "QUIET"
+    assert v.returning == ("deepcogito/cogito-v2-1-671b",), (
+        "one model, not six — and a single-model QUIET is not a certification")
     now, prior = v.rates()
-    assert prior == pytest.approx(0.9766, abs=0.001)
-    assert now == pytest.approx(0.7292, abs=0.001)
+    assert prior == pytest.approx(0.7639, abs=0.001)
+    assert now == pytest.approx(0.7202, abs=0.001)
+    assert v.p == pytest.approx(0.194, abs=0.005)
 
-    #: **Monotone across three days**, which one anomalous day cannot produce.
+    #: **The three-day fall DOES survive, on one model, and stays uncertified.**
+    #: The original read was six models on day one against cogito on days two
+    #: and three. Recomputed on cogito throughout it is still monotone —
+    #: 0.875 -> 0.756 -> 0.705 — which is the residual observation the log
+    #: records as unresolved. Three ordered points are 1-in-6 under a null of
+    #: random ordering, and no single step reaches significance, so this is a
+    #: direction worth re-measuring and not a result.
     obs = OQ.observations()
-    anchored = set(R.CLEAN_LAT_ANCHOR)
     rates = []
     for day in ("2026-08-13", "2026-08-14", "2026-08-15"):
         sel = [o for o in obs if o.world == "LAT" and o.day == day
-               and o.model in anchored]
-        k, n = sum(o.ate for o in sel), sum(o.n for o in sel)
-        rates.append(k / n)
-    assert rates[0] > rates[1] > rates[2], rates
+               and o.model == "deepcogito/cogito-v2-1-671b"]
+        if sel:
+            rates.append(sum(o.ate for o in sel) / sum(o.n for o in sel))
+    assert len(rates) == 3
+    assert rates == pytest.approx([0.875, 0.756, 0.705], abs=0.001)
+    assert rates[0] > rates[1] > rates[2], (
+        "still monotone on one model — the observation that survives, and the "
+        "one the fleet's first days are meant to settle")
 
 
 def test_the_GATE_VETOES_FOURTEEN_and_every_one_carries_its_REASON():
@@ -152,24 +220,27 @@ def test_the_GATE_VETOES_FOURTEEN_and_every_one_carries_its_REASON():
     not the 3/3 rule this round pins.
     """
     gated, ungated = CO.veto_hold(), CO.veto_hold(gate=False)
-    assert len(ungated.admitted) == 23
+
+    #: **The fourteen were never measured, so there is nothing to veto.** The
+    #: gate vetoed fourteen models on an EVENT that does not exist, at LAT
+    #: cells that cogito served. Eight of the fourteen have left the register
+    #: entirely — they have no cells at these worlds under any identity. The
+    #: gate is not broken; its input was. Issue #113, and #108 voids with it.
+    assert len(ungated.admitted) == 9, (
+        "was 23 — the other fourteen were filenames, not measurements")
     assert len(gated.admitted) == 9
 
     by_event = {m: why for m, why in gated.refused.items()
                 if any("EVENT" in w for w in why)}
-    assert len(by_event) == 14
-    #: **The date moved and the assertion should not have named it.** Round 16
-    #: made e16/2026-08-15 the canonical LAT cell for these models, so the
-    #: printed reason now cites the re-serve rather than 08-14. What matters is
-    #: that LAT is vetoed for an occasion EVENT, not which occasion.
-    for model, why in by_event.items():
-        assert any("LAT" in w and "occasion EVENT" in w for w in why), model
+    assert by_event == {}, (
+        "no model is vetoed for an occasion EVENT because the corpus contains "
+        "none; the fourteen UNSCORED rows were a consequence of the defect")
 
-    #: The one pre-existing refusal is incompleteness, not occasion — the two
-    #: reasons must stay distinguishable or the gate takes credit for a gap.
-    other = set(gated.refused) - set(by_event)
-    assert len(other) == 1
-    assert all("no cell" in w for m in other for w in gated.refused[m])
+    #: Refusals that remain are incompleteness, and they must stay
+    #: distinguishable from occasion vetoes or the gate takes credit for a gap.
+    assert gated.refused, "some models are still short of the 3/3 suite"
+    for model, why in gated.refused.items():
+        assert all("EVENT" not in w for w in why), model
 
 
 def test_ADMITTED_MODELS_KEEP_THEIR_UNGATED_SCORE_EXACTLY():
@@ -195,14 +266,26 @@ def test_a_ZERO_ADMITTED_model_is_UNSCORED_rather_than_scored_on_nothing():
     assert all(len(w) == len(CO.WORLDS) for w in score.refused.values())
 
 
-def test_the_RIDER_selection_is_a_RULE_ALREADY_COMPUTED_not_a_fresh_choice():
-    """Its two non-control models are exactly the ones the channel flagged. A
-    hand-picked probe cohort is a choice made after seeing the data."""
-    audit = OQ.audit(alpha=R.OCCASION_ALPHA)
-    event = next(v for v in audit if v.verdict == "EVENT")
-    flagged = {m for m, _n, _p, _pv in event.flags}
-    assert flagged == set(R.RIDER_COHORT) - {"deepcogito/cogito-v2-1-671b"}
+def test_the_RIDER_COHORT_was_selected_by_a_RULE_WHOSE_INPUT_IS_RETRACTED():
+    """The rule was sound and the selection is still not hand-picked — but the
+    flags it selected on came from a sweep whose per-model attribution was
+    wrong, so the two flagged models were flagged for cogito's behaviour.
+
+    The literal stays frozen (it records the selection that was made); the rule
+    no longer reproduces it, and that is the assertion. #106 keeps the rider
+    unreachable in the CLI, so nothing has been served on this basis.
+    """
+    assert R.RIDER_COHORT == ("moonshotai/Kimi-K2.7-Code",
+                              "thinkingmachines/Inkling",
+                              "deepcogito/cogito-v2-1-671b")
     assert len(R.RIDER_COHORT) == 3, "two flagged plus one control"
+
+    audit = OQ.audit(alpha=R.OCCASION_ALPHA)
+    events = [v for v in audit if v.verdict == "EVENT"]
+    flagged = {m for v in events for m, _n, _p, _pv in v.flags}
+    assert flagged != set(R.RIDER_COHORT) - {"deepcogito/cogito-v2-1-671b"}, (
+        "the selecting rule no longer reproduces the frozen cohort — its "
+        "per-model flags were attributions to models that did not serve")
 
 
 def test_the_SEED_BLOCKS_are_disjoint_from_every_committed_cell():

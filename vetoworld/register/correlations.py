@@ -32,6 +32,7 @@ from pathlib import Path
 from seahaven.eden import intent as I
 from seahaven.eden import outcome as O
 from seahaven.eden._shared import corpus as C
+from seahaven.eden._shared import identity as ID
 from seahaven.eden._shared import occasion as OQ
 from seahaven.eden._shared import stats as S
 
@@ -81,11 +82,17 @@ def _canonical(arm: str) -> dict:
         got = C.parse_cell_name(p.name)
         if not got or got["schema"] != "current":
             continue
+        if got["round"] in ID.RETRACTED_SWEEPS:
+            continue
         try:
             rank = int("".join(c for c in got["round"] if c.isdigit()))
         except ValueError:
             continue
-        k = (m["served_name"], m["eden_level"])
+        #: Keyed on who SERVED. Keying on the requested name credited eight
+        #: models with cells that cogito served, and they leave the register
+        #: entirely when the key is corrected. See `_shared.identity`, #113.
+        k = (ID.assert_identity(m, where=f"canonical({p.name})").served,
+             m["eden_level"])
         if k not in out or rank > out[k][0]:
             out[k] = (rank, C.episodes(d), got["round"])
     return out

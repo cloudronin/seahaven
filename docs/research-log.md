@@ -11755,6 +11755,22 @@ digests. Corpus 259 cells, digest `8fb0cb6e18cca6eb`. Programme total **$244.86*
 
 ## 2026-08-14 — the A0 reference channel: a paired detector, and a retraction
 
+> **[RETRACTED 2026-08-15 — see [CORRECTION] 10 / [TRAP] 32 at the end of this
+> log.]** Every per-model figure in this entry was computed on cell metadata
+> that named models which had not served the cells: all 166 cells in rounds
+> 15-19 were served by `deepcogito/cogito-v2-1-671b`. The certified event below
+> — six returning models, 0.977 -> 0.819, p=1.7e-05 — has a genuine model in
+> every "before" cell and cogito in every "after" cell, so it is a between-model
+> comparison and not a paired one. Corrected, that sweep has one returning model
+> and reads QUIET at p=0.222, and the corpus contains no surviving occasion
+> EVENT at all.
+>
+> **The entry is left standing, unedited below.** Its reasoning about pooling,
+> NO-ANCHOR, and detector contamination is correct and is why the machinery
+> exists; only the attributions it was fed were wrong. What retracts is the
+> certified event, the six-model cohort, and the W2/W3 NO-ANCHOR reading — W2
+> and W3 do have an anchor once identity is corrected, and read QUIET.
+
 The counterfactual arm carries no treatment and sits near ceiling by design, so
 movement in it is environment. Building that into a gate turned up a defect in
 our own published prose, and the correction is the most important thing here.
@@ -11867,3 +11883,131 @@ The re-serve is on the critical path rather than beside it: it is the corpus's
 **second** judgeable (sweep, world) pair out of eleven, the gate's first
 out-of-sample test, and the only thing that decides the composition fork. Round
 16 is pinned at `643e782d`, cells unserved.
+
+## 2026-08-15 — [CORRECTION] 10 / [TRAP] 32 — 166 cells, one model, twenty-two name tags
+
+**The twelfth retraction and the largest.** Every cell in rounds 15-19 was
+served by `deepcogito/cogito-v2-1-671b`. The grid's model tuple selected a
+filename and a price; it never selected a served model. The certified LAT event
+was a between-model comparison dressed as a temporal one, and the 425-cell
+corpus published the night before contained all of it.
+
+### **[TRAP] 32 — the request model was bound once and the grid varied around it**
+
+`Backend` fixes the request's `"model"` field at construction from `spec.model`
+(`seahaven/fidelity/endpoint.py:186`), and `_round_cells` built ONE Backend for
+a whole grid from `endpoints.toml`, whose `together` entry names cogito. So
+fourteen "models" were fourteen filenames over one endpoint.
+
+**The tell was in the tokens and it was visible for weeks.** Round 18's eight
+models agree to within 1.09x on prompt tokens and 1.05x on completion, while
+billing differs 7x because `COHORT[model]` charged each at its INTENDED price.
+Price-tracking without token-tracking is the whole signature. Eight genuinely
+different models cannot be that tight, and the uniformity was read as a strong
+cohort-wide effect rather than as a question.
+
+**Two review failures, owned.** The hoist was found once before, as the billing
+bug, and reviewed as a usage-accounting correction without asking what else it
+touched — one bug, two symptoms, the loud one fixed and the quiet one left
+serving cogito 161 times. And `resolved_model_string` has been recorded since
+round 13, written to check one model's identity, never generalised into a
+per-cell gate. The evidence sat correct and unread in the metadata of every
+affected cell.
+
+### What falls
+
+- **The certified LAT event is withdrawn.** It read six returning models,
+  0.977 -> 0.819, intervals separating, p=1.7e-05. Every "before" cell is a
+  genuine model; every "after" cell is cogito. Corrected, the sweep has one
+  returning model and reads QUIET at p=0.222.
+- **The corpus contains no surviving occasion EVENT.** Seven QUIET, eight
+  NO-ANCHOR. One sweep trips the live alpha — LAT e18, p=0.034 — and does not
+  survive inspection: its eight cells are one model on one 24-seed set, so
+  n=192 counts the same seeds eight times. **Judged per replicate, none of the
+  eight fires** (p 0.054-0.809). It is also QUIET at the Bonferroni pass alpha.
+  **Pseudo-replication is a second symptom of the same hoist**, enumerated here
+  rather than found later.
+- **Sweep-wide LAT event, the three-day trace, the disjoint-cohort replication,
+  and the damping law's evidence** all retract at the certified level.
+- **Round 15's cohort expansion retracts**, and with it rule-5 at n=23, the
+  A0-decliner list, and idle-mode-at-scale — which is one model's behaviour
+  replicated thirteen times. **Eight models leave the benchmark entirely**:
+  MiniMax-M2.7, Qwen3.5-397B-A17B, DeepSeek-V3.1, Kimi-K3, GLM-4.6, GLM-5,
+  GLM-5.1, GLM-5.2. They have no cells at these worlds under any identity. The
+  A1 register goes from 24 models to 16.
+- **#108 does not resolve, it VOIDS.** The fourteen were never measured, so
+  their sealed scores are not pending — they are nonexistent, and eight of the
+  fourteen have just left. The raidex column's path is the genuine round-15
+  re-serve, ~$70, whenever serving resumes.
+
+### What stands
+
+- **Rounds <=14 are untouched.** They served one model per invocation, so
+  `spec.model` and the intent agreed. The floor mechanisms, Terra, `intent_rate`,
+  the round-11 matrix and band stability are genuine multi-model results.
+- **DeepSeek-V4-Flash's 0.319 step survives** — pre-round-15 cells, real Flash.
+  It remains the programme's one confirmed serving event.
+- **cogito's same-day cross-world contrast is real and uncertified**: LAT 0.677
+  against W2 0.974, one model, same day. Consistent with the damping hypothesis
+  and far too small to certify it.
+- **cogito's LAT fall is unresolved**: 0.875 -> 0.708 across 08-13 to 08-15,
+  Fisher p=0.29 on the one honest paired comparison in the corpus. Still
+  monotone across three days on one model, which is 1-in-6 under random
+  ordering and no single step significant. A direction to re-measure.
+- **The paired detector is unaffected.** It judged exactly the identities it was
+  handed. The instrument was never wrong; the name tags were.
+
+### **Round 16 "passes" its certification now, and that is not a finding**
+
+Corrected, the sweep that failed its own self-certification reads QUIET. It is
+cogito paired with cogito. **A one-model self-comparison certifies nothing** —
+it says one model matched itself. EVENT retracts to nothing; QUIET is not
+thereby earned. The honest statement is that the certification's subject, a
+six-model cohort, never existed.
+
+**The frozen literals are NOT updated.** `BASE_RATE_AT_PIN`, `FROZEN_ANCHORS`,
+`EVENT_DAY_UNANCHORED_8` and `RIDER_COHORT` stay exactly as written — the
+precedent is DEAD_CRITERION's wrong text and round 10's disclosed MIDDLE
+defect. They record what was believed when the seal happened, which is the only
+thing a pre-registration can honestly claim. The tests flip from asserting the
+numbers to asserting that the corrected read **disagrees** with them, and to
+naming #113 as where the disagreement lives.
+
+### The gain, which is real and was free
+
+Rounds 17-19 accidentally ran the only identical-input repeatability study the
+programme has: eight replicates at four levels, same model, same seeds, same
+day. Same-input rate spread runs 0.000 at COMP to 0.250 at LAT2. **Across all
+140 identical-input pairs, zero fire at alpha=0.01** (min p 0.093). The detector
+does not false-alarm on same-model, same-seed, same-day resampling at n=24.
+
+Together with seven QUIET verdicts across every sweep *including the days
+everyone believed were events*, that is the strongest false-alarm entry the
+channel has, because paired-within-model on true identity is exactly the
+comparison it was built to make.
+
+### The structural fixes
+
+- **`requested == served` is a per-cell precondition**, asserted wherever
+  `saw == n` is: at serve time (both paths refuse when the endpoint resolves
+  something other than what was asked) and at read time via
+  `_shared/identity.py`. Four states, because two would lie: VERIFIED (13
+  cells), CORRECTED (161), UNVERIFIED (251, predating the field — admitted,
+  never rendered as a pass), and MISLABELLED, which raises.
+- **Measurement keys on who SERVED**, never on the requested name and never on
+  the filename. The filenames of corrected cells still spell the request,
+  because correcting them would collide — eight of round 18's LAT cells would
+  become one name.
+- **Retracted sweeps supply no canonical cell.** Without this the damage
+  compounds: cogito gains 14 tied candidates at (LAT, A1, e16), the picker
+  takes one arbitrarily, and it displaces cogito's genuine round-12
+  measurement. The pinned prediction check silently moved from "5 of 6
+  consistent" to "6 of 6" that way — a retracted replicate improving a
+  pre-registered result, the worst direction an error can move.
+- **Bug closure now requires symptom enumeration** (AGENTS.md). The hoist's
+  second symptom outlived its first by weeks.
+
+### Cost
+
+$0. Every number above is from committed cells.
+

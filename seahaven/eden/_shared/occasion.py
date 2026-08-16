@@ -9,15 +9,27 @@ already buys one. This module is the sensor.
 The obvious construction — pool a sweep's A0 and compare it to the pooled
 history — confounds the environment with who happened to be in the sweep. It is
 not a hypothetical failure. On 2026-08-14 the pooled LAT A0 read 0.756 against a
-0.953 history and looked like a clean event; decomposed, it is 6 returning models
-at 0.819 **plus 8 models never served at LAT before** sitting at 0.708. The
-pooled figure mixed a real drop with a lower-baseline cohort.
+0.953 history and looked like a clean event; decomposed, it split into a
+returning group and a group never served at LAT before. The pooled figure mixed
+a drop with a lower-baseline cohort.
 
-Worse, the same pooled construction reported W2 and W3 as *quiet* that day. Both
-had **zero returning models** — 14 new models each. A new cohort scoring 0.982
+Worse, the same pooled construction reported W2 and W3 as *quiet* that day, on a
+cohort that shared no model with their history. A new cohort scoring 0.982
 against a historical cohort's 0.949 is not evidence the environment held; it is
 not a comparison at all. That reading was published in the spec and repeated in
 prose before anyone decomposed it.
+
+**THE FIGURES ABOVE ARE THE PUBLISHED ONES AND THEY ARE RETRACTED (#113).** The
+decomposition that motivated this module was itself computed on cell metadata
+that named models which had not served the cells: 166 cells across rounds 15-19
+were served by one model. So "6 returning at 0.819 plus 8 newcomers at 0.708"
+was not a cohort split, and re-read on true identity the whole sweep is one
+model and QUIET. The argument for pairing is untouched — strengthened, if
+anything, since the defect is another way a comparison can silently stop being
+between the things it names. The numbers are left in place, struck, because
+this docstring is also the record of why the module exists.
+
+`_shared.identity` now gates every read on it: measurement keys on who SERVED.
 
 So a model enters the test only if it has been served at that world on a
 strictly earlier day, and it is compared **against itself**.
@@ -46,6 +58,7 @@ from dataclasses import dataclass
 from ..conditioning import stage_counts
 from ..outcome import level_state, load_level
 from . import corpus as C
+from . import identity as ID
 from .stats import fisher, wilson_ci
 
 __all__ = ["WORLDS", "VERDICTS", "Observation", "Verdict", "observations",
@@ -125,10 +138,16 @@ def observations(root=None) -> list[Observation]:
             continue
         if C.generation_of(meta) != "gen3" or C.is_diagnostic(meta):
             continue
+        #: **The model is who SERVED, never who was asked for and never the
+        #: filename.** 161 cells named eight models that one model served, and
+        #: this line read the name — which is how a between-model comparison
+        #: passed as a paired one. `assert_identity` refuses an uncorrected
+        #: mislabelled cell outright; see issue #113.
+        ident = ID.assert_identity(meta, where=f"observations({path.name})")
         counts = stage_counts(C.episodes(cell), forbidden_item(meta["eden_level"]))
         when, _src = C.occasion_of(path, meta)
         out.append(Observation(world=meta["eden_level"], sweep=got["round"],
-                               day=when[:10], model=meta["served_name"],
+                               day=when[:10], model=ident.served,
                                ate=counts["ate"], n=counts["n"]))
     return out
 

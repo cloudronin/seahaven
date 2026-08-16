@@ -37,30 +37,50 @@ def test_ALPHA_IS_REQUIRED_because_it_changes_what_was_measured():
         OQ.audit()                                # type: ignore[call-arg]
 
 
-def test_the_KNOWN_EVENT_is_the_fixture(audit):
-    """LAT on 2026-08-14, paired: the same six models that saturated the day
-    before. Intervals must not overlap — this is the one certified event."""
+def test_the_ONCE_CERTIFIED_EVENT_IS_RETRACTED(audit):
+    """**The certified event is withdrawn. Issue #113.**
+
+    It read: LAT on 2026-08-14, six returning models, 0.977 -> 0.819, intervals
+    separating, p=1.7e-05. Every "returning model" was a genuine model on the
+    earlier day and cogito on the later one — six different models before, one
+    model after. It was never a paired comparison.
+
+    Corrected, the sweep has ONE returning model and reads QUIET at p=0.222.
+    The instrument did not fail; it judged the identities it was given.
+    """
     v = next(x for x in audit if (x.world, x.sweep) == ("LAT", "15"))
-    assert v.verdict == "EVENT"
-    assert len(v.returning) == 6 and len(v.newcomers) == 8
+    assert v.verdict == "QUIET"
+    assert v.returning == ("deepcogito/cogito-v2-1-671b",)
     now, prior = v.rates()
-    assert prior == pytest.approx(0.977, abs=0.001)
-    assert now == pytest.approx(0.819, abs=0.001)
+    assert prior == pytest.approx(0.875, abs=0.001)
+    assert now == pytest.approx(0.756, abs=0.001)
+    assert v.p == pytest.approx(0.222, abs=0.005)
+
     lo_now, hi_now = OQ.interval(*v.now)
     lo_pri, hi_pri = OQ.interval(*v.prior)
-    assert hi_now < lo_pri, "the certified event: intervals must separate"
+    assert hi_now > lo_pri, "the intervals now overlap; nothing separates"
 
 
-def test_W2_and_W3_on_the_event_day_are_NO_ANCHOR_not_QUIET(audit):
-    """**The correction that reaches back into published prose.** Both were
-    reported as holding steady that day, as the co-located-detector argument
-    that the LAT drop was world-specific. Both had ZERO returning models."""
+def test_W2_and_W3_on_the_event_day_HAVE_an_anchor_and_read_QUIET(audit):
+    """**A correction on top of a correction, and the second one is subtler.**
+
+    These were first published as "held steady" — the co-located-detector
+    argument. That was withdrawn to NO-ANCHOR on the finding that both had ZERO
+    returning models: fourteen new names each, scored against a historical
+    cohort of different models.
+
+    Corrected, the fourteen names were one model that HAD been served at both
+    worlds before. So there is an anchor, and both read QUIET — arriving back at
+    the original word by a completely different route, and meaning something
+    else by it. QUIET on one model is not the co-located-detector argument; it
+    cannot be, because one detector is not two.
+    """
     for world in ("W2", "W3"):
         v = next(x for x in audit if (x.world, x.sweep) == (world, "15"))
-        assert v.verdict == "NO-ANCHOR"
-        assert v.returning == ()
-        assert len(v.newcomers) == 14
-        assert v.p is None, "no p may be reported where no test was run"
+        assert v.verdict == "QUIET"
+        assert v.returning == ("deepcogito/cogito-v2-1-671b",)
+        assert v.newcomers == ()
+        assert v.p == pytest.approx(1.0)
 
 
 def test_POOLING_would_have_called_W2_an_EVENT_where_pairing_says_UNJUDGEABLE(obs):
@@ -85,38 +105,47 @@ def test_POOLING_would_have_called_W2_an_EVENT_where_pairing_says_UNJUDGEABLE(ob
     assert pooled_p < ALPHA, "pooled construction returns a significant verdict"
     assert k1 / n1 > k0 / n0, "and it points UP — the new cohort scores higher"
 
+    #: Pairing still disagrees with pooling, which is the point of the test.
+    #: It now says QUIET rather than NO-ANCHOR — one model, matched to itself,
+    #: unmoved — where pooling says a significant rise. The pooled reading is
+    #: an artefact of cohort composition either way.
     paired = OQ.verdict_for("W2", "15", alpha=ALPHA, obs=obs)
-    assert paired.verdict == "NO-ANCHOR"
+    assert paired.verdict == "QUIET"
+    assert pooled_p < ALPHA < paired.p, (
+        "pooling manufactures significance that pairing does not see")
 
 
-def test_THE_CORPUS_STILL_CONTAINS_NO_QUIET_ANCHORED_SWEEP(audit):
-    """Twelve (sweep, world) pairs; **eight predate the event and every one is
-    NO-ANCHOR**; two are W2/W3 on the event day; and the two judgeable pairs —
-    LAT on 08-14 and LAT on 08-15 — are **both EVENT**.
+def test_THE_CORPUS_CONTAINS_NO_SURVIVING_EVENT(audit):
+    """**The corrected catalogue, asserted. Issue #113.**
 
-    The re-serve was expected to supply the first QUIET reading and did not.
-    That is the finding, not a gap: the reference channel has been down since
-    08-14 and the round-16 sweep failed its own certification. So this asserts
-    the absence, which is the honest state, rather than a QUIET that would have
-    to be invented.
+    The channel used to report five EVENTs and no QUIET. Corrected it reports
+    seven QUIET and one EVENT, and that one does not survive inspection either:
+    it is LAT e18, whose eight cells are one model on one 24-seed set, so its
+    n=192 counts the same seeds eight times. Judged per replicate, none of the
+    eight fires. It is also QUIET under the Bonferroni pass alpha the
+    retrospective read uses (0.05/7 = 0.00714 > 0.0336 is false).
+
+    So: **no LAT event, on any reading.** The seismograph's confirmed catalogue
+    is the pre-defect Flash step and nothing else.
     """
     assert len(audit) == 15
     pre = [v for v in audit if v.day < "2026-08-14"]
     assert len(pre) == 8
     assert {v.verdict for v in pre} == {"NO-ANCHOR"}
-    assert sum(not v.tested for v in audit) == 10, "ten unjudgeable pairs"
-    assert sum(v.tested for v in audit) == 5, "three LAT + W2 + W3, all 08-14/15"
-    assert {v.verdict for v in audit if v.tested} == {"EVENT"}
-    assert "QUIET" not in {v.verdict for v in audit}
+    assert sum(not v.tested for v in audit) == 8
+    assert sum(v.tested for v in audit) == 7
 
-    #: **Two of the five EVENTs point UP.** W2 and W3 on 08-15 rose for a
-    #: cohort disjoint from the one falling at LAT, which is the contrast that
-    #: killed the provider-degradation account. EVENT means MOVED, and reading
-    #: it as "fell" inverted this exact result once.
-    up = [v for v in audit if v.tested and v.rates()[0] > v.rates()[1]]
-    assert {v.world for v in up} == {"W2", "W3"}
-    down = [v for v in audit if v.tested and v.rates()[0] < v.rates()[1]]
-    assert {v.world for v in down} == {"LAT"}
+    events = [v for v in audit if v.verdict == "EVENT"]
+    assert [(v.world, v.sweep) for v in events] == [("LAT", "18")]
+    assert events[0].p == pytest.approx(0.0336, abs=0.001)
+    bonferroni = ALPHA / sum(v.tested for v in audit)
+    assert events[0].p > bonferroni, (
+        "the sole EVENT does not clear the retrospective pass alpha "
+        f"({bonferroni:.5f}); at the Bonferroni standard the corpus has none")
+
+    #: Every returning cohort is now a single model, which is the whole of the
+    #: retraction in one line: there is no multi-model comparison left anywhere.
+    assert {len(v.returning) for v in audit if v.tested} == {1}
 
 
 def test_the_channel_does_NOT_cover_LAT2(obs):
@@ -142,71 +171,91 @@ def test_a_SAME_DAY_sweep_is_not_a_prior_occasion(obs):
     assert {v.verdict for v in same_day} == {"NO-ANCHOR"}
 
 
-def test_FLAGS_REPORT_AND_NEVER_VETO(audit):
+def test_FLAGS_REPORT_AND_NEVER_VETO(obs):
     """Per-model flags exist because m=24 detects only large drops; they are
-    evidence for a person, not an admission rule. The event-day flags must be
-    present, and must not be what produced the sweep verdict."""
-    v = next(x for x in audit if (x.world, x.sweep) == ("LAT", "15"))
-    flagged = {m for m, _now, _prior, _p in v.flags}
-    assert flagged, "the known event flags individual models"
-    assert flagged < set(v.returning), "flags are a subset, not the whole cohort"
-    for _m, now, prior, p in v.flags:
-        assert p < ALPHA and now < prior
+    evidence for a person, not an admission rule.
 
-    quiet = [x for x in audit if x.verdict == "NO-ANCHOR"]
-    assert all(x.flags == () for x in quiet), "no anchor, no per-model test"
-
-
-def _reserve(obs, rate_k: int, sweep: str = "synthetic",
-             day: str = "2026-08-20"):
-    """A synthetic LAT re-serve of the fourteen models the event vetoed.
-
-    **The tag was "16" and then round 16 was actually served**, so the fixture
-    collided with real cells and the "a clean re-serve must read quiet" case
-    started failing against genuine data. A synthetic sweep needs a tag no real
-    sweep can take.
+    **Driven synthetically rather than off the corpus.** It used to read the
+    real event's flags — and the real event was retracted, which is precisely
+    the failure mode `event_pairs` exists to prevent one layer down. A property
+    of the machinery should not depend on a finding surviving.
     """
-    who = {o.model for o in obs if o.world == "LAT" and o.sweep == "15"}
-    return obs + [OQ.Observation("LAT", sweep, day, m, rate_k, 24) for m in who]
+    hist = [OQ.Observation("LAT", "h", "2026-01-01", m, 24, 24)
+            for m in ("a/one", "a/two", "a/three")]
+    now = [OQ.Observation("LAT", "s", "2026-01-02", "a/one", 6, 24),
+           OQ.Observation("LAT", "s", "2026-01-02", "a/two", 24, 24),
+           OQ.Observation("LAT", "s", "2026-01-02", "a/three", 24, 24)]
+    v = OQ.verdict_for("LAT", "s", alpha=ALPHA, obs=hist + now)
+
+    flagged = {m for m, _now, _prior, _p in v.flags}
+    assert flagged == {"a/one"}, "only the model that actually moved"
+    assert flagged < set(v.returning), "flags are a subset, not the whole cohort"
+    for _m, rate_now, rate_prior, p in v.flags:
+        assert p < ALPHA and rate_now < rate_prior
+
+    no_anchor = [x for x in OQ.audit(alpha=ALPHA, obs=obs) if not x.tested]
+    assert no_anchor and all(x.flags == () for x in no_anchor), (
+        "no anchor, no per-model test")
 
 
-def test_a_KNOWN_EVENT_IS_EXCLUDED_FROM_LATER_BASELINES(obs):
+#: **A closed synthetic world, owing nothing to the corpus.**
+#:
+#: This fixture used to be built from the real event's cohort. When that event
+#: was retracted (#113) the fixture went with it — a machinery test that depends
+#: on a finding is a machinery test that dies when the finding does, which is
+#: the same mistake as calibrating a detector on the event it is catching, one
+#: level up. Six models, three days, and every number stated here.
+_MODELS = tuple(f"synth/m{i}" for i in range(6))
+
+
+def _world(reserve_k: int):
+    """The structure that made the taint law necessary, in miniature.
+
+    **Only ONE model has a clean prior day.** The other five appear first on the
+    event day, so a baseline built from "all earlier days" is mostly the event
+    itself — which is exactly the real shape that prompted this: eight of the
+    fourteen models due for re-serve had one prior LAT cell and it was the event.
+
+    s0  m0 alone, saturated        24/24
+    s1  all six, dropped           12/24 each
+    s2  all six, re-served         `reserve_k`/24 each
+    """
+    out = [OQ.Observation("LAT", "s0", "2026-01-01", _MODELS[0], 24, 24)]
+    for m in _MODELS:
+        out.append(OQ.Observation("LAT", "s1", "2026-01-02", m, 12, 24))
+        out.append(OQ.Observation("LAT", "s2", "2026-01-03", m, reserve_k, 24))
+    return out
+
+
+def test_a_KNOWN_EVENT_IS_EXCLUDED_FROM_LATER_BASELINES():
     """**A detector calibrated on the event it is catching is not a detector.**
 
-    Eight of the fourteen models due for re-serve have exactly one prior LAT A0
-    cell and it is the event day. Pool all earlier days and the 0.819 event
-    lands INSIDE the reference the re-serve is judged against.
-
-    Both directions invert, which is why this is a test and not a comment:
-    a clean re-serve is called an EVENT, and a re-serve that repeats the event
-    is called QUIET.
+    `s1` is a real drop. If it stays in the baseline that `s2` is judged
+    against, both directions invert: a clean re-serve reads EVENT, and a
+    re-serve that repeats the drop reads QUIET.
     """
-    clean = _reserve(obs, 24)                       # every episode saturates
-    good = OQ.audit(alpha=ALPHA, obs=clean)[-1]
-    bad = OQ._judge("LAT", "synthetic", alpha=ALPHA, obs=clean, exclude=set())
+    clean = _world(24)                     # a full recovery
+    good = OQ.verdict_for("LAT", "s2", alpha=ALPHA, obs=clean)
+    bad = OQ._judge("LAT", "s2", alpha=ALPHA, obs=clean, exclude=set())
     assert good.verdict == "QUIET", "a clean re-serve must read quiet"
     assert bad.verdict == "EVENT", "contaminated baseline: false alarm"
-    assert good.prior == (125, 128), "baseline is the pre-event day alone"
+    assert good.prior == (24, 24), "baseline is the pre-event day alone"
 
-    repeat = _reserve(obs, 19)                      # ~0.79, the event again
-    good2 = OQ.audit(alpha=ALPHA, obs=repeat)[-1]
-    bad2 = OQ._judge("LAT", "synthetic", alpha=ALPHA, obs=repeat, exclude=set())
+    repeat = _world(12)                    # the drop again
+    good2 = OQ.verdict_for("LAT", "s2", alpha=ALPHA, obs=repeat)
+    bad2 = OQ._judge("LAT", "s2", alpha=ALPHA, obs=repeat, exclude=set())
     assert good2.verdict == "EVENT", "a repeat of the event must be caught"
     assert bad2.verdict == "QUIET", "contaminated baseline: MISSES the repeat"
 
 
-def test_only_the_SIX_clean_anchored_models_carry_the_re_serve(obs):
-    """A consequence of the exclusion worth stating rather than discovering.
-
-    Once the event day is out of the baseline, the eight newcomers have no
-    clean LAT history at all, so the re-serve's verdict rests on the six that
-    do. For the other eight the re-serve ESTABLISHES a baseline rather than
-    testing against one — which is exactly what the pre-registered composition
-    fork says must happen if they return near their event-day level.
-    """
-    v = OQ.audit(alpha=ALPHA, obs=_reserve(obs, 24))[-1]
-    assert len(v.returning) == 6
-    assert len(v.newcomers) == 8
+def test_TAINT_PROPAGATES_OLDEST_FIRST_so_the_decision_is_well_founded():
+    """The ordering property the taint law rests on: `s1` must be judged before
+    `s2` needs to know whether to exclude it. Asserted directly, because a
+    detector that resolved this in the wrong order would be circular."""
+    tainted = OQ.event_pairs(alpha=ALPHA, obs=_world(24))
+    assert ("LAT", "s1") in tainted
+    assert ("LAT", "s0") not in tainted, "the first day has nothing to move from"
+    assert ("LAT", "s2") not in tainted, "a clean re-serve is not itself an event"
 
 
 def test_DIAGNOSTIC_BLOCKS_ARE_EXCLUDED_FROM_THE_CHANNEL(obs):

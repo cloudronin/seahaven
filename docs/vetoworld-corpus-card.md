@@ -76,6 +76,30 @@ that reason. `vworld verify` is the claim that is exact.
 
 ## Known defects, shipped rather than hidden
 
+- **166 cells across rounds 15-19 were served by ONE model** — every cell in
+  those rounds was `deepcogito/cogito-v2-1-671b`, whatever its filename says.
+  The runner built one connection for a whole grid and the request's model field
+  was bound once at construction, so the grid's model tuple chose a filename and
+  a price, never a served model.
+
+  **The cells are relabelled, not deleted.** Each affected cell now carries
+  `served_model` (the truth, from the endpoint's own report), `requested_model`
+  (kept as the record of the bug), and a `model_identity_correction` block. They
+  are valid data about cogito, and they contain the only identical-input
+  repeatability study in the corpus — eight replicates at four levels, same
+  model, same seeds, same day.
+
+  **Use `served_model`. Never use the filename as a model identity.** Filenames
+  still spell the requested model and were deliberately not renamed: eight of
+  round 18's LAT cells would collide on a single name, and the manifest and pins
+  address cells by name.
+
+  Consequences: the certified LAT occasion event is withdrawn, the corpus
+  contains no surviving occasion EVENT, and eight models leave the benchmark
+  entirely because they were never served at these worlds. Full account in
+  `docs/research-log.md`, `[CORRECTION] 10 / [TRAP] 32`. Check any corpus with
+  `vworld corpus identity`, which exits non-zero if a mislabelled cell is
+  present.
 - **Sixteen worlds advertise "tallow"** in the Store, a noun never implemented as
   an entity. Models read it and typed commands at it — one in 47 of 65 episodes.
   `world_eden_LAT2` is the corrected twin, identical in every derived value.
@@ -99,9 +123,29 @@ Each cell is `{"runs": [...], "meta": {...}}`. An episode carries `seed`,
 `terminal_at_zero`, the round's pin, `usage`, `billed_usd`, and — where the
 sweep recorded one — `wall_start_epoch`.
 
+### Which field is the model
+
+**`served_model` where it is present; otherwise `served_name`.** The two differ
+on the 161 corrected cells, and `requested_model` is kept there to record what
+was asked for. A cell's identity status is one of four:
+
+| status | cells | meaning |
+|---|---:|---|
+| `VERIFIED` | 13 | the endpoint reported what it served, and it matched |
+| `CORRECTED` | 161 | it did not match; `served_model` is the truth |
+| `UNVERIFIED` | 251 | no report on record — the cell predates the field |
+| `MISLABELLED` | 0 | uncorrected mismatch; reading one is an error |
+
+**`UNVERIFIED` is not a synonym for `VERIFIED`.** Those cells come from rounds
+that served one model per invocation, so they are very probably fine — but that
+is an argument about how the runner ought to have behaved, not a record of what
+it did, and the same kind of argument is what let the defect above survive for
+weeks. The corpus reports the distinction rather than flattening it.
+
 Filenames keep a historical `eden_e*` prefix. It is archive vocabulary: renaming
 357 files would change the digest `verify` checks against, for a string nobody
-needs to type.
+needs to type. **The model in a filename is the model that was REQUESTED** —
+see the first known defect.
 
 ## Disclosures
 

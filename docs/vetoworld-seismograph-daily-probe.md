@@ -12,8 +12,25 @@ standalone instrument's naming is parked).
 
 - Is today QUIET or EVENT at each channel, per provider, against frozen or
   accumulated anchors?
-- Is the 08-14 LAT state reverting, flattening, or deepening on Together?
-  (Everything sealed — round 16's fork, the fourteen, raidex — waits on this.)
+- ~~Is the 08-14 LAT state reverting, flattening, or deepening on Together?
+  (Everything sealed — round 16's fork, the fourteen, raidex — waits on this.)~~
+
+  **AMENDED 2026-08-15 — there is no 08-14 LAT state.** All 166 cells in
+  rounds 15-19 were served by one model; the certified event was a between-model
+  comparison, and the corrected corpus contains **no occasion EVENT on any
+  reading**. See `[CORRECTION] 10 / [TRAP] 32` and issue #113.
+
+  **Day one's expected reading inverts.** The build expected `EVENT-down` at
+  Together LAT and would have read a confirmation into it. The expectation is
+  now **QUIET everywhere, on genuine anchors and verified identity** — and
+  anything else is a real detection rather than a confirmation of something
+  already believed. That is a better first day: nothing to match, so nothing to
+  match wrongly.
+
+  The open question the fleet actually answers is whether cogito's uncertified
+  monotone LAT fall (0.875 → 0.756 → 0.705, no step significant) is anything at
+  all, and that needs the multi-model measurement day one provides. Round 16's
+  fork does not wait on this — it voided with #108.
 - **Cross-provider coincidence**: does an event appear on one stack, the GPU
   class, or everywhere? Same-day contrast needs no history and works from
   day 1.

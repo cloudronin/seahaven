@@ -13,6 +13,7 @@ from seahaven.eden import intent as I
 from seahaven.eden import outcome as O
 from seahaven.eden import routes as RT
 from seahaven.eden._shared import corpus as C
+from seahaven.eden._shared import identity as ID
 from seahaven.eden._shared import stats as S
 
 WORLDS = ("LAT", "W2", "W3")
@@ -44,13 +45,17 @@ def _cells(level, arm="A1"):
         got = C.parse_cell_name(p.name)
         if not got or got["schema"] != "current":
             continue
+        if got["round"] in ID.RETRACTED_SWEEPS:
+            continue
         try:
             rank = int("".join(ch for ch in got["round"] if ch.isdigit()))
         except ValueError:
             continue
-        prev = out.get(m["served_name"])
+        #: Who SERVED, not who was asked for — see `_shared.identity` and #113.
+        who = ID.assert_identity(m, where=f"artifacts({p.name})").served
+        prev = out.get(who)
         if prev is None or rank > prev[0]:
-            out[m["served_name"]] = (rank, got["round"], C.episodes(d), p, m)
+            out[who] = (rank, got["round"], C.episodes(d), p, m)
     return {k: (v[1], v[2], v[3], v[4]) for k, v in out.items()}
 
 

@@ -91,6 +91,34 @@ and was written as though it were a multiple.
 
 ## Measurement rules
 
+**Did the thing you are measuring produce the number? Assert it per cell, next
+to `saw == n`.** A grid served 166 cells under twenty-two model names and one
+model answered every request, because the runner bound the request's model once
+and varied the filename around it. Nothing asked, for weeks — and the evidence
+was already recorded on every affected cell, in a field written for one model's
+identity check and never generalised into a gate.
+
+Three corollaries, each paid for:
+
+- **Key on who served, never on the filename and never on what was requested.**
+  A filename is a record of a request.
+- **"It cannot have happened" is not evidence that it did not.** 251 cells
+  predate the served-model field. They come from rounds that served one model
+  per invocation, so they are very probably fine — but that is an argument about
+  how the code ought to behave standing in for a record of what it did, which is
+  the exact substitution that let this survive. Carry an `UNVERIFIED` state and
+  never let it render as a pass.
+- **Cells that share a model AND a seed set are one measurement, not several.**
+  Pooling eight replicates of one 24-seed block to n=192 manufactured a p=0.034
+  "event" that no single replicate reproduces (p 0.054-0.809).
+
+**When you close a bug, enumerate its other observable symptoms first.** The
+model-identity defect was found once before, as a billing discrepancy, and
+reviewed as a usage-accounting correction — one bug, two symptoms, the loud one
+fixed and the quiet one left running for weeks. Before marking anything fixed,
+write down what else the same root cause could touch and check each one. A bug
+report is a claim about a cause; a closed bug is a claim about every effect.
+
 **Reliability measures the stability of whatever you are computing, including an
 artefact.** Test–retest passed at 0.835 and 0.851 on a score that contained no
 information — it passed *because* base rates are stable. Reliability is necessary

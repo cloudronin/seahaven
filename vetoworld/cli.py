@@ -139,12 +139,16 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--dry-run", action="store_true")
 
     cp = sub.add_parser("corpus", help="fetch/checksum the committed cells ($0)")
-    cp.add_argument("action", choices=("fetch", "status", "manifest"))
+    cp.add_argument("action",
+                    choices=("fetch", "status", "manifest", "identity",
+                             "relabel"))
     cp.add_argument("--results", default="results")
     cp.add_argument("--repo", default=None,
                     help="dataset to fetch from (default: the published one)")
     cp.add_argument("--force", action="store_true",
                     help="replace a corpus that is already on disk")
+    cp.add_argument("--dry-run", action="store_true",
+                    help="relabel: report what would change, write nothing")
 
     pn = sub.add_parser("pin", help="the pin lifecycle ($0 for check)")
     pn.add_argument("action", choices=("check", "new", "retire"))

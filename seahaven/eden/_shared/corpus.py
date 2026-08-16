@@ -23,6 +23,7 @@ import re
 from pathlib import Path
 
 from ..outcome import funnel
+from . import identity as _identity
 
 __all__ = [
     "RESULTS", "cell_path", "parse_cell_name", "iter_cells", "load_cell",
@@ -169,7 +170,10 @@ def burned_seeds(level: str | None = None, model: str | None = None,
         meta = d.get("meta", {})
         if level and meta.get("eden_level") != level:
             continue
-        if model and meta.get("served_name") != model:
+        #: Match on who SERVED, not on the requested name — a seed burned by
+        #: cogito under another model's filename is still burned, and is still
+        #: burned for cogito. See `_shared.identity` and issue #113.
+        if model and _identity.model_identity(meta).served != model:
             continue
         out |= {r["seed"] for r in d.get("runs", []) if "seed" in r}
     return out

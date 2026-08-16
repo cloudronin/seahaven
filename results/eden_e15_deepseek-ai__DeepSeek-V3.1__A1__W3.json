@@ -22252,6 +22252,14 @@
     "billed_usd": 0.84681,
     "billed_this_attempt_usd": 0.84681,
     "filled_seeds": [],
-    "attempts": 1
+    "attempts": 1,
+    "requested_model": "deepseek-ai/DeepSeek-V3.1",
+    "served_model": "deepcogito/cogito-v2-1-671b",
+    "model_identity_correction": {
+      "issue": 113,
+      "requested_model": "deepseek-ai/DeepSeek-V3.1",
+      "served_model": "deepcogito/cogito-v2-1-671b",
+      "why": "The runner built one Backend for a whole grid; Backend fixes the request's model field at construction, so the grid's model tuple selected a filename and a price, never a served model. The filename still spells the request."
+    }
   }
 }

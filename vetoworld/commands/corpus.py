@@ -22,6 +22,7 @@ import urllib.request
 from pathlib import Path
 
 from seahaven.eden._shared import corpus as C
+from seahaven.eden._shared import identity as ID
 
 #: **The manifest ships WITH THE CODE, not with the corpus.**
 #:
@@ -197,9 +198,118 @@ def _fetch(args) -> int:
     return 0
 
 
+def _identity(args) -> int:
+    """Report the served-model status of every cell. $0, read-only.
+
+    Exists so the precondition has a standing surface rather than living only
+    in a test: a rule nobody can look up is a rule that gets forgotten, which
+    is the whole story of `resolved_model_string`.
+    """
+    root = Path(args.results)
+    rows = [(p, C.load_cell(p).get("meta", {})) for p in
+            sorted(root.glob("eden_e*.json"))]
+    counts = ID.tally(m for _p, m in rows)
+
+    print(f"MODEL IDENTITY — {len(rows)} cells at {root.resolve()}\n")
+    print("  Was each cell served by the model it claims? The endpoint's own")
+    print("  report is the only evidence; an argument about how the runner")
+    print("  ought to behave is not evidence.\n")
+    for st in (ID.VERIFIED, ID.CORRECTED, ID.UNVERIFIED, ID.MISLABELLED):
+        print(f"  {counts[st]:>4}  {st}")
+
+    bad = [p for p, m in rows if ID.model_identity(m).status == ID.MISLABELLED]
+    if bad:
+        print(f"\n  ** {len(bad)} cell(s) claim a model that did not serve "
+              "them and are NOT corrected. **")
+        for p in bad[:10]:
+            print(f"     {p.name}")
+        if len(bad) > 10:
+            print(f"     ... and {len(bad) - 10} more")
+        print("\n  Run `vworld corpus relabel` to record what actually served.")
+        return 1
+
+    if counts[ID.UNVERIFIED]:
+        print(f"\n  {counts[ID.UNVERIFIED]} cell(s) predate the served-model "
+              "record. Not a failure —")
+        print("  but NOT a clean bill either. The check cannot be run on them "
+              "at all,")
+        print("  and no read may quietly promote that to a pass.")
+    return 0
+
+
+def _relabel(args) -> int:
+    """Record what actually served, keeping what was asked for beside it.
+
+    **Relabel rather than delete.** The affected cells are valid data about the
+    model that really served them — including the only identical-input
+    repeatability study the programme has ever had, which arrived by accident
+    when eight "models" turned out to be one. Deleting them would discard a
+    measurement to hide a mistake.
+
+    The filenames are deliberately NOT corrected: eight of round 18's cells
+    would collide on one name, and the manifest and pins address cells by name.
+    A filename is now a record of a REQUEST.
+
+    Idempotent: re-running finds nothing to do.
+    """
+    root = Path(args.results)
+    todo = []
+    for p in sorted(root.glob("eden_e*.json")):
+        payload = C.load_cell(p)
+        ident = ID.model_identity(payload.get("meta", {}))
+        if ident.status == ID.MISLABELLED:
+            todo.append((p, payload, ident))
+
+    if not todo:
+        print("Nothing to relabel: no cell claims a model that did not serve "
+              "it.")
+        return 0
+
+    print(f"RELABEL — {len(todo)} cell(s) whose served model was not what the "
+          "name claims\n")
+    by_served: dict[str, int] = {}
+    for _p, _pl, ident in todo:
+        by_served[ident.served] = by_served.get(ident.served, 0) + 1
+    for served, n in sorted(by_served.items()):
+        print(f"  {n:>4} cells actually served by {served}")
+
+    if getattr(args, "dry_run", False):
+        print("\n  --dry-run: nothing written.")
+        return 0
+
+    for p, payload, ident in todo:
+        meta = payload["meta"]
+        meta["requested_model"] = ident.requested
+        meta["served_model"] = ident.served
+        meta[ID.CORRECTION_KEY] = {
+            "issue": ID.ISSUE,
+            "requested_model": ident.requested,
+            "served_model": ident.served,
+            "why": "The runner built one Backend for a whole grid; Backend "
+                   "fixes the request's model field at construction, so the "
+                   "grid's model tuple selected a filename and a price, never "
+                   "a served model. The filename still spells the request.",
+        }
+        #: `indent=2`, no `sort_keys` — exactly how `run.py` writes a cell. The
+        #: new keys append to `meta`, so the diff is the correction and
+        #: nothing else. Reformatting 166 large cells would bury it.
+        p.write_text(json.dumps(payload, indent=2) + "\n")
+
+    print(f"\n  relabelled {len(todo)} cells.")
+    print("  `served_model` is now the measurement identity; "
+          "`requested_model` is kept")
+    print("  as the record of the bug. Regenerate the manifest with "
+          "`vworld corpus manifest`.")
+    return 0
+
+
 def main(args) -> int:
     if args.action == "fetch":
         return _fetch(args)
+    if args.action == "identity":
+        return _identity(args)
+    if args.action == "relabel":
+        return _relabel(args)
 
     root = Path(args.results)
     if args.action == "status":

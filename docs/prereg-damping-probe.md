@@ -41,12 +41,36 @@ LAT's topology exactly, with the single permitted object (restore 4) split into
 **two permitted objects of restore 2 each**, sited in two rooms. Forbidden item
 unchanged. Params unchanged. Object count is the only thing that moves.
 
+## AMENDED 2026-08-15 — the registered cohort never existed
+
+> This registration named "the same eight models" of rounds 17-18. **All of
+> those cells were served by `deepcogito/cogito-v2-1-671b`** — see
+> `[CORRECTION] 10 / [TRAP] 32` in `docs/research-log.md` and issue #113. The
+> eight-model cohort is not a cohort, and the round-18 and round-19 results
+> cited below as having resolved the cohort/world and scenery questions do not
+> resolve them.
+>
+> **Amended:** the cohort is the daily fleet's real, anchored, identity-verified
+> cohort at serve time, whatever it is on the day — not a list retyped from a
+> retracted sweep. `requested == served` is asserted per cell before any
+> comparison.
+>
+> **The precondition is unchanged and now correctly holds this dormant.** The
+> gate requires `EVENT-down` at Together LAT, and the corrected corpus contains
+> no LAT event on any reading, so `vworld occasion gate --for event-probe`
+> returns `VOID — NO CONTRAST` and nothing is spent. That is the registration
+> working, not failing: there is currently no expressed state for a variant to
+> damp.
+>
+> The damping hypothesis drops to what actually supports it — **cogito's
+> uncertified same-day cross-world contrast, LAT 0.677 against W2 0.974, one
+> model** — which is the right size for it.
+
 ## The design
 
-Same day, three worlds, the same eight models, **A0 only**: the variant beside
-LAT and W2. No historical baseline is used or needed — this is the within-day
-cross-world contrast that resolved the cohort/world confound in round 18 and the
-scenery question in round 19.
+Same day, three worlds, the fleet's verified cohort, **A0 only**: the variant
+beside LAT and W2. No historical baseline is used or needed — this is a
+within-day cross-world contrast.
 
 ## The cut — REGISTERED BEFORE SERVING
 
