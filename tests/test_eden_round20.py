@@ -26,16 +26,38 @@ def test_the_PIN_RECOMPUTES_and_the_round_is_OPEN():
         R15.assert_pinned()
 
 
-def test_the_COHORT_IS_ROUND_15s_EXACTLY_so_the_two_are_comparable():
-    """**Retyped deliberately, and asserted equal rather than imported.**
+def test_the_COHORT_IS_WHAT_TIERING_LEFT_and_the_rest_is_RECORDED():
+    """**The cohort could not be round 15's, and the reason is frozen.**
 
-    A re-serve that quietly re-scoped would make the two rounds incomparable
-    for reasons unrelated to the defect, and the whole point is to find out
-    what round 15 would have said. Importing `R15.COHORT` would make the
-    equality unfalsifiable; asserting it makes a silent edit fail here.
+    Six of round 15's fourteen went non-serverless on Together between then and
+    now. They are recorded in EXCLUDED with the reason and the date rather than
+    quietly dropped, because "we chose not to measure this" and "the provider
+    stopped serving it" are different facts about a benchmark.
+
+    Every one of the fourteen must be accounted for exactly once: served,
+    excluded by tiering, or servable-but-deliberately-not-re-served.
     """
-    assert R.COHORT == R15.COHORT
-    assert len(R.COHORT) == 14
+    assert set(R.COHORT) == {"moonshotai/Kimi-K3", "zai-org/GLM-5.2"}
+    assert len(R.EXCLUDED) == 6 and len(R.NOT_RESERVED) == 6
+
+    accounted = set(R.COHORT) | set(R.EXCLUDED) | set(R.NOT_RESERVED)
+    assert accounted == set(R15.COHORT), (
+        "every round-15 model must be accounted for exactly once: missing "
+        f"{set(R15.COHORT) - accounted}, extra {accounted - set(R15.COHORT)}")
+    assert not (set(R.COHORT) & set(R.EXCLUDED))
+    assert not (set(R.COHORT) & set(R.NOT_RESERVED))
+    assert not (set(R.EXCLUDED) & set(R.NOT_RESERVED))
+
+    #: Prices carry over unchanged for the two that survive.
+    for m in R.COHORT:
+        assert R.COHORT[m] == R15.COHORT[m]
+
+    #: **Six of the eight the register LOST are unservable**, which is why this
+    #: round recovers two and not eight. Asserted so the shortfall is a recorded
+    #: consequence rather than a surprise at writeup.
+    assert len(set(R.NEVER_MEASURED) & set(R.EXCLUDED)) == 6
+    assert set(R.COHORT) <= set(R.NEVER_MEASURED)
+
     assert R.LEVELS == R15.LEVELS
     assert R.ARMS == R15.ARMS
     assert R.EPISODES_A1 == R15.EPISODES_A1 == 48
@@ -93,23 +115,25 @@ def test_THE_EIGHT_NEVER_MEASURED_ARE_EXACTLY_THE_ONES_WITH_NO_CELLS():
             continue
         have.add(ID.model_identity(m).served)
 
-    never = {m for m in R.COHORT if m not in have}
+    #: Computed over ROUND 15's fourteen, not round 20's two — the claim is
+    #: about what the register lost, which is a fact about the old cohort.
+    never = {m for m in R15.COHORT if m not in have}
     assert never == set(R.NEVER_MEASURED), (
         f"NEVER_MEASURED is stale: corpus says {sorted(never)}")
     assert len(R.NEVER_MEASURED) == 8
 
     #: The other six DO have gen-3 cells, so the split is real rather than an
-    #: artefact of the filter being too narrow.
-    assert len(set(R.COHORT) - never) == 6
+    #: artefact of the filter being too narrow. They are exactly NOT_RESERVED.
+    assert set(R15.COHORT) - never == set(R.NOT_RESERVED)
 
 
-def test_the_GRID_IS_98_CELLS_and_every_one_is_new():
-    """14 models x (3 worlds x 2 arms) + 14 COMP = 98. Asserted because the
-    cost estimate and the budget gate are both derived from it."""
+def test_the_GRID_IS_14_CELLS_and_every_one_is_new():
+    """2 models x (3 worlds x 2 arms) + 2 COMP = 14. Asserted because the cost
+    estimate and the budget gate are both derived from it."""
     grid, comp = R.cells(), R.comp_cells()
-    assert len(grid) == 14 * 3 * 2 == 84
-    assert len(comp) == 14
-    assert len(grid) + len(comp) == 98
+    assert len(grid) == 2 * 3 * 2 == 12
+    assert len(comp) == 2
+    assert len(grid) + len(comp) == 14
     assert {lv for _m, _a, lv in comp} == {"COMP"}
     assert {a for _m, a, _lv in comp} == {"A0"}
 
@@ -127,6 +151,8 @@ def test_THE_IDENTITY_RULE_IS_INSIDE_THE_PAYLOAD_not_just_in_the_code():
     assert R.IDENTITY_RULE[:50] in payload
     assert R.CANNOT_SETTLE[:40] in payload
     assert "supersedes" in payload
+    assert "availability_preflight" in payload
+    assert "excluded" in payload and "non-serverless" in payload
 
 
 def test_the_ROUND_SAYS_WHAT_IT_CANNOT_SETTLE_before_it_runs():
@@ -148,3 +174,33 @@ def test_RULES_1_TO_4_STAY_RESOLVED_because_their_cohort_was_never_affected():
     assert R.RULE_5_DEFERRED != R15.RULE_5_DEFERRED, (
         "rule 5's deferral text must record that round 15's serving never "
         "evaluated it, rather than being copied forward unchanged")
+
+
+def test_the_SUPERSEDED_PIN_is_kept_and_governs_nothing():
+    """**Re-pinned before the first cell, which is the discipline working.**
+
+    The first pin named round 15's fourteen and was frozen before availability
+    was checked. Six proved unservable; zero cells had been served, so it
+    governed nothing and amending it cost nothing. Amending a pin AFTER cells
+    exist would be the opposite of this.
+    """
+    assert R.SUPERSEDED_PIN_14_MODELS != R.PINNED_ROUND20_HASH
+    assert R.PINNED_ROUND20_HASH == R.current_hash()
+
+    from seahaven.eden._shared import corpus as C
+    served = [p for p, _d in C.iter_cells()
+              if (C.parse_cell_name(p.name) or {}).get("round") == "20"]
+    assert not served or R.PINNED_ROUND20_HASH == R.current_hash()
+
+
+def test_THE_AVAILABILITY_PREFLIGHT_IS_A_STANDING_RULE_in_the_runner():
+    """The rule is registered in the pin AND implemented in the serving path.
+    A pre-registration nobody enforces is a sentence, not a gate."""
+    import inspect
+    from vetoworld.commands import run
+
+    src = inspect.getsource(run)
+    assert "pre-flight" in src
+    assert "UNAVAILABLE" in src
+    assert "resolve_model()" in src
+    assert R.AVAILABILITY_PREFLIGHT[:40] in R.payload()

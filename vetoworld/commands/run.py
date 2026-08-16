@@ -154,6 +154,42 @@ def _round_cells(args, spec) -> int:
             backends[model] = Backend(dataclasses.replace(spec, model=model))
         return backends[model]
 
+    # **AVAILABILITY PRE-FLIGHT, before the first cell.** A provider can move a
+    # model to a dedicated-only tier with no notice, and nothing in the corpus
+    # or the pin can see it: round 20's COMP gate discovered six of round 15's
+    # fourteen had gone non-serverless, on its first cell. That abort cost
+    # $0.00, which was luck of ordering — had the unavailable model been
+    # fourteenth, thirteen cells would have been served into a round whose
+    # cohort could never be completed.
+    #
+    # So every model answers a 1-token request first. This is round 13's
+    # identity discipline generalised to serve time: check the thing exists
+    # before believing anything about it, and never learn it by spending.
+    want_models = sorted({m for m, _a, _lv in [c for c in todo]})
+    if want_models:
+        print(f"  pre-flight: {len(want_models)} model(s) ...", flush=True)
+        dead = []
+        for m in want_models:
+            try:
+                got = backend_for(m).resolve_model()
+                if got != m:
+                    dead.append((m, f"endpoint resolved {got!r}"))
+            except Exception as e:                       # noqa: BLE001
+                dead.append((m, str(e).split("\n")[0][:120]))
+        if dead:
+            print()
+            for m, why in dead:
+                print(f"  UNAVAILABLE  {m}\n               {why}")
+            raise SystemExit(
+                f"\n{len(dead)} of {len(want_models)} cohort model(s) cannot be "
+                "served. Nothing was spent.\n"
+                "  A round whose cohort cannot be completed must not be part-"
+                "served: the\n"
+                "  cells would pin a grid that can never be finished. Amend the "
+                "round's\n"
+                "  COHORT and re-pin BEFORE any cell, or resolve access with the "
+                "provider.")
+
     spent = 0.0
     # **`usage_total` is CUMULATIVE over the backend's lifetime**, and the
     # backend is created once so the connection is reused. Reading it directly

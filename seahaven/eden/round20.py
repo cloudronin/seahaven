@@ -13,7 +13,13 @@ and say nothing whatever about these fourteen models. Eight of them have no
 cells at these worlds under any identity and have left the register entirely.
 **This round is their first measurement.**
 
-**WHAT IS DELIBERATELY UNCHANGED FROM ROUND 15.** The cohort, the worlds, the
+**THE COHORT IS NOT ROUND 15'S, AND COULD NOT BE.** Six of its fourteen moved
+to a dedicated-only tier between then and now (see EXCLUDED), and six of the
+eight models the register LOST are among them. Only two are recoverable. The
+other six servable models already have genuine gen-3 cells and are left
+alone deliberately.
+
+**WHAT IS DELIBERATELY UNCHANGED FROM ROUND 15.** The worlds, the
 arms, the episode counts, the score definition, the companion column, the
 resolved rules, the deferred rule 5, and E1's reading in CI form. A round that
 quietly re-scoped while re-serving would make the two incomparable for reasons
@@ -62,25 +68,61 @@ COMP_SEED0 = 26500
 COMP_LEVEL = "COMP"
 COMP_EPISODES = 24
 
-#: **Round 15's cohort, retyped from round 15 rather than re-derived**, so the
-#: two are comparable by construction. Prices are (prompt, completion) USD per
-#: million. Asserted equal to `round15.COHORT` in the tests.
+#: **The cohort is what this round can actually recover: two models.**
+#:
+#: Round 15's fourteen were retyped here first, and six of them turned out to
+#: be unservable — see EXCLUDED. Of the eight the register LOST, six are in
+#: that group, so only these two are recoverable at all. The other six servable
+#: models already carry genuine gen-3 cells and do not need re-measuring: the
+#: v1 policy is dated occasions and mixed dates are already legal, so buying
+#: occasion-uniformity for them would spend ~$37 on a property the design does
+#: not require.
+#:
+#: Prices are (prompt, completion) USD per million, unchanged from round 15.
 COHORT = {
-    "MiniMaxAI/MiniMax-M2.7": (0.20, 1.10),
-    "Qwen/Qwen3.5-397B-A17B": (0.60, 1.70),
-    "deepseek-ai/DeepSeek-V3.1": (0.60, 1.70),
-    "deepseek-ai/DeepSeek-V4-Pro": (1.25, 1.25),
-    "moonshotai/Kimi-K2.6": (1.00, 3.00),
-    "moonshotai/Kimi-K2.7-Code": (1.00, 3.00),
     "moonshotai/Kimi-K3": (1.00, 3.00),
-    "openai/gpt-oss-120b": (0.15, 0.60),
-    "openai/gpt-oss-20b": (0.05, 0.20),
-    "thinkingmachines/Inkling": (1.00, 3.00),
-    "zai-org/GLM-4.6": (0.40, 1.75),
-    "zai-org/GLM-5": (0.60, 2.00),
-    "zai-org/GLM-5.1": (0.60, 2.00),
     "zai-org/GLM-5.2": (0.60, 2.00),
 }
+
+#: **Excluded by provider tiering, not by choice. Recorded, dated, and frozen
+#: into the payload.**
+#:
+#: On 2026-08-16 Together answers `model_not_available` for each of these:
+#: "Unable to access non-serverless model X. Please visit ... to create and
+#: start a new dedicated endpoint." They were serverless when round 15 selected
+#: them and are not now.
+#:
+#: **A dedicated endpoint is not a substitute.** It is a different served
+#: artifact from the one every anchor in this corpus was measured on, so cells
+#: from one would not be comparable to the history they would be joined to.
+#:
+#: The cost is permanent and is stated rather than mourned: **E1's ceiling
+#: shrinks for good.** The correlate study stays underpowered on this cohort
+#: forever — which is what it was pre-registered as, so no reading changes.
+EXCLUDED = {
+    "MiniMaxAI/MiniMax-M2.7": "non-serverless on Together as of 2026-08-16",
+    "Qwen/Qwen3.5-397B-A17B": "non-serverless on Together as of 2026-08-16",
+    "deepseek-ai/DeepSeek-V3.1": "non-serverless on Together as of 2026-08-16",
+    "zai-org/GLM-4.6": "non-serverless on Together as of 2026-08-16",
+    "zai-org/GLM-5": "non-serverless on Together as of 2026-08-16",
+    "zai-org/GLM-5.1": "non-serverless on Together as of 2026-08-16",
+}
+
+#: Servable, already carrying genuine gen-3 cells, deliberately NOT re-served.
+NOT_RESERVED = ("deepseek-ai/DeepSeek-V4-Pro", "moonshotai/Kimi-K2.6",
+                "moonshotai/Kimi-K2.7-Code", "openai/gpt-oss-120b",
+                "openai/gpt-oss-20b", "thinkingmachines/Inkling")
+
+#: **The standing rule this round is the first to carry.** Round 13 established
+#: that a model's identity is checked before its cells are believed; this
+#: generalises it to serve time. Every cohort model is probed for availability
+#: BEFORE the first cell of a round, because a provider can move a model to a
+#: dedicated tier silently and the failure is otherwise discovered by spending.
+#: The COMP gate found it on cell one here and aborted at $0.00, which is the
+#: cheap version — the pre-flight is the free one.
+AVAILABILITY_PREFLIGHT = ("every cohort model answers a 1-token request before "
+                          "the round's first cell is served; a round refuses "
+                          "to start if any does not")
 
 #: **The eight with no GENERATION-3 cell at these worlds under any identity.**
 #: Round 15's filenames credited them with data cogito produced; corrected,
@@ -178,7 +220,16 @@ ARTIFACTS = (
 
 #: Computed on a clean tree, BEFORE any cell was served, via
 #: `vworld pin new --round 20`.
+#: **RE-PINNED 2026-08-16, before any cell.** The first pin (f5c77df8) named
+#: round 15's fourteen; six proved unservable and the pin governed nothing
+#: because zero cells had been served under it. Amending before the first
+#: cell is the discipline working; amending after would have broken it.
 PINNED_ROUND20_HASH = \
+    "aa84484d1fb7de6b7c499ae54229b631a8951e32ff62c45fd5c4b40c24ae4922"
+
+#: The superseded pin, kept so the record of what was frozen first stays
+#: legible. It governed no cell and certifies nothing.
+SUPERSEDED_PIN_14_MODELS = \
     "f5c77df810d60832e339eaa3e54e0be55f63370aed33159c686d0b3c934723f9"
 
 
@@ -216,7 +267,10 @@ def _payload_body(art: dict, locks: dict, specs: dict | None = None) -> str:
         "a0_floor": A0_FLOOR,
         "comp": {"level": COMP_LEVEL, "m": COMP_EPISODES, "seed0": COMP_SEED0},
         "cohort": {k: list(v) for k, v in sorted(COHORT.items())},
+        "excluded": dict(sorted(EXCLUDED.items())),
+        "not_reserved": sorted(NOT_RESERVED),
         "never_measured": sorted(NEVER_MEASURED),
+        "availability_preflight": AVAILABILITY_PREFLIGHT,
         "reused": sorted(REUSED),
         "score": SCORE, "companion": COMPANION,
         "rules_resolved": RULES_RESOLVED, "rule_5_deferred": RULE_5_DEFERRED,
