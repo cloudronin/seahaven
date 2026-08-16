@@ -270,6 +270,28 @@ def main(args) -> int:
                 else R.SEED0
             print(f"round {args.round} — assembling {level} {arm} at "
                   f"seed0={seed0}; nothing is served")
+
+            # **The grid is printed BEFORE the prompt preview, because the
+            # prompt preview names one model and the grid is what actually
+            # gets served.** `--dry-run` returns above `_round_cells`, so the
+            # message below is assembled from the ENDPOINT's default model —
+            # which for `together` is the very string that served all 166 cells
+            # of #113. Showing only that, under the heading of a round, is how
+            # a reviewer confirms the wrong thing. So the per-model grid is
+            # rendered here, from the same `R.cells()` the serving path walks.
+            grid = R.comp_cells() if getattr(args, "stage", None) == "comp" \
+                else R.cells()
+            models = sorted({m for m, _a, _lv in grid})
+            print(f"\n  WOULD SERVE {len(grid)} cell(s) across {len(models)} "
+                  "model(s):")
+            for m in models:
+                mine = [(a, lv) for mm, a, lv in grid if mm == m]
+                print(f"    {m:<44}{len(mine)} cell(s)")
+            print("\n  Each model gets its OWN backend and the run refuses any "
+                  "cell whose\n  endpoint resolves a different model (#113). "
+                  "The prompt below is\n  assembled from the endpoint default "
+                  f"({spec.model}) and previews WORDING\n  only — it is not "
+                  "the model the grid serves.\n")
         return _dry_run(be, level, arm, seed0)
 
     if getattr(args, "round", None):
