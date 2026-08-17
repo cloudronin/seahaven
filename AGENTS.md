@@ -271,6 +271,14 @@ card carried "**357 cells**" and "(259 cells)" against a corpus of 481 — three
 stale numbers in front of the test written to prevent them. Widen the pattern to
 the forms that actually occur, then re-run it and read what it catches.
 
+**Never read an exit code through a pipe.** `cmd | tail; echo $?` reports
+`tail`'s status, not `cmd`'s — so a failing command reads as success. Three
+instances in one session: two suite runs and a gate check where all three gates
+were reported as exiting 0 when one exited 1. Redirect to a file and check the
+command's own code, or use a runner that `exec`s. The pipe is the tell: if a
+`$?` you are about to trust sits downstream of a `|`, it is not the code you
+think it is.
+
 **Run the suite through `scripts/run-tests.sh`, and never read a shell status
 as pytest's.** `pytest ...; echo "EXIT=$?"` leaves the SHELL's code as the
 process result, so a trailing command reports 0 whatever pytest did — this

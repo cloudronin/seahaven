@@ -12593,3 +12593,58 @@ headroom rather than left at the default.
 ### Cost
 
 $0. Every figure above is read off committed cells or off vendor documentation.
+
+### **[TRAP] 40 — membership-dependent derivation**
+
+`sorted(PROVIDERS).index(provider)` looks like a lookup and is a **function of
+the whole set**. Every member's value depends on every other member's existence,
+so adding one silently renumbers the rest.
+
+This is [TRAP] 38's shape — a statistic whose value depends on cohort membership
+— relocated from a verdict to **provenance**, which is worse. A verdict that
+drifts with the cohort is wrong and arguable. A seed that drifts with the cohort
+makes committed cells unreproducible from the code that produced them, and
+nothing fails: the old cells still parse, the new derivation still runs, and the
+two simply stop agreeing.
+
+The tell is that it is the silent-coherent family again — the only kind left
+here. Nothing raises. Every check passes. The corruption is in a relationship
+between two things that are each individually fine.
+
+**The complete fix has two halves.** Sever the coupling: `PROVIDER_SLOT` is
+frozen and append-only, so a new column takes the next index and no existing
+index moves. And make the history load-bearing: a test re-derives day one's
+seeds from the committed cells and asserts they still match, so the property is
+checked against what was actually served rather than against the constant.
+
+**Where else to look for this class:** anywhere an index, offset, order or
+identifier is derived from a collection that can grow — `sorted(...).index()`,
+`list(...).index()`, enumerate over a dict, a hash of a set's repr, "the Nth
+element". If the collection is ever appended to and the derived value is ever
+persisted, the two will disagree and nobody will be told.
+
+### The fork lesson, at full generality
+
+**A voided decision recorded only in prose is one the machinery keeps
+offering.**
+
+`docs/vetoworld-seismograph-daily-probe.md` said "Round 16's fork does not wait
+on this — it voided with #108". The gate returned PROCEED. Both were in the
+repository, for days, and the one that could spend money was the one that was
+wrong.
+
+The mechanism is ordinary and worth naming: **the gate's purposes were specced
+before the retraction and built after it.** Nobody re-read the spec's premises
+while implementing from it, because the spec is where premises are supposed to
+already be settled.
+
+So the premise-check discipline, which this programme already applies to *data*
+premises, has to extend to **spec premises at build time**: when building from a
+document, check whether its decisions still stand before implementing them. That
+is exactly the pass that caught this update's other two defects — the cost
+premise ($2.50 against a measured $13.59) and the seed premise (a block believed
+burned that was never the probe's block) — both of which came from re-reading a
+document's assumptions rather than its instructions.
+
+The document is a record of what was decided. It is not a record of what is
+still true.

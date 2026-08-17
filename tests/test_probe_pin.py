@@ -487,3 +487,64 @@ def test_ROUND_19s_SEALED_TEXT_IS_NOT_EDITED():
     #: is exactly why the text stays in the retired pin rather than being
     #: corrected in place: it records what was believed, not what is true.
     assert "QUIET" in R19.SEALED_ROUND16_FORK["reopens_on"]
+
+
+def test_the_UTC_HOUR_IS_PINNED_and_the_reason_is_the_confound():
+    """15:00 UTC is 08:00 Pacific, so a failure surfaces at breakfast. That is
+    the operational reason and NOT why it is in the payload.
+
+    A fixed hour exists to remove the hour-of-day confound: a fleet serving at
+    15:00 one day and 03:00 the next folds diurnal load variation into every
+    between-day verdict, and the instrument's whole claim is that a between-day
+    difference is about the endpoint. Consistency is the requirement; 15:00 is
+    the choice.
+    """
+    assert PB.SCHEDULE_UTC_HOUR == 15
+    assert PB.SCHEDULE_CRON == "0 15 * * *"
+    assert str(PB.SCHEDULE_UTC_HOUR) in PB.SCHEDULE_CRON
+
+    import json
+    p = json.loads(PB.payload())
+    assert p["schedule_utc_hour"] == 15, "the hour must travel in the pin"
+    assert p["schedule_cron"] == PB.SCHEDULE_CRON
+
+
+def test_the_CADENCE_IS_A_FUNCTION_not_a_sentence():
+    """'DeepInfra on Mon/Wed/Fri' written only in prose is a cadence someone
+    has to remember. `serves_today` is one the job obeys."""
+    #: Monday=0 ... Sunday=6
+    assert [d for d in range(7) if PB.serves_today("deepinfra", d)] == [0, 2, 4]
+    assert [d for d in range(7) if PB.serves_today("together", d)] == list(range(7))
+
+    #: 13 DeepInfra serving days in 30, which is what the budget assumed.
+    import datetime as _dt
+    start = _dt.date(2026, 8, 17)
+    n = sum(PB.serves_today("deepinfra", (start + _dt.timedelta(days=i)).weekday())
+            for i in range(PB.PILOT_DAYS))
+    assert n == PB.DEEPINFRA_SERVING_DAYS, (
+        f"the cadence yields {n} serving days but the budget assumed "
+        f"{PB.DEEPINFRA_SERVING_DAYS} — the projection and the schedule "
+        "disagree, and the projection is what the gate was amended against")
+
+
+def test_the_JOB_SPEC_DOES_NOT_INHERIT_THE_30_MINUTE_DEFAULT():
+    """The default kills a two-column day mid-serve and would present as a
+    PARTIAL day of unknown cause. The timeout must be explicit."""
+    job = PB.SCHEDULE_JOB
+    assert "timeout" in job and job["timeout"] != "30m"
+    assert job["flavor"] == "cpu-basic"
+    assert set(job["secrets"]) == {"TOGETHER_API_KEY", "HF_TOKEN"}
+    #: Order matters: the columns run sequentially in one window, and the
+    #: anchored column goes first so a DeepInfra outage cannot delay it.
+    assert job["columns_in_order"][0] == "together"
+
+
+def test_EVERY_SUPERSEDED_PIN_SAYS_WHETHER_IT_GOVERNED_CELLS():
+    """A superseded hash a reader finds in git history is a question. Each one
+    answers it: day one's governed 17 cells, the other governed none."""
+    assert len(PB.SUPERSEDED_PINS) >= 2
+    for h, why in PB.SUPERSEDED_PINS.items():
+        assert len(h) == 64
+        assert h != PB.PINNED_PROBE_HASH
+        assert ("SERVED under it" in why) or ("NO CELLS WERE SERVED" in why), (
+            f"{h[:12]} does not say whether any cell was served under it")

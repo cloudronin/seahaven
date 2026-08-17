@@ -300,6 +300,50 @@ SCHEDULE_FACTS = (
     "present as a PARTIAL day of unknown cause, which is the failure mode the "
     "status enum exists to make legible.")
 
+#: **15:00 UTC, and the hour is pinned because drifting it would confound.**
+#:
+#: 08:00 Pacific: a failure surfaces at breakfast rather than overnight. But the
+#: operational reason is not why it is in the payload — **a fixed hour exists to
+#: remove the hour-of-day confound.** A fleet that served at 15:00 one day and
+#: 03:00 the next would fold diurnal load variation into every between-day
+#: verdict, and the instrument's whole claim is that a between-day difference is
+#: about the endpoint.
+#:
+#: Consistency is the requirement; 15:00 is the choice.
+SCHEDULE_UTC_HOUR = 15
+SCHEDULE_CRON = "0 15 * * *"
+
+#: **The job runs DAILY; each column decides whether today is its day.** One
+#: schedule, not two — a second cron for the MWF column would make the
+#: same-window property depend on two schedules agreeing rather than on there
+#: being one window.
+CADENCES = {
+    "daily": (0, 1, 2, 3, 4, 5, 6),
+    "mon_wed_fri": (0, 2, 4),          # Python weekday(): Mon=0
+}
+
+#: The invocation, recorded so it is unambiguous rather than reconstructed.
+#: Not created yet: HF Jobs needs a positive credit balance on the account.
+SCHEDULE_JOB = {
+    "schedule": SCHEDULE_CRON,
+    "flavor": "cpu-basic",             # it calls APIs and runs Fisher tests
+    "timeout": "3h",                   # NOT the 30-minute default; see above
+    "secrets": ("TOGETHER_API_KEY", "HF_TOKEN"),
+    "columns_in_order": ("together", "deepinfra"),
+}
+
+
+def serves_today(provider: str, weekday: int) -> bool:
+    """Does this column serve on this weekday? `weekday` is `date.weekday()`.
+
+    **The cadence is a function, not a sentence.** "DeepInfra on Mon/Wed/Fri"
+    written only in prose is a cadence someone has to remember; written here it
+    is one the job obeys.
+    """
+    cadence = PROVIDERS[provider]["cadence"]
+    return weekday in CADENCES[cadence]
+
+
 #: **One job, columns sequential, same UTC window.**
 SCHEDULE_SHAPE = (
     "ONE scheduled job running the provider lines in sequence inside a single "
@@ -443,8 +487,9 @@ ARTIFACTS = (
     "seahaven/eden/intent.py",
 )
 
-#: **The pin as of the two-column amendment, 2026-08-16, before day two.**
-PINNED_PROBE_HASH = "4469c1af68dfdf3af00ca96998f4917ac6d580f85943039ddb18e853758d5b4c"
+#: **The pin as of the two-column amendment plus the fixed schedule, 2026-08-16,
+#: before day two.**
+PINNED_PROBE_HASH = "b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e8a08f"
 
 #: **Day one's pin, kept because day one's cells cite it.**
 #:
@@ -461,8 +506,17 @@ PINNED_PROBE_HASH = "4469c1af68dfdf3af00ca96998f4917ac6d580f85943039ddb18e853758
 SUPERSEDED_PINS = {
     "956f9059871c87961495d4c861c367c7578c9821f4dc0bf709e851931e845471":
         "one-column shape, 2026-08-15 to 2026-08-16. Day one (17 cells) was "
-        "served under it. Superseded by the two-column amendment before day "
+        "SERVED under it. Superseded by the two-column amendment before day "
         "two; nothing it governed was re-read under different rules.",
+    #: **Committed but never served under, and recorded anyway.**
+    #: It existed in the repository for one commit, between the two-column
+    #: amendment and the schedule being fixed. No cell cites it. Listing it
+    #: costs nothing and stops a reader who finds it in git history from
+    #: wondering which day it governed: none.
+    "4469c1af68dfdf3af00ca96998f4917ac6d580f85943039ddb18e853758d5b4c":
+        "two-column shape before the UTC hour was pinned. NO CELLS WERE SERVED "
+        "under it — it lived in the repository for one commit and was "
+        "superseded by the schedule amendment on the same day.",
 }
 
 
@@ -534,6 +588,10 @@ def _payload_body(art: dict, locks: dict, specs: dict) -> str:
         "deepinfra_cohort": {k: list(v)
                              for k, v in sorted(DEEPINFRA_COHORT.items())},
         "schedule_facts": SCHEDULE_FACTS, "schedule_shape": SCHEDULE_SHAPE,
+        "schedule_utc_hour": SCHEDULE_UTC_HOUR, "schedule_cron": SCHEDULE_CRON,
+        "cadences": {k: list(v) for k, v in sorted(CADENCES.items())},
+        "schedule_job": {k: (list(v) if isinstance(v, tuple) else v)
+                         for k, v in sorted(SCHEDULE_JOB.items())},
         "levels_rule": LEVELS_RULE,
         "seeds": {"base": SEED_BASE, "stride": SEED_STRIDE,
                   "block": list(SEED_BLOCK), "epoch": SEED_EPOCH},
