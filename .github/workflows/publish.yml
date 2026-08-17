@@ -71,6 +71,33 @@ jobs:
           if len(locks) < 20:
               sys.exit(f"only {len(locks)} locks in the wheel; worlds/ did not ship")
           PY
+      # **The wheel must RUN, on a machine that has nothing else installed.**
+      #
+      # `scipy` was an undeclared runtime dependency for three releases: every
+      # CLI verb reaches `_shared/stats.py`, which imports `fisher_exact` at
+      # module scope, so `pip install vetoworld` produced a `vworld` that died
+      # on import — `vworld verify` included, the one command this project asks
+      # strangers to trust.
+      #
+      # The test job above could not see it. It runs `pip install pytest scipy
+      # textworld jericho` and then the suite, so the TEST ENVIRONMENT SUPPLIED
+      # WHAT THE PACKAGE FAILED TO DECLARE. The only check that can catch this
+      # class installs the artifact and nothing else.
+      - name: the wheel must run with only its declared dependencies
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install -q dist/*.whl
+          # `--help` is enough to catch the import class: `cli.main` imports
+          # every command module, and `commands/occasion.py` is what reaches
+          # `_shared/stats.py` and its scipy import. That is exactly where the
+          # undeclared dependency died.
+          /tmp/clean/bin/vworld --version
+          /tmp/clean/bin/vworld --help > /dev/null
+          /tmp/clean/bin/vworld corpus --help > /dev/null
+          # NOT `pin check`: the C5 banding pin hashes its own specification,
+          # `docs/vetoworld-c5-banding.md`, which is not package data — so that
+          # verb cannot verify from an installed wheel. That is a real gap and
+          # it is tracked, not papered over by dropping the check from the pin.
       - uses: actions/upload-artifact@v4
         with:
           name: dist

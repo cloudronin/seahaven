@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 # therefore never renamed), and `worlds` (the compiled worlds, needed as package
 # data or `vworld verify` cannot read a single lock).
 name = "vetoworld"
-version = "0.2.0"
+version = "0.2.1"
 license = "MIT"
 description = "VetoWorld: a benchmark of expedience under terminal stakes"
 # **Without this the PyPI page renders nothing at all.** 0.1.0 and 0.1.1 both
@@ -31,7 +31,21 @@ classifiers = [
 # Dependencies are pinned in env/*.yml, not here. The dev and CUDA environments
 # have incompatible transformers requirements and must never be resolved
 # together; expressing them as extras would invite exactly that.
-dependencies = []
+#
+# **`scipy` IS a runtime dependency and went undeclared for three releases.**
+# `_shared/stats.py` imports `fisher_exact` at module scope, and every CLI verb
+# reaches it through `commands/occasion.py`, so `pip install vetoworld` produced
+# a `vworld` that died on `import` — including `vworld verify`, the one command
+# this project asks strangers to trust.
+#
+# It survived because nothing ever tested the installed package on a clean
+# machine. The CI gate runs `pip install pytest pytest-timeout scipy textworld
+# jericho` and then the suite, so the TEST ENVIRONMENT SUPPLIED WHAT THE PACKAGE
+# FAILED TO DECLARE — the same shape as the corpus fetch-back, where every check
+# ran where the missing file happened to exist.
+#
+# Found by running the real install in a real HF Job before scheduling it.
+dependencies = ["scipy>=1.10"]
 
 # **The daily probe is the one verb that WRITES to HuggingFace**, and an
 # authenticated upload cannot reuse `corpus fetch`'s hand-rolled unauthenticated

@@ -32,8 +32,11 @@ stakes*, plus everything needed to recompute the paper from them.
 drifted. It needs **no API key and costs nothing**.
 
 `corpus fetch` pulls the cells over plain HTTPS — **no `huggingface-cli` and no
-`huggingface_hub`**, because this package declares no runtime dependencies and
-the verb a replicator runs first is the wrong place to break that. It stages the
+`huggingface_hub`** — because the verb a replicator runs first is the wrong
+place to drag in an SDK. (The package does declare one runtime dependency,
+`scipy`: every verdict here rests on Fisher's exact test. It went undeclared
+for three releases, which made `vworld verify` die on import for anyone who
+installed it — fixed in 0.2.1.) It stages the
 download, checks the digest against the manifest, and installs nothing that does
 not match: a corpus that arrived corrupted would otherwise make `verify` report
 drifted figures, which is a statement about the network dressed as a statement
