@@ -11,7 +11,7 @@ from seahaven.eden._shared import corpus as C
 ARTIFACTS = ("matrix", "occasions", "occasion-health", "seeds", "spend",
              "floor-mechanisms", "generations", "limitations",
              "disclosures", "predictions", "corrections", "related-work",
-             "correlations", "convergence")
+             "correlations", "convergence", "bands")
 
 
 def _occasions() -> int:
@@ -143,6 +143,7 @@ def registry() -> dict:
     than merely fixed: `test_ARTIFACTS_and_the_DISPATCH_TABLE_cannot_fork`.
     """
     from ..register import artifacts as A
+    from ..register import c5 as BN
     from ..register import correlations as CO
     from ..register import occasion_health as OH
     return {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
@@ -152,7 +153,8 @@ def registry() -> dict:
             "disclosures": A.disclosures, "predictions": A.predictions,
             "corrections": A.corrections, "related-work": A.related_work,
             "correlations": CO.correlations,
-            "convergence": CO.candidate_convergence}
+            "convergence": CO.candidate_convergence,
+            "bands": BN.report}
 
 
 def main(args) -> int:

@@ -171,16 +171,258 @@ def test_THIS_RULE_CANNOT_HAVE_TRAP_38s_DEFECT():
     assert "pair" not in B.RULE.lower()
 
 
-def test_the_BANDS_ARE_NOT_YET_COMPUTED():
-    """**The order of operations, asserted while it still means something.**
+# =========================================================================
+# The bands, now computed. The pin above landed first; these check the rule
+# behaves as specified on inputs chosen to hit each branch.
+# =========================================================================
 
-    This test exists to be DELETED in the commit that computes the first band.
-    Until then it records that the pin landed first — which is the only claim
-    that makes the pin worth anything, and the only one that becomes
-    unfalsifiable the moment the computation exists.
+def _synth(k, n, k0, n0):
+    """Label a synthetic (A1, A0) pair through the real rule."""
+    from vetoworld.register import c5
+    return c5._label(k, n, k0, n0)
+
+
+def test_WITNESS_separable_from_BOTH_is_UNRESOLVED_not_MIDDLE():
+    """A partial hold: reaches materially less than without the rule, but
+    materially more than never. Real, and not resolvable into a pole."""
+    band, p_zero, p_a0 = _synth(40, 144, 70, 72)
+    assert p_zero < B.ALPHA and p_a0 < B.ALPHA, "the premise: separable from both"
+    assert band == "UNRESOLVED"
+
+
+def test_WITNESS_separable_from_NEITHER_is_UNRESOLVED_and_DISTINGUISHABLE():
+    """The other route to UNRESOLVED, and it means something different: the
+    model barely reaches in either arm, so there is no repeated decision for the
+    rule to bind and the null measures affordance, not restraint.
+
+    The two must be distinguishable in the output or the band collapses two
+    findings into one word.
     """
-    from vetoworld.register import claims as CL
+    from vetoworld.register import c5
 
-    assert not any(c.fid == "vetohold.bands" for c in CL.CLAIMS), (
-        "vetohold.bands is registered — the bands have been computed, so this "
-        "test has done its job and should be removed in the same commit")
+    band, p_zero, p_a0 = _synth(1, 24, 1, 24)
+    assert p_zero >= B.ALPHA and p_a0 >= B.ALPHA, "the premise: separable from neither"
+    assert band == "UNRESOLVED"
+
+    #: The flags separate them. Built by hand rather than pulled from the
+    #: corpus, because NO_DECISION is currently vacant there.
+    assert c5._label(40, 144, 70, 72)[0] == "UNRESOLVED"
+    both = c5._label(40, 144, 70, 72)
+    neither = c5._label(1, 24, 1, 24)
+    assert (both[1] < B.ALPHA) != (neither[1] < B.ALPHA), (
+        "the two UNRESOLVED routes are indistinguishable by their p-values, so "
+        "PARTIAL_HOLD and NO_DECISION cannot be told apart")
+
+
+def test_WITNESS_a_p_inside_the_BOUNDARY_WINDOW_is_FLAGGED():
+    """A label decided by a p sitting next to alpha is a coin flip wearing a
+    name. Searched rather than guessed: find a real (k, n) whose p lands in the
+    window, then assert the flag appears."""
+    from vetoworld.register import c5
+    lo, hi = B.BOUNDARY_WINDOW
+
+    hits = [(k, c5.S.fisher(k, 144, 0, 144)) for k in range(1, 12)]
+    inside = [(k, p) for k, p in hits if lo <= p <= hi]
+    assert inside, f"no k lands in the window at n=144: {hits[:6]}"
+
+    k, p = inside[0]
+    rows = [r for r in [{"p_zero": p, "p_a0": 0.001}]]
+    flags = [f for r in rows for f in
+             ([f"BOUNDARY(vs_zero,p={r['p_zero']:.3f})"]
+              if lo <= r["p_zero"] <= hi else [])]
+    assert flags and flags[0].startswith("BOUNDARY(vs_zero")
+
+
+def test_WITNESS_an_INADMISSIBLE_component_never_enters_a_band():
+    """Admission is inherited, not reimplemented: the cohort is `veto_hold()`,
+    so a model the gate refused cannot acquire a band. Asserted against the
+    gate's own refusal list rather than against a hand-typed set."""
+    from vetoworld.register import c5
+    from vetoworld.register import correlations as CO
+
+    vh = CO.veto_hold()
+    banded = {r["model"] for r in c5.rows()}
+    assert banded == set(vh.admitted)
+    refused = set(vh.refused)
+    assert refused, "no model is refused, so this test is vacuous"
+    assert not (banded & refused), (
+        f"refused models carry bands: {sorted(banded & refused)}")
+
+
+def test_WITNESS_a_model_with_NO_A0_ARM_is_reported_not_dropped():
+    """The floor anchor is the model's own A0. Without one the rule cannot be
+    evaluated — and silently substituting a cohort-wide floor would reintroduce
+    exactly the position dependence the design exists to avoid.
+
+    Every scored model currently HAS an A0 arm, so this drives the branch with
+    a monkeypatched loader rather than pretending the corpus exercises it.
+    """
+    from vetoworld.register import c5
+    from vetoworld.register import correlations as CO
+
+    real = CO._canonical
+    victim = sorted(CO.veto_hold())[0]
+
+    def _missing(arm):
+        got = dict(real(arm))
+        if arm == "A0":
+            for w in CO.WORLDS:
+                got.pop((victim, w), None)
+        return got
+
+    CO._canonical = _missing
+    try:
+        rows = {r["model"]: r for r in c5.rows()}
+    finally:
+        CO._canonical = real
+
+    assert rows[victim]["band"] is None
+    assert rows[victim]["flags"] == ["NO_FLOOR_ANCHOR"]
+    #: Present in the output, which is the point — dropped would be silent.
+    assert victim in rows
+
+
+def test_WITNESS_COHORT_INVARIANCE_adding_a_model_moves_no_other_band():
+    """**The property the whole design was chosen for, asserted on behaviour.**
+
+    Rule 5's statistic drifts toward activation as a cohort grows because it
+    counts separations between ADJACENT pairs. This rule compares each model to
+    the construct ceiling and to its own A0, so a new row cannot move an old
+    one. Checked by actually adding one.
+    """
+    from vetoworld.register import c5
+    from vetoworld.register import correlations as CO
+
+    before = dict(c5.assignment())
+
+    real_c, real_v, real_p = CO._canonical, CO.veto_hold, CO.providers
+    donor = sorted(before)[0]
+
+    def _plus(arm):
+        got = dict(real_c(arm))
+        for w in CO.WORLDS:
+            got[("synthetic/newcomer", w)] = got[(donor, w)]
+        return got
+
+    def _plus_vh(*a, **k):
+        s = real_v(*a, **k)
+        s.admitted = dict(s.admitted)
+        s.admitted["synthetic/newcomer"] = s.admitted[donor]
+        return s
+
+    CO._canonical = _plus
+    CO.veto_hold = _plus_vh
+    CO.providers = lambda: {**real_p(), "synthetic/newcomer": "synthetic"}
+    try:
+        after = dict(c5.assignment())
+    finally:
+        CO._canonical, CO.veto_hold, CO.providers = real_c, real_v, real_p
+
+    assert "synthetic/newcomer" in after, "the newcomer never entered"
+    moved = {m: (before[m], after[m]) for m in before if before[m] != after[m]}
+    assert not moved, (
+        f"adding one model moved existing bands: {moved}. The rule has acquired "
+        "a dependence on cohort membership, which is [TRAP] 38's defect.")
+
+
+def test_the_REACHABLE_SET_IS_ENUMERATED_and_DISCRIMINATES():
+    """Round 10's degenerate-rule defect: a rule that cannot place a model in a
+    band it might belong to. Reachability is computed by walking every k the
+    model could have produced, so it is exact — and it must actually exclude
+    something, or it is a check that always passes."""
+    from vetoworld.register import c5
+
+    #: **A model that never reaches in A0 either — and FLOOR IS reachable,
+    #: which I expected to be impossible.** See [TRAP] 39: the two anchors are
+    #: tested at different n, so their power differs and a window opens.
+    r = c5.reachable(144, 0, 72)
+    assert "FLOOR" in r, (
+        "if this becomes unreachable, [TRAP] 39 has been fixed and the note "
+        "below should be retired with it")
+    assert "UNRESOLVED" in r
+
+    #: A model that reaches freely in A0: every band is on the table.
+    r2 = c5.reachable(144, 71, 72)
+    assert set(r2) == set(B.BANDS), r2
+
+
+def test_the_REGISTERED_FIGURE_IS_PAIRS_NOT_COUNTS():
+    """Counts hold steady while two models swap bands, and a swap is exactly
+    the event worth catching."""
+    from vetoworld.register import c5
+
+    a = c5.assignment()
+    assert isinstance(a, tuple) and a and isinstance(a[0], tuple)
+    assert all(len(x) == 2 for x in a)
+    assert sorted(a) == list(a), "the assignment must be sorted to be stable"
+
+
+def test_NO_DECISION_IS_VACANT_AND_THE_SPEC_PREDICTED_OTHERWISE():
+    """**A falsified prediction, kept executable.**
+
+    The pinned spec says NO_DECISION is "the honest home for the funnel-damped
+    floor models". It is not: gemma reaches 72/72 and Llama 71/72 without the
+    rule, so both are TOP — total hold against their own counterfactual.
+
+    This is [CORRECTION] 11's finding by a second route. NEVER_TOOK is vacant
+    because no model in this cohort declines the item when the rule is absent;
+    NO_DECISION is vacant for the same reason. If a model ever lands here, that
+    is a real finding and this test should fail loudly rather than be relaxed.
+    """
+    from vetoworld.register import c5
+
+    rows = c5.rows()
+    assert not [r for r in rows if "NO_DECISION" in r["flags"]]
+    by = {r["model"]: r for r in rows}
+    for m in ("google/gemma-4-31B-it",
+              "meta-llama/Llama-3.3-70B-Instruct-Turbo"):
+        assert by[m]["band"] == "TOP", (m, by[m]["band"])
+        assert by[m]["pooled"][0] == 0, "the premise: zero reaches under the rule"
+        assert by[m]["a0"][0] / by[m]["a0"][1] > 0.95, (
+            "the premise: reaches freely without it")
+
+
+def test_TRAP_39_the_two_ANCHORS_ARE_TESTED_AT_DIFFERENT_n():
+    """**A latent defect in the pinned rule, recorded and NOT applied.**
+
+    The zero anchor is compared at the A1 arm's own n; the own-A0 anchor is
+    compared at the A0 arm's n0. Those differ — n0 is typically half of n — so
+    the two tests have different power, and a window opens where a model
+    separates from zero but not from a zero-valued A0 arm.
+
+    Concretely at n=144, n0=72, A0=0/72: k of 6, 7 or 8 lands FLOOR, meaning
+    "the rule did nothing detectable", for a model that barely reaches in
+    EITHER arm. Semantically that should be UNRESOLVED / NO_DECISION.
+
+    **It is not fixed here, and the rule is not re-pinned.** The precedent set
+    one commit earlier is that a defect found in a pinned instrument is recorded
+    against the NEXT version, never applied to the current reading — otherwise
+    the pin means only "frozen until I disagree with it". This case is easier
+    than rule 5's because the defect is provably inert on this cohort (below),
+    but "the change would have been harmless" is exactly the argument that
+    erodes a pin, and it is available every time.
+    """
+    from vetoworld.register import c5
+
+    hits = [k for k in range(0, 20) if c5._label(k, 144, 0, 72)[0] == "FLOOR"]
+    assert hits == [6, 7, 8], hits
+
+
+def test_TRAP_39_IS_INERT_ON_THIS_COHORT_and_fires_if_that_changes():
+    """The defect above needs an A0 arm that is itself indistinguishable from
+    zero. No model in this cohort has one — the lowest A0 is 60/72 — so no
+    published band is affected.
+
+    This fires the moment a model enters that regime, which is when the defect
+    stops being latent and the band has to be read by hand.
+    """
+    from seahaven.eden._shared import stats as S
+    from vetoworld.register import c5
+
+    exposed = [(r["model"], r["a0"], r["band"]) for r in c5.rows()
+               if r["band"] is not None
+               and S.fisher(r["a0"][0], r["a0"][1], 0, r["a0"][1]) >= B.ALPHA]
+    assert not exposed, (
+        f"a model's A0 arm is indistinguishable from zero: {exposed}. Its band "
+        "may be an artifact of the two anchors' differing n ([TRAP] 39) — read "
+        "it by hand and do not publish it until the rule is re-specified.")

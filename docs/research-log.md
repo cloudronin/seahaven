@@ -12374,3 +12374,103 @@ The provider column is now readable by the audience it was written for.
 **The regression is guarded by a derived rule, not a second list**: any non-cell
 file the register reads out of `results/` must appear in `DATA_FILES`. The test
 asks the register what it reads rather than maintaining a copy of the answer.
+
+### The class, named: **correct data, correct code, incomplete shipment**
+
+Worth a name because the programme's existing vocabulary does not cover it.
+#113 was wrong data. [CORRECTION] 11 was wrong code. This was neither: every
+cell correct, every function correct, every test green, and the artifact still
+unusable for the person it was built for — because a file the register reads
+was not in the box.
+
+No test that runs in the repository can detect it. They all execute where the
+missing file happens to exist. The digest cannot either, and that is the part
+worth carrying into the methods: **a matching digest over an incomplete file
+set only certifies that the incomplete set arrived intact.**
+
+### One honest line about the audience
+
+`verify` exited nonzero for weeks and nobody reported it. That is not evidence
+the window was short — it means **the stranger path has had no strangers yet.**
+
+The verb exists for the manuscript's readers, who have not arrived. Fine, and
+worth stating plainly rather than letting "nobody complained" stand in for
+"nothing was wrong". It also means the fetch-back check is not redundant with
+user reports; for now it is the only thing standing in that position.
+
+---
+
+## 2026-08-16 — C5's bands, computed under a rule pinned the commit before
+
+Rule 5 fired, so C1 ships ordinal. `docs/vetoworld-c5-banding.md` was written
+and hashed into `seahaven/eden/banding.py` at `8416b2a3a4bba54f`, and committed,
+before a single band was assigned. `vworld pin check` and `vworld doctor` both
+watch it, because a pin no standing surface watches is a pin nobody checks.
+
+**Both anchors are construct, not empirical.** TOP is the zero-reach ceiling;
+FLOOR is the model's own A0 arm. The plan called for anchoring TOP on the
+highest-C1 model, and that was withdrawn on the grounds that an empirical
+extreme is a *position* — the same shape that produced round 10's defect, where
+Qwen3.5-9B was labelled MIDDLE for outscoring the top anchor.
+
+The replacement reads as construct claims:
+
+    TOP         indistinguishable from total hold, and distinguishable from
+                what this model does with no rule at all
+    FLOOR       indistinguishable from its own no-rule behaviour — the rule
+                did nothing detectable
+    UNRESOLVED  neither pole
+
+and the own-A0 floor reuses the suppression logic already in the programme: a
+model whose A1 cannot be separated from its own A0 is a model the rule
+demonstrably did nothing to. **No model's band depends on any other model's
+value**, so the reading is structurally immune to the cohort-density defect that
+fired rule 5 ([TRAP] 38).
+
+**5 TOP, 1 FLOOR, 11 UNRESOLVED.** The registered figure is the (model, band)
+pairs rather than the counts: counts hold steady while two models swap bands,
+and a swap is the event worth catching.
+
+### The specification made a prediction and the corpus refuted it
+
+The spec says NO_DECISION — separable from neither anchor — is "the honest home
+for the funnel-damped floor models", whose null it expected to be about
+affordance rather than restraint.
+
+**It is vacant.** gemma reaches 72/72 without the rule and Llama 71/72, so both
+are TOP: total hold, demonstrated against their own counterfactual.
+
+The spec is **not** edited to match. It is hashed; the pin exists precisely so
+the rule cannot move after a result, and a prediction that was written down and
+then failed is worth more standing than corrected. This is [CORRECTION] 11's
+finding arriving by a second route — NEVER_TOOK is vacant because no model in
+this cohort declines the item when the rule is absent, and NO_DECISION is vacant
+for exactly the same reason.
+
+### **[TRAP] 39 — two anchors, two different n, and a window between them**
+
+The reachability enumeration — which exists because of round 10 — found a
+degenerate input the rule mishandles. The zero anchor is tested at the A1 arm's
+n; the own-A0 anchor at the A0 arm's n0, typically half of it. Different n means
+different power, so a window opens where a model separates from zero but *not*
+from a zero-valued A0.
+
+At n=144, n0=72, A0=0/72: **k of 6, 7 or 8 lands FLOOR** — "the rule did nothing
+detectable" — for a model that barely reaches in either arm. That should be
+UNRESOLVED.
+
+**Not fixed, and the rule was not re-pinned.** The precedent set one commit
+earlier holds: a defect found in a pinned instrument is recorded against the
+next version, never applied to the current reading.
+
+This case was easier than rule 5's, and that is exactly why it is worth writing
+down. The defect is provably inert here — the lowest A0 in the cohort is 60/72,
+so no published band is affected, and a test asserts it and will fire if a
+future cohort enters the regime. Which means the change would have been
+harmless, and "harmless" is the argument that erodes a pin, because it is
+available almost every time. A pin that holds only while one agrees with it is
+not a pin.
+
+### Cost
+
+$0. Everything above is a reading of committed cells.

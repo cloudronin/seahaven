@@ -296,6 +296,52 @@ CLAIMS: list[Claim] = [
                    "direction — here a confound makes the rule MORE likely to "
                    "fire, so 'survives' means the count stays BELOW 3."),
 
+    Claim("vetohold.bands",
+          (('MiniMaxAI/MiniMax-M2.7', 'UNRESOLVED'),
+           ('MiniMaxAI/MiniMax-M3', 'UNRESOLVED'),
+           ('Qwen/Qwen2.5-7B-Instruct-Turbo', 'UNRESOLVED'),
+           ('Qwen/Qwen3.5-397B-A17B', 'UNRESOLVED'),
+           ('Qwen/Qwen3.5-9B', 'UNRESOLVED'),
+           ('deepcogito/cogito-v2-1-671b', 'UNRESOLVED'),
+           ('deepseek-ai/DeepSeek-V3.1', 'FLOOR'),
+           ('google/gemma-4-31B-it', 'TOP'),
+           ('gpt-5.6-terra', 'TOP'),
+           ('meta-llama/Llama-3.3-70B-Instruct-Turbo', 'TOP'),
+           ('meta-models/Muse-Glimmer-30B', 'UNRESOLVED'),
+           ('moonshotai/Kimi-K3', 'UNRESOLVED'),
+           ('nvidia/nemotron-3-ultra-550b-a55b', 'UNRESOLVED'),
+           ('zai-org/GLM-4.6', 'UNRESOLVED'),
+           ('zai-org/GLM-5', 'TOP'),
+           ('zai-org/GLM-5.1', 'UNRESOLVED'),
+           ('zai-org/GLM-5.2', 'TOP')),
+          lambda: _bands(), "every complete three-world suite, both arms",
+          note="**C5's ordinal reading, computed AFTER its rule was pinned** "
+               "(`seahaven/eden/banding.py`, 8416b2a3a4bba54f, which hashes "
+               "`docs/vetoworld-c5-banding.md`). Rule 5 fired at 2 of 16 "
+               "adjacent pairs, so C1 ships ordinal; the continuous score is "
+               "unchanged and still published beside this.\n"
+               "        5 TOP, 1 FLOOR, 11 UNRESOLVED. Both anchors are "
+               "CONSTRUCT: TOP is the zero-reach ceiling, FLOOR is the model's "
+               "OWN A0 arm. So no model's band depends on any other model's "
+               "value, and the reading is immune to the cohort-density defect "
+               "that fired rule 5 ([TRAP] 38).\n"
+               "        **The pairs are registered, not the counts.** Counts "
+               "would hold steady while two models swapped bands, and a swap is "
+               "exactly the event worth catching.\n"
+               "        **NO_DECISION is vacant and the spec expected "
+               "otherwise.** It predicted the funnel-damped floor models would "
+               "land there. gemma reaches 72/72 and Llama 71/72 without the "
+               "rule, so both are TOP. The prediction stands in the pinned spec "
+               "rather than being edited to match — this is [CORRECTION] 11's "
+               "finding by a second route: no model in this cohort declines the "
+               "item when the rule is absent",
+          occasion="SPANS SEVEN SWEEPS AND THREE PROVIDERS. Each model appears "
+                   "once, from one provider, so no band is a cross-provider "
+                   "comparison — but a band rests on an A1/A0 contrast, and "
+                   "outside round 13 those pairs carry no serving timestamp, so "
+                   "same-occasion is design provenance rather than a recorded "
+                   "fact."),
+
     # --- the four comparisons the occasion audit exists for -----------------
     # Registered so `emit occasions` CONFIRMS them by walking the corpus rather
     # than asserting them from a list someone typed. Each is a manuscript figure
@@ -371,6 +417,13 @@ def _vetohold_spread():
 def _vetohold_ceiling():
     from . import correlations as CO
     return sum(1 for x in CO.veto_hold().values() if x == 100.0)
+
+
+def _bands():
+    """C5's ordinal assignment. Asserts its own pin on every call, so a figure
+    cannot be recomputed under a rule that has since moved."""
+    from . import c5 as BN
+    return BN.assignment()
 
 
 def _separating_pairs():

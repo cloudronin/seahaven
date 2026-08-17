@@ -62,3 +62,29 @@ def test_shared_is_never_added_to_a_rounds_ARTIFACTS():
         m = importlib.import_module(f"seahaven.eden.round{n}")
         for a in getattr(m, "ARTIFACTS", ()):
             assert "_shared" not in a, f"round{n} hashes {a}"
+
+
+def test_THE_TEST_RUNNER_CANNOT_LIE_ABOUT_PYTESTS_EXIT_CODE():
+    """**Structure, not a rule.** Twice in one session a suite was reported
+    green off a shell status that was not pytest's: `pytest ...; echo "EXIT=$?"`
+    leaves the SHELL's code as the process result, so any trailing command
+    returns 0 whatever pytest did. The second time, one real failure was
+    reported as exit 0.
+
+    A rule ("check pytest's code, not the shell's") is forgotten under exactly
+    the conditions that matter — a long run, late, when green is expected. So
+    `scripts/run-tests.sh` uses `exec`, which REPLACES the shell with pytest:
+    there is no shell left to have its own status, and nothing can run after
+    pytest to overwrite one. The guarantee holds even if someone appends a line.
+    """
+    from pathlib import Path
+
+    sh = Path(__file__).resolve().parents[1] / "scripts/run-tests.sh"
+    assert sh.exists(), "the runner is gone; the guarantee went with it"
+    body = [ln.strip() for ln in sh.read_text().splitlines()
+            if ln.strip() and not ln.strip().startswith("#")]
+    #: The pytest invocation must be the LAST executable line, and must exec.
+    assert body[-1].startswith("exec "), (
+        f"the runner's last line is {body[-1]!r} — if pytest is not exec'd, or "
+        "anything runs after it, the exit code can differ from pytest's")
+    assert "-m pytest" in body[-1]

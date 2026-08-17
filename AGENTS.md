@@ -271,6 +271,14 @@ card carried "**357 cells**" and "(259 cells)" against a corpus of 481 — three
 stale numbers in front of the test written to prevent them. Widen the pattern to
 the forms that actually occur, then re-run it and read what it catches.
 
+**Run the suite through `scripts/run-tests.sh`, and never read a shell status
+as pytest's.** `pytest ...; echo "EXIT=$?"` leaves the SHELL's code as the
+process result, so a trailing command reports 0 whatever pytest did — this
+family bit twice in one session, once reporting a real failure as green. The
+runner `exec`s pytest, so the shell is gone and there is no second status to
+confuse. That is why it is a script and not a remembered rule: the mistake is
+unmakeable rather than merely discouraged.
+
 **A publication is not verified until it has been fetched back into an empty
 directory and run.** Not the digest — a matching digest over an incomplete file
 set only says the incomplete set arrived intact. Ours matched perfectly while
