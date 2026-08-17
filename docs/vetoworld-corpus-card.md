@@ -26,7 +26,7 @@ stakes*, plus everything needed to recompute the paper from them.
 
     pip install vetoworld
     vworld corpus fetch          # this dataset, checksummed on arrival
-    vworld verify                # all 17 figures recompute, $0, no key
+    vworld verify                # every figure recomputes, $0, no key
 
 `verify` recomputes every quoted figure and exits nonzero naming any that
 drifted. It needs **no API key and costs nothing**.
@@ -38,6 +38,14 @@ download, checks the digest against the manifest, and installs nothing that does
 not match: a corpus that arrived corrupted would otherwise make `verify` report
 drifted figures, which is a statement about the network dressed as a statement
 about the manuscript.
+
+It also pulls `results/raidex_pool.json`, the frozen index axis every correlate
+is plotted against. That file is **not** part of the manifest digest — the
+digest is over cells — so it is fetched beside them and reported separately. It
+was missing from this dataset for weeks, during which `verify` exited nonzero
+for anyone who fetched, on a figure that recomputed perfectly in the authors'
+own working tree. A digest that matches over an incomplete file set only tells
+you the incomplete set arrived intact.
 
 ## What is in here
 

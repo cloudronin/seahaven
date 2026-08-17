@@ -236,7 +236,9 @@ def test_NO_PROSE_HARDCODES_A_LIVE_CELL_COUNT():
     #: stale counts, in front of a test written to stop exactly that. A guard
     #: that checks one spelling of a fact is a guard that the other spelling
     #: walks past.
-    bare = re.compile(r"\*{0,2}(\d{2,}) cells?\b")
+    #: `figures` joins `cells` because the register grows too — the card said
+    #: "all 17 figures recompute" while `verify` reported 21.
+    bare = re.compile(r"\*{0,2}(\d{2,}) (?:cells?|figures?)\b")
     bad = []
     for rel in ("vetoworld/register/occasions.py", "vetoworld/commands/emit.py",
                 "vetoworld/commands/run.py", "docs/vetoworld-corpus-card.md"):

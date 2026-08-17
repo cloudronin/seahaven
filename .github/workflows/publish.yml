@@ -29,11 +29,21 @@ jobs:
       # imports textworld. The first version of this job installed neither and
       # the gate failed on a missing dependency rather than on the code.
       - run: pip install pytest pytest-timeout scipy textworld jericho
+      # `test_raidex_pool` carries the `scored - joined == 6, and the same six
+      # by name` invariant. `verify` alone would not catch that class: it
+      # compares against the published literal, so a key defect that silently
+      # dropped seven models from the join would pass the moment someone
+      # updated the literal to match. The invariant is what noticed.
+      #
+      # `test_eden_banding` holds C5's rule, which is pinned rather than served
+      # — nothing else would fail if the rule text moved.
       - run: python -m pytest tests/test_vworld_packaging.py
                               tests/test_vworld_cli.py
                               tests/test_vworld_verify.py
                               tests/test_vworld_artifacts.py
                               tests/test_occasions.py
+                              tests/test_raidex_pool.py
+                              tests/test_eden_banding.py
                               tests/test_pin_invariance.py
                               tests/test_layering.py -q
 

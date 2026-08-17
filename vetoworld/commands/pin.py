@@ -23,7 +23,12 @@ ROUNDS = (2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
 #: `PINNED_ROUNDN_HASH` and an end; the daily probe is a standing instrument
 #: with neither. It still has to appear here, or it is a pin only its own tests
 #: watch — and `doctor` and `pin check` are where anyone looks first.
-STANDING = ("probe",)
+#:
+#: `banding` is C5's ordinal rule. It serves nothing and costs nothing, so its
+#: pin is not protecting a measurement from a moving world — it protects the
+#: RULE from moving under a result, which is why it belongs on the surface
+#: people check rather than only in its own tests.
+STANDING = ("probe", "banding")
 
 
 def _mod(n):

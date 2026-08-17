@@ -39,6 +39,15 @@ MANIFEST = Path(__file__).resolve().parent.parent / "corpus.manifest.json"
 #: The published dataset. Its digest is `corpus.manifest.json`, and `fetch`
 #: installs nothing that does not match it.
 DATASET = "cloudronin/vetoworld-corpus"
+#: **Data under `results/` that is not a cell but that the register reads.**
+#: The corpus is the cells; the shipment is the cells plus whatever a figure
+#: needs to recompute. `raidex_pool.json` is a frozen axis — it carries a
+#: rebuild guard precisely because moving it would move the x-axis under
+#: published results — and it was missing from the dataset for weeks while
+#: every in-repo check passed, because every in-repo check runs where the file
+#: happens to exist.
+DATA_FILES = ("raidex_pool.json",)
+
 _API = "https://huggingface.co/api/datasets/{repo}/tree/main/results"
 _FILE = "https://huggingface.co/datasets/{repo}/resolve/main/{path}"
 
@@ -179,6 +188,42 @@ def _fetch(args) -> int:
             return 2
         if i % 25 == 0 or i == len(names):
             print(f"  {i}/{len(names)} cells", flush=True)
+
+    # **The axis travels with the cells, or the register cannot be recomputed.**
+    #
+    # A fetch-back into an empty directory found `vworld verify` exiting nonzero
+    # for a stranger: `vetohold.cohort` recomputed (17, 0) instead of (17, 11),
+    # because `raidex_pool.json` — the x-axis of every correlate the register
+    # reports — was in the git repository and nowhere else. `emit correlations`
+    # printed nothing at all, since it returns early when the pool is absent.
+    #
+    # The listing filters to `eden_e*`, which is right for the DIGESTED cell set
+    # and wrong for the corpus as a shipment. These files are pulled beside the
+    # cells and are deliberately NOT part of the manifest digest: the digest is
+    # over cells, and widening it would invalidate every published digest for a
+    # file that has never changed. Their integrity is asserted instead by
+    # `test_raidex_pool`, which pins the pool's own counts.
+    #
+    # Missing is not fatal — an older dataset predates this — but it is SAID,
+    # because the failure it causes otherwise appears as a drifted figure, which
+    # reads as a statement about the manuscript rather than about the download.
+    for extra in DATA_FILES:
+        #: **Resume applies here too.** The cell loop skips what is already
+        #: staged; a data file that re-downloaded on every retry would make a
+        #: resumed fetch do strictly more work than the interrupted one, on a
+        #: connection that has already shown it is unreliable.
+        if (stage / extra).exists():
+            print(f"  = {extra} already staged")
+            continue
+        try:
+            (stage / extra).write_bytes(
+                _get(_FILE.format(repo=repo, path=f"results/{extra}")))
+            print(f"  + {extra}")
+        except (TransientFetchError, urllib.error.HTTPError):
+            print(f"  ! {extra} is not in {repo}.")
+            print("    Figures that read it will not recompute; `verify` will")
+            print("    report them as drifted. That is the download, not the")
+            print("    manuscript.")
 
     digest, n, total = _digest_corpus(stage)
     want = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else None

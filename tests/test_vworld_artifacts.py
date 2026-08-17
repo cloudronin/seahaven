@@ -454,5 +454,38 @@ def test_a_resumed_fetch_SKIPS_what_is_already_staged(tmp_path, capsys,
         action, results, force = "fetch", str(tmp_path / "results"), False
         repo = "someone/mirror"
     assert CO.main(_A()) == 0
+    #: **The axis ships with the cells**, so a resumed fetch pulls it too —
+    #: it was not staged. `vetohold.cohort` recomputed (17, 0) for anyone who
+    #: fetched, for weeks, because `raidex_pool.json` was in git and not in the
+    #: dataset, and the listing filters to `eden_e*`.
+    assert pulled == ["eden_e2_b.json", "raidex_pool.json"], pulled
+    out = capsys.readouterr().out
+    assert "resuming: 1 cell(s) already staged" in out
+    assert "+ raidex_pool.json" in out
+
+
+def test_a_resumed_fetch_SKIPS_a_DATA_FILE_that_is_already_staged(tmp_path,
+                                                                  capsys,
+                                                                  monkeypatch):
+    """Resume applies to the axis exactly as it does to cells. Re-downloading it
+    on every retry would make a resumed fetch do strictly more work than the
+    interrupted one, on a connection that has already proved unreliable."""
+    from vetoworld.commands import corpus as CO
+
+    stage = tmp_path / "results.partial"
+    stage.mkdir()
+    (stage / "eden_e1_a.json").write_text('{"runs": []}')
+    (stage / "raidex_pool.json").write_text('{"models": []}')
+    monkeypatch.setattr(CO, "_listing", lambda repo: ["eden_e1_a.json",
+                                                      "eden_e2_b.json"])
+    pulled = []
+    monkeypatch.setattr(CO, "_get", lambda url, timeout=60: (
+        pulled.append(url.rsplit("/", 1)[-1]) or b'{"runs": []}'))
+    monkeypatch.setattr(CO, "MANIFEST", tmp_path / "absent.json")
+
+    class _A:
+        action, results, force = "fetch", str(tmp_path / "results"), False
+        repo = "someone/mirror"
+    assert CO.main(_A()) == 0
     assert pulled == ["eden_e2_b.json"], pulled
-    assert "resuming: 1 cell(s) already staged" in capsys.readouterr().out
+    assert "already staged" in capsys.readouterr().out

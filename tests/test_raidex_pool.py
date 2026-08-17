@@ -267,3 +267,68 @@ def test_THE_PROVIDER_IS_A_COLUMN_AND_THE_ARTIFACT_PRINTS_IT(capsys):
     assert "PROVENANCE" in out
     assert "deepinfra" in out and "together" in out
     assert "MAY NOT be compared" in out
+
+
+# --- the axis has to SHIP, not just exist ----------------------------------
+
+def test_THE_POOL_IS_IN_THE_FETCHED_SHIPMENT_not_only_in_the_repo():
+    """**Found by fetching the corpus back into an empty directory.**
+
+    `vworld verify` exited nonzero for a stranger: `vetohold.cohort` recomputed
+    (17, 0) instead of (17, 11), because this pool — the x-axis of every
+    correlate the register reports — was in git and nowhere else. `emit
+    correlations` printed nothing at all, so [CORRECTION] 11's provider column
+    was invisible to exactly the audience it was written for.
+
+    Every check in this repository runs against the working tree, where the file
+    happens to exist, so none of them could see it. The digest could not either:
+    a matching digest over an incomplete file set says the incomplete set
+    arrived intact.
+
+    **Derived, not typed.** The rule is that any non-cell file the register
+    reads out of `results/` must be in the shipment — so ask the register what
+    it reads rather than maintaining a second list beside it.
+    """
+    from vetoworld.commands.corpus import DATA_FILES
+    from vetoworld.register import correlations as CO
+
+    assert CO.POOL.name in DATA_FILES, (
+        f"{CO.POOL.name} is read by the register but is not in DATA_FILES, so "
+        "`corpus fetch` will not pull it and a fetched corpus cannot recompute "
+        "the figures that read it")
+    assert CO.POOL.parent.name == "results"
+
+
+def test_THE_FETCH_ACTUALLY_PULLS_THE_DATA_FILES():
+    """The listing filters to `eden_e*`, which is correct for the digested cell
+    set and wrong for the shipment. Uploading the file was necessary and NOT
+    sufficient — the first fix was published and still did not reach a reader,
+    because the fetch skipped it. Asserted on the source: the loop must exist
+    and must be over `DATA_FILES`."""
+    import inspect
+
+    from vetoworld.commands import corpus as CB
+    src = inspect.getsource(CB)
+    assert "for extra in DATA_FILES:" in src, (
+        "nothing fetches the non-cell data files; uploading them to the "
+        "dataset does not put them in a reader's directory")
+    #: And a missing one must be reported rather than swallowed, or the
+    #: resulting drifted figure reads as a fact about the manuscript.
+    assert "is not in {repo}" in src or "is not in" in src
+
+
+def test_THE_DATA_FILES_ARE_NOT_IN_THE_MANIFEST_DIGEST():
+    """Deliberate, and worth asserting so nobody 'fixes' it. The digest is over
+    cells; widening it would invalidate every published digest for a file that
+    has never changed. The pool's integrity is asserted by its own frozen
+    counts above, not by the corpus digest."""
+    import json
+    from pathlib import Path
+
+    from vetoworld.commands.corpus import DATA_FILES
+    root = Path(__file__).resolve().parents[1]
+    man = json.loads((root / "vetoworld/corpus.manifest.json").read_text())
+    n_cells = len(list((root / "results").glob("eden_e*.json")))
+    assert man["cells"] == n_cells, (
+        "the manifest counts something other than the eden_e* cells; if "
+        f"{DATA_FILES} were folded in, every published digest would break")

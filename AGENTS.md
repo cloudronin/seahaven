@@ -271,6 +271,15 @@ card carried "**357 cells**" and "(259 cells)" against a corpus of 481 — three
 stale numbers in front of the test written to prevent them. Widen the pattern to
 the forms that actually occur, then re-run it and read what it catches.
 
+**A publication is not verified until it has been fetched back into an empty
+directory and run.** Not the digest — a matching digest over an incomplete file
+set only says the incomplete set arrived intact. Ours matched perfectly while
+`raidex_pool.json` was absent from the dataset, so a stranger's `verify` exited
+nonzero on a figure that had been unreproducible for weeks. Every check in the
+repository runs against the working tree, where the missing file happens to
+exist; none of them can see this class. Execute the reader's actual path — fetch
+clean, run the verbs the card promises, read the exit code.
+
 **A number in a document is wrong from the next sweep onward.** Including a
 number written to warn about that: the sentence explaining the drift quoted the
 true count, and went stale itself within two rounds. State the fact and name the

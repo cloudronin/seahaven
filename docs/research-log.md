@@ -12110,14 +12110,26 @@ The classifier fix above swept every place a requested model id is compared to
 a resolved one. Regenerating the register afterwards moved **five published
 figures**, and only one of them was the correction.
 
-### The four that were not
+### Five figures, one correction and four restorations
 
-| figure | published | recomputed |
-|---|---|---|
-| `vetohold.cohort` | (10, 4) | **(17, 11)** |
-| `vetohold.spread` | (23.4, 100.0) | (22.2, 100.0) |
-| `vetohold.ceiling` | 3 | 4 |
-| `rule5.separating_pairs` | 3 | **2** |
+| figure | published | recomputed | why it moved |
+|---|---|---|---|
+| `gemma.route.W2` | `NEVER_TOOK` | `BINDS_AT_TAKE` | **the correction** |
+| `vetohold.cohort` | (10, 4) | **(17, 11)** | restoration + the key defect below |
+| `vetohold.spread` | (23.4, 100.0) | (22.2, 100.0) | restoration |
+| `vetohold.ceiling` | 3 | 4 | restoration |
+| `rule5.separating_pairs` | 3 | **2** | restoration |
+
+**Only the first row is a correction. The other four moved because round 21
+joined the register, which was the entire point of round 21.** Those are not
+figures that were wrong; they are figures whose inputs grew as designed. The
+distinction matters for how they are read: a corrected figure says the
+programme published something false, a restored figure says the programme
+measured more. Collapsing the two under one heading would inflate the
+retraction and hide the recovery.
+
+The exception is `vetohold.cohort`, which is both — the scored half grew by
+restoration, the join half grew because a key defect had been suppressing it.
 
 Round 21's seven models had joined the register. That is what round 21 was for
 — they are precisely the remaining seven of the eight models #113 destroyed,
@@ -12199,10 +12211,51 @@ statistic toward activation mechanically.
 
 A proportion would not have this problem.
 
+**And the phantom cohort activated it too, partly for the same reason.** Rule 5
+read 2 and fired on the ungated 23-model cohort as well — the cohort that never
+existed, in which **fourteen of the twenty-three rows were one model under
+fourteen names** (#113). At n=23 there are 22 adjacent pairs, and the pairs
+falling among those fourteen compared cogito to cogito. They could not separate
+beyond sampling noise, because there was nothing between them to separate. That
+is packing density taken to its limit: not merely a denser ordering, but literal
+duplication.
+
+*(That is structural inference from #113's established fact that all fourteen
+were cogito, not a recomputation — the cells are relabelled and the old ordering
+cannot be rebuilt. The direction of the argument does not depend on the exact
+count.)*
+
+So the statistic **agreed with itself on fabricated data and on real data, for
+partially wrong reasons both times.** A measure that returns the same verdict
+whether its cohort is genuine or fourteen copies of one model is not reading the
+property it names. That is worse than a threshold set at the wrong n, and it is
+the part worth carrying forward: the count is not merely miscalibrated, it is
+insensitive to whether the cohort is real.
+
 **This is recorded as a defect in the statistic, not used to override it.** A
 threshold renegotiated after seeing the number it decides is not a
 pre-registration. Rule 5 activates; the defect is on the record for whoever
 writes the next version of the rule.
+
+### The order of operations, as precedent
+
+The defect was found **in the same pass as the firing**, which is the tempting
+moment to use it. The rule fired; the statistic that fired it is flawed; the
+flaw pushes in the direction of firing. Every ingredient for quietly declining
+the result was on the table at once.
+
+It was recorded and not used. The reason is not that the defect is minor — it
+is not — but that a threshold renegotiated after seeing the number it decides
+stops being a pre-registration and becomes a preference. The programme has
+already paid for the inverse of this (round 19's unregistered midpoints), and
+the cost is the same in both directions: a decision rule that bends to the
+result it is deciding tells you nothing you did not already believe.
+
+**The precedent, stated so it can be cited rather than re-argued:** a defect
+discovered in a pinned instrument at the moment of its firing is recorded
+against the NEXT version of that instrument, never applied to the current
+reading. If the defect is severe enough to invalidate the reading, that is a
+retraction with its own entry — not a silent adjustment of the threshold.
 
 ### The ceiling got worse, which is the one thing the mixed cohort buys
 
@@ -12232,3 +12285,92 @@ and destroys the identity in the same stroke — and the damage is silent.
 ### Cost
 
 $0. Every number above is from committed cells.
+
+---
+
+## 2026-08-16 — the fetch-back check, and what a stranger actually gets
+
+The two-place rule says corpus and dataset land together. It does not say the
+landed dataset **works**, and nobody had checked. So: fetch the corpus from
+HuggingFace into an empty directory, exactly as the card instructs, and run the
+verbs the card promises.
+
+    vworld corpus fetch     ->  481 cells, digest fb2234415b322451, manifest MATCHES
+    vworld verify           ->  1 FIGURE(S) DRIFTED
+
+### What drifts, and why it is not the corpus
+
+    vetohold.cohort    published (17, 11)    stranger recomputes (17, 0)
+
+The scored half is right. The **joined** half is zero, because
+`results/raidex_pool.json` is not in the published dataset — and it never has
+been. The raidex axis is the x-axis of every correlate the register reports,
+and it lives only in the git repository.
+
+A stranger therefore cannot reproduce `vetohold.cohort`, and `emit
+correlations` prints **nothing at all** for them: the module returns early when
+the pool is absent, so the PROVENANCE block added by [CORRECTION] 11 — the
+provider column, the whole point of that correction — is invisible to exactly
+the audience it was written for.
+
+### This is not new damage, which is the uncomfortable part
+
+`vetohold.cohort` read (10, 4) before today and would have recomputed (10, 0)
+for a stranger just the same. The figure has been unreproducible from the
+published corpus since the raidex axis was registered. Every republication
+since has carried the defect forward, including this week's.
+
+**It survived because nobody ever ran the card's own instructions.** The suite
+is green, `verify` exits 0, the manifest matches, and every one of those checks
+runs against the working tree — where `raidex_pool.json` happens to be present.
+The corpus was verified as the author has it, never as a reader receives it.
+
+That is a distinct class from the defects this programme has been finding. #113
+and [CORRECTION] 11 were wrong data and wrong code. This is **correct data,
+correct code, and an incomplete shipment** — and no test that runs in the
+repository can see it, because the thing that is missing is missing somewhere
+else.
+
+### The rule that follows
+
+**A publication is not verified until it has been fetched back and run in a
+directory that contains nothing else.** Not the digest — the digest matched
+perfectly, and a matching digest over an incomplete file set is a statement
+that the incomplete set arrived intact.
+
+The check has to execute the reader's actual path: fetch clean, run the verbs
+the card promises, and read the exit code. Ours cost one download and found a
+figure that has been unreproducible for weeks.
+
+### The fix, and the second half of it that the first half missed
+
+`results/raidex_pool.json` was uploaded to the dataset. **That was necessary
+and not sufficient, and the fetch-back caught the difference.**
+
+`_listing` filters the dataset tree to files beginning `eden_e` — correct for
+the digested cell set, wrong for the corpus as a *shipment*. So the file sat in
+the dataset and `corpus fetch` walked straight past it. A second clean fetch
+confirmed it: the pool was published, and still absent from the reader's
+directory.
+
+Had the check stopped at "uploaded", the defect would have been reported fixed
+and would not have been.
+
+`DATA_FILES` now names the non-cell data the register reads, the fetch pulls it
+beside the cells, and a missing one prints a line saying the resulting drifted
+figure is the download rather than the manuscript. It is deliberately **not**
+folded into the manifest digest: the digest is over cells, and widening it would
+invalidate every published digest for a file that has never changed. The pool's
+integrity is carried by its own frozen counts, which are asserted in CI.
+
+Third clean fetch, from an empty directory:
+
+    vworld corpus fetch      ->  481 cells, + raidex_pool.json, manifest MATCHES
+    vworld verify            ->  exit 0, all 21 figures recompute
+    vworld emit correlations ->  PROVENANCE — 2 provider(s), 7 deepinfra, 4 together
+
+The provider column is now readable by the audience it was written for.
+
+**The regression is guarded by a derived rule, not a second list**: any non-cell
+file the register reads out of `results/` must appear in `DATA_FILES`. The test
+asks the register what it reads rather than maintaining a copy of the answer.
