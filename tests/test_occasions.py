@@ -176,7 +176,7 @@ def test_the_ROUND_3_HALVES_are_invisible_to_BOTH_signals():
     """
     row = OC.audit_claim(_claim("round3.halves"))
     assert row.sweeps == ("3",), "the sweep column cannot separate a top-up"
-    assert {s for _v, s in row.labels} == {"mtime"}
+    assert {s for _v, s in row.labels} == {"git_add(reconstructed)"}
     assert "Neither signal detects it" in _claim("round3.halves").occasion
 
 
@@ -195,7 +195,8 @@ def test_emit_occasions_prints_the_SOURCE_and_never_launders_mtime(capsys):
     stamps = [ln for ln in body.splitlines() if ln.strip().startswith("2026-")]
     assert stamps
     for ln in stamps:
-        assert "mtime" in ln or "wall_start_epoch" in ln, ln
+        assert any(k in ln for k in ("mtime", "wall_start_epoch",
+                                     "git_add(reconstructed)")), ln
 
 
 def test_occasion_labels_come_from_the_CORPUS_LAYER_not_a_second_detector():
@@ -229,12 +230,23 @@ def test_NO_PROSE_HARDCODES_A_LIVE_CELL_COUNT():
     #: "N of M" where M is plausibly a corpus size. Small ratios such as
     #: "2 of 3 worlds" or "5 of 6" are not cell counts and stay legal.
     pat = re.compile(r"\b(\d+) of (\d{3,})\b")
+    #: **And the bare form, `N cells`.** The regex above only caught ratios, so
+    #: the corpus card carried "**357 cells**" and a manifest line reading
+    #: "(259 cells)" while the corpus held 481 — a published document with three
+    #: stale counts, in front of a test written to stop exactly that. A guard
+    #: that checks one spelling of a fact is a guard that the other spelling
+    #: walks past.
+    bare = re.compile(r"\*{0,2}(\d{2,}) cells?\b")
     bad = []
     for rel in ("vetoworld/register/occasions.py", "vetoworld/commands/emit.py",
                 "vetoworld/commands/run.py", "docs/vetoworld-corpus-card.md"):
         src = re.sub(r"\s+", " ", (root / rel).read_text().lower())
         bad += [f"{rel}: {g.group(0)!r}" for g in pat.finditer(src)
                 if int(g.group(1)) <= int(g.group(2))]
+        #: The 166 relabelled cells are a CLOSED historical set — it cannot
+        #: grow, so naming it is a fact, not a live count.
+        bad += [f"{rel}: {g.group(0)!r}" for g in bare.finditer(src)
+                if g.group(1) not in ("161", "166")]
     assert not bad, (
         "prose hardcodes a live cell count, which the daily probe makes wrong "
         f"within a day: {bad}. State the fact, not the figure — "
@@ -250,4 +262,10 @@ def test_emit_occasions_STILL_PRINTS_the_live_split(capsys):
         artifact = "occasions"
     assert emit.main(_A()) == 0
     out = capsys.readouterr().out
-    assert "real," in out and "mtime-only" in out
+    #: The split is still reported; the vocabulary widened from two sources to
+    #: three when 249 mtime labels were reconstructed ([CORRECTION] 11). What
+    #: must hold is that the artifact states how many figures rest on a
+    #: MEASURED timestamp versus a derived one — removing counts from prose is
+    #: only safe while the artifact still reports them.
+    assert "measured," in out and "derived" in out
+    assert "by source:" in out

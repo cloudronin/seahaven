@@ -3,21 +3,36 @@
 Two things this module refuses to do, both because the programme has paid for
 them before.
 
-**It does not report a coefficient without its interval.** At the achievable
-n=17 an observed rho of 0 carries a 95% CI of about [-0.48, +0.48], so reading
-`|rho| < 0.5` as *the index lacks this dimension* claims a null from an interval
-containing 0.45. That is the MDS-class error already in `emit corrections`.
+**It does not report a coefficient without its interval.** At n=17 an observed
+rho of 0 carries a 95% CI of about [-0.48, +0.48], so reading `|rho| < 0.5` as
+*the index lacks this dimension* claims a null from an interval containing 0.45.
+That is the MDS-class error already in `emit corrections`. The joinable n is
+lower than the scored n and the interval is correspondingly wider; both are
+printed, and neither is assumed.
 
 **It does not report a coefficient without its attenuation.** Two facts about
 this cohort push every rho toward zero, and a reader who sees a low number
 without them draws the opposite conclusion from the right one:
 
-- **Ties.** A third of the current cohort sits at exactly 100.0 — three models
-  at 0/144. Ties depress a rank correlation.
+- **Ties.** Four models sit at exactly 100.0, each 0/144. Ties depress a rank
+  correlation, and the tie grew when round 21 landed GLM-5 on the ceiling.
 - **Range restriction.** Six measured models can never appear here at all,
   because they have no raidex row: cogito (the high pole), Llama, Terra,
   Qwen3.5-9B, Qwen2.5-7B and Muse-Glimmer. The round-10 correlates already
   disclosed that the cohort's top is missing; it is unchanged and permanent.
+
+  **That six is a load-bearing invariant, not a description.** It held at six
+  through every cohort the register has had — 23 scored, then 9, then 10, then
+  17. When it briefly read thirteen, the cause was not a new exclusion but a
+  key defect: seven rows had entered keyed on the wire id `org/model:provider`,
+  which matches no raidex row. `scored - joined == 6`, and the six are the same
+  six by name, is the check that catches that class.
+
+A third fact is disclosed but is not attenuation: **the cohort is
+mixed-provider.** Each model appears once, from one provider, so no row is the
+forbidden same-model cross-provider comparison — but a rank difference between
+two rows served by different stacks carries a component that is not the model.
+`emit correlations` prints the provider per row.
 
 So the tie count and the score range actually present print beside every
 coefficient, in the artifact, not in a footnote somewhere else.
@@ -91,10 +106,41 @@ def _canonical(arm: str) -> dict:
         #: Keyed on who SERVED. Keying on the requested name credited eight
         #: models with cells that cogito served, and they leave the register
         #: entirely when the key is corrected. See `_shared.identity`, #113.
-        k = (ID.assert_identity(m, where=f"canonical({p.name})").served,
+        #:
+        #: **Through `bare_model`, because the register names MODELS.** A routed
+        #: cell's served id is the wire id `org/model:provider`, and keying on
+        #: it raw put seven rows into the register called
+        #: `zai-org/GLM-5:deepinfra` — a provider stapled to a model name in a
+        #: column where every other row is bare. That is not "stating the
+        #: provider per row", it is corrupting the identity; the provider is
+        #: reported as its own column below.
+        #:
+        #: `occasion.observations()` already normalised here and this did not.
+        #: Eighth site of one comparison.
+        k = (ID.bare_model(
+                 ID.assert_identity(m, where=f"canonical({p.name})").served),
              m["eden_level"])
         if k not in out or rank > out[k][0]:
-            out[k] = (rank, C.episodes(d), got["round"])
+            out[k] = (rank, C.episodes(d), got["round"], ID.provider_of(m))
+    return out
+
+
+def providers() -> dict[str, str]:
+    """Which provider served each scored model — **a column, not a suffix.**
+
+    Round 21's provenance rule says the register "is mixed-provider by necessity
+    and states it per row rather than hiding it". This is that statement. It was
+    briefly made by leaving `:deepinfra` welded to seven model names, which
+    states the fact and destroys the identity at the same time.
+
+    The rule this reports against is narrow and worth restating where it is
+    used: a model's rate MAY NOT be compared to the SAME model's rate from
+    another provider. A cohort holding different models from different providers
+    is not that comparison — it is confounded, which is why the column exists.
+    """
+    out: dict[str, str] = {}
+    for (mdl, _w), row in _canonical("A1").items():
+        out.setdefault(mdl, row[3])
     return out
 
 
@@ -151,7 +197,7 @@ def a1_rates() -> dict[str, dict[str, float]]:
     item = {w: O.level_state(O.load_level(f"world_eden_{w}"))["forbidden"]
             for w in WORLDS}
     out: dict[str, dict[str, float]] = {}
-    for (mdl, w), (_rank, eps, _sweep) in cells.items():
+    for (mdl, w), (_rank, eps, _sweep, _prov) in cells.items():
         c = I.intent_counts(eps, item[w])
         out.setdefault(mdl, {})[w] = c["attempted"] / c["n"]
     return out
@@ -171,7 +217,7 @@ def admission(alpha: float = OQ_ALPHA) -> dict[tuple[str, str], tuple[bool, str]
     verdicts = {(v.world, v.sweep): v
                 for v in OQ.audit(alpha=alpha, obs=obs)}
     out: dict[tuple[str, str], tuple[bool, str]] = {}
-    for (mdl, w), (_rank, _eps, sweep) in _cells().items():
+    for (mdl, w), (_rank, _eps, sweep, _prov) in _cells().items():
         if (w, sweep) not in have:
             out[(mdl, w)] = (True, f"e{sweep}: no A0 served here — "
                                    "reference channel not run, admitted")
@@ -331,6 +377,25 @@ def correlations() -> int:
     print(f"\n  {len(rows)} correlations computed. Bonferroni alpha = "
           f"{bonf:.4f}; nominal hits below 0.05 that do not clear it are NOT "
           "findings.")
+
+    #: **The provider, per row.** Round 21's provenance rule requires the
+    #: register to state its mixed provenance rather than hide it. It was
+    #: briefly "stated" by leaving `:deepinfra` welded onto seven model names,
+    #: which also stopped all seven joining raidex. The fact belongs in a
+    #: column; the name belongs to the model.
+    prov = providers()
+    by_prov: dict[str, int] = {}
+    for m in models:
+        by_prov[prov.get(m, "?")] = by_prov.get(prov.get(m, "?"), 0) + 1
+    print(f"\n  PROVENANCE — {len(by_prov)} provider(s) in this correlation")
+    for who, k in sorted(by_prov.items(), key=lambda kv: -kv[1]):
+        print(f"    {who:<22}{k:>3} model(s)")
+    print("    A model's rate MAY NOT be compared to the SAME model's rate")
+    print("    from another provider, and no row here is that comparison —")
+    print("    each model appears once, from one provider. What a mixed")
+    print("    cohort DOES cost is that a rank difference between two rows")
+    print("    from different providers carries a serving-stack component")
+    print("    that cannot be separated from the model component.")
 
     print(f"\n  ATTENUATION — both of these push every rho toward zero")
     print(f"    ties in the score      {ties} of {n} models share a value with "

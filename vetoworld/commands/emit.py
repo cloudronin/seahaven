@@ -44,22 +44,35 @@ def _occasions() -> int:
     print()
 
     consumed = sorted({p for r in rows for p in r.cells})
-    real = sum(1 for p in consumed
-               if C.occasion_of(p, C.load_cell(p).get("meta", {}))[1]
-               == "wall_start_epoch")
+    from collections import Counter
+    srcs = Counter(C.occasion_of(p, C.load_cell(p).get("meta", {}))[1]
+                   for p in consumed)
+    real = srcs.get("wall_start_epoch", 0)
     print(f"  PROVENANCE OF THE {len(consumed)} CELLS THESE FIGURES READ — "
-          f"{real} real, {len(consumed)-real} mtime-only\n")
-    print(f"  {'when':<18}{'source':<18}{'cell'}")
+          f"{real} measured, {len(consumed) - real} derived")
+    print(f"  by source: {dict(srcs)}\n")
+    #: **Width matters here.** `git_add(reconstructed)` is 22 characters and
+    #: the column was 18, so the source ran into the sweep tag with no space —
+    #: a provenance column that cannot be read is a provenance column nobody
+    #: reads.
+    print(f"  {'when':<18}{'source':<24}{'cell'}")
     for p in consumed:
         val, src = C.occasion_of(p, C.load_cell(p).get("meta", {}))
-        print(f"  {val:<18}{src:<18}{_cell_id(p)}")
+        print(f"  {val:<18}{src:<24}{_cell_id(p)}")
 
-    print("\n  **mtime is NOT a serving date.** It is when the file was last")
-    print("  written; for a gap-filled cell that is its last attempt, not its")
-    print("  first. It also UNDER-DETECTS: rounds 11, 12 and 13 were three")
-    print("  sweeps and share one mtime day, so a timestamps-only audit would")
-    print("  call those comparisons clean. The sweep column is the honest")
-    print("  signal — it is recorded in the cell's own name, not inferred.")
+    print("\n  **THREE SOURCES, and only one is a measurement.**")
+    print("    wall_start_epoch       a real serving time, recorded as served")
+    print("    git_add(reconstructed) DERIVED — the commit that first added the")
+    print("                           cell. An upper bound, not a measurement.")
+    print("    mtime                  when the file was last written. Should")
+    print("                           now be ZERO; it is destructible and was")
+    print("                           destroyed once (see [CORRECTION] 11).")
+    print("\n  **mtime is NOT a serving date**, and neither is a commit date.")
+    print("  For a gap-filled cell an mtime is its last attempt, not its first,")
+    print("  and it UNDER-DETECTS: rounds 11, 12 and 13 were three sweeps and")
+    print("  shared one mtime day, so a timestamps-only audit would call those")
+    print("  comparisons clean. The sweep column is the honest signal — it is")
+    print("  recorded in the cell's own name, not inferred.")
     print("\n  The programme measured a 0.319 between-day shift on one model")
     print("  with the mechanism unresolved. Batch composition and prefix cache")
     print("  were ruled out; a deployment change is consistent and untestable")

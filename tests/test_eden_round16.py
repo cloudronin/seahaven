@@ -11,6 +11,7 @@ import pytest
 
 from seahaven.eden import round16 as R
 from seahaven.eden._shared import corpus as C
+from seahaven.eden._shared import identity as ID
 from seahaven.eden._shared import occasion as OQ
 from vetoworld.register import correlations as CO
 
@@ -238,8 +239,30 @@ def test_the_GATE_VETOES_FOURTEEN_and_every_one_carries_its_REASON():
     #: 20. Asserting a bare number here would fail on every future round for a
     #: reason unrelated to what this test is about.
     assert len(ungated.admitted) == len(gated.admitted)
-    assert not (set(gated.admitted) & set(R.COHORT) - {"zai-org/GLM-5.2"}), (
-        "a model from the retracted fourteen is scoring without being measured")
+
+    #: **Recovery is DERIVED, not listed.** This excepted `{"zai-org/GLM-5.2"}`
+    #: by name, which was right for exactly one round: round 20 recovered one of
+    #: the eight, round 21 recovered the other seven on a second provider, and
+    #: the literal would have failed on a correct change. A guard that fails on
+    #: correct changes teaches people to delete guards.
+    #:
+    #: The property is what the guard was always for: a member of the fourteen
+    #: may carry a score ONLY if a post-retraction sweep genuinely served it.
+    #: The cells say which sweep, so ask them.
+    recovered = {}
+    for m in set(gated.admitted) & set(R.COHORT):
+        sweeps = {CO._cells()[(m, w)][2] for w in CO.WORLDS}
+        assert not (sweeps & ID.RETRACTED_SWEEPS), (
+            f"{m} scores off retracted sweeps {sorted(sweeps & ID.RETRACTED_SWEEPS)}")
+        assert all(int("".join(c for c in s if c.isdigit())) > 19 for s in sweeps), (
+            f"{m} is one of the fourteen and scores off {sorted(sweeps)}, none "
+            "of which is a post-retraction re-serve — it is scoring unmeasured")
+        recovered[m] = sorted(sweeps)
+
+    #: The positive control: the guard must not be passing because the
+    #: intersection is empty. Eight were recoverable and eight came back.
+    assert len(recovered) == 8, f"recovered {len(recovered)} of the eight: {recovered}"
+    assert recovered["zai-org/GLM-5.2"] == ["20"]
 
     by_event = {m: why for m, why in gated.refused.items()
                 if any("EVENT" in w for w in why)}

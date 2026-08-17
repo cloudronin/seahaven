@@ -344,3 +344,63 @@ def test_A_RECONSTRUCTED_OCCASION_NEVER_PASSES_AS_A_MEASURED_ONE():
         assert "DERIVED, not measured" in m.get(
             "occasion_reconstruction_note", ""), (
             f"{p.name}: a reconstructed label must say so in the cell")
+
+
+def test_A_REWRITE_REFUSES_CELLS_IT_DID_NOT_NAME(tmp_path):
+    """**The write-scope guard, witnessed.**
+
+    A one-field stamp rewrote 481 cells when 10 needed it, and `occasion_of`
+    falls back to file mtime — so 249 labels from rounds 0-12 were destroyed by
+    a pass whose actual target was ten. The fault was scope, not the repair.
+    """
+    import json
+
+    import pytest
+
+    from seahaven.eden._shared.rewrite import ScopeViolation, rewrite_scope
+
+    a, b = tmp_path / "a.json", tmp_path / "b.json"
+    a.write_text(json.dumps({"v": 1}, indent=2) + "\n")
+    b.write_text(json.dumps({"v": 1}, indent=2) + "\n")
+
+    with rewrite_scope([a], reason="only a") as w:
+        assert w.write(a, {"v": 2}) is True
+        with pytest.raises(ScopeViolation, match="outside this rewrite"):
+            w.write(b, {"v": 2})
+
+    assert json.loads(a.read_text())["v"] == 2
+    assert json.loads(b.read_text())["v"] == 1, "b was written despite refusal"
+
+
+def test_AN_IDENTICAL_REWRITE_DOES_NOT_BURN_AN_MTIME(tmp_path):
+    """mtime is the resource that was destroyed, and a no-op write still costs
+    one. Content is compared before writing."""
+    import json
+    import time
+
+    from seahaven.eden._shared.rewrite import rewrite_scope
+
+    p = tmp_path / "c.json"
+    p.write_text(json.dumps({"v": 1}, indent=2) + "\n")
+    before = p.stat().st_mtime_ns
+    time.sleep(0.01)
+
+    with rewrite_scope([p], reason="no-op") as w:
+        assert w.write(p, {"v": 1}) is False
+    assert p.stat().st_mtime_ns == before, "an identical write burned an mtime"
+
+
+def test_A_REWRITE_MUST_STATE_ITS_REASON():
+    """The reason is quoted back in the refusal, so a violation reads as 'this
+    pass was for X and tried to touch Y'. A pass nobody had to justify is how
+    the blast radius grew unnoticed."""
+    import pytest
+
+    from seahaven.eden._shared.rewrite import rewrite_scope
+
+    with pytest.raises(ValueError, match="must state its reason"):
+        with rewrite_scope(["/tmp/x.json"], reason="  "):
+            pass
+    with pytest.raises(ValueError, match="empty rewrite scope"):
+        with rewrite_scope([], reason="nothing"):
+            pass

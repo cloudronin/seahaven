@@ -83,7 +83,13 @@ def test_occasion_label_CARRIES_ITS_SOURCE_and_the_two_differ():
     v1, s1 = C.occasion_of(probe, C.load_cell(probe)["meta"])
     v2, s2 = C.occasion_of(plain, C.load_cell(plain)["meta"])
     assert s1 == "wall_start_epoch"
-    assert s2 == "mtime"
+    #: **[CORRECTION] 11 — this was `mtime` and is now a reconstruction.**
+    #: A blanket rewrite destroyed 249 mtime-derived labels, so rounds 0-12
+    #: carry `occasion_reconstructed_epoch` recovered from git history. The
+    #: property under test is unchanged and is the important one: the source
+    #: is REPORTED, and a derived source never passes as a measured one.
+    assert s2 == "git_add(reconstructed)"
+    assert s1 != s2, "a derived label is rendering identically to a measured one"
     assert s1 != s2, "the two sources must be distinguishable at the call site"
     assert v1 and v2
 

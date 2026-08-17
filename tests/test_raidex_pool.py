@@ -182,3 +182,88 @@ def test_the_FROZEN_POOL_still_carries_the_join_the_correlates_assume():
     mapped = [m for m in d["models"]
               if m.get("together_served_name") and m.get("rai_coverage") == "9/9"]
     assert len(mapped) == 17, "E1's hard ceiling"
+
+
+# --- the register's model key, and the six that cannot join ----------------
+#
+# Added by [CORRECTION] 11's sweep. `_canonical` keyed on the raw served id, so
+# round 21's seven routed models entered the register named
+# `zai-org/GLM-5:deepinfra`. That is not a model name, and it matches no raidex
+# row — seven models were scored, joinable, and silently not joined. The
+# published cohort figure read (17, 4) when it should have read (17, 11).
+#
+# Eighth site of one comparison. `occasion.observations()` normalised here and
+# this did not. These are the witnesses that the two cannot drift apart again.
+
+def test_NO_REGISTER_KEY_CARRIES_A_ROUTING_SUFFIX():
+    """**The property, on the committed register rather than on any source.**
+
+    A provider is a column. Welding it to the model name states the provenance
+    and destroys the identity in the same stroke, and the damage is silent:
+    nothing raises, a name just stops matching everything it should match.
+    """
+    from vetoworld.register import correlations as CO
+
+    for m in CO.veto_hold():
+        assert ":" not in m, (
+            f"register key {m!r} carries a routing suffix — this is a wire id, "
+            "not a model. Key on `identity.bare_model`.")
+    for (mdl, _w) in CO._cells():
+        assert ":" not in mdl, f"canonical key {mdl!r} carries a routing suffix"
+
+
+def test_THE_SIX_UNJOINABLE_ARE_THE_SAME_SIX_AT_EVERY_COHORT_SIZE():
+    """**The invariant that catches the key class, stated as arithmetic.**
+
+    Six measured models have no raidex row, permanently. That count held at six
+    across every cohort the register has had (23, 9, 10, 17). A key defect
+    inflates it without touching any exclusion rule, which is exactly how it
+    hides — so the check is on the NAMES, not only the count.
+    """
+    from vetoworld.register import correlations as CO
+
+    j, vh, _dims = CO.joined()
+    missing = sorted(set(vh.admitted) - set(j))
+    assert missing == sorted([
+        "Qwen/Qwen2.5-7B-Instruct-Turbo", "Qwen/Qwen3.5-9B",
+        "deepcogito/cogito-v2-1-671b", "gpt-5.6-terra",
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        "meta-models/Muse-Glimmer-30B"]), (
+        f"the unjoinable set changed: {missing}. Growing without a stated "
+        "exclusion means a key stopped matching, not that a model left.")
+    assert len(vh.admitted) - len(j) == 6
+
+
+def test_A_ROUTED_MODEL_ACTUALLY_JOINS_RAIDEX():
+    """The positive control. The test above would pass if round 21's models
+    were excluded outright rather than mis-keyed, so assert the join happened:
+    a model served through the router must reach the correlation."""
+    from vetoworld.register import correlations as CO
+
+    j, _vh, _dims = CO.joined()
+    prov = CO.providers()
+    routed = [m for m in j if prov.get(m) not in ("together", "api.openai.com")]
+    assert routed, (
+        "no routed model joins raidex — either round 21 left the register or "
+        "its keys stopped matching again")
+    assert "zai-org/GLM-5" in j
+
+
+def test_THE_PROVIDER_IS_A_COLUMN_AND_THE_ARTIFACT_PRINTS_IT(capsys):
+    """Round 21's provenance rule: the register is mixed-provider by necessity
+    and **states it per row rather than hiding it**. Removing the suffix from
+    the name is only honest while the fact is reported somewhere else."""
+    from vetoworld.register import correlations as CO
+
+    prov = CO.providers()
+    #: A superset: it covers every canonical model, including ones admission
+    #: refused. It must at minimum cover every model that carries a score, or
+    #: a row could print without its provenance.
+    assert set(CO.veto_hold()) <= set(prov)
+    assert len({prov[m] for m in CO.veto_hold()}) > 1, "no provenance to state"
+
+    CO.correlations()
+    out = capsys.readouterr().out
+    assert "PROVENANCE" in out
+    assert "deepinfra" in out and "together" in out
+    assert "MAY NOT be compared" in out

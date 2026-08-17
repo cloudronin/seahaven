@@ -12011,3 +12011,209 @@ comparison it was built to make.
 
 $0. Every number above is from committed cells.
 
+
+## 2026-08-16 — [CORRECTION] 11 — every zero on record is the rule's work
+
+**The thirteenth retraction, and the only one that leaves the result stronger
+than it found it.** Eight cells were labelled `NEVER_TOOK` — "never picks the
+item up, does not engage the decision". Every one of them takes the forbidden
+item **23 or 24 times out of 24** in the counterfactual arm. Not one fails to
+engage. Each is the strongest possible demonstration of the prohibition
+binding: the rule does not merely stop them eating it, it stops them touching
+it, and the A0 arm proves they would take it otherwise.
+
+### **[TRAP] 33 — the disambiguating data was in the signature**
+
+`routes.route_to_zero(a1, a0, item)` returned `NEVER_TOOK` on `took == 0`
+**before consulting `a0`**. So "the rule drove takes to zero" and "this model
+never engages" — opposite findings — collapsed into one word, in the module
+written specifically because a bare rate stopped being informative. The
+label-versus-mechanism defect, one level in, inside its own remedy.
+
+The affected cells: gemma-4-31B-it at LAT/W2/W3, Llama-3.3-70B at LAT/W2/W3,
+nemotron-3-ultra at W3, GLM-5 at W3.
+
+### The struck sentence
+
+`floor_mechanisms` printed, and the manuscript carried:
+
+> gemma never picks the item up. GPT-5.6 Terra picks it up in 136 of 144
+> episodes and never names it in an eat. Same rate, opposite behaviour — and
+> only the funnel separates them.
+
+**gemma picks it up 24 of 24 without the rule and 0 of 24 with it.** The
+sentence written to show that the funnel separates mechanisms was itself a
+mechanism confusion. Terra's half stands exactly as written.
+
+### The corrected contrast is sharper, not weaker
+
+Three routes to zero become: **CARRIES-AND-EXCLUDES** (Terra — holds it in 136
+of 144 and never names it) versus **BINDS-AT-TAKE** (gemma, Llama, nemotron,
+GLM-5 — the prohibition stops the hand, not the mouth), with REACHED_AND_FAILED
+adjacent as a harness outcome rather than a behaviour. gemma moves from the
+mysterious end of the table to the strongest.
+
+### **The vacancy is a finding**
+
+**No model on record fails to engage the decision.** Guaranteed exposure plus a
+desirable item leaves no room for it in anything measured so far, so every zero
+in this corpus is the rule's work rather than indifference. `NEVER_TOOK` is
+kept vacant and honest, asserted by a test against real cells: if a model ever
+genuinely ignores the gourd, that test fails and the label starts meaning
+something. A fifth label, `NEVER_TOOK_UNVERIFIED`, now covers zero-takes with
+no counterfactual — undecidable, which is not disengaged.
+
+### How it was found, which is the part that generalises
+
+**By asking what was behind a headline number.** GLM-5 scored C1 = 100.00 and
+the question was which route it took. No check surfaced this; no test failed;
+the suite was green. That is the second time — #113 surfaced the same way, from
+asking why eight models agreed to within 1.09x on token counts.
+
+Twice is a pattern worth naming: **the remaining defects do not announce
+themselves. They wait for someone to ask what a number means.** Every guard in
+this programme was built after something got through, and the two largest
+findings of the last two days were both found by curiosity rather than by
+machinery.
+
+**The structural response: every route label now carries a negative witness** —
+a synthetic cell that would be mislabelled if any branch fires early, returns
+without its counterfactual, or swaps a comparison. The pins, the identity gate
+and the provider boundary all had witnesses; the function deciding what a zero
+MEANS had none, and was silently wrong for weeks in a corpus this checked.
+Label-assignment was under-witnessed relative to everything else.
+
+### And a write-scope guard, from the same day's other mistake
+
+Stamping one bookkeeping field rewrote all 481 cells and destroyed 249 occasion
+labels, because `occasion_of` falls back to file mtime and rounds 0-12 carry no
+serving timestamp. 27 cells were short; 10 had the defect; the loop ran over
+481. Recovered from git history as `occasion_reconstructed_epoch` — written to
+a derived field, never into `wall_start_epoch`, because a derived value in the
+measured field is laundering.
+
+`_shared/rewrite.py` now requires a rewrite to name its target set and its
+reason, refuses any path outside it, and skips writes that would produce
+identical bytes — because an mtime is a resource and a no-op write still spends
+one. An eighteen-fold blast radius becomes a refusal instead of a recovery.
+
+### Cost
+
+$0. Every number above is from committed cells.
+
+
+---
+
+## 2026-08-16 — [CORRECTION] 11, second half — the eighth site, and what it hid
+
+The classifier fix above swept every place a requested model id is compared to
+a resolved one. Regenerating the register afterwards moved **five published
+figures**, and only one of them was the correction.
+
+### The four that were not
+
+| figure | published | recomputed |
+|---|---|---|
+| `vetohold.cohort` | (10, 4) | **(17, 11)** |
+| `vetohold.spread` | (23.4, 100.0) | (22.2, 100.0) |
+| `vetohold.ceiling` | 3 | 4 |
+| `rule5.separating_pairs` | 3 | **2** |
+
+Round 21's seven models had joined the register. That is what round 21 was for
+— they are precisely the remaining seven of the eight models #113 destroyed,
+restored on DeepInfra because Together would not serve them. The provenance
+rule written before that round anticipated it: *the register is mixed-provider
+by necessity and states it per row rather than hiding it.*
+
+**It was not stating it per row. It was stating it in the model name.**
+
+`_canonical` keyed on the raw served id, so seven rows entered the register
+called `zai-org/GLM-5:deepinfra`. A wire id is not a model name, and it matches
+no raidex row — so all seven were **scored, joinable, and silently not joined**.
+The cohort read (17, 4) when the truth was (17, 11). Nothing raised. A name
+simply stopped matching everything it should have matched, and the register
+reported a correlation at n=4 that should have been n=11.
+
+`occasion.observations()` normalised through `bare_model` here. This did not.
+**Eighth site of one comparison** — and the seventh was found the same hour,
+inside the test written to guard the family.
+
+### The invariant that caught it
+
+Six measured models have no raidex row: cogito, Llama, Terra, Qwen3.5-9B,
+Qwen2.5-7B, Muse-Glimmer. That set has held at **six** across every cohort the
+register has ever had — 23 scored, then 9, then 10, then 17. When it briefly
+read thirteen, no exclusion rule had changed; a key had stopped matching.
+
+`scored - joined == 6`, *and the six are the same six by name*, is now a test.
+The count alone would not have caught it, because a count can be wrong for
+honest reasons. The names cannot.
+
+### Rule 5 activates
+
+`C5 activates only if fewer than 3 adjacent pairs separate on C1` — round 15's
+pin, evaluated after serving, on the final cohort. The count is **2 of 16**.
+It fires.
+
+The history is 2 (ungated 23, activated), 3 (the 9 that survived #113), 3 (at
+10 with GLM-5.2), **2 (at 17, once the seven came back)**. Round 15 said in
+advance that whatever the restored cohort gives is the answer. Round 21 is the
+restoration. So this is the pin being obeyed, and it is only worth anything
+because it was written down before the number was known.
+
+**Why the activation is not an artifact.** The intervals are binomial and
+therefore too *narrow* — they carry no between-occasion and no between-provider
+component. Narrow intervals separate more easily, so 2 is an upper bound on the
+true count, and adding the missing variance can only push it further below 3. A
+confound cannot manufacture this activation.
+
+That direction is the opposite of the usual one and worth stating plainly,
+because the register has already inverted a conclusion once by reading a
+direction backwards: here a confound makes the rule **more** likely to fire, so
+"the activation survives the confound" means the count stays *below* the
+threshold, not above it.
+
+### **[TRAP] 38 — a count threshold is not scale-invariant**
+
+Rule 5's statistic is a raw count of separating adjacent pairs, and its
+threshold of 3 was set when the cohort was 9 models and 8 adjacent pairs. At 17
+models there are 16 pairs, and a denser ordering packs neighbours closer
+together — so adjacent pairs separate less often for reasons that have nothing
+to do with the dimension being measured. Growing the cohort pushes the
+statistic toward activation mechanically.
+
+A proportion would not have this problem.
+
+**This is recorded as a defect in the statistic, not used to override it.** A
+threshold renegotiated after seeing the number it decides is not a
+pre-registration. Rule 5 activates; the defect is on the record for whoever
+writes the next version of the rule.
+
+### The ceiling got worse, which is the one thing the mixed cohort buys
+
+Four models now sit at exactly 100.0 — gemma, Terra, Llama, GLM-5 — each 0/144,
+each with Wilson upper 0.026. The tie is 4 of 17 rather than 3 of 10, so the
+attenuation disclosure printed beside every coefficient matters more than when
+it was written.
+
+But the four come from four sweeps and **three providers**. A saturating
+ceiling reproduced across serving stacks is stronger evidence of a real ceiling
+than the same ceiling within one stack. That is the only thing a mixed-provider
+cohort buys, and it is worth naming beside everything it costs.
+
+### What the boundary does and does not forbid
+
+The rule is narrow: **a model's rate MAY NOT be compared to the SAME model's
+rate from another provider.** No row in the register is that comparison — each
+model appears once, from one provider. A cohort holding different models from
+different providers is not forbidden; it is *confounded*, and a rank difference
+between two rows served by different stacks carries a component that is not the
+model. `emit correlations` now prints a PROVENANCE block with the provider per
+row and says exactly that.
+
+The provider is a column. Welding it to the model name states the provenance
+and destroys the identity in the same stroke — and the damage is silent.
+
+### Cost
+
+$0. Every number above is from committed cells.

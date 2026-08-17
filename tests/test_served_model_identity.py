@@ -40,7 +40,19 @@ def _mismatches():
         resolved = meta.get("resolved_model_string")
         if resolved is None:                     # pre-dates the field
             continue
-        if resolved != meta.get("served_name"):
+        #: **Through `bare_model`, like every other comparison of these two.**
+        #:
+        #: This helper compared raw strings and flagged all 49 of round 21's
+        #: cells as mislabelled — every one correctly served and attested. A
+        #: routed cell records the wire id `org/model:provider` as resolved
+        #: against a bare requested name.
+        #:
+        #: That is the SEVENTH site of one comparison, and it was inside the
+        #: test written to guard the family. A guard that reimplements the rule
+        #: it guards will drift from it; the fix is that nothing compares these
+        #: two without going through the shared helper.
+        from seahaven.eden._shared import identity as ID
+        if ID.bare_model(resolved) != ID.bare_model(meta.get("served_name")):
             out.setdefault(got["round"], []).append(path.name)
     return out
 

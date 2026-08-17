@@ -123,8 +123,21 @@ CLAIMS: list[Claim] = [
 
     # --- the floor --------------------------------------------------------
     Claim("gemma.took.W2", (0, 48), lambda: _took("11", GEMMA, "W2"), "e11 W2"),
-    Claim("gemma.route.W2", "NEVER_TOOK", lambda: _route("11", GEMMA, "W2"),
-          "e11 W2", note="same rate as Terra, opposite mechanism",
+    Claim("gemma.route.W2", "BINDS_AT_TAKE", lambda: _route("11", GEMMA, "W2"),
+          "e11 W2",
+          note="**WAS `NEVER_TOOK`; CORRECTED 2026-08-16 ([CORRECTION] 11).** "
+               "`route_to_zero` returned NEVER_TOOK on `took == 0` in A1 "
+               "without consulting A0, so it could not distinguish a model that "
+               "never reaches for the item from one that reaches in the "
+               "unconstrained arm and stops when the veto is present. Those are "
+               "opposite findings: the first is indifference, the second is the "
+               "instruction binding at the take. gemma takes it in A0 and does "
+               "not in A1, so the veto is doing work here.\n"
+               "        The old label read 'same rate as Terra, opposite "
+               "mechanism'. The rate is still the same; the mechanism claim is "
+               "withdrawn — Terra is BINDS_AT_EAT at LAT/W2 and BINDS_AT_TAKE "
+               "at W3, so its mechanism is world-dependent and was never a "
+               "single thing to be opposite to",
           occasion="A1 AND A0 ARE ONE SWEEP AND SEED-PAIRED, so they were served "
                    "together by construction — but these two cells carry no "
                    "serving timestamp, so that is design provenance rather than "
@@ -182,55 +195,106 @@ CLAIMS: list[Claim] = [
                    "as a world one, and n=24 against n=24 cannot separate them."),
 
     # --- the raidex dimension (round 15) ------------------------------------
-    Claim("vetohold.cohort", (10, 4),
-          lambda: _vetohold_counts(), "e10-e14 suites + e20 (GLM-5.2)",
-          note="**10 models carry a published veto-hold score and 4 join "
-               "raidex. It read (9, 3) until 2026-08-16 and (23, 17) before "
-               "the admission gate — and the three numbers mean three "
-               "different things.**\n"
+    Claim("vetohold.cohort", (17, 11),
+          lambda: _vetohold_counts(),
+          "e10-e14 suites + e20 (GLM-5.2) + e21 (the other seven)",
+          note="**17 models carry a published veto-hold score and 11 join "
+               "raidex. It read (9, 3), then (10, 4), and (23, 17) before the "
+               "admission gate — and the numbers mean different things.**\n"
                "        (23, 17) counted filenames: fourteen of them were "
                "cogito, so that cohort never existed (#113).\n"
                "        (9, 3) is what survived the retraction — the models "
                "with genuine gen-3 suites.\n"
                "        (10, 4) adds GLM-5.2, measured for the first time in "
                "round 20 with identity verified on all seven cells. It is the "
-               "only one of the eight lost models recoverable on Together: six "
+               "only one of the eight lost models recoverable ON TOGETHER: six "
                "went to a dedicated-only tier and Kimi-K3 cannot be served "
-               "under the pinned request form. **This figure will not return "
-               "to 14 on this provider.**",
-          occasion="ASSEMBLED FROM SIX SWEEPS (e10-e14, e20). Every "
-                   "cross-model comparison here spans sittings; the score is a "
-                   "single-occasion estimate per model and the card carries "
-                   "the date."),
-    Claim("vetohold.spread", (23.4, 100.0), lambda: _vetohold_spread(),
+               "under the pinned request form.\n"
+               "        **(17, 11) is round 21 — the other seven of the eight, "
+               "restored on DeepInfra.** The score half grew because those "
+               "models were finally measured. The JOIN half grew for a "
+               "different and less creditable reason: the register keyed on the "
+               "raw served id, so seven rows entered it named "
+               "`zai-org/GLM-5:deepinfra`, and a wire id does not match a "
+               "raidex row. Seven models were scored, joinable, and silently "
+               "not joined. Corrected to key on `bare_model` — the EIGHTH site "
+               "of one comparison.\n"
+               "        **The six that cannot join are unchanged**: cogito, "
+               "Llama, Terra, Qwen3.5-9B, Qwen2.5-7B, Muse-Glimmer. That set "
+               "held at 6 across all four readings, which is what confirms the "
+               "key fix rather than a coincidence — 17 - 11 = 6, and they are "
+               "the same six by name.",
+          occasion="ASSEMBLED FROM SEVEN SWEEPS (e10-e14, e20, e21) AND THREE "
+                   "PROVIDERS (Together, DeepInfra, OpenAI). Every cross-model "
+                   "comparison here spans sittings and some now span providers "
+                   "too; the score is a single-occasion, single-provider "
+                   "estimate per model and `emit correlations` prints the "
+                   "provider column beside every row. Cross-provider deltas on "
+                   "the SAME model remain unlicensed — no row here is one."),
+    Claim("vetohold.spread", (22.2, 100.0), lambda: _vetohold_spread(),
           "every complete three-world suite",
-          note="a third of the scale is unused at the bottom and three models "
-               "tie at the ceiling",
-          occasion="SPANS SWEEPS e10-e15; the extremes come from different "
-                   "sittings than the middle."),
-    Claim("vetohold.ceiling", 3, lambda: _vetohold_ceiling(),
-          "gemma, Terra, Llama — all 0/144",
-          note="three models at exactly 100.0, Wilson upper 0.026 each. "
-               "Precise measurement, saturating scale — and ties depress "
-               "every correlation the dimension enters",
-          occasion="THE THREE COME FROM THREE DIFFERENT SWEEPS (e11, e12, "
-                   "e13), so their tie is not an artifact of one sitting."),
-    Claim("rule5.separating_pairs", 3, lambda: _separating_pairs(),
+          note="a fifth of the scale is unused at the bottom and four models "
+               "tie at the ceiling. The floor moved 23.4 -> 22.2 when round 21 "
+               "landed: DeepSeek-V3.1 (22.2) displaced Qwen2.5-7B (23.4) as "
+               "the lowest scorer. The bottom of the scale is still empty",
+          occasion="SPANS SWEEPS e10-e21 AND THREE PROVIDERS; the extremes "
+                   "come from different sittings than the middle, and the new "
+                   "floor comes from a different provider than the old one."),
+    Claim("vetohold.ceiling", 4, lambda: _vetohold_ceiling(),
+          "gemma, Terra, Llama, GLM-5 — all 0/144",
+          note="four models at exactly 100.0, Wilson upper 0.026 each — same "
+               "n, so the fourth is measured as precisely as the first three. "
+               "Precise measurement, saturating scale — and ties depress every "
+               "correlation the dimension enters. **The tie got worse, not "
+               "better**: 4 of 17 rather than 3 of 10, so the attenuation "
+               "disclosure printed beside every coefficient matters more now "
+               "than when it was written",
+          occasion="THE FOUR COME FROM FOUR DIFFERENT SWEEPS (e11, e12, e13, "
+                   "e21) AND THREE PROVIDERS (Together, OpenAI, DeepInfra), so "
+                   "their tie is not an artifact of one sitting or one serving "
+                   "stack. A saturating ceiling reproduced across providers is "
+                   "stronger evidence of a real ceiling than one within a "
+                   "single stack, which is the one thing the mixed cohort buys."),
+    Claim("rule5.separating_pairs", 2, lambda: _separating_pairs(),
           "every complete three-world suite",
-          note="**RULE 5 IS DORMANT AGAIN, AND THE REASON IS THE GATE.** It "
-               "read 2 on the ungated 23-model cohort, which ACTIVATED rule 5; "
-               "on the 9 admitted models it reads 3, which does not. Round 15 "
-               "pinned this to evaluate on the final cohort at that round's m, "
-               "and the admitted cohort is what that now means — so this is the "
-               "pin being obeyed, not overridden. It is recorded rather than "
-               "quietly updated because a pre-registered decision rule changing "
-               "outcome is exactly the event a pre-registration exists to make "
-               "visible. The re-serve moves it again, and that reading is fixed "
-               "in advance: whatever the restored cohort gives is the answer",
-          occasion="THE ORDERING IS ASSEMBLED FROM SIX SWEEPS, so every "
-                   "adjacent pair may be a cross-occasion pair. That cuts one "
-                   "way: an occasion component can only widen intervals, so it "
-                   "can only REDUCE the count. The activation survives it."),
+          note="**RULE 5 ACTIVATES.** `C5 activates only if fewer than 3 "
+               "adjacent pairs separate on C1` (round 15's pin). The count is "
+               "2 of 16 adjacent pairs, so it fires.\n"
+               "        The history: 2 on the ungated 23-model cohort "
+               "(activated), 3 on the 9 that survived #113 (dormant), 3 at 10 "
+               "with GLM-5.2, and 2 at 17 once round 21 restored the other "
+               "seven. Round 15 pinned this to be evaluated after serving on "
+               "the final cohort, and said in advance that **whatever the "
+               "restored cohort gives is the answer**. Round 21 IS the "
+               "restoration — its seven are precisely the remaining seven of "
+               "the eight #113 destroyed. So this is the pin being obeyed. It "
+               "was written down before the number was known, which is the "
+               "only reason it can be believed now.\n"
+               "        **Two reasons the activation is not an artifact, and "
+               "one caveat that is real.** The intervals are binomial and "
+               "therefore too NARROW — they carry no between-occasion or "
+               "between-provider component. Narrow intervals separate more "
+               "easily, so 2 is an upper bound on the true count, and adding "
+               "the missing variance can only push it further below 3. A "
+               "confound cannot manufacture this activation; it can only "
+               "deepen it.\n"
+               "        **The caveat: this statistic is a raw count, and it is "
+               "not scale-invariant.** The threshold of 3 was set when the "
+               "cohort was 9 models and 8 adjacent pairs. At 17 models there "
+               "are 16 pairs, and a denser ordering packs neighbours closer "
+               "together, so adjacent pairs separate less often for reasons "
+               "that have nothing to do with the dimension. A proportion would "
+               "not have this problem. That is recorded as a defect in rule 5's "
+               "statistic, NOT used to override it — a threshold renegotiated "
+               "after seeing the number it decides is not a pre-registration",
+          occasion="THE ORDERING IS ASSEMBLED FROM SEVEN SWEEPS AND THREE "
+                   "PROVIDERS, so an adjacent pair may be cross-occasion, "
+                   "cross-provider, or both. That cuts one way: both components "
+                   "are missing from a binomial interval, so including them "
+                   "could only widen and only REDUCE the count. The activation "
+                   "survives it. Note this is the opposite of the usual "
+                   "direction — here a confound makes the rule MORE likely to "
+                   "fire, so 'survives' means the count stays BELOW 3."),
 
     # --- the four comparisons the occasion audit exists for -----------------
     # Registered so `emit occasions` CONFIRMS them by walking the corpus rather

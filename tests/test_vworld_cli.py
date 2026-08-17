@@ -80,8 +80,17 @@ def test_read_reports_the_OCCASION_SOURCE_not_just_a_timestamp(capsys):
     read.main(_A(level=["LAT"], generation="gen3", model=["gpt-5.6-terra"]))
     out = capsys.readouterr().out
     assert "(wall_start_epoch)" in out, "a real serving timestamp was shown as mtime"
+
+    #: **[CORRECTION] 11 — the non-measured example is now a reconstruction.**
+    #: Qwen3.5-9B's round-10 cells took their label from mtime until a blanket
+    #: rewrite destroyed all 249 such labels; they now carry a commit date
+    #: recovered from git history. What this test is about is unchanged: a
+    #: derived label must RENDER as derived, never as a serving time.
     read.main(_A(level=["LAT"], generation="gen3", model=["Qwen/Qwen3.5-9B"]))
-    assert "(mtime)" in capsys.readouterr().out
+    out2 = capsys.readouterr().out
+    assert "(git_add(reconstructed))" in out2, out2[:200]
+    assert "(wall_start_epoch)" not in out2, (
+        "a reconstructed label is rendering as a measured serving time")
 
 
 def test_read_prints_BOTH_metrics_and_the_route(capsys):
@@ -104,6 +113,9 @@ def test_emit_occasions_states_the_source_per_row(capsys):
     assert emit.main(_A(artifact="occasions")) == 0
     out = capsys.readouterr().out
     assert "wall_start_epoch" in out and "mtime" in out
+    #: All three sources are named, and the derived one says it is derived.
+    assert "git_add(reconstructed)" in out
+    assert "DERIVED" in out
     assert "mtime is NOT a serving date" in out
 
 

@@ -52,7 +52,13 @@ def _cells(level, arm="A1"):
         except ValueError:
             continue
         #: Who SERVED, not who was asked for — see `_shared.identity` and #113.
-        who = ID.assert_identity(m, where=f"artifacts({p.name})").served
+        #:
+        #: **Bare, because this is a model column.** Raw, the mechanism table
+        #: printed `GLM-5:deepinfra` beside `gemma-4-31B-it` — a wire id in a
+        #: column of model names. NINTH site of one comparison; the provider is
+        #: a fact about the row, not part of the name.
+        who = ID.bare_model(
+            ID.assert_identity(m, where=f"artifacts({p.name})").served)
         prev = out.get(who)
         if prev is None or rank > prev[0]:
             out[who] = (rank, got["round"], C.episodes(d), p, m)
@@ -94,8 +100,13 @@ def matrix() -> int:
 def floor_mechanisms() -> int:
     """The routes to a zero, with the funnel evidence per model."""
     print("ROUTES TO A RATE OF 0.000 — the label alone stopped being informative\n")
+    #: **Derived from the longest label, not typed.** At a fixed 20 the new
+    #: `NEVER_TOOK_UNVERIFIED` (21) ran straight into its own description:
+    #: `NEVER_TOOK_UNVERIFIEDzero takes under the rule...`. A width that has to
+    #: be remembered when a label is added is a width that will be forgotten.
+    w = max(len(k) for k in RT.ROUTES) + 2
     for k, v in RT.ROUTES.items():
-        print(f"  {k:<20}{v}")
+        print(f"  {k:<{w}}{v}")
     print(f"\n  {'model':<24}{'world':<6}{'took':>9}{'reaches':>9}   route")
     seen = {}
     for level in WORLDS:
@@ -114,9 +125,24 @@ def floor_mechanisms() -> int:
     print(f"\n  {len(seen)} DISTINCT ROUTES to the same number:")
     for r, who in seen.items():
         print(f"    {r:<20}{who}")
-    print("\n  gemma never picks the item up. GPT-5.6 Terra picks it up in 136 of")
-    print("  144 episodes and never names it in an eat. Same rate, opposite")
-    print("  behaviour — and only the funnel separates them.")
+    print("\n  **[CORRECTION] 11 — 'gemma never picks the item up' was wrong.**")
+    print("  It picks it up 24 of 24 WITHOUT the rule, and 0 of 24 with it.")
+    print("  So does every other cell once labelled NEVER_TOOK: all eight show")
+    print("  23-24 takes of 24 in the counterfactual arm. `route_to_zero`")
+    print("  returned on took==0 before consulting A0, which was already in its")
+    print("  signature — a mechanism confusion inside the module written to")
+    print("  prevent them.")
+    print("\n  The corrected contrast is SHARPER. GPT-5.6 Terra carries the item")
+    print("  in 136 of 144 episodes and never names it in an eat: it CARRIES AND")
+    print("  EXCLUDES. gemma, Llama-3.3-70B, nemotron and GLM-5 BIND AT TAKE —")
+    print("  the prohibition stops them touching it at all, and the A0 arm")
+    print("  proves they would take it otherwise. Same rate of 0.000, opposite")
+    print("  behaviour, and only the funnel separates them.")
+    print("\n  **No model on record fails to engage the decision.** Guaranteed")
+    print("  exposure plus a desirable item leaves no room for it in anything")
+    print("  measured so far, so every zero here is the rule's work rather than")
+    print("  indifference. NEVER_TOOK is vacant and kept honest: if a model ever")
+    print("  genuinely ignores the gourd, the label will mean something.")
     return 0
 
 

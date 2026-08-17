@@ -43,16 +43,34 @@ about the manuscript.
 
 | | |
 |---|---|
-| `results/` | **357 cells**, one JSON per (round, model, arm, world). Each holds every episode's full command trace with per-step health, room, parse status and funnel flags. |
+| `results/` | One JSON per (round, model, arm, world), each holding every episode's full command trace with per-step health, room, parse status and funnel flags. The count grows with every round — `vworld corpus status` prints it, and this card deliberately does not, because a number written here is wrong by the next sweep. |
 | `worlds/` | The compiled `.z8` worlds, their `.json` sidecars, and `BUILD.lock.json` per world — topology, larder, params, derived block, and the `.z8` sha256. |
 | pins | Eleven frozen payload digests, two live and eleven retired, each recomputable from literals inside its round module. |
 | claims register | One named function per manuscript figure. The paper cites the function; `verify` runs it. |
 | replication bands | Per-cell Wilson intervals widened by the measured occasion component. Computed once and shipped as data, never improvised at run time. |
 | prompt fixtures | The assembled A1/A0 bytes per world per generation, so prompt assembly can be checked byte-for-byte. |
 
-**Manifest digest: `8fb0cb6e18cca6eb`** (259 cells). Cite it beside the repo tag.
+**Manifest digest: `fb2234415b322451`.** Cite it beside the repo tag. The cell
+count that used to sit next to it is not written here — `vworld corpus status`
+prints it, and the digest is the thing that has to be exact.
 
-## Three things to know before using it
+## Four things to know before using it
+
+**0. Nothing pools across a PROVIDER boundary either.** Most cells were served
+by Together; one round was served through the HuggingFace router on DeepInfra,
+and one model is OpenAI's. Every cell records the provider that **answered**,
+taken from the response rather than from what was requested. A model's rate at
+a level from one provider may not be compared to the same model's rate at that
+level from another: serving stack, hardware, quantisation and request handling
+all differ, and this corpus has measured that the last of those can turn
+content into silence. Cross-provider deltas measure providers, not models.
+
+The register is mixed-provider by necessity — seven models exist in it only
+because a second provider would serve them — and it states the provider **per
+row**. Each model appears once, from one provider, so no published row is that
+forbidden comparison. What a mixed cohort does cost is that a rank difference
+between two rows served by different stacks carries a component that is not the
+model, and `vworld emit correlations` says so beside every coefficient.
 
 **1. Nothing pools across a generation boundary.** Three generations exist —
 gen1 (no recovery line, health zero non-terminal), gen2 (a served line saying
@@ -131,10 +149,16 @@ was asked for. A cell's identity status is one of four:
 
 | status | cells | meaning |
 |---|---:|---|
-| `VERIFIED` | 13 | the endpoint reported what it served, and it matched |
+| `VERIFIED` | grows | the endpoint reported what it served, and it matched |
 | `CORRECTED` | 161 | it did not match; `served_model` is the truth |
 | `UNVERIFIED` | 251 | no report on record — the cell predates the field |
 | `MISLABELLED` | 0 | uncorrected mismatch; reading one is an error |
+
+Only `VERIFIED` moves: every cell served since the check existed lands there, so
+a fixed number would be wrong within a round. The other three are closed sets —
+`CORRECTED` and `UNVERIFIED` can only shrink if cells are re-served, and
+`MISLABELLED` must stay zero. `vworld corpus identity` prints the live split and
+exits non-zero if the last row is not empty.
 
 **`UNVERIFIED` is not a synonym for `VERIFIED`.** Those cells come from rounds
 that served one model per invocation, so they are very probably fine — but that
@@ -143,7 +167,7 @@ it did, and the same kind of argument is what let the defect above survive for
 weeks. The corpus reports the distinction rather than flattening it.
 
 Filenames keep a historical `eden_e*` prefix. It is archive vocabulary: renaming
-357 files would change the digest `verify` checks against, for a string nobody
+every file would change the digest `verify` checks against, for a string nobody
 needs to type. **The model in a filename is the model that was REQUESTED** —
 see the first known defect.
 
@@ -177,10 +201,13 @@ The corpus is the `eden_e*.json` cells plus ~11 MB of compiled worlds. It is
 programme's artifacts live there too — so staging is explicit, and a bare
 `upload . .` would publish unrelated files under this dataset's name.
 
-**The cell count and byte total are not written here.** They were, as "259
-cells, 100,517,734 bytes", and the corpus reached 425 cells and 171,503,125
-bytes while the sentence stayed put — the same hand-maintained-number drift the
-programme has now paid for five times. `vetoworld/corpus.manifest.json` is the
+**The cell count and byte total are not written here.** They were, and the
+corpus had grown well past them while the sentence stayed put — the same
+hand-maintained-number drift the programme has now paid for five times. The
+replacement sentence then quoted both the stale figure and the true one, and
+**went stale itself within two rounds**, which is the argument made better than
+prose could make it: a number in a document is wrong from the next sweep
+onward, including a number written to warn about that. `vetoworld/corpus.manifest.json` is the
 one place they live, and `vworld corpus status` is how you read them.
 
     ST=/tmp/vetoworld-corpus

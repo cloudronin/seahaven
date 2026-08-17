@@ -114,7 +114,16 @@ def test_THE_ROUTER_HOST_IS_CATALOGUED_so_verification_is_not_skipped():
 
 
 def test_the_SEED_BLOCKS_are_fresh_and_disjoint():
-    burned = C.burned_seeds()
+    #: **Round 21's own cells are now burned**, so this asks the question it
+    #: was always asking — does the block collide with anything served BEFORE
+    #: this round — rather than colliding with itself. Rounds 16 and 20 learned
+    #: the identical lesson; the fix is the same shape each time.
+    burned = set()
+    for path, cell in C.iter_cells():
+        got = C.parse_cell_name(path.name)
+        if got and got["round"] == "21":
+            continue
+        burned |= {r["seed"] for r in cell.get("runs", []) if "seed" in r}
     grid = set(range(R.SEED0, R.SEED0 + max(R.EPISODES_A1, R.EPISODES_A0)))
     comp = set(range(R.COMP_SEED0, R.COMP_SEED0 + R.COMP_EPISODES))
     assert not grid & burned and not comp & burned

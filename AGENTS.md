@@ -257,6 +257,26 @@ and leave the short default where it does its real job of catching hangs.
 and module-level caches (one, world-keyed) before the boring answer was accepted.
 "Flaky" is a hypothesis, not a diagnosis.
 
+**A guard that reimplements the rule it guards will drift from it.** The test
+written to catch mislabelled cells compared model ids with its own raw `!=`
+instead of the shared helper, and flagged 49 correctly-served cells. It was the
+seventh copy of one comparison; there turned out to be nine. When you fix a
+comparison, grep for every site of it in the same pass — including the tests,
+including the artifact printers. Fixing them one at a time as each surfaces is
+how a defect stays alive for weeks.
+
+**A guard that checks one spelling of a fact misses the other.** The test
+banning hardcoded cell counts matched `N of M` and nothing else, so a published
+card carried "**357 cells**" and "(259 cells)" against a corpus of 481 — three
+stale numbers in front of the test written to prevent them. Widen the pattern to
+the forms that actually occur, then re-run it and read what it catches.
+
+**A number in a document is wrong from the next sweep onward.** Including a
+number written to warn about that: the sentence explaining the drift quoted the
+true count, and went stale itself within two rounds. State the fact and name the
+verb that prints the figure. The only numbers that may be written down are
+closed sets that cannot grow.
+
 ---
 
 ## Infrastructure rules
