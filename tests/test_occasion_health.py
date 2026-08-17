@@ -303,3 +303,78 @@ def test_the_channel_reads_GEN3_ONLY(obs):
             continue
         key = (meta.get("served_name"), meta.get("eden_level"), got["round"])
         assert key not in {(o.model, o.world, o.sweep) for o in obs}
+
+
+# --- the provider boundary ---------------------------------------------------
+
+def test_PAIRING_REFUSES_TO_CROSS_A_PROVIDER_BOUNDARY():
+    """**Rule 1 as machinery, exercised synthetically because the corpus
+    cannot exercise it.**
+
+    Round 21's seven were chosen precisely BECAUSE Together will not serve
+    them, so no model spans both providers and the boundary is never crossed
+    today. It was also, until this test, protected only by accident: the
+    routed model id carried a `:provider` suffix, so routed cells looked like
+    distinct models. Nothing designed that — and `bare_model` exists to strip
+    exactly that suffix.
+
+    So the guard would have shipped untested until the day it was needed,
+    which is the day it would have been found broken. Here it is driven with
+    the same bare model on two providers.
+    """
+    same = "acme/model-x"
+    obs = [
+        #: Together: a clean prior day and a sharp drop.
+        OQ.Observation("LAT", "t0", "2026-01-01", same, 24, 24, "together"),
+        OQ.Observation("LAT", "t1", "2026-01-02", same, 6, 24, "together"),
+        #: DeepInfra: one day only, at the Together prior's level.
+        OQ.Observation("LAT", "d0", "2026-01-03", same, 24, 24, "deepinfra"),
+    ]
+
+    #: Together's own drop is still caught — the boundary must not blunt the
+    #: detector, only stop it reaching across.
+    t1 = OQ.verdict_for("LAT", "t1", alpha=ALPHA, obs=obs)
+    assert t1.verdict == "EVENT" and t1.returning == (same,)
+
+    #: The DeepInfra sweep has a same-named model with earlier days on ANOTHER
+    #: provider, and must still read NO-ANCHOR: it has no prior of its own.
+    d0 = OQ.verdict_for("LAT", "d0", alpha=ALPHA, obs=obs)
+    assert d0.verdict == "NO-ANCHOR", (
+        "a sweep was paired against a different provider's cells — Rule 1 is "
+        "prose again")
+    assert d0.returning == ()
+    assert d0.prior == (0, 0) and d0.p is None
+
+
+def test_A_SWEEP_SPANNING_TWO_PROVIDERS_IS_REFUSED_OUTRIGHT():
+    """Not merely unpaired — refused. A sweep served half on one provider and
+    half on another is not one measurement, and there is no honest way to pool
+    it into a single k/n."""
+    obs = [
+        OQ.Observation("LAT", "s", "2026-01-02", "a/one", 24, 24, "together"),
+        OQ.Observation("LAT", "s", "2026-01-02", "a/two", 24, 24, "deepinfra"),
+    ]
+    with pytest.raises(SystemExit, match="spans providers"):
+        OQ.verdict_for("LAT", "s", alpha=ALPHA, obs=obs)
+
+
+def test_THE_BOUNDARY_IS_NOT_LOAD_BEARING_ON_THE_NAME_SUFFIX():
+    """The models here are bare on both sides — no `:provider` anywhere — so
+    this fails if the separation ever silently reverts to relying on the id
+    string rather than the provider field."""
+    a = OQ.Observation("LAT", "x", "2026-01-01", "a/m", 24, 24, "together")
+    b = OQ.Observation("LAT", "y", "2026-01-02", "a/m", 24, 24, "deepinfra")
+    assert a.model == b.model and ":" not in a.model
+    assert a.provider != b.provider
+    v = OQ.verdict_for("LAT", "y", alpha=ALPHA, obs=[a, b])
+    assert v.verdict == "NO-ANCHOR"
+
+
+def test_EVERY_COMMITTED_OBSERVATION_CARRIES_A_PROVIDER(obs):
+    """`None` would compare equal to `None` and quietly permit everything —
+    the can't-fire family again. Cells predating the attestation derive theirs
+    from the endpoint, and an unrecognised host forms its OWN partition rather
+    than joining `together` by default."""
+    assert all(o.provider for o in obs)
+    seen = {o.provider for o in obs}
+    assert "together" in seen and "deepinfra" in seen, seen

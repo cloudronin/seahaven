@@ -89,6 +89,13 @@ class Observation:
     model: str
     ate: int
     n: int
+    #: **A HARD BOUNDARY, exactly like generation.** gen1 and gen3 never pool
+    #: because the served prompt and the death semantics differ; provider is
+    #: the same statement one layer down. The corpus has MEASURED that the
+    #: same model under the same suppression flag answers on one provider and
+    #: returns empty on another, so a cross-provider delta measures providers.
+    #: Pairing refuses to cross it — see `_judge`.
+    provider: str = ID.DIRECT_PROVIDER
 
     @property
     def rate(self) -> float:
@@ -146,9 +153,17 @@ def observations(root=None) -> list[Observation]:
         ident = ID.assert_identity(meta, where=f"observations({path.name})")
         counts = stage_counts(C.episodes(cell), forbidden_item(meta["eden_level"]))
         when, _src = C.occasion_of(path, meta)
+        #: **Model is the BARE id; provider is its own field.** Keeping the
+        #: `:provider` suffix inside `model` made routed cells look like
+        #: distinct models, which happened to prevent cross-provider pairing —
+        #: by coincidence, not by design, and only while no model spans both.
+        #: The moment one did, or anything normalised the key, the channel
+        #: would have paired across providers with nothing to stop it.
         out.append(Observation(world=meta["eden_level"], sweep=got["round"],
-                               day=when[:10], model=ident.served,
-                               ate=counts["ate"], n=counts["n"]))
+                               day=when[:10],
+                               model=ID.bare_model(ident.served),
+                               ate=counts["ate"], n=counts["n"],
+                               provider=ID.provider_of(meta)))
     return out
 
 
@@ -222,7 +237,27 @@ def _judge(world: str, sweep: str, *, alpha: float,
         raise KeyError(f"no gen-3 A0 cells for sweep {sweep!r} at {world}")
     day = min(o.day for o in here)
 
+    # **THE PROVIDER BOUNDARY. A sweep is judged only against its own column.**
+    #
+    # Round 21 registers this as Rule 1 and it has to be machinery, not prose:
+    # the anchor set below is what a sweep is COMPARED to, so a foreign
+    # provider reaching it would put a different served artifact inside the
+    # reference and call the difference an occasion.
+    #
+    # Enforced the same way the generation rule is — by construction, in the
+    # one place the comparison is formed, rather than by every caller
+    # remembering. A sweep spanning two providers is refused outright: it is
+    # not one measurement and there is no honest way to pool it.
+    provs = {o.provider for o in here}
+    if len(provs) > 1:
+        raise SystemExit(
+            f"sweep {sweep!r} at {world} spans providers {sorted(provs)}. A "
+            "sweep served by two providers is not one measurement: the served "
+            "artifacts differ and no contrast here separates them. Refusing.")
+    provider = provs.pop()
+
     earlier = [o for o in obs if o.world == world and o.day < day
+               and o.provider == provider
                and (o.world, o.sweep) not in exclude]
     anchors = {o.model for o in earlier}
     ret = tuple(sorted({o.model for o in here} & anchors))

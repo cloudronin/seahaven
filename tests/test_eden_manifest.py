@@ -230,3 +230,117 @@ def test_a_MOVED_food_is_caught_by_the_lock():
 
 def O_lock(world_id: str) -> dict:
     return json.loads(Path(f"worlds/{world_id}/BUILD.lock.json").read_text())
+
+
+def test_NO_CELL_HEADER_CONTRADICTS_ITS_OWN_RUNS():
+    """**A summary field that disagrees with what it summarises.**
+
+    `run_cell` gap-fills by rewriting `runs` and used to leave
+    `n_runs_completed` and `failed_runs` at their first-attempt values. Ten
+    committed cells carried headers understating themselves — round 21's
+    Kimi-K3 A1 LAT held 47 episodes across 47 distinct seeds under
+    `n_runs_completed: 10` and 38 failure records.
+
+    Harmless only because every measurement path reads `episodes()` and nothing
+    read the header. That is the argument preceding most of this programme's
+    retractions, so the invariant is asserted rather than relied on.
+    """
+    import json
+
+    from seahaven.eden._shared import corpus as C
+
+    bad = []
+    for p, d in C.iter_cells():
+        runs = len(d.get("runs", []))
+        if d.get("n_runs_completed") != runs:
+            bad.append(f"{p.name}: header {d.get('n_runs_completed')} vs "
+                       f"{runs} runs")
+    assert not bad, "cell headers contradict their runs:\n  " + "\n  ".join(bad)
+
+
+def test_EVERY_CELL_STATES_ITS_ACTUAL_SHORTFALL():
+    """**The count is knowable even when the identities are not.**
+
+    Failure records written before 2026-08-16 carry a `run` index and no seed,
+    and an index means nothing across attempts — so a gap-fill cannot tell
+    which records it resolved. Kimi-K3 A1 LAT keeps 38 records against a real
+    shortfall of ONE, and a reader counting records would put that cell at
+    under a quarter served.
+
+    `outstanding_episodes` is the unambiguous quantity. `runner.py` now stamps
+    the seed on new failures, so the identities become knowable too — but the
+    count must be right regardless.
+    """
+    from seahaven.eden._shared import corpus as C
+
+    bad = []
+    for p, d in C.iter_cells():
+        runs = len(d.get("runs", []))
+        want = max(0, d.get("n_runs_requested", runs) - runs)
+        if d.get("outstanding_episodes") != want:
+            bad.append(f"{p.name}: says {d.get('outstanding_episodes')}, "
+                       f"actually {want}")
+    assert not bad, "outstanding_episodes is wrong on:\n  " + "\n  ".join(bad)
+
+
+def test_NEW_FAILURE_RECORDS_CARRY_THE_SEED_THEY_FAILED_ON():
+    """A failure that cannot be matched to an episode cannot be reconciled by
+    any later attempt. `run` is an index within one attempt; the seed is the
+    episode's identity."""
+    import inspect
+
+    import seahaven.fidelity.runner as RN
+    src = inspect.getsource(RN)
+    assert src.count('"seed": seed0 + i') >= 2, (
+        "rollout and narrate failures must both record the seed")
+
+
+def test_NO_CELL_DEPENDS_ON_FILE_MTIME_FOR_ITS_OCCASION():
+    """**mtime is destructible, and it was destroyed.**
+
+    249 cells from rounds 0-12 carried no serving timestamp, so `occasion_of`
+    fell back to file mtime. On 2026-08-16 a blanket rewrite stamping one
+    bookkeeping field onto every cell reset all 481 mtimes to that day, and
+    every one of those labels was gone — round 10's LAT anchors reading
+    2026-08-16.
+
+    The measurements were never touched; only the labels. But those labels are
+    what `emit occasions` uses to say which comparisons span serving days, so
+    losing them silently would have made every cross-day claim unverifiable.
+
+    Every cell now carries either a real `wall_start_epoch` or a reconstructed
+    one, and the guard is that NOTHING falls through to mtime. A corpus that
+    depends on filesystem metadata for a research claim is a corpus one `touch`
+    away from unfalsifiable.
+    """
+    from seahaven.eden._shared import corpus as C
+
+    on_mtime = [p.name for p, d in C.iter_cells()
+                if C.occasion_of(p, d.get("meta", {}))[1] == "mtime"]
+    assert not on_mtime, (
+        f"{len(on_mtime)} cell(s) still take their occasion from file mtime, "
+        f"e.g. {on_mtime[:3]} — stamp a timestamp instead")
+
+
+def test_A_RECONSTRUCTED_OCCASION_NEVER_PASSES_AS_A_MEASURED_ONE():
+    """**The derived value must not wear the measured field's name.**
+
+    `wall_start_epoch` means a real serving time. Writing a git-commit date
+    into it would have made 249 inferences indistinguishable from 232
+    measurements — the precise substitution `occasion_of` returns a `source`
+    to prevent, and the reason it has always returned a pair.
+    """
+    from seahaven.eden._shared import corpus as C
+
+    for p, d in C.iter_cells():
+        m = d.get("meta", {})
+        if not m.get("occasion_reconstructed_epoch"):
+            continue
+        assert not m.get("wall_start_epoch"), (
+            f"{p.name} carries BOTH a measured and a reconstructed timestamp; "
+            "a reconstruction must never overwrite or accompany a real one")
+        _when, src = C.occasion_of(p, m)
+        assert src == "git_add(reconstructed)", src
+        assert "DERIVED, not measured" in m.get(
+            "occasion_reconstruction_note", ""), (
+            f"{p.name}: a reconstructed label must say so in the cell")

@@ -84,4 +84,50 @@ def run_cell(policy, *, runs, seed0, level, arm, terminal_at_zero,
                     "gap-fill is NOT construction-identical. Refusing.")
         keep += new
     res["runs"] = sorted(keep, key=lambda r: r["seed"])
+
+    # **THE HEADER MUST NOT CONTRADICT THE RUNS IT SUMMARISES.**
+    #
+    # This wrote `runs` and left `n_runs_completed` and `failed_runs` at their
+    # first-attempt values, so a gap-filled cell claimed a completeness it had
+    # since fixed: round 21's Kimi-K3 A1 LAT carried 47 real episodes across 47
+    # distinct seeds under a header reading `n_runs_completed: 10` and
+    # `failed_runs: 38`.
+    #
+    # Harmless only because every measurement path reads `episodes()` and none
+    # reads the header — which is the argument that has preceded most of this
+    # programme's retractions. A field that is wrong and unread is a field that
+    # becomes wrong and read.
+    #
+    # `failed_runs` is rebuilt rather than cleared: a seed that failed and was
+    # then filled is no longer a failure, but one that failed and was never
+    # asked for again still is, and losing that would overstate the cell.
+    #
+    # **Records written before 2026-08-16 carry no seed** — only a `run` index,
+    # which is an index within ONE attempt and so means nothing across them.
+    # Those cannot be matched to anything, so the only honest reconciliation is
+    # completeness: a cell holding every episode it asked for has no
+    # outstanding failure, whatever its old records say. A short cell keeps
+    # them, because there we genuinely cannot tell which were resolved.
+    # `runner.py` now stamps the seed, so this degrades to the precise rule for
+    # everything served from here on.
+    have = {r["seed"] for r in res["runs"] if "seed" in r}
+    res["n_runs_completed"] = len(res["runs"])
+    old = res.get("failed_runs", [])
+    req = res.get("n_runs_requested", len(res["runs"]))
+    complete = len(res["runs"]) >= req
+    res["failed_runs"] = [] if complete else [
+        f for f in old if f.get("seed") is None or f["seed"] not in have]
+
+    # **How many episodes are actually still missing, stated as a number.**
+    #
+    # Seedless records cannot say WHICH failures a gap-fill resolved, and
+    # guessing would be inventing. But the COUNT is not ambiguous: a cell that
+    # asked for 48 and holds 47 is short by exactly one, however many stale
+    # records it carries. Round 21's Kimi-K3 kept 38 records beside 47
+    # episodes — 37 of them resolved, unidentifiably — and any reader counting
+    # records would have put the cell at less than a quarter served.
+    #
+    # So the identity stays unknown and the quantity stops being.
+    res["outstanding_episodes"] = max(0, req - len(res["runs"]))
+    return res, list(seeds)
     return res, list(seeds)

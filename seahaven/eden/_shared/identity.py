@@ -104,6 +104,46 @@ def bare_model(name: str | None) -> str | None:
     return f"{org}/{base}" if org else base
 
 
+#: The provider a cell is attributed to when it carries no attestation.
+#:
+#: Every cell served before 2026-08-16 went to Together directly, which answers
+#: for itself and sends no routing header. `None` on such a cell means "not
+#: routed", not "unknown" — but leaving it None would make the provider
+#: boundary below compare `None` to `None` and quietly permit anything.
+DIRECT_PROVIDER = "together"
+
+
+def provider_of(meta: dict) -> str:
+    """Which provider served this cell. **A hard boundary, like generation.**
+
+    `generation_of` exists because gen1 and gen3 differ in the served prompt and
+    the death semantics, so a pooled rate averages two different measurements.
+    Provider is the same statement one layer down: serving stack, hardware,
+    quantisation and request handling all differ, and this corpus has MEASURED
+    that the last of those can turn content into silence — the same model, the
+    same suppression flag, answering on one provider and returning empty on
+    another.
+
+    So a model's rate at a level from one provider may not be compared to the
+    same model's rate at that level from another. Round 21 registers that as
+    Rule 1; this function is what makes it enforceable rather than stated.
+    """
+    got = meta.get("served_provider")
+    if got:
+        return got
+    #: Derived from the endpoint for cells predating the attestation. Kept
+    #: narrow deliberately: a base_url this does not recognise returns the
+    #: literal host, so an unrecognised provider forms its OWN partition rather
+    #: than silently joining `together`.
+    url = meta.get("base_url") or meta.get("endpoint") or ""
+    if "together" in url:
+        return DIRECT_PROVIDER
+    if not url:
+        return DIRECT_PROVIDER
+    host = url.split("//")[-1].split("/")[0]
+    return host or DIRECT_PROVIDER
+
+
 class IdentityViolation(RuntimeError):
     """A cell was read for measurement whose served model is not established.
 

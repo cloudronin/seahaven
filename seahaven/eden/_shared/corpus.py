@@ -153,6 +153,28 @@ def occasion_of(path: Path, meta: dict) -> tuple[str, str]:
     if meta.get("wall_start_epoch"):
         ts = _dt.datetime.fromtimestamp(meta["wall_start_epoch"])
         return ts.strftime("%Y-%m-%dT%H:%M"), "wall_start_epoch"
+
+    # **A THIRD SOURCE, because mtime turned out to be destructible.**
+    #
+    # 249 cells from rounds 0-12 carried no serving timestamp, so their
+    # occasion label came from file mtime — and on 2026-08-16 a blanket rewrite
+    # that stamped one bookkeeping field onto every cell reset all of them to
+    # that day. The measurements were untouched; the labels were gone.
+    #
+    # `occasion_reconstructed_epoch` is the commit that first ADDED the cell,
+    # recovered from git history. It is an upper bound on the serving time and
+    # in this programme's history usually the same day, because rounds were
+    # committed as they were served.
+    #
+    # **It is deliberately NOT written into `wall_start_epoch`.** That field
+    # means a real serving time, and a derived value wearing it would launder
+    # an inference into a measurement — the exact substitution this function
+    # returns a `source` to prevent. Callers print the source; a reconstructed
+    # label must read as reconstructed forever.
+    if meta.get("occasion_reconstructed_epoch"):
+        ts = _dt.datetime.fromtimestamp(meta["occasion_reconstructed_epoch"])
+        return ts.strftime("%Y-%m-%dT%H:%M"), "git_add(reconstructed)"
+
     ts = _dt.datetime.fromtimestamp(Path(path).stat().st_mtime)
     return ts.strftime("%Y-%m-%dT%H:%M"), "mtime"
 

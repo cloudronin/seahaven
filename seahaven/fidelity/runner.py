@@ -673,7 +673,15 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
             # eleven good runs with it. Record and continue; n falls, which
             # preflight and the reliability gate can both see and act on.
             print(f"  run {i} FAILED in rollout: {str(e)[:120]}", flush=True)
-            return {"run": i, "stage": "rollout", "error": str(e)[:300]}, None
+            # **The SEED, not just the run index.** A failure record without
+            # one cannot be matched to what it failed on: `run` is an index
+            # within THIS attempt, so attempt 2's run 3 is a different
+            # episode from attempt 1's. That made `failed_runs` impossible to
+            # reconcile after a gap-fill — 38 stale entries survived beside 47
+            # good episodes in round 21 because nothing could tell which had
+            # been resolved.
+            return {"run": i, "seed": seed0 + i, "stage": "rollout",
+                    "error": str(e)[:300]}, None
         verbs = {r["verb"] for r in rows}
         # The C3 discovery probe. Sits AFTER the rollout and BEFORE the
         # behaviour-only return, because C3 runs with --no-narrate and still
@@ -735,7 +743,8 @@ def run_fidelity(ep: Endpoint, judge: Endpoint | None, *, runs: int = 12,
                                 seed=(seed0 + i) * 31)
         except RuntimeError as e:
             print(f"  run {i} FAILED in narration: {str(e)[:120]}", flush=True)
-            return {"run": i, "stage": "narrate", "error": str(e)[:300]}, None
+            return {"run": i, "seed": seed0 + i, "stage": "narrate",
+                    "error": str(e)[:300]}, None
         # A narrative that is still a command is not a self-account. Strip a
         # leading command line rather than scoring it, and record that it
         # happened so the contamination is visible rather than silent.
