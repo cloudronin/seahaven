@@ -27,6 +27,11 @@ from seahaven.eden._shared import probe_channel as PC
 #: decoration in a pipeline.
 PROCEED, HOLD = 0, 1
 
+#: **A gate whose subject no longer exists is not a HOLD.** HOLD says "not
+#: today"; this says "not ever, and the question was never about today". They
+#: must be distinguishable in a pipeline, so VOID_SUBJECT gets its own code.
+VOID_SUBJECT = 3
+
 CHANNELS = tuple(PC.channel_key(lv, PB.ARM) for lv in PB.LEVELS) + (
     PC.channel_key(PB.DECISION_LEVEL, PB.DECISION_ARM),)
 
@@ -138,15 +143,26 @@ def _gate(args) -> int:
         return HOLD
 
     if purpose == "fork-reopen":
-        if v == "QUIET":
-            print(f"PROCEED (fork-reopen): Together LAT {latest.date} QUIET. "
-                  "This licenses SERVING the re-serve only — the re-serve's "
-                  "own certification still decides reading.")
-            return PROCEED
-        print(f"HOLD (fork-reopen): Together LAT {latest.date} is {v}/{d}. "
-              "The sealed fork reopens on a QUIET LAT sweep or an identified "
-              "mechanism, and on nothing else.")
-        return HOLD
+        #: **VOIDED, and deliberately BEFORE any occasion is consulted.**
+        #:
+        #: This read the day's verdict and returned PROCEED on QUIET — correct
+        #: by its own stated condition, and wrong in substance: it would have
+        #: licensed a spend on a fork whose subject #113 destroyed. Consulting
+        #: the occasion first and voiding second would still imply the occasion
+        #: was ever the obstacle. It was not.
+        print("VOID-SUBJECT (fork-reopen): round16.FORK has no subject.")
+        print("  Its eight models were never served — those round-16 cells")
+        print("  were all deepcogito/cogito-v2-1-671b (#113), so reading them")
+        print("  would characterise cogito, not the eight.")
+        print("  Its premise is gone too: the 08-14 event the fork asked about")
+        print("  was itself withdrawn, so there is no reach left to measure.")
+        print("  NOT reopenable on a QUIET day. Occasion was never what was")
+        print("  missing, so no fleet reading can license it.")
+        print("  The residual question — those models' LAT A0 baselines — is")
+        print("  answered by round 21's DeepInfra rows under the provenance")
+        print("  rule. Round 19's sealed text stands unedited in its retired")
+        print("  pin as the record of what was believed.")
+        return VOID_SUBJECT
 
     if v == "QUIET":
         print(f"PROCEED (spend): Together LAT {latest.date} QUIET, rate "

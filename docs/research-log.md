@@ -12474,3 +12474,122 @@ not a pin.
 ### Cost
 
 $0. Everything above is a reading of committed cells.
+
+---
+
+## 2026-08-16 — the fleet's second column, and a gate that would have spent on nothing
+
+Day one read QUIET on all three channels against the amended expectation. The
+right response to a boring first day is to check the instrument around it, and
+that turned up two things.
+
+### The fork was licensed, and its subject did not exist
+
+`vworld occasion gate --for fork-reopen` returned **PROCEED**. Correctly, by its
+own stated condition: round 19 sealed `round16.FORK` pending "a LAT sweep that
+certifies QUIET", and LAT was quiet.
+
+The fork asks whether eight unanchored models return near 0.708 (structural) or
+0.95+ (the event reached them), from round-16 LAT A0 cells "committed and never
+read". **#113 established that every one of those cells was served by cogito.**
+The eight were filenames. And the fork's premise is gone too: it asks how far
+the 08-14 shift reached, and the certified event was itself withdrawn — there is
+no reach to measure. Not an unanswered question, an unasked one.
+
+So the gate would have licensed spending on a fork with no subject and no
+premise, on the strength of an occasion reading that was never the obstacle.
+
+**VOIDED on the #108 precedent.** The gate now returns `VOID-SUBJECT` and exits
+nonzero, **before consulting any verdict** — checking the day first and voiding
+second would still imply the occasion mattered. Round 19's sealed text is NOT
+edited: it is a retired pin, and it stands as the record of what was believed.
+
+The residual real question — those models' LAT A0 baselines — was absorbed into
+ordinary measurement. Round 21 measured seven of the eight on DeepInfra, as
+dated rows under the provenance rule. Nothing is left to reopen.
+
+**The spec document already said "Round 16's fork does not wait on this — it
+voided with #108."** The prose knew and the code did not, for days. A voided
+decision recorded only in prose is a decision the machinery will keep offering.
+
+### Adding a provider almost moved the seeds under the served column
+
+`seed_for` derived each provider's seed offset from
+`sorted(PROVIDERS).index(provider)`. Adding `"deepinfra"` sorts it **before**
+`"together"`, moving Together from slot 0 to slot 1 — and with it every seed the
+column derives. Day one served `seed0=100864` for MiniMax-M3 at LAT; after the
+change the same day, model and world would have re-derived **101272**.
+
+The served cells would have become unreproducible from the code that made them.
+Silently. No test would have failed, because no test asks the code to re-derive
+a seed it already served.
+
+**An alphabetical index looks stable and is not.** It is a function of the whole
+set, so every member's value depends on every other member — the same shape as
+the cohort-dependence [TRAP] 38 records in rule 5's statistic, in a place where
+it corrupts provenance rather than a verdict.
+
+`PROVIDER_SLOT` is now frozen and append-only, and a test re-derives day one's
+seeds from the committed cells and asserts they still match.
+
+### The second column, weeks early
+
+The plan said the cross-provider coincidence read — the pilot's headline — waited
+on Fireworks, DeepInfra and SambaNova accounts, an errand only the operator could
+run. **DeepInfra did not wait.** Round 21 established that the HuggingFace router
+serves it on an `HF_TOKEN` alone, and that the `x-inference-provider` response
+header says who actually answered.
+
+That header is what makes the column trustworthy: the runner refuses a cell whose
+attestation is missing or mismatched, so a silent reroute produces **no cell**
+rather than a mislabelled one. #113's lesson applied before the fact instead of
+after it. Two errands remain, not three.
+
+### The cost premise was wrong by 5.4x, and it was checkable
+
+The cadence was planned at ~$2.50 per DeepInfra serving day. Measured from round
+21's committed billing: **$13.59**.
+
+**Kimi-K3 is $7.42 of that** — more than the other six models together, at
+$0.1545/episode. Mon/Wed/Fri with him projects $412 for 30 days; without him,
+$6.17/day and $316. He leaves the daily fleet for cost and for nothing else, and
+stays in round 21's measured column, so the register loses nothing.
+
+### The gate amendment, pre-registered
+
+**$280 → $350, stated before day two**, with the second column recorded as the
+reason and three figures it is answerable to: $316 projected, $7.42/day for the
+excluded model, $412 for the configuration that was rejected.
+
+A budget raised after the spend cannot be told apart from a budget raised to
+excuse it. The only thing that distinguishes them is *when* it was written down.
+
+Day one's 17 cells cite the superseded pin
+`956f9059…` in their `probe_pin`, and that hash is kept recomputable, so the
+amendment is a legible boundary rather than a rewrite. What moved: the DeepInfra
+column, the frozen slots, the gate, the schedule facts, the fork's void. What did
+not: the Together cohort, the anchors, alpha, the seed base, the decision
+channel. Day one's readings stand unchanged under the new pin.
+
+### Phase E, resolved with facts
+
+HF Jobs supports scheduled execution via `create_scheduled_job(...,
+schedule=...)`, taking CRON or `@daily`; availability is any account with a
+positive credit balance, not a tier; secrets are passed encrypted server-side.
+`cpu-basic` at $0.01/hr is the right flavour — the job calls APIs and computes
+Fisher tests.
+
+**The default timeout is thirty minutes and it kills the job.** A two-column day
+serves ~700 episodes against hosted endpoints and will exceed that, so `timeout`
+must be passed explicitly. A silent kill would present as a PARTIAL day of
+unknown cause.
+
+**Shape: one job, columns sequential, one UTC window.** The coincidence read
+requires a shared occasion, and sequential-in-one-window makes that true by
+construction rather than by two schedules happening to agree. A hung provider
+delaying its siblings is the accepted cost, which is why the timeout is set with
+headroom rather than left at the default.
+
+### Cost
+
+$0. Every figure above is read off committed cells or off vendor documentation.

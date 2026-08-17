@@ -27,10 +27,29 @@ standalone instrument's naming is parked).
   already believed. That is a better first day: nothing to match, so nothing to
   match wrongly.
 
+  **DAY ONE, 2026-08-16 — the amended expectation held.** 17 cells, Together,
+  all three channels QUIET: `LAT.A0` 173/192 down p=0.076, `W2.A0` 160/188 down
+  p=0.358, `LAT.A1` 21/24 up p=0.186. Nothing to characterise before scheduling,
+  because nothing deviated from what was registered.
+
+  Worth saying plainly since a boring first day is easy to under-read: this is
+  the instrument working. The expectation was inverted **before** the day was
+  served, on the strength of #113 rather than on the reading, and the reading
+  then matched. A fleet whose first day confirms a prediction made after the
+  fact would be worth nothing.
+
   The open question the fleet actually answers is whether cogito's uncertified
   monotone LAT fall (0.875 → 0.756 → 0.705, no step significant) is anything at
   all, and that needs the multi-model measurement day one provides. Round 16's
   fork does not wait on this — it voided with #108.
+
+  **And that last sentence was true in this document while the live gate still
+  disagreed.** `occasion gate --for fork-reopen` returned PROCEED on day one's
+  QUIET, correctly by its own stated condition, and would have licensed a spend
+  on a fork whose subject #113 had destroyed. The prose knew; the code did not.
+  Voided in the gate on 2026-08-16 — it now returns `VOID-SUBJECT` and exits
+  nonzero, before consulting any verdict, because occasion was never what was
+  missing.
 - **Cross-provider coincidence**: does an event appear on one stack, the GPU
   class, or everywhere? Same-day contrast needs no history and works from
   day 1.

@@ -187,15 +187,66 @@ def test_the_SEED_BLOCK_is_disjoint_from_every_committed_seed():
 
 
 def test_the_COST_is_MEASURED_and_inside_the_gate():
-    """The spec sized $2.50/day for four models. Eight changes it materially,
-    and a wrong cost inside a hashed payload gets quoted as though derived."""
+    """**Both columns, both measured.** The spec sized $2.50/day for four
+    models; eight changed it, and the second provider changed it again. A wrong
+    cost inside a hashed payload gets quoted later as though it were derived.
+
+    The DeepInfra figure comes from round 21's committed billing, not a rate
+    card — the plan assumed ~$2.50 a serving day and the truth is $6.17 without
+    Kimi-K3 and $13.59 with him.
+    """
     assert len(PB.cells()) * PB.EPISODES == PB.DAILY_EPISODES == 408
     assert PB.DAILY_USD < PB.BUDGET_PER_DAY
-    assert PB.PILOT_USD == pytest.approx(PB.DAILY_USD * PB.PILOT_DAYS, abs=0.5)
+
+    projected = (PB.DAILY_USD * PB.PILOT_DAYS
+                 + PB.DEEPINFRA_DAY_USD * PB.DEEPINFRA_SERVING_DAYS)
+    assert PB.PILOT_USD == pytest.approx(projected, abs=1.0)
     assert PB.PILOT_USD < PB.BUDGET_PILOT
-    #: Slack is thin. If this ever fails, the pilot no longer fits and the
-    #: cadence or the cohort has to give — not the gate.
+    #: Slack is thin. If this fails, the CADENCE or the COHORT gives — not the
+    #: gate. A gate raised to fit a projection is not a gate.
     assert PB.BUDGET_PILOT - PB.PILOT_USD > 20
+
+    #: **The excluded model is excluded for a stated, checkable amount.**
+    #: Keeping Kimi-K3 would breach even the amended gate, and that arithmetic
+    #: is the whole justification for dropping him.
+    with_kimi = projected + PB.DEEPINFRA_KIMI_WOULD_ADD * PB.DEEPINFRA_SERVING_DAYS
+    assert with_kimi > PB.BUDGET_PILOT, (
+        "Kimi-K3 now fits inside the gate, so the cost reason for excluding "
+        "him from the daily fleet has evaporated — put him back or restate why")
+    assert "moonshotai/Kimi-K3" not in PB.DEEPINFRA_COHORT
+
+
+def test_the_BUDGET_AMENDMENT_IS_PREREGISTERED_not_discovered():
+    """**$280 -> $350, stated before day two.**
+
+    A budget raised after the spend cannot be told apart from a budget raised
+    to excuse it. So the amendment carries its date, its reason, and the three
+    figures it is answerable to — and day one's superseded pin is kept, because
+    the 17 cells served under it cite it in their `probe_pin`.
+    """
+    assert PB.BUDGET_PILOT == 350.00
+    a = PB.BUDGET_AMENDMENT
+    assert "280" in a and "350" in a
+    assert "BEFORE DAY TWO" in a
+    assert "Kimi-K3" in a
+    assert "cannot be told apart" in a
+
+    #: The superseded pin stays recomputable, like a retired round's.
+    assert PB.SUPERSEDED_PINS
+    old = "956f9059871c87961495d4c861c367c7578c9821f4dc0bf709e851931e845471"
+    assert old in PB.SUPERSEDED_PINS
+    assert old != PB.PINNED_PROBE_HASH
+
+    #: And day one's cells really do cite it, or the boundary is not legible.
+    import json
+    from pathlib import Path
+    served = sorted(Path("results").glob("probe-together-*.json"))
+    if served:
+        pins = {json.loads(p.read_text())["meta"].get("probe_pin")
+                for p in served}
+        assert pins <= set(PB.SUPERSEDED_PINS) | {PB.PINNED_PROBE_HASH}, (
+            f"a served probe cell cites a pin that is neither current nor "
+            f"recorded as superseded: {pins}")
 
 
 def test_VERDICT_FAIL_is_in_the_status_enum():
@@ -231,9 +282,13 @@ def test_the_MULTI_PROVIDER_UNBLOCK_is_recorded_as_waiting_on_keys():
     """Together-only is a state, not a silent omission. The pin says what is
     missing and what it costs — the coincidence read, which is the pilot's
     headline — so nobody later reads a one-column instrument as the pilot."""
-    assert set(PB.PROVIDERS) == {"together"}
-    for word in ("Fireworks", "DeepInfra", "SambaNova", "COINCIDENCE"):
+    #: **DeepInfra no longer waits.** The HF router serves it on an HF_TOKEN,
+    #: so the second column was taken without a DeepInfra account — weeks
+    #: earlier than the plan assumed. Two errands remain.
+    assert set(PB.PROVIDERS) == {"together", "deepinfra"}
+    for word in ("Fireworks", "SambaNova", "COINCIDENCE"):
         assert word in PB.PROVIDERS_WAITING
+    assert "DeepInfra NO LONGER WAITS" in PB.PROVIDERS_WAITING
     #: **Decode the payload, do not substring it.** `json.dumps` defaults to
     #: `ensure_ascii=True`, so the em-dash in this text becomes `\\u2014` and a
     #: raw `in payload()` check fails on a string that is genuinely there.
@@ -297,3 +352,138 @@ def test_STANDING_is_a_SINGLE_SOURCE_not_a_second_copy():
                 if ln.strip().startswith("STANDING =")], "doctor redefines it"
     for name in pin.STANDING:
         __import__(f"seahaven.eden.{name}")
+
+
+# --- the second column, and what adding it nearly broke ---------------------
+
+def test_ADDING_A_PROVIDER_MUST_NOT_MOVE_AN_EXISTING_COLUMNS_SEEDS():
+    """**Caught before the second column was added, not after.**
+
+    `seed_for` derived the provider offset from `sorted(PROVIDERS).index()`.
+    "deepinfra" sorts BEFORE "together", so adding it would have moved
+    Together's offset 0 -> 1 and shifted every seed the column derives: day one
+    served `seed0=100864` for MiniMax-M3/LAT and would have re-derived 101272.
+    The served cells would have become unreproducible from the code that made
+    them, silently, with nothing failing.
+
+    An alphabetical index looks stable and is not — it is a function of the
+    whole set, so every member depends on every other. Same shape as [TRAP] 38,
+    in a place where it corrupts provenance rather than a verdict.
+    """
+    assert PB.PROVIDER_SLOT["together"] == 0, (
+        "Together's slot moved; every seed it has ever derived moved with it")
+    #: Appending must never renumber an existing column.
+    assert PB.PROVIDER_SLOT == {"together": 0, "deepinfra": 1,
+                                "fireworks": 2, "sambanova": 3}
+
+    #: The derivation must use the frozen slot, not the sorted position.
+    import inspect
+    #: **Executable lines only.** The comment beside the fix NAMES the old form
+    #: so a reader knows what was wrong, so a whole-source substring check would
+    #: fire on the explanation rather than on the code.
+    src = inspect.getsource(PB.seed_for)
+    code = "\n".join(ln for ln in src.splitlines()
+                     if not ln.lstrip().startswith("#"))
+    assert "PROVIDER_SLOT[provider]" in code
+    assert "sorted(PROVIDERS).index" not in code
+
+
+def test_DAY_ONES_SEEDS_STILL_DERIVE_TO_WHAT_WAS_SERVED():
+    """The property the slot freeze exists for, asserted against the committed
+    cells rather than against the constant."""
+    import json
+    from pathlib import Path
+
+    for p in sorted(Path("results").glob("probe-together-2026-08-16_*.json")):
+        m = json.loads(p.read_text())["meta"]
+        got = PB.seed_for("together", m["served_name"], m["eden_level"],
+                          m["eden_arm"], 1)
+        assert got == m["seed0"], (
+            f"{p.name}: served seed0={m['seed0']} but the code now derives "
+            f"{got}. The cell is no longer reproducible from the pin.")
+
+
+def test_the_TWO_COLUMNS_TAKE_DISJOINT_SEEDS():
+    from seahaven.eden import probe as P
+    a = {P.seed_for("together", m, lv, ar, d)
+         for m, ar, lv in P.cells() for d in range(1, 31)}
+    b = {P.seed_for("deepinfra", m, lv, ar, d)
+         for m, ar, lv in P.cells() for d in range(1, 31)}
+    assert not (a & b), "the columns share seeds; they are not independent"
+    lo, hi = P.SEED_BLOCK
+    assert max(a | b) + P.EPISODES - 1 <= hi, (
+        "a 30-day two-column pilot runs past the reserved block")
+
+
+def test_the_ROUTED_COLUMN_IS_DEFINED_BY_THE_HEADER_not_the_request():
+    """A router can reroute. What makes the column trustworthy is that the
+    runner refuses a cell whose `x-inference-provider` does not match the pin —
+    #113's lesson applied before the fact rather than after it."""
+    assert "x-inference-provider" in PB.ROUTER_ATTESTATION
+    assert "REFUSES" in PB.ROUTER_ATTESTATION
+    assert PB.PROVIDERS["deepinfra"]["model_suffix"] == ":deepinfra"
+    assert PB.PROVIDERS["deepinfra"]["key_env"] == "HF_TOKEN"
+
+    import inspect
+    from vetoworld.commands import run
+    src = inspect.getsource(run)
+    assert "SERVED BY THE WRONG PROVIDER" in src
+    assert "NO PROVIDER ATTESTATION" in src
+
+
+def test_PHASE_E_IS_RESOLVED_WITH_FACTS_not_left_as_INVESTIGATE():
+    """The plan left HF Jobs cron as `[INVESTIGATE]` and said to resolve it
+    before building. These are the facts it was resolved with."""
+    f = PB.SCHEDULE_FACTS
+    assert "create_scheduled_job" in f
+    assert "CRON" in f and "@daily" in f
+    assert "POSITIVE CREDIT BALANCE" in f, "the tier question must be answered"
+    assert "THIRTY MINUTES" in f, (
+        "the default timeout is the trap and must be stated: a two-column day "
+        "exceeds it and would be killed mid-serve")
+    assert "secrets=" in f
+
+    s = PB.SCHEDULE_SHAPE
+    assert "ONE scheduled job" in s
+    assert "BY CONSTRUCTION" in s, (
+        "the reason for sequential-in-one-window is that coincidence needs a "
+        "shared occasion; without that the choice is arbitrary")
+    assert "hung provider" in s, "the accepted cost must be named"
+
+
+def test_the_FORK_IS_VOID_and_no_occasion_can_reopen_it():
+    """#108's precedent exactly. The gate returns VOID-SUBJECT before it looks
+    at any verdict, because occasion was never what was missing."""
+    assert "VOID-SUBJECT" in PB.GATE_RULES["fork-reopen"]
+    assert "#113" in PB.FORK_VOIDED
+    assert "no subject" in PB.FORK_VOIDED
+    assert "NOT reopenable" in PB.FORK_VOIDED
+    assert "round 21" in PB.FORK_VOIDED, (
+        "the residual question's actual answer must be pointed at, or voiding "
+        "reads as abandoning it")
+
+    #: The live surface must exit NONZERO and must not consult the day.
+    import inspect
+    from vetoworld.commands import occasion as OC
+    src = inspect.getsource(OC)
+    assert "VOID_SUBJECT = 3" in src
+    body = src.split('if purpose == "fork-reopen":')[1].split("return")[0]
+    assert "QUIET" not in body.split("#:")[0] or "VOID-SUBJECT" in body, (
+        "the fork branch still reads the day's verdict; voiding after "
+        "consulting the occasion implies the occasion mattered")
+
+
+def test_ROUND_19s_SEALED_TEXT_IS_NOT_EDITED():
+    """The seal is a retired pin — restored, never re-frozen. It stands as the
+    record of what was believed when it was written, and the live gate is where
+    the correction goes."""
+    from seahaven.eden import round19 as R19
+
+    assert "have never been read" in R19.SEALED_ROUND16_FORK["what"], (
+        "the sealed text was edited to match the void; it should stand as "
+        "written and the LIVE gate should carry the correction")
+    assert "0.708" in R19.SEALED_ROUND16_FORK["what"]
+    #: The seal still says a QUIET sweep reopens it. That is now FALSE, and it
+    #: is exactly why the text stays in the retired pin rather than being
+    #: corrected in place: it records what was believed, not what is true.
+    assert "QUIET" in R19.SEALED_ROUND16_FORK["reopens_on"]
