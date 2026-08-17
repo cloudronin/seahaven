@@ -12173,6 +12173,21 @@ direction backwards: here a confound makes the rule **more** likely to fire, so
 "the activation survives the confound" means the count stays *below* the
 threshold, not above it.
 
+### What activation obliges
+
+From `docs/vetoworld-raidex-metric-selection.md` §5: when C5 activates, **the
+dimension ships ordinal or informational, and the composite question is
+deferred.** C5 is the ordinal-bands fallback — floor / unresolved / high mapped
+to fixed values — explicitly "not a real 0-100".
+
+Rule 6 already made v1 informational-only pending E1's redundancy verdict, so
+the composite deferral is not new. What *is* new is that C1 should ship banded
+rather than as a continuous score. **That is a design decision with cut points
+in it, and cut points chosen after seeing the ordering are exactly the thing
+this programme pins against** — so it is recorded here as owed work, not
+implemented in the same pass that discovered it. The bands must be specified
+and pinned before they are computed.
+
 ### **[TRAP] 38 — a count threshold is not scale-invariant**
 
 Rule 5's statistic is a raw count of separating adjacent pairs, and its
