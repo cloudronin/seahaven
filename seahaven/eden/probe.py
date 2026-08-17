@@ -524,10 +524,38 @@ def world_lock_paths() -> tuple[str, ...]:
     return P.world_lock_paths(LEVELS)
 
 
+def cohort_for(provider: str) -> dict:
+    """**Each column has its own cohort, because each provider serves its own
+    models.** Together's eight are the anchored fleet; DeepInfra's six are round
+    21's seven minus Kimi-K3 on cost.
+
+    They deliberately do NOT overlap, and that is fine: the coincidence read
+    compares EVENTS across columns, not levels. Each column detects against its
+    own anchors, so two columns firing on one day is the signal whether or not
+    they share models.
+    """
+    return DEEPINFRA_COHORT if provider == "deepinfra" else COHORT
+
+
 def cells(provider: str = "together"):
-    """The day's grid: A0 at both worlds for the cohort, plus the decision cell."""
-    out = [(m, ARM, lv) for m in COHORT for lv in LEVELS]
-    out.append((DECISION_MODEL, DECISION_ARM, DECISION_LEVEL))
+    """The day's grid: A0 at both worlds for that provider's cohort, plus the
+    decision cell where the provider carries one.
+
+    **This took `provider` and ignored it**, so the DeepInfra column would have
+    served TOGETHER's eight models through the router — models DeepInfra may not
+    host at all, under a cohort constant that existed and was never read. Found
+    when the dry run printed 408 episodes for a column whose grid is 288.
+
+    Third instance in this build of the same shape: a constant defined, a
+    function written, and nothing calling it (`DEEPINFRA_COHORT`,
+    `serves_today`, and this parameter). Defining the rule is half the work.
+    """
+    out = [(m, ARM, lv) for m in cohort_for(provider) for lv in LEVELS]
+    #: The decision channel is Flash on Together. It is not re-served on other
+    #: columns: its anchor is a Together anchor, and a DeepInfra Flash cell
+    #: would be a different served artifact judged against the wrong baseline.
+    if provider == "together":
+        out.append((DECISION_MODEL, DECISION_ARM, DECISION_LEVEL))
     return out
 
 
@@ -539,7 +567,16 @@ def seed_for(provider: str, model: str, level: str, arm: str, day: int) -> int:
     the block exists to keep clear. The invariant has to be enforced where the
     number is made, not assumed by the test that checks the block is free.
     """
-    idx = sorted({(m, a, lv) for m, a, lv in cells()}).index((model, arm, level))
+    #: **Index within THIS provider's own grid.** It read `cells()` — Together's
+    #: grid — so the first DeepInfra cell raised `ValueError: not in list`. For
+    #: Together `cells("together") == cells()`, so this cannot move day one.
+    grid = sorted({(m, a, lv) for m, a, lv in cells(provider)})
+    if (model, arm, level) not in grid:
+        raise SystemExit(
+            f"{model} {arm} {level} is not in {provider}'s grid. Each column "
+            "has its own cohort; serving a model outside it would take a seed "
+            "from another column's range.")
+    idx = grid.index((model, arm, level))
     #: **The frozen slot, not `sorted(PROVIDERS).index()`** — see PROVIDER_SLOT.
     #: The alphabetical version would have moved Together's seeds the moment a
     #: second provider was added, making day one unreproducible.

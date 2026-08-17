@@ -61,6 +61,27 @@ def _daily(args) -> int:
     def path_for(model, arm, level):
         return root / PC.cell_name(provider, date, model, arm, level)
 
+    # **THE CADENCE IS ENFORCED HERE, OR IT IS NOT ENFORCED.**
+    #
+    # `probe.serves_today()` existed as a function and NOTHING CALLED IT. One
+    # scheduled job runs daily and each column is supposed to decide whether
+    # today is its day; without this check the MWF column would have served
+    # every day — $6.17 x 30 = $185 instead of $80, breaching the gate that was
+    # amended for it hours earlier.
+    #
+    # That is the fork lesson in miniature: a rule written where the machinery
+    # does not consult it is a rule the machinery will not follow. It was found
+    # while wiring the scheduled job, before the job existed, and cost nothing.
+    weekday = dt.date.fromisoformat(date).weekday()
+    if not PB.serves_today(provider, weekday):
+        cadence = PB.PROVIDERS[provider]["cadence"]
+        print(f"probe {provider} {date} — NOT A SERVING DAY for this column "
+              f"(cadence {cadence}).")
+        print("  Nothing served, $0.00 spent. This is the schedule working:")
+        print("  one job runs daily and each column decides its own days, so")
+        print("  the columns share a UTC window without sharing a cadence.")
+        return 0
+
     todo = [c for c in grid if not path_for(*c).exists()]
     print(f"probe {provider} {date} — {len(grid)} cell(s), {len(todo)} to run")
     print(f"  pin {PB.PINNED_PROBE_HASH[:16]}...  seed day {day}  "

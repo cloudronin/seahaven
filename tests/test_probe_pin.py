@@ -404,11 +404,16 @@ def test_DAY_ONES_SEEDS_STILL_DERIVE_TO_WHAT_WAS_SERVED():
 
 
 def test_the_TWO_COLUMNS_TAKE_DISJOINT_SEEDS():
+    #: **Each column over its OWN grid.** This iterated `cells()` for both,
+    #: which is Together's grid — and once `seed_for` learned to refuse a model
+    #: outside the column's cohort, the test refused too. It was asking a
+    #: question that cannot be asked: what seed does DeepInfra give a model it
+    #: does not serve.
     from seahaven.eden import probe as P
     a = {P.seed_for("together", m, lv, ar, d)
-         for m, ar, lv in P.cells() for d in range(1, 31)}
+         for m, ar, lv in P.cells("together") for d in range(1, 31)}
     b = {P.seed_for("deepinfra", m, lv, ar, d)
-         for m, ar, lv in P.cells() for d in range(1, 31)}
+         for m, ar, lv in P.cells("deepinfra") for d in range(1, 31)}
     assert not (a & b), "the columns share seeds; they are not independent"
     lo, hi = P.SEED_BLOCK
     assert max(a | b) + P.EPISODES - 1 <= hi, (
@@ -548,3 +553,73 @@ def test_EVERY_SUPERSEDED_PIN_SAYS_WHETHER_IT_GOVERNED_CELLS():
         assert h != PB.PINNED_PROBE_HASH
         assert ("SERVED under it" in why) or ("NO CELLS WERE SERVED" in why), (
             f"{h[:12]} does not say whether any cell was served under it")
+
+
+# --- defining a rule is half the work: three that were not wired -----------
+
+def test_EACH_COLUMN_SERVES_ITS_OWN_COHORT():
+    """`cells(provider)` took the provider and IGNORED it, so the DeepInfra
+    column would have served Together's eight models through the router —
+    models DeepInfra may not host at all — while `DEEPINFRA_COHORT` sat defined
+    and unread. Found when a dry run printed 408 episodes for a 288-episode
+    grid."""
+    tg, di = PB.cells("together"), PB.cells("deepinfra")
+    assert {m for m, _a, _l in tg} - {PB.DECISION_MODEL} == set(PB.COHORT)
+    assert {m for m, _a, _l in di} == set(PB.DEEPINFRA_COHORT)
+    assert len(tg) * PB.EPISODES == 408
+    assert len(di) * PB.EPISODES == 288
+
+    #: The decision channel is Together's. A DeepInfra Flash cell would be a
+    #: different served artifact judged against a Together anchor.
+    assert PB.DECISION_MODEL in {m for m, _a, _l in tg}
+    assert PB.DECISION_MODEL not in {m for m, _a, _l in di}
+
+
+def test_SEED_FOR_INDEXES_WITHIN_THE_PROVIDERS_OWN_GRID():
+    """It indexed into `cells()` — Together's grid — so the first DeepInfra
+    cell raised `ValueError: not in list`. The scheduled job would have died on
+    its first MWF day."""
+    assert PB.seed_for("deepinfra", "zai-org/GLM-5", "LAT", "A0", 2) > 0
+
+    #: And a model outside the column's cohort is refused, not silently given
+    #: another column's seed.
+    with pytest.raises(SystemExit, match="not in deepinfra's grid"):
+        PB.seed_for("deepinfra", "google/gemma-4-31B-it", "LAT", "A0", 2)
+
+
+def test_THE_CADENCE_GATE_IS_CALLED_not_merely_defined():
+    """`serves_today` existed and nothing called it. One job runs daily and each
+    column decides its own days; without the check the MWF column serves every
+    day — $185 over the pilot instead of $80, breaching the gate amended for it
+    hours earlier."""
+    import inspect
+
+    from vetoworld.commands import probe as CMD
+    src = inspect.getsource(CMD._daily)
+    assert "serves_today" in src, (
+        "the cadence is defined in the pin and not consulted by the verb — a "
+        "rule the machinery does not read is a rule it does not follow")
+    #: And it must gate BEFORE the grid is priced or served.
+    assert src.index("serves_today") < src.index("todo = [")
+
+
+def test_THE_TWO_COLUMNS_STILL_TAKE_DISJOINT_SEEDS_AFTER_THE_GRID_SPLIT():
+    a = {PB.seed_for("together", m, lv, ar, d)
+         for m, ar, lv in PB.cells("together") for d in range(1, 31)}
+    b = {PB.seed_for("deepinfra", m, lv, ar, d)
+         for m, ar, lv in PB.cells("deepinfra") for d in range(1, 31)}
+    assert not (a & b)
+    lo, hi = PB.SEED_BLOCK
+    assert max(a | b) + PB.EPISODES - 1 <= hi
+
+
+def test_THE_PIN_DID_NOT_MOVE_because_no_RULE_moved():
+    """**The wiring fixes changed no pinned constant, and that is the point.**
+
+    The cohorts, cadences, slots and gates were all correct and hashed before
+    this build. What was wrong was that three of them had no caller. A pin
+    records what was decided; it cannot record whether the code obeys it, which
+    is what these tests are for.
+    """
+    assert PB.PINNED_PROBE_HASH.startswith("b380cc61")
+    PB.assert_pinned()
