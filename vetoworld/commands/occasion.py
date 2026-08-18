@@ -36,26 +36,34 @@ CHANNELS = tuple(PC.channel_key(lv, PB.ARM) for lv in PB.LEVELS) + (
     PC.channel_key(PB.DECISION_LEVEL, PB.DECISION_ARM),)
 
 
-def _epoch_for(channel: str):
+def _epoch_for(provider: str, channel: str):
+    """**Provider first, because it is the first question.**
+
+    This took only `channel` — `"LAT.A0"`, a string a second column produces
+    identically — while `provider` sat unused in the caller's scope. A DeepInfra
+    verdict would have Fisher-tested DeepInfra's rate against TOGETHER's epoch
+    anchor, the exact comparison `LEVELS_RULE` forbids, and pushed the row to the
+    public log with that rule printed beside it.
+    """
     level, arm = channel.split(".")
-    if arm == PB.DECISION_ARM:
-        return PB.FLASH_ANCHOR
-    return PB.EPOCH_ANCHOR.get(level)
+    return PB.epoch_for(provider, level, arm)
 
 
-def _envelope_for(channel: str):
-    return (PB.FLASH_ENVELOPE
-            if channel == PC.channel_key(PB.DECISION_LEVEL, PB.DECISION_ARM)
-            else None)
+def _envelope_for(provider: str, channel: str):
+    """The Flash envelope is TOGETHER's block range. The matched-pair design puts
+    a Flash A1 LAT cell on the DeepInfra column, and keyed on the channel string
+    alone that cell would inherit it."""
+    level, arm = channel.split(".")
+    return PB.envelope_for(provider, level, arm)
 
 
 def _traces(provider: str, root=None):
     cells = PC.read_cells(root or C.RESULTS, provider=provider)
     return {ch: PC.trace(cells, provider=provider, channel=ch,
-                         epoch=_epoch_for(ch), alpha=PB.ALPHA,
+                         epoch=_epoch_for(provider, ch), alpha=PB.ALPHA,
                          rolling_k=PB.ROLLING_K,
                          stale_after_days=PB.STALE_AFTER_DAYS,
-                         envelope=_envelope_for(ch))
+                         envelope=_envelope_for(provider, ch))
             for ch in CHANNELS}
 
 

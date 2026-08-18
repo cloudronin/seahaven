@@ -157,7 +157,13 @@ def _daily(args) -> int:
             total = dict(be.usage_total)
             u = {k: total.get(k, 0) - seen.get(k, 0) for k in total}
             seen = total
-            pi, po = PB.COHORT.get(model, (0.0, 0.0))
+            #: **This provider's cohort, not Together's.** It read
+            #: `PB.COHORT`, so DeepInfra models missed and billed $0 — the
+            #: budget ceiling could never bite. With a MATCHED PAIR the failure
+            #: inverts and gets quieter: a model in BOTH cohorts hits and bills
+            #: the second provider's cells at Together's rate card, producing a
+            #: plausible-looking number that is wrong.
+            pi, po = PB.cohort_for(provider).get(model, (0.0, 0.0))
             billed = round(u["prompt_tokens"] / 1e6 * pi
                            + u["completion_tokens"] / 1e6 * po, 5)
             spent += billed

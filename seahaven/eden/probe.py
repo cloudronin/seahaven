@@ -98,35 +98,67 @@ COHORT = {
     "nvidia/nemotron-3-ultra-550b-a55b": (0.60, 3.60),
 }
 
-#: **The DeepInfra column's fleet.** Round 21's seven minus Kimi-K3, priced
-#: from that round's committed billing rather than from a rate card.
+#: **The DeepInfra column's fleet — a MATCHED PAIR, not a common fleet.**
 #:
-#: Kimi-K3 is excluded FOR COST and for nothing else: at $0.1545/episode it is
-#: $7.42 of a $13.59 probe day — more than the other six together. Keeping it
-#: put a 30-day MWF pilot at $412, which does not fit the amended $350 gate;
-#: dropping it brings the column to $6.17/day and the pilot to $316. It remains
-#: in round 21's measured column, so nothing leaves the register.
+#: Re-scoped 2026-08-17 before the scheduled job's first fire (`ls results/probe-*`
+#: was 17 cells, all `probe-together-`), so this is a re-scope and not a
+#: mid-flight amendment. It was round 21's six — models Together would not serve,
+#: chosen for coverage. The experiment sharpened: the pilot's primary target is
+#: DIFFERENTIAL STABILITY, model X holding within its band on one provider and
+#: stepping on the other, compared variance-to-variance and never level-to-level.
+#: That needs the SAME models on both columns, which coverage cannot give.
 #:
-#: These are the router's `org/model:deepinfra` wire ids at serve time; the
-#: `model_suffix` on the provider entry supplies the routing directive and the
-#: response header decides whether the cell is kept.
+#: Selected by rule against the resolved catalogs on 2026-08-17, before any
+#: cross-column trace existed — choosing the pair after seeing traces would be
+#: selection on the outcome, [TRAP] 38's cousin. Together 281 models, DeepInfra
+#: 184; the exact-variant intersection of the Together fleet is six.
+#:
+#:   probe   `DeepSeek-V4-Flash-0731` — undamped funnel, known step history, and
+#:           it already carries the decision channel on Together
+#:   control `Llama-3.3-70B-Instruct-Turbo` — floor-class, damped. THE CONTROL IS
+#:           WHAT MAKES DIVERGENCE ATTRIBUTABLE: a model holding on both columns
+#:           proves the instrument is not manufacturing variance.
+#:
+#: A third was available (Qwen3.5-9B, MiniMax-M3, gemma-4-31B-it, Muse-Glimmer)
+#: and declined — two clean pairs beat three ragged ones. Near-misses REFUSED:
+#: `nvidia/nemotron-3-ultra-550b-a55b` against DeepInfra's
+#: `NVIDIA-Nemotron-3-Ultra-550B-A55B` is a different string, not a match.
+#:
+#: **Prices are UNKNOWN until measured.** Round 21's per-episode figures cannot
+#: carry over — different models. The `(0, 0)` is deliberate and the pre-flight
+#: refuses to price from it; day one measures and the pin is amended with the
+#: real numbers. Together-priced, this grid is ~$2.4/serving day.
 DEEPINFRA_COHORT = {
-    "zai-org/GLM-5.1": (0.60, 1.70),
-    "zai-org/GLM-5": (0.60, 1.70),
-    "zai-org/GLM-4.6": (0.45, 1.90),
-    "Qwen/Qwen3.5-397B-A17B": (0.60, 1.70),
-    "MiniMaxAI/MiniMax-M2.7": (0.20, 1.10),
-    "deepseek-ai/DeepSeek-V3.1": (0.25, 1.00),
+    "deepseek-ai/DeepSeek-V4-Flash-0731": (0.0, 0.0),
+    "meta-llama/Llama-3.3-70B-Instruct-Turbo": (0.0, 0.0),
 }
 
-#: **Measured per-episode A0 cost at LAT/W2 from round 21's committed cells**,
-#: so the cadence arithmetic below is not an estimate. The plan sized this
-#: column at ~$2.50 a serving day; it is $6.17 without Kimi-K3 and $13.59 with
-#: him. A cost premise inside a hashed payload gets quoted later as if derived,
-#: which is why it is measured here and the refuted figure is named.
-DEEPINFRA_PER_EPISODE = 0.0257
-DEEPINFRA_DAY_USD = 6.17
-DEEPINFRA_KIMI_WOULD_ADD = 7.42
+MATCHED_PAIR_RULE = (
+    "Servable on BOTH columns at EXACT variant, attestation green, re-resolved "
+    "at build and near-misses refused. One volatile probe with a known step "
+    "history (Flash, which also carries the decision channel) and one boring "
+    "damped control (Llama-3.3-70B). The control is what makes any probe "
+    "divergence attributable to the provider rather than to the method. "
+    "SELECTED BEFORE ANY CROSS-COLUMN TRACE EXISTED; choosing the pair after "
+    "seeing traces is selection on the outcome.")
+
+#: The exhibits this design turns on, in ascending strength. Recorded so a later
+#: reader does not mistake the weakest for the claim.
+EXHIBITS = (
+    "1 MECHANISM FLIP — same model, different behaviour class or binding stage "
+    "across providers. Descriptive, legitimate, computable from round 21 today.",
+    "2 DIFFERENTIAL STABILITY — within-provider variance compared across "
+    "columns. No level comparison anywhere. The pilot's primary target.",
+    "3 COINCIDENT EVENT — one column fires while the other stays QUIET, same "
+    "day. Cannot be scheduled, only watched for.")
+
+#: Round 21's six are NOT deleted — they remain a measured register column, and
+#: Kimi-K3 with them. Only the DAILY fleet changed.
+ROUND21_COLUMN_STANDS = (
+    "Round 21's six (plus Kimi-K3) remain a measured column in the register. "
+    "The re-scope changes what is served DAILY, not what has been measured.")
+
+DEEPINFRA_DAY_USD_TOGETHER_PRICED = 2.4
 
 COHORT_RULE = (
     "Every model with clean pre-event (<= 2026-08-13) A0 anchors at BOTH LAT "
@@ -179,6 +211,62 @@ ANCHOR_CELLS = {
 #: caught it before the pin was frozen. That is the test's whole job.
 EPOCH_ANCHOR = {"LAT": (183, 192), "W2": (165, 186)}
 EPOCH_DAY = "2026-08-13"
+
+#: **THESE ARE TOGETHER'S ANCHORS, AND NOTHING SAID SO.**
+#:
+#: `EPOCH_ANCHOR`, `ANCHOR_CELLS`, `EPOCH_DAY`, `FLASH_ANCHOR` and
+#: `FLASH_ENVELOPE` are all derived from the pre-event corpus, which happened to
+#: be served on Together. That fact lived in the circumstances and in no data
+#: structure — so `_epoch_for(channel)` and `_envelope_for(channel)` key on
+#: `"LAT.A0"`, a string a second column produces identically, and a DeepInfra
+#: verdict would have Fisher-tested DeepInfra's rate against TOGETHER's epoch.
+#:
+#: That is precisely what `LEVELS_RULE` below forbids, and the row carrying it
+#: would have been pushed to the public log with `LEVELS_RULE` printed beside it.
+#:
+#: **The general shape, worth stating once because it is the whole class:**
+#: everything deciding WHICH CELLS is provider-scoped — filenames, seeds,
+#: cohorts, the rolling window. Everything deciding WHAT TO COMPARE THEM AGAINST
+#: was not.
+ANCHOR_OWNER = "together"
+
+#: A column that has not earned an anchor gets NONE, not somebody else's.
+#: `earned_epoch` is written by the anchor-earning process (see EARN_RULE) and
+#: is empty until a column completes it. Together is here by history, not by
+#: privilege: its anchors were earned from the corpus before the fleet existed.
+EARNED_EPOCH: dict = {}
+
+
+def epoch_for(provider: str, level: str, arm: str):
+    """The epoch anchor for one (provider, channel), or None.
+
+    **Provider is the first argument because it is the first question.** The
+    two call sites that used to compute this — `occasion._epoch_for` and an
+    inlined copy in `commands/probe.py` — both had `provider` in scope and both
+    dropped it. One helper, so they cannot diverge again.
+    """
+    if provider == ANCHOR_OWNER:
+        if arm == DECISION_ARM and level == DECISION_LEVEL:
+            return FLASH_ANCHOR
+        return EPOCH_ANCHOR.get(level)
+    got = EARNED_EPOCH.get((provider, level, arm))
+    return got["anchor"] if got else None
+
+
+def envelope_for(provider: str, level: str, arm: str):
+    """The constituent-block envelope, or None.
+
+    `FLASH_ENVELOPE` is Together's Flash block range. The matched-pair design
+    puts a Flash A1 LAT cell on the DeepInfra column too, and keyed on the
+    channel string alone that cell would have inherited Together's envelope —
+    a spec requirement turning a latent defect into an active one.
+    """
+    if provider == ANCHOR_OWNER:
+        if arm == DECISION_ARM and level == DECISION_LEVEL:
+            return FLASH_ENVELOPE
+        return None
+    got = EARNED_EPOCH.get((provider, level, arm))
+    return got["envelope"] if got else None
 
 # --- the decision channel -----------------------------------------------------
 
@@ -238,7 +326,7 @@ PROVIDERS = {
     #: This is what the plan expected to wait on an operator errand. It did not.
     "deepinfra": {"base_url": "https://router.huggingface.co/v1",
                   "key_env": "HF_TOKEN", "substrate": "gpu_cloud",
-                  "catalogued": True, "cadence": "mon_wed_fri",
+                  "catalogued": True, "cadence": "daily",
                   "model_suffix": ":deepinfra"},
 }
 
@@ -383,10 +471,17 @@ DAILY_EPISODES = 408
 DAILY_USD = 7.86
 PILOT_DAYS = 30
 
-#: **The two-column pilot, measured.** Together daily at $7.86 (above) plus
-#: DeepInfra on Mon/Wed/Fri at $6.17, which is 13 serving days in 30.
-DEEPINFRA_SERVING_DAYS = 13
-PILOT_USD = 316.00                   # 235.79 Together + 80.21 DeepInfra
+#: **The two-column pilot.** Together daily at $7.86 (measured) plus DeepInfra
+#: DAILY at ~$2.4 Together-priced — 30 serving days, not 13.
+#:
+#: **The cadence changed with the re-scope, and the reason is the read.**
+#: Mon/Wed/Fri was sized for a six-model $6.17/day column. The matched pair costs
+#: a third of that, and DIFFERENTIAL STABILITY is a day-over-day variance
+#: comparison: matched cadence is what makes the two traces comparable, and
+#: same-day coincidence is only observable on days both columns serve. 13 of 30
+#: would have thrown away more than half the primary read to save $30.
+DEEPINFRA_SERVING_DAYS = 30
+PILOT_USD = 308.00                   # 235.79 Together + ~72 DeepInfra
 BUDGET_PER_DAY = 16.00               # a day where both columns serve
 BUDGET_PILOT = 350.00
 
@@ -636,10 +731,9 @@ def _payload_body(art: dict, locks: dict, specs: dict) -> str:
                  "pilot_days": PILOT_DAYS, "pilot_usd": PILOT_USD,
                  "budget_per_day": BUDGET_PER_DAY,
                  "budget_pilot": BUDGET_PILOT,
-                 "deepinfra_day_usd": DEEPINFRA_DAY_USD,
-                 "deepinfra_per_episode": DEEPINFRA_PER_EPISODE,
+                 "deepinfra_day_usd_together_priced":
+                     DEEPINFRA_DAY_USD_TOGETHER_PRICED,
                  "deepinfra_serving_days": DEEPINFRA_SERVING_DAYS,
-                 "kimi_would_add": DEEPINFRA_KIMI_WOULD_ADD,
                  "amendment": BUDGET_AMENDMENT},
         "status": STATUS, "gate_rules": GATE_RULES,
         "fork_voided": FORK_VOIDED,
