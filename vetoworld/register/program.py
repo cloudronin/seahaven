@@ -245,7 +245,7 @@ def program_rows() -> list[tuple[str, object]]:
     provs = sorted(set(CO.providers().values()))
     suite = len(list(Path("tests").glob("test_*.py")))
     return [
-        ("corpus cells (eden_e*)", cells),
+        ("corpus cells", cells),
         ("corpus digest", digest),
         ("corpus bytes", nbytes),
         ("probe cells (excluded from the corpus BY CONSTRUCTION)", probe_cells),
@@ -264,10 +264,10 @@ def program_counts() -> int:
     print("PROGRAMME-LEVEL COUNTS — what the abstract and intro quote\n")
     print(kv_table(program_rows(), key="quantity", value="value"))
     print("\n  Probe cells are counted SEPARATELY and are not part of the")
-    print("  corpus digest. Their filename schema cannot match `eden_e*`, so")
-    print("  they are invisible to the corpus reader by construction rather")
-    print("  than by discipline — which is the only version of that guarantee")
-    print("  worth having.")
+    print("  corpus digest. Their filename schema cannot match the corpus")
+    print("  schema, so they are invisible to the corpus reader by")
+    print("  construction rather than by discipline — which is the only")
+    print("  version of that guarantee worth having.")
     print("\n  `vworld pin check` verifies each pinned round recomputes;")
     print("  `vworld verify` recomputes every registered figure. This artifact")
     print("  counts them rather than re-running them.")

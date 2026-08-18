@@ -238,7 +238,7 @@ def test_PROGRAMME_COUNTS_KEEP_PROBE_CELLS_OUT_OF_THE_CORPUS():
     from vetoworld.register import program as PG
 
     got = dict(PG.program_rows())
-    corpus = got["corpus cells (eden_e*)"]
+    corpus = got["corpus cells"]
     probe = got["probe cells (excluded from the corpus BY CONSTRUCTION)"]
     assert corpus > 400 and probe >= 0
     assert got["models joined (the correlation n)"] <= got["models scored"]
