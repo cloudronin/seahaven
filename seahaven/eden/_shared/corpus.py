@@ -149,6 +149,27 @@ def occasion_of(path: Path, meta: dict) -> tuple[str, str]:
     `wall_start_epoch` is a real serving time. `mtime` is when the file was last
     written, which for a gap-filled cell is its last attempt. Printing them
     identically would misrepresent the second as the first.
+
+    **KNOWN DEFECT: THE DAY LABEL IS LOCAL-TIMEZONE.** `fromtimestamp` with no
+    tz reads the machine's clock, so the same cell bytes land on different DAYS
+    in different timezones. This corpus was served and pinned in Pacific; under
+    `TZ=UTC` a late-evening Pacific timestamp rolls to the next day, the epoch
+    anchors reconstruct to (90, 96) instead of (183, 192), and one anchor cell
+    stops predating `EPOCH_DAY`. Reproduce with `TZ=UTC pytest
+    tests/test_probe_pin.py`.
+
+    **Measured blast radius, not assumed.** Under `TZ=UTC`, `vworld verify`
+    still recomputes all 22 figures and `vworld pin check` reports 0 problems,
+    and `probe.epoch_for` returns PINNED literals rather than reconstructing —
+    so no verdict moves with the clock. What is weakened is the RECONSTRUCTION
+    guarantee: the tests that prove the pinned anchors derive from the corpus
+    prove it only in the timezone the corpus was pinned in, so a replicator
+    elsewhere gets a different answer from identical bytes.
+
+    Not fixed here because the fix is a boundary, not an edit: choosing a
+    canonical timezone re-derives anchors that are pinned MEASURED constants.
+    Three tests are deselected in `.github/workflows/publish.yml`, which
+    carries the full reasoning.
     """
     if meta.get("wall_start_epoch"):
         ts = _dt.datetime.fromtimestamp(meta["wall_start_epoch"])
