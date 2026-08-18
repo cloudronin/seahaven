@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 # therefore never renamed), and `worlds` (the compiled worlds, needed as package
 # data or `vworld verify` cannot read a single lock).
 name = "vetoworld"
-version = "0.3.0"
+version = "0.3.1"
 license = "MIT"
 description = "VetoWorld: a benchmark of expedience under terminal stakes"
 # **Without this the PyPI page renders nothing at all.** 0.1.0 and 0.1.1 both
@@ -57,8 +57,27 @@ dependencies = ["scipy>=1.10"]
 # CUDA *environments*, which conflict with each other and must never resolve
 # together. One leaf SDK, imported by exactly one module, is a different thing —
 # and `test_ONLY_the_publish_module_may_import_the_HF_SDK` names which module.
+#
+# **`serve` exists because 0.3.0's scheduled job served ZERO cells.** Every one
+# of its 22 cells failed with `No module named 'textworld'`, reported PARTIAL,
+# exited 0 and pushed an empty day to the public log. `seahaven/fidelity/
+# runner.py` reaches `seahaven/world/loader.py`, which imports `textworld.gym`
+# — so EVERY serving path needs these, including `vworld replicate`, the verb
+# this project asks strangers to run.
+#
+# They are an EXTRA and not a runtime dependency for the same reason
+# `huggingface_hub` is: `vworld corpus fetch` and `vworld verify` must keep
+# installing anywhere with nothing behind them, and jericho compiles. The cost
+# of that choice is that a serving verb can be installed without what it needs,
+# so the serving paths now REFUSE with an actionable message instead of raising
+# ImportError once per cell — see `commands/_serving_deps.py`.
+#
+# This is the scipy defect of 0.2.1 one dependency over, and the check that
+# caught scipy could not catch this: `vworld --help` imports the command modules
+# but never opens a compiled world. Only serving does.
 [project.optional-dependencies]
-probe = ["huggingface_hub>=0.24"]
+serve = ["textworld>=1.6", "jericho>=3.3"]
+probe = ["huggingface_hub>=0.24", "vetoworld[serve]"]
 
 [project.urls]
 Homepage = "https://github.com/cloudronin/vetoworld"

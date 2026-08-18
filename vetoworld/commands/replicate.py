@@ -52,6 +52,11 @@ def _preconditions(eps, level):
 
 
 def main(args) -> int:
+    #: **This is the verb strangers run**, so a missing serving dependency
+    #: must produce an instruction rather than an ImportError from three
+    #: modules down. See `_serving_deps`.
+    from ._serving_deps import require as _require_serving
+    _require_serving("vworld replicate")
     ours = _ours(args.model, args.level)
     if not ours:
         print(f"no committed generation-3 cell for {args.model} at {args.level};"

@@ -139,6 +139,27 @@ jobs:
           # `docs/vetoworld-c5-banding.md`, which is not package data — so that
           # verb cannot verify from an installed wheel. That is a real gap and
           # it is tracked, not papered over by dropping the check from the pin.
+      # **THE CHECK ABOVE COULD NOT CATCH 0.3.0's DEFECT, AND THIS ONE CAN.**
+      #
+      # `--help` imports every command module and never opens a compiled world,
+      # so `textworld` being an undeclared dependency was invisible to it. The
+      # 0.3.0 scheduled job then served ZERO of 22 cells with `No module named
+      # 'textworld'`, reported PARTIAL, exited 0 and pushed an empty day.
+      #
+      # This installs the SERVING extra and reaches the loader that needs it.
+      # A serving path that cannot open a world is a broken release, and the
+      # only check that sees it is one that opens a world.
+      - name: the serving extra must actually let a world open
+        run: |
+          python -m venv /tmp/serve
+          /tmp/serve/bin/pip install -q "$(echo dist/*.whl)[serve]"
+          /tmp/serve/bin/python - <<'PY'
+          from vetoworld.commands._serving_deps import missing
+          gone = missing()
+          assert not gone, f"serving extra installed and still missing {gone}"
+          import seahaven.world.loader          # imports textworld.gym
+          print("serving deps resolve and the world loader imports")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: dist

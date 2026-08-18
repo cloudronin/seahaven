@@ -51,6 +51,11 @@ def _daily(args) -> int:
     from seahaven.fidelity.runner import run_fidelity
 
     PB.assert_pinned()
+    #: **Before anything is served.** 0.3.0 discovered a missing `textworld`
+    #: 22 times, once per cell, as 22 SERVE_FAILs — and a missing dependency
+    #: is a broken install, identical for every cell and knowable in advance.
+    from ._serving_deps import require as _require_serving
+    _require_serving("vworld probe --daily")
     provider = args.endpoint
     date = getattr(args, "date", None) or dt.date.today().isoformat()
     day = (dt.date.fromisoformat(date)
@@ -217,8 +222,15 @@ def _daily(args) -> int:
             print(f"  [{len(grid)-len(todo)+todo.index((model,arm,level))+1}"
                   f"/{len(grid)}] {model.split('/')[-1][:24]:<26}{arm} "
                   f"{level:<5} ${billed:.3f}  running ${spent:.2f}")
+        #: **A day where EVERYTHING failed is SERVE_FAIL, not PARTIAL.**
+        #: `SERVE_FAIL` was in the status enum and unreachable from here: the
+        #: chain fell through to PARTIAL whether one cell failed or all of
+        #: them. 0.3.0's first fire served zero cells and reported PARTIAL,
+        #: which reads as "most of a day" and was none of one.
+        served = len(todo) - len(failed)
         status = ("OK" if not failed else
                   "BUDGET_REFUSED" if any(f[3] == "BUDGET_REFUSED" for f in failed)
+                  else "SERVE_FAIL" if served == 0
                   else "PARTIAL")
 
     #: **THE JOB'S MEMORY.** `trace` rebuilds history from local disk cells;
@@ -332,9 +344,30 @@ def _daily(args) -> int:
         print(f"\n  PUSH SKIPPED: {why}")
         print("  A local-only day is a gap in the record; fix and re-run.")
         return 1
+    #: **An empty push is a claim that nothing happened.** 0.3.0 pushed two
+    #: zero-row files for a day where nothing served, because `read_cells`
+    #: found no cells, the channel loop never ran, and the empty list went up
+    #: anyway. A day with no rows is not a quiet day and must not be recorded
+    #: as one — the same distinction `VERDICT_FAIL` exists to preserve.
+    if not rows:
+        print("\n  REFUSING TO PUSH: no rows. Nothing served for this "
+              f"provider-day, so there is no verdict to publish.")
+        print("  An empty day in the log is indistinguishable from a quiet "
+              "one, and a reader cannot tell a silent instrument from a calm "
+              "channel. Fix the serve failure and re-run; the day is "
+              "idempotent by (provider, date).")
+        return 1
     url = push_day(rows, [path_for(*c) for c in grid if path_for(*c).exists()],
                    provider=provider, date=date)
     print(f"  pushed -> {url}")
+    #: **The success signal is the SERVING, not the push.** This returned 0
+    #: once the upload succeeded, so a day that served nothing and pushed
+    #: nothing still reported success and the scheduled job read DAY_RC=0.
+    #: That is the tail-exit-code lesson, in the module whose docstring cites it.
+    if status in ("SERVE_FAIL", "BUDGET_REFUSED"):
+        print(f"  status {status}: exiting non-zero — the row was published, "
+              "but the day did not do what it was scheduled to do.")
+        return 1
     return 0
 
 

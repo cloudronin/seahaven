@@ -144,6 +144,27 @@ def test_EVERY_SERVING_PATH_IS_REGISTERED():
 
 
 @pytest.mark.parametrize("name", sorted(PATHS))
+def test_EVERY_SERVING_PATH_REFUSES_A_BROKEN_INSTALL(name):
+    """**The fifth instance, and the registry is what makes it cheap.**
+
+    0.3.0's scheduled job served zero cells because `textworld` is an extra
+    and nothing checked for it — 22 identical failures, each caught by a
+    per-cell `except` and reported as a provider SERVE_FAIL. A missing
+    dependency is a broken install: identical for every cell, knowable before
+    the first request, and fixable only by an instruction.
+
+    `run` and `replicate` had the same gap. Enumerating the paths is what
+    turned one fix into three, which is the AGENTS.md rule this registry
+    exists to serve.
+    """
+    src = _source(PATHS[name]["module"])
+    assert "_serving_deps" in src, (
+        f"{name} can serve without checking it CAN serve — it will discover a "
+        "missing textworld once per cell and report it as provider trouble")
+    assert "require" in src
+
+
+@pytest.mark.parametrize("name", sorted(PATHS))
 def test_EACH_PATH_ACTUALLY_WRITES_IDENTITY_FROM_EVIDENCE(name):
     """**Asserted against the source, on the path that runs.**
 
@@ -181,3 +202,64 @@ def test_THE_PROBE_PATH_PRICES_FROM_ITS_OWN_COLUMN():
     assert "cohort_for(provider)" in src
     assert not re.search(r"PB\.COHORT\.get|PB\.COHORT\[", src), (
         "the serving path reads the Together cohort directly again")
+
+
+# --- what 0.3.0's empty day taught, asserted so it cannot recur -------------
+
+def test_A_DAY_THAT_SERVED_NOTHING_IS_SERVE_FAIL_not_PARTIAL():
+    """`SERVE_FAIL` was in the status enum and UNREACHABLE from `_daily`: the
+    chain fell through to PARTIAL whether one cell failed or all 22 did.
+
+    0.3.0's first scheduled fire served zero cells and reported PARTIAL, which
+    reads as "most of a day" and was none of one.
+    """
+    from vetoworld.commands import probe as CMD
+
+    src = inspect.getsource(CMD._daily)
+    assert '"SERVE_FAIL" if served == 0' in src, (
+        "total failure no longer maps to SERVE_FAIL")
+    assert "served = len(todo) - len(failed)" in src
+
+
+def test_A_DAY_WITH_NO_ROWS_IS_NOT_PUSHED():
+    """**An empty push is a claim that nothing happened.** 0.3.0 pushed two
+    zero-row files because `read_cells` found nothing, the channel loop never
+    ran, and the empty list went up anyway.
+
+    An empty day in the log is indistinguishable from a quiet one, and the
+    whole instrument exists to keep those apart.
+    """
+    from vetoworld.commands import probe as CMD
+
+    src = inspect.getsource(CMD._daily)
+    assert "REFUSING TO PUSH" in src
+    assert src.index("if not rows:") < src.index("url = push_day("), (
+        "the refusal must come BEFORE the upload")
+
+
+def test_THE_SUCCESS_SIGNAL_IS_THE_SERVING_not_the_push():
+    """`_daily` returned 0 once the upload succeeded, so a day that served
+    nothing still reported success and the job read DAY_RC=0. That is the
+    tail-exit-code lesson, in the module whose own docstring cites it."""
+    from vetoworld.commands import probe as CMD
+
+    src = inspect.getsource(CMD._daily)
+    assert 'if status in ("SERVE_FAIL", "BUDGET_REFUSED"):' in src
+    assert src.count("return 1") >= 2
+
+
+def test_THE_SERVING_EXTRA_IS_DECLARED_and_probe_includes_it():
+    """`textworld` and `jericho` were undeclared runtime dependencies — the
+    scipy defect of 0.2.1, one dependency over. The scheduled job installs
+    `vetoworld[probe]`, so `probe` must carry them."""
+    import tomllib
+
+    root = Path(__file__).resolve().parents[1]
+    cfg = tomllib.loads((root / "pyproject.toml").read_text())
+    extras = cfg["project"]["optional-dependencies"]
+    serve = " ".join(extras["serve"])
+    assert "textworld" in serve and "jericho" in serve
+    probe = " ".join(extras["probe"])
+    assert "vetoworld[serve]" in probe, (
+        "the scheduled job installs vetoworld[probe] and must get the serving "
+        "deps with it, or it serves zero cells again")

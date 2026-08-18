@@ -348,6 +348,10 @@ def _round_cells(args, spec) -> int:
 
 
 def main(args) -> int:
+    #: Serving needs a compiled world, which needs the serving extra. Refused
+    #: here rather than discovered per cell — see `_serving_deps`.
+    from ._serving_deps import require as _require_serving
+    _require_serving("vworld run")
     spec = resolve(args.endpoint, model=args.model, key_env=args.key_env)
     if getattr(args, "block", None) and not getattr(args, "round", None):
         raise SystemExit(
