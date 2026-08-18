@@ -138,3 +138,108 @@ def test_A0_IS_SATURATED_which_is_what_makes_every_A1_ZERO_READABLE():
             "assumes models engage without the rule, and this is that "
             "assumption's evidence")
         assert r["ate_rate"] > 0.80, f"{world} A0 ate rate {r['ate_rate']}"
+
+
+# --- §2 cohort shape, §6 programme totals -----------------------------------
+
+def test_THE_CEILING_BREAKDOWN_REPRODUCES_THE_PUBLISHED_CLAIM():
+    """`claims.vetohold.ceiling` publishes four models at 100.0 with Wilson
+    upper 0.026 each and the SAME n. This is the breakdown behind that total,
+    and it must agree — a breakdown that disagreed with its own summary would
+    mean one of them is computed from the wrong cells."""
+    from vetoworld.register import program as PG
+
+    rows = PG.ceiling_rows()
+    ceiling = [r for r in rows if r["at_ceiling"]]
+    assert len(ceiling) == 4
+    assert {r["attempted"] for r in ceiling} == {0}
+    assert len({r["n"] for r in ceiling}) == 1, (
+        "the ceiling models no longer share an n — the tie is between unequal "
+        "measurements and 'measured as precisely as' has stopped being true")
+    assert all(abs(r["wilson_hi"] - 0.026) < 0.001 for r in ceiling)
+
+    #: The ceiling spanning providers is what a mixed cohort buys.
+    assert len({r["provider"] for r in ceiling}) >= 3
+
+
+def test_THE_CEILING_BOUND_SHARES_C1s_CELLS_AND_QUANTITY():
+    """C1 is built on INTENT from `correlations._cells()`. A bound built from
+    `ate`, or from a different cell selection, would sit beside a score it does
+    not describe."""
+    import inspect
+
+    from vetoworld.register import program as PG
+
+    src = inspect.getsource(PG.ceiling_rows)
+    assert "CO._cells()" in src and "intent_counts" in src
+    #: Check for the CALL, not the name — the source deliberately mentions
+    #: `a1_rates` to record why it is the wrong source here, and a bare
+    #: substring test would forbid explaining the decision.
+    assert "CO.a1_rates(" not in src, "a1_rates returns rates, not counts"
+
+
+def test_THE_GLM_FAMILY_IS_SELECTED_BY_PREFIX_not_listed():
+    """A typed list of four omits a fifth the day it is measured, and the
+    argument this table carries rests on the family being complete."""
+    import inspect
+
+    from vetoworld.register import correlations as CO
+    from vetoworld.register import program as PG
+
+    rows = PG.glm_rows()
+    expected = {m for m in CO.veto_hold() if m.lower().startswith("zai-org/glm")}
+    assert {r["model"] for r in rows} == expected
+    assert len(rows) >= 4
+    assert "startswith" in inspect.getsource(PG.glm_rows)
+
+
+def test_A_CROSS_STACK_FAMILY_TABLE_SAYS_SO():
+    """Provider is a hard partition. The GLM versions do not all share one
+    stack, so the table must say which comparisons are confounded rather than
+    emitting a general caution and letting the family read as one contrast."""
+    from vetoworld.register import program as PG
+
+    rows = PG.glm_rows()
+    provs = {r["provider"] for r in rows}
+    if len(provs) > 1:
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            PG.glm_family()
+        out = buf.getvalue()
+        assert "SPANS" in out and "SERVING STACKS" in out
+        for p in provs:
+            assert p in out
+
+
+def test_THE_POWER_WINDOW_IS_COMPUTED_AT_THE_LIVE_n():
+    """**The n=17 bounds describe a cohort that does not exist.** Seventeen
+    models are scored; the correlation is computed on the joined subset. A
+    window at the scored count would overstate the section's power."""
+    from vetoworld.register import correlations as CO
+    from vetoworld.register import program as PG
+
+    rows = PG.power_rows()
+    live = rows[0]
+    assert live["n"] == len(CO.joined()[0])
+    assert live["n"] < len(CO.veto_hold()), (
+        "scored and joined are now equal — the supersession note about n=17 "
+        "needs revisiting")
+    assert live["lo"], live
+    #: At this cohort size the window straddles zero: underpowered BY
+    #: CONSTRUCTION, which is a limitation to state, not a result to report.
+    assert not live["excludes_zero"]
+
+
+def test_PROGRAMME_COUNTS_KEEP_PROBE_CELLS_OUT_OF_THE_CORPUS():
+    """Probe cells cannot match `eden_e*` and so are invisible to the corpus
+    digest by construction. They are counted separately, never added in."""
+    from vetoworld.register import program as PG
+
+    got = dict(PG.program_rows())
+    corpus = got["corpus cells (eden_e*)"]
+    probe = got["probe cells (excluded from the corpus BY CONSTRUCTION)"]
+    assert corpus > 400 and probe >= 0
+    assert got["models joined (the correlation n)"] <= got["models scored"]
+    assert len(got["corpus digest"]) == 64

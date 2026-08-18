@@ -12,7 +12,8 @@ ARTIFACTS = ("matrix", "occasions", "occasion-health", "seeds", "spend",
              "floor-mechanisms", "generations", "limitations",
              "disclosures", "predictions", "corrections", "related-work",
              "correlations", "convergence", "bands", "exhibit-1",
-             "worlds-table", "arms", "metrics", "funnel", "a0-saturation")
+             "worlds-table", "arms", "metrics", "funnel", "a0-saturation",
+             "glm-family", "spread-ceiling", "power-window", "program-counts")
 
 
 def _occasions() -> int:
@@ -149,6 +150,7 @@ def registry() -> dict:
     from ..register import exhibits as EX
     from ..register import funnel as FN
     from ..register import instrument as IN
+    from ..register import program as PG
     from ..register import occasion_health as OH
     return {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
             "occasion-health": OH.occasion_health,
@@ -160,6 +162,8 @@ def registry() -> dict:
             "worlds-table": IN.worlds_table, "arms": IN.arms,
             "metrics": IN.metrics,
             "funnel": FN.funnel_table, "a0-saturation": FN.a0_saturation,
+            "glm-family": PG.glm_family, "spread-ceiling": PG.spread_and_ceiling,
+            "power-window": PG.power_window, "program-counts": PG.program_counts,
             "correlations": CO.correlations,
             "convergence": CO.candidate_convergence,
             "bands": BN.report}
