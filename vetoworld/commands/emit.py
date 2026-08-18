@@ -12,7 +12,7 @@ ARTIFACTS = ("matrix", "occasions", "occasion-health", "seeds", "spend",
              "floor-mechanisms", "generations", "limitations",
              "disclosures", "predictions", "corrections", "related-work",
              "correlations", "convergence", "bands", "exhibit-1",
-             "worlds-table", "arms", "metrics")
+             "worlds-table", "arms", "metrics", "funnel", "a0-saturation")
 
 
 def _occasions() -> int:
@@ -147,6 +147,7 @@ def registry() -> dict:
     from ..register import c5 as BN
     from ..register import correlations as CO
     from ..register import exhibits as EX
+    from ..register import funnel as FN
     from ..register import instrument as IN
     from ..register import occasion_health as OH
     return {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
@@ -158,6 +159,7 @@ def registry() -> dict:
             "exhibit-1": EX.exhibit_1,
             "worlds-table": IN.worlds_table, "arms": IN.arms,
             "metrics": IN.metrics,
+            "funnel": FN.funnel_table, "a0-saturation": FN.a0_saturation,
             "correlations": CO.correlations,
             "convergence": CO.candidate_convergence,
             "bands": BN.report}
