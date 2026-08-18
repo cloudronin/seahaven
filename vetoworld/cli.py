@@ -19,7 +19,7 @@ import argparse
 import sys
 
 #: Verbs that must never require a credential.
-FREE_VERBS = ("verify", "worlds", "read", "emit", "seeds", "doctor",
+FREE_VERBS = ("verify", "worlds", "read", "emit", "bundle", "seeds", "doctor",
               "pin check", "corpus", "occasion")
 
 #: Verbs that serve episodes and therefore cost money.
@@ -61,6 +61,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     e = sub.add_parser("emit", help="render a register artifact ($0)")
     e.add_argument("artifact", help="matrix | occasions | seeds | spend | ...")
+
+    bu = sub.add_parser("bundle", help="emit the manuscript data bundle ($0)")
+    bu.add_argument("--out", help="output directory (default: manuscript-data)")
 
     sub.add_parser("doctor", help="environment, corpus and pin health ($0)")
     sub.add_parser("verify", help="recompute every manuscript figure ($0)")
@@ -175,11 +178,12 @@ def main(argv: list[str] | None = None) -> int:
         from .commands.corpus import DATASET
         args.repo = DATASET
 
-    from .commands import (corpus, doctor, emit, occasion, pin, probe, read,
+    from .commands import (bundle, corpus, doctor, emit, occasion, pin, probe, read,
                            replicate, run, seeds, verify, worlds)
     return {"read": read.main, "worlds": worlds.main, "seeds": seeds.main,
             "occasion": occasion.main,
-            "emit": emit.main, "doctor": doctor.main, "verify": verify.main,
+            "emit": emit.main, "bundle": bundle.main,
+            "doctor": doctor.main, "verify": verify.main,
             "probe": probe.main, "run": run.main,
             "pin": pin.main, "replicate": replicate.main,
             "corpus": corpus.main}[args.verb](args)
