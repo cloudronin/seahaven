@@ -57,6 +57,7 @@ is a day the programme cannot react, not merely a gap in monitoring.
 | `p_rolling` | Fisher vs the rolling window of recent QUIET days |
 | `status` | `OK`, `PARTIAL`, `SERVE_FAIL`, `VERDICT_FAIL`, `BUDGET_REFUSED` |
 | `probe_pin` | the payload digest the day was served under |
+| `history_source` | which memory computed the verdict — see the trust boundary below |
 
 ## Five things to know before using it
 
@@ -87,14 +88,93 @@ than assuming today's.
 
 ## Columns
 
-Started 2026-08-15. Together daily; DeepInfra on Mon/Wed/Fri through the
-HuggingFace router, where the response header `x-inference-provider` decides
-whether a cell is kept — a routed request that lands elsewhere produces **no
-row** rather than a mislabelled one.
+Started 2026-08-15. **Together and DeepInfra, both daily, both on their
+provider's direct API.** DeepInfra was taken on 2026-08-16 through the
+HuggingFace router — which serves it on an `HF_TOKEN` with no DeepInfra account,
+and is why the second column arrived weeks early — and moved to the direct
+endpoint on 2026-08-17. Round 21's cells were served through the router and
+answer to the header rule below; nothing in this log does.
+
+Direct, there is no router to reroute, so the column is established by the
+**endpoint host**, recorded in every cell as `base_url` alongside a
+`served_provider` derived from it. The serving path refuses to serve a host that
+does not map to a known column, because a cell that cannot be attributed is
+worse than a cell never served. This is deliberately **weaker than the routed
+rule** it replaces: a response header attests who *answered*, a host attests who
+was *asked*. The difference is stated rather than glossed, and if a column ever
+returns to a router the header check returns with it.
 
 Fireworks and SambaNova are specified and not built: their keys do not exist.
 Every column begins with no anchor and earns one, so a column started later is
 not a column started worse.
+
+## The matched pair, and what it is for
+
+The two columns serve **the same two models**: `DeepSeek-V4-Flash-0731` as a
+volatile probe with a known step history, and `Llama-3.3-70B-Instruct-Turbo` as
+a damped, floor-class control. They were chosen as the exact-variant
+intersection of the two providers' catalogues, **before any cross-column trace
+existed** — choosing a pair after seeing its traces is selection on the outcome.
+Near-misses were refused: `nvidia/nemotron-3-ultra-550b-a55b` and DeepInfra's
+`NVIDIA-Nemotron-3-Ultra-550B-A55B` are different strings and therefore
+different models.
+
+The control is what makes a divergence attributable. A model that holds on both
+columns while the other steps on one is evidence about the provider; without the
+control, the same picture is equally evidence that the instrument manufactures
+variance.
+
+Three claim classes are on the table, in ascending strength, and they are fixed
+here so the data cannot later suggest which is easiest to support:
+
+1. **Mechanism flip** — same model, different behaviour class or binding stage
+   across providers. Descriptive and legitimate. Emitted by
+   `vworld emit exhibit-1`, which currently reports **zero**: every overlapping
+   model's Together-side cell comes from a retracted sweep.
+2. **Differential stability** — one model's *within*-provider variance compared
+   across columns. Variance to variance, never level to level. The pilot's
+   primary target, and what the matched pair exists for.
+3. **Coincident event** — one column fires while the other stays QUIET on the
+   same day. Cannot be scheduled, only watched for.
+
+**None of these compares a level across columns**, and that is not an oversight
+to be relaxed later. It is the constraint the whole design is built around: see
+point 1 above.
+
+## The trust boundary: this log is an input to itself
+
+**Stated plainly because it is easy to miss.** Verdicts need history — a rolling
+window of recent QUIET days, and, for a column that has not yet earned an epoch
+anchor, a pool of its first served days. The scheduled job runs in an ephemeral
+container that fetches no probe cells, so it reads that history **back out of
+this log**. The published record is therefore *load-bearing for verdicts*, not
+merely a report of them.
+
+This is accepted for v1 rather than hidden, and it is mitigated in two ways.
+Every row ships with its raw cells attached, so any day can be recomputed from
+the evidence instead of taken from the record; and where a local cell and a
+published row cover the same day, **the cell wins**. Every row also records
+`history_source`, because a `NO-ANCHOR` day produced by a run that could not
+read the log means something entirely different from one produced by a run that
+could, and without that field the two are indistinguishable.
+
+## How a new column earns its anchor
+
+A column with no epoch anchor reads `NO-ANCHOR` and yields no verdict — it
+admits to the record and claims nothing. It earns one when **three consecutive
+served days are mutually non-separable**: every *pairwise* Fisher p ≥ alpha, not
+merely adjacent pairs, since adjacent-only would freeze a monotone drift as a
+baseline and disable the very anchor meant to catch drift. Their pooled sum
+becomes the anchor and is never revised, and the **spread of the constituent
+days** is frozen beside it as an envelope — at 24 episodes a day, mutual
+non-separability is a weak standard, and the envelope is what keeps a soft
+anchor honest about how soft it is.
+
+Two details that decide what the rule measures. **Failed and void days do not
+restart the window**: "consecutive" counts served days only, because an outage
+is not evidence about agreement, and a rule an outage can reset measures uptime
+rather than stability. And **the three constituent days are not judged against
+the anchor they form** — an anchor cannot be evidence about the days it pools.
 
 ## Reproducing a verdict
 

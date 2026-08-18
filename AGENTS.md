@@ -126,6 +126,29 @@ fixed and the quiet one left running for weeks. Before marking anything fixed,
 write down what else the same root cause could touch and check each one. A bug
 report is a claim about a cause; a closed bug is a claim about every effect.
 
+**When a structural rule lands, enumerate every path it must cover.** The twin
+of the rule above, one level up: that one is about a cause's other symptoms,
+this one about a rule's other subjects. The provider boundary was endorsed as
+complete at round 21 without listing the paths it had to reach — so `run.py`
+got the attestation guards, `probe._daily` never imported a round and got none
+of them, `replicate.py` was not looked at for another day, and the test meant to
+cover the probe column grepped `run.py` and passed. One missing list, four
+consequences.
+
+The trap is that separation is often the *feature*. The probe path is separate
+from the round path on purpose — that separation is what keeps probe cells out
+of the score corpus by construction rather than by discipline. The cost of
+building something to be separate is that structural fixes do not propagate into
+it, and that cost was never written down beside the benefit. Where paths are
+deliberately separate, the enumeration is not optional, it is the only thing
+holding them to a common standard.
+
+`tests/test_serving_paths.py` is the standing form of this rule for anything
+that spends money: every serving path, each answering the same four invariants,
+with the list discovered from the source rather than from memory. Add the
+equivalent wherever a rule has more than one subject. *Defining a rule is half
+the work; the other half is knowing everything it applies to.*
+
 **Reliability measures the stability of whatever you are computing, including an
 artefact.** Test–retest passed at 0.835 and 0.851 on a score that contained no
 information — it passed *because* base rates are stable. Reliability is necessary

@@ -109,6 +109,18 @@ def main(args) -> int:
     out = Path(args.out)
     out.mkdir(exist_ok=True)
     res["meta"] = {"served_name": resolved, "eden_level": args.level,
+                   #: **THIRD instance of blocker 5, found by enumerating the
+                   #: serving paths rather than by another incident.** This
+                   #: wrote no `base_url` and no `served_provider`, so
+                   #: `identity.provider_of` fell through to DIRECT_PROVIDER and
+                   #: every replication cell claimed Together — on the ONE path
+                   #: whose entire purpose is a stranger running this against
+                   #: an endpoint of their own choosing.
+                   #:
+                   #: `vworld_replicate` is not in `DIAGNOSTIC_STAGES`, so such
+                   #: a cell dropped into `results/` reads as canonical.
+                   "base_url": be.spec.base_url,
+                   "endpoint": be.spec.base_url,
                    "eden_arm": "A1", "terminal_at_zero": True, "seed0": seed0,
                    "stage": "vworld_replicate", "replicating_round": tag,
                    "ours": [k_o, n_o], "band": [blo, bhi], "verdict": verdict,
