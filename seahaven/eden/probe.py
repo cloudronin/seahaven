@@ -127,7 +127,14 @@ COHORT = {
 #: **Prices are UNKNOWN until measured.** Round 21's per-episode figures cannot
 #: carry over — different models. The `(0, 0)` is deliberate and the pre-flight
 #: refuses to price from it; day one measures and the pin is amended with the
-#: real numbers. Together-priced, this grid is ~$2.4/serving day.
+#: real numbers.
+#:
+#: The served grid is FIVE cells, not four: A0 at both worlds for each of the
+#: pair, plus the Flash A1 LAT decision cell, which this column carries because
+#: Flash is in the pair (see `cells`). Together-priced that is ~$2.4/serving
+#: day — an ESTIMATE from another column's rate card, carried only so the gate
+#: has something to refuse against, and `DEEPINFRA_DAY_USD_TOGETHER_PRICED`
+#: says so in its name.
 DEEPINFRA_COHORT = {
     "deepseek-ai/DeepSeek-V4-Flash-0731": (0.0, 0.0),
     "meta-llama/Llama-3.3-70B-Instruct-Turbo": (0.0, 0.0),
@@ -236,6 +243,72 @@ ANCHOR_OWNER = "together"
 #: privilege: its anchors were earned from the corpus before the fleet existed.
 EARNED_EPOCH: dict = {}
 
+#: **THE ANCHOR-EARNING RULE, PINNED BEFORE THE COLUMN CAN SERVE.**
+#:
+#: `probe_channel`'s docstring has promised since it was written that "a new
+#: column's epoch is its own first QUIET run, frozen when reached". It was
+#: implemented NOWHERE — only a test did it by hand — and the consequence is
+#: that NO-ANCHOR was ABSORBING: `trace` only admits QUIET days to the rolling
+#: pool, so a column with no epoch could never earn a rolling one either, and
+#: would have read NO-ANCHOR for all 30 days while costing full price.
+#:
+#: The rule is pinned BEFORE any DeepInfra day is served, because a rule for
+#: what counts as a baseline, written after seeing the baseline, is not a rule.
+EARN_DAYS = 3
+
+EARN_RULE = (
+    "A column with no epoch anchor for a channel accumulates daily pooled "
+    "counts. When THREE CONSECUTIVE SERVED DAYS are MUTUALLY NON-SEPARABLE — "
+    "every PAIRWISE Fisher p >= ALPHA, not merely adjacent pairs — their pooled "
+    "sum is frozen as that channel's epoch anchor and NEVER REVISED, and the "
+    "min and max of the constituent DAY rates are frozen beside it as that "
+    "channel's envelope. Until then the channel reads NO-ANCHOR and yields no "
+    "verdict. "
+    "SERVE_FAIL AND VOID DAYS DO NOT RESTART THE WINDOW: consecutive means "
+    "consecutive among SERVED days, because a provider outage is not evidence "
+    "about agreement, and an anchor-earning process that an outage can reset "
+    "measures uptime rather than stability. Only served days that DISAGREE "
+    "restart it, and they are dropped from the candidate pool only, never from "
+    "the log. "
+    "THE ENVELOPE IS NOT OPTIONAL: at n=24 a day, mutual non-separability is a "
+    "WEAK standard because low power makes agreement easy, so the constituent "
+    "spread printed beside every later verdict is what keeps a mushy anchor "
+    "honest about how mushy it is. This is the FLASH PRECEDENT, applied to days "
+    "where Flash applied it to blocks.")
+
+#: **The earning days are NOT judged against the anchor they constitute.** They
+#: read NO-ANCHOR, like every day before them; the first day judged against an
+#: earned anchor is the day AFTER the window closes. Testing a day against a
+#: pooled sum that contains it is the circularity [TRAP] 38 records in another
+#: costume, and it would make the third day look reassuringly quiet by
+#: construction.
+#: **THE TRUST BOUNDARY THE ROLLING WINDOW CREATES.**
+#:
+#: `publish.read_rows` existed, filtered by provider correctly, and was called
+#: by nothing. Making it live is what gives the scheduled job a memory — without
+#: it every ephemeral run starts with today's cells alone, the rolling anchor is
+#: permanently empty, and no column can ever earn an epoch. Day one worked only
+#: because it ran on a machine where cells persist.
+#:
+#: The cost is that **the job trusts its own prior rows**: the published log
+#: stops being a report of verdicts and becomes an input to them. Accepted for
+#: v1 because every row carries its raw cells, so any day can be recomputed from
+#: evidence rather than taken from the record — but stated here, and on the log
+#: card, because a trust boundary nobody wrote down is one nobody checks.
+LOG_IS_LOAD_BEARING = (
+    "Verdicts read prior rows from the published log for the rolling window and "
+    "the anchor-earning pool. The log is therefore LOAD-BEARING for verdicts, "
+    "not merely a report of them. Mitigated, not removed, by attaching raw "
+    "cells to every row: a reader can recompute any day from the evidence. "
+    "Where a local cell and a published row cover the same day, THE CELL WINS. "
+    "Every row records which memory computed it in `history_source`, because a "
+    "NO-ANCHOR day from a run that could not read the log means something "
+    "entirely different from one that could.")
+
+EARN_EXCLUDES_ITS_OWN_DAYS = (
+    "The three constituent days read NO-ANCHOR and yield no verdict. An anchor "
+    "cannot be evidence about the days it is made of.")
+
 
 def epoch_for(provider: str, level: str, arm: str):
     """The epoch anchor for one (provider, channel), or None.
@@ -316,18 +389,27 @@ PROVIDERS = {
     "together": {"base_url": "https://api.together.xyz/v1",
                  "key_env": "TOGETHER_API_KEY", "substrate": "gpu_cloud",
                  "catalogued": True, "cadence": "daily"},
-    #: **The second column, taken 2026-08-16.** Round 21 established that the
-    #: HuggingFace router serves DeepInfra on an `HF_TOKEN` alone — no DeepInfra
-    #: account — and that the response header `x-inference-provider` says who
-    #: actually answered, which the runner refuses a cell without. So the column
-    #: is defined by the ATTESTATION, not by the request: the router cannot
-    #: silently reroute to a different provider without the cell refusing.
+    #: **The second column, taken 2026-08-16 through the HuggingFace router and
+    #: moved to the direct API on 2026-08-17.** Round 21 established that the
+    #: router serves DeepInfra on an `HF_TOKEN` alone — no DeepInfra account —
+    #: which is what let this column arrive weeks before the plan expected it,
+    #: without the operator errand it was supposed to wait on.
     #:
-    #: This is what the plan expected to wait on an operator errand. It did not.
-    "deepinfra": {"base_url": "https://router.huggingface.co/v1",
-                  "key_env": "HF_TOKEN", "substrate": "gpu_cloud",
-                  "catalogued": True, "cadence": "daily",
-                  "model_suffix": ":deepinfra"},
+    #: **DIRECT, not the router, from 2026-08-17.** The router was how the
+    #: column was TAKEN — it needed no DeepInfra account, which is why the
+    #: second column arrived weeks early. It is not how the column should be
+    #: SERVED: a router adds a reroute step between the request and the answer,
+    #: and the matched-pair read compares one model's variance across columns,
+    #: where a silent reroute is indistinguishable from the thing being
+    #: measured.
+    #:
+    #: `model_suffix` is GONE rather than left unread. It was applied only in
+    #: the round path via `R.served_id`, so on this path it was dead config
+    #: describing a transport this column no longer uses — and dead config that
+    #: LOOKS live is what a later reader reconstructs a wrong story from.
+    "deepinfra": {"base_url": "https://api.deepinfra.com/v1/openai",
+                  "key_env": "DEEPINFRA_API_KEY", "substrate": "gpu_cloud",
+                  "catalogued": True, "cadence": "daily"},
 }
 
 #: **Slot indices are FROZEN and APPEND-ONLY, and this is load-bearing.**
@@ -353,8 +435,9 @@ PROVIDERS_WAITING = (
     "Fireworks and SambaNova are specified and NOT built in: their keys do not "
     "exist, so their catalogs cannot be resolved and their columns cannot be "
     "served. DeepInfra NO LONGER WAITS — the HuggingFace router serves it on an "
-    "`HF_TOKEN`, so the second column was taken on 2026-08-16 without a "
-    "DeepInfra account. The verbs are provider-parameterised and the matrix "
+    "`HF_TOKEN`, so the second column was TAKEN on 2026-08-16 without a "
+    "DeepInfra account, and MOVED to the direct API on 2026-08-17 once a key "
+    "existed. The verbs are provider-parameterised and the matrix "
     "lives here, so adding one is a pin boundary rather than a code change. "
     "The CROSS-PROVIDER COINCIDENCE READ — the pilot's headline, and the only "
     "thing separating 'this stack moved' from 'the GPU ecosystem moved' — is "
@@ -368,6 +451,48 @@ ROUTER_ATTESTATION = (
     "and REFUSES the cell on mismatch or absence. So a silent reroute produces "
     "no cell rather than a mislabelled one — the #113 lesson applied before the "
     "fact instead of after it.")
+
+#: **THE RULE IN FORCE FOR THIS COLUMN, now that it serves DIRECT.**
+#:
+#: `ROUTER_ATTESTATION` above is kept because round 21's cells were served that
+#: way and it is the rule they answer to. It is NOT the rule this column serves
+#: under any more, and leaving one attestation constant to cover two transports
+#: is how a reader ends up believing a header was checked that never existed.
+TRANSPORT_RULE = (
+    "THE COLUMN IS DEFINED BY EVIDENCE RECORDED IN THE CELL, NEVER BY INTENT. "
+    "Through a ROUTER the evidence is the `x-inference-provider` response "
+    "header, compared to the pinned provider and REFUSED on mismatch or "
+    "absence. DIRECT — which is what this column now uses — there is no router "
+    "to reroute and the evidence is the ENDPOINT HOST: api.deepinfra.com "
+    "answers for DeepInfra and for nobody else. Every probe cell records "
+    "`base_url` and the `served_provider` derived from it, and the serving path "
+    "REFUSES to serve a host that does not map to the pinned column. "
+    "THIS IS WEAKER THAN THE HEADER AND THE DIFFERENCE IS STATED RATHER THAN "
+    "GLOSSED: the header attests who ANSWERED, the host attests who was ASKED. "
+    "It is accepted because a direct endpoint has no reroute step for the two "
+    "to diverge across; if this column ever returns to a router, the header "
+    "check returns with it.")
+
+#: **Host -> column. For a direct endpoint the provider IS the host.**
+#: A host absent from this map serves NOTHING on the probe path: it cannot be
+#: attributed, and a cell that cannot be attributed is worse than no cell.
+HOST_PROVIDER = {
+    "api.together.xyz": "together",
+    "api.deepinfra.com": "deepinfra",
+}
+
+
+def served_provider_for(base_url: str) -> str | None:
+    """Which column a cell served from this endpoint belongs to, or None.
+
+    **Blocker 5 was that the probe path had no attestation guard at all.** It
+    wrote `"provider": provider` from INTENT, with no `served_provider` and no
+    `base_url`, so `identity.provider_of` fell through to `DIRECT_PROVIDER` and
+    a DeepInfra probe cell partitioned as TOGETHER — silently pooling two
+    providers' rates in the one place the corpus most needs them apart.
+    """
+    host = (base_url or "").split("//")[-1].split("/")[0].lower()
+    return HOST_PROVIDER.get(host)
 
 #: **Phase E, RESOLVED with facts rather than left as [INVESTIGATE].**
 #: Checked against HuggingFace's Jobs documentation on 2026-08-16.
@@ -416,7 +541,10 @@ SCHEDULE_JOB = {
     "schedule": SCHEDULE_CRON,
     "flavor": "cpu-basic",             # it calls APIs and runs Fisher tests
     "timeout": "3h",                   # NOT the 30-minute default; see above
-    "secrets": ("TOGETHER_API_KEY", "HF_TOKEN"),
+    #: `DEEPINFRA_API_KEY` for the direct second column; `HF_TOKEN` stays and
+    #: is NOT vestigial — it is what pushes the day's rows and, since Phase 3,
+    #: what reads the prior ones back for the rolling window and the earn pool.
+    "secrets": ("TOGETHER_API_KEY", "HF_TOKEN", "DEEPINFRA_API_KEY"),
     "columns_in_order": ("together", "deepinfra"),
 }
 
@@ -582,9 +710,36 @@ ARTIFACTS = (
     "seahaven/eden/intent.py",
 )
 
-#: **The pin as of the two-column amendment plus the fixed schedule, 2026-08-16,
-#: before day two.**
-PINNED_PROBE_HASH = "b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e8a08f"
+#: **The pin as of the MATCHED-PAIR RE-SCOPE, 2026-08-17, before day two.**
+#:
+#: **Re-pinned DELIBERATELY, ONCE, at the end of phase 4.** The previous pin was
+#: frozen against a design whose second column was six round-21 models on a
+#: Mon/Wed/Fri cadence through the HuggingFace router; this one is frozen
+#: against a matched pair, daily, on the direct DeepInfra API. Cohort, cadence,
+#: cost, serving days, grid and transport all moved, so the pin moves with them
+#: — a re-scope that did NOT move it would mean the payload was not carrying
+#: the design.
+#:
+#: **Once** is the discipline, not a detail. The hash was recomputed mid-phase
+#: while the transport was still the router, which would have entered
+#: SUPERSEDED_PINS as a pin that existed for no commit and governed no cell —
+#: churn in the one list a reader consults to ask which rules a given day
+#: answered to. It was replaced rather than recorded. Only pins that actually
+#: reached a commit are listed below.
+#:
+#: What newly travels, and why this hash differs by more than the constants:
+#: `matched_pair_rule`, `exhibits`, `round21_column_stands`, `anchor_owner`,
+#: the `earn` block, `log_is_load_bearing`, `transport_rule` and
+#: `host_provider`. Every one was a module constant that nothing hashed —
+#: which made the pair's "SELECTED BEFORE ANY CROSS-COLUMN TRACE EXISTED"
+#: clause editable after the traces arrive, and the anchor-earning rule
+#: editable after seeing what the first three days looked like. Documentation
+#: wearing the costume of a pre-registration.
+#:
+#: **No cell has been served under any pin since day one.** The 17 cells in
+#: `results/` all cite 956f9059, and the scheduled job is deleted, so this
+#: re-pin governs nothing retroactively.
+PINNED_PROBE_HASH = "8bfb3da9ed3effda91554cc10176ed864f1549fb47002e2a4c2459a8b26936ad"
 
 #: **Day one's pin, kept because day one's cells cite it.**
 #:
@@ -593,11 +748,13 @@ PINNED_PROBE_HASH = "b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e
 #: unverifiable UNLESS the superseded hashes stay recomputable — the same
 #: reason retired rounds keep their pins rather than deleting them.
 #:
-#: What moved: the DeepInfra column and its cohort, the frozen provider slots,
-#: the budget gate 280 -> 350 with its amendment text, the resolved schedule
-#: facts, and the fork's void. What did NOT move: the Together cohort, the
-#: anchors, alpha, the seed base, or the decision channel — so day one's
-#: readings stand under this pin exactly as they did under that one.
+#: What moved across all of them: the DeepInfra column and its cohort, the
+#: frozen provider slots, the budget gate 280 -> 350 with its amendment text,
+#: the resolved schedule facts, the fork's void, and — at the re-scope — the
+#: second column's entire fleet and cadence. What has NEVER moved: the Together
+#: cohort, the anchors, alpha, the seed base, and the decision channel. Day
+#: one's readings therefore stand under the current pin exactly as they did
+#: under the one they cite, which is the property that makes superseding safe.
 SUPERSEDED_PINS = {
     "956f9059871c87961495d4c861c367c7578c9821f4dc0bf709e851931e845471":
         "one-column shape, 2026-08-15 to 2026-08-16. Day one (17 cells) was "
@@ -612,6 +769,15 @@ SUPERSEDED_PINS = {
         "two-column shape before the UTC hour was pinned. NO CELLS WERE SERVED "
         "under it — it lived in the repository for one commit and was "
         "superseded by the schedule amendment on the same day.",
+    #: **The six-model second column, superseded by the matched pair.**
+    #: Committed at da0e265 against a deliberately RED tree, mid-re-scope. The
+    #: scheduled job that would have served under it was deleted before it
+    #: could fire, so again: none.
+    "b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e8a08f":
+        "six-model DeepInfra cohort on a Mon/Wed/Fri cadence, 2026-08-16 to "
+        "2026-08-17. NO CELLS WERE SERVED under it — the scheduled job was "
+        "deleted before its first fire, and the column it describes was "
+        "re-scoped to the matched pair for the DIFFERENTIAL STABILITY read.",
 }
 
 
@@ -621,13 +787,19 @@ def world_lock_paths() -> tuple[str, ...]:
 
 def cohort_for(provider: str) -> dict:
     """**Each column has its own cohort, because each provider serves its own
-    models.** Together's eight are the anchored fleet; DeepInfra's six are round
-    21's seven minus Kimi-K3 on cost.
+    models.** Together's eight are the anchored fleet; DeepInfra's are the
+    MATCHED PAIR — Flash and Llama-3.3-70B, servable on both columns at exact
+    variant. See `MATCHED_PAIR_RULE`.
 
-    They deliberately do NOT overlap, and that is fine: the coincidence read
-    compares EVENTS across columns, not levels. Each column detects against its
-    own anchors, so two columns firing on one day is the signal whether or not
-    they share models.
+    **They deliberately DO overlap, and the overlap is the whole point.** This
+    docstring said the opposite until 2026-08-17, and it was correct when it was
+    written: disjoint cohorts are sufficient for the COINCIDENCE read, which
+    compares EVENTS across columns and never levels, each column detecting
+    against its own anchors. But the pilot's primary target is now DIFFERENTIAL
+    STABILITY — one model's within-provider variance compared across columns —
+    and disjoint cohorts cannot produce that read at all. The coincidence read
+    is unaffected and still needs no overlap; it simply is no longer the only
+    read this function serves.
     """
     return DEEPINFRA_COHORT if provider == "deepinfra" else COHORT
 
@@ -646,10 +818,27 @@ def cells(provider: str = "together"):
     `serves_today`, and this parameter). Defining the rule is half the work.
     """
     out = [(m, ARM, lv) for m in cohort_for(provider) for lv in LEVELS]
-    #: The decision channel is Flash on Together. It is not re-served on other
-    #: columns: its anchor is a Together anchor, and a DeepInfra Flash cell
-    #: would be a different served artifact judged against the wrong baseline.
-    if provider == "together":
+    #: **The decision cell is served on every column that carries the model.**
+    #:
+    #: This appended it for Together alone, reasoning that a DeepInfra Flash
+    #: cell "would be a different served artifact judged against the wrong
+    #: baseline". That was TRUE while the channel string alone chose the anchor
+    #: — and it is exactly the defect `epoch_for`/`envelope_for` fix. DeepInfra
+    #: Flash A1 LAT now resolves through `EARNED_EPOCH`, which is empty, so the
+    #: cell gets NO anchor rather than Together's. The objection was to the
+    #: inheritance, not to the cell.
+    #:
+    #: Fourth instance in two days of the same shape, and the sharpest:
+    #: `envelope_for`'s own docstring already said "the matched-pair design puts
+    #: a Flash A1 LAT cell on the DeepInfra column too" while THIS function, ten
+    #: lines away, refused to emit it. A rule the machinery does not read is a
+    #: rule it does not follow, even when the rule is written in the machinery.
+    #:
+    #: Together is here by `ANCHOR_OWNER` and not by cohort membership: Flash is
+    #: the decision channel, not one of the anchored eight, so `DECISION_MODEL
+    #: in COHORT` is False and testing membership alone would have silently
+    #: dropped Together's decision cell — 17 cells to 16, day one unreproducible.
+    if provider == ANCHOR_OWNER or DECISION_MODEL in cohort_for(provider):
         out.append((DECISION_MODEL, DECISION_ARM, DECISION_LEVEL))
     return out
 
@@ -681,6 +870,32 @@ def seed_for(provider: str, model: str, level: str, arm: str, day: int) -> int:
             "PROVIDER_SLOT with the NEXT free index — appending keeps every "
             "existing column's seeds where they are; inserting moves them.")
     off = PROVIDER_SLOT[provider] * (len(cells()) * EPISODES)
+    #: **THE STRIDE MUST HOLD EVERY COLUMN'S SPAN, or day N+1 reuses day N's
+    #: seeds.** `SEED_STRIDE` is 864 = 36 cell-slots a day, and its comment says
+    #: "across four providers" — but four columns at Together's 17-cell grid
+    #: need 68 slots. Slots 0 and 1 fit (max offsets 407 and 527); slot 2 runs
+    #: to 1199 and slot 3 to 1631, both past the stride and therefore into the
+    #: NEXT day's range, starting with Together's.
+    #:
+    #: Latent today, since only two columns exist — and silent when it fires,
+    #: because nothing downstream would notice two days sharing seeds. The block
+    #: bounds below are checked; this was not.
+    #:
+    #: **The fix is a refusal, not a wider stride.** Day one is day=1 and its
+    #: cells derive from `100000 + 1*864`; changing SEED_STRIDE would move every
+    #: served seed and make the 17 committed cells unreproducible from the code
+    #: that made them — the precise corruption PROVIDER_SLOT was frozen to
+    #: prevent. Widening needs a new SEED_BLOCK at a deliberate pin boundary.
+    span = off + len(grid) * EPISODES
+    if span > SEED_STRIDE:
+        raise SystemExit(
+            f"provider {provider!r} (slot {PROVIDER_SLOT[provider]}) needs "
+            f"seed offsets up to {span - 1} within a day, but SEED_STRIDE is "
+            f"{SEED_STRIDE} — day {day}'s seeds would run into day {day + 1}'s "
+            "range and silently reuse another column's numbers. Widen the "
+            "stride AND the block together at a pin boundary; note that "
+            "changing SEED_STRIDE moves every seed already served, so day one "
+            "must be re-derivable or explicitly retired first.")
     seed = SEED_BASE + day * SEED_STRIDE + off + idx * EPISODES
     lo, hi = SEED_BLOCK
     if not (lo <= seed and seed + EPISODES - 1 <= hi):
@@ -717,8 +932,26 @@ def _payload_body(art: dict, locks: dict, specs: dict) -> str:
         "providers": PROVIDERS, "providers_waiting": PROVIDERS_WAITING,
         "provider_slot": PROVIDER_SLOT,
         "router_attestation": ROUTER_ATTESTATION,
+        "transport_rule": TRANSPORT_RULE,
+        "host_provider": HOST_PROVIDER,
         "deepinfra_cohort": {k: list(v)
                              for k, v in sorted(DEEPINFRA_COHORT.items())},
+        #: **The pair's selection rule travels, or it is not a
+        #: pre-registration.** MATCHED_PAIR_RULE's load-bearing clause is
+        #: "SELECTED BEFORE ANY CROSS-COLUMN TRACE EXISTED" — a claim whose
+        #: entire value is that it cannot be edited after the traces arrive.
+        #: Stated in a module constant and absent from the payload, it could
+        #: have been, with no pin breaking. Same for ANCHOR_OWNER, which is the
+        #: one constant standing between a DeepInfra verdict and Together's
+        #: epoch, and for the EXHIBITS, which fix what the pilot claims BEFORE
+        #: the data can suggest which claim is easiest to support.
+        "matched_pair_rule": MATCHED_PAIR_RULE,
+        "earn": {"days": EARN_DAYS, "rule": EARN_RULE,
+                 "excludes_its_own_days": EARN_EXCLUDES_ITS_OWN_DAYS},
+        "log_is_load_bearing": LOG_IS_LOAD_BEARING,
+        "exhibits": EXHIBITS,
+        "round21_column_stands": ROUND21_COLUMN_STANDS,
+        "anchor_owner": ANCHOR_OWNER,
         "schedule_facts": SCHEDULE_FACTS, "schedule_shape": SCHEDULE_SHAPE,
         "schedule_utc_hour": SCHEDULE_UTC_HOUR, "schedule_cron": SCHEDULE_CRON,
         "cadences": {k: list(v) for k, v in sorted(CADENCES.items())},

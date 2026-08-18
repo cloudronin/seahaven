@@ -40,7 +40,15 @@ class EndpointSpec:
     #: `router.huggingface.co` is included because it publishes per-model,
     #: per-provider availability at `/v1/models` and answers `model_not_available`
     #: for anything it will not serve, which is the property this flag is about.
-    CATALOGUED_HOSTS = ("together", "openai.com", "router.huggingface.co")
+    #: `api.deepinfra.com` publishes `/v1/openai/models` and answers a
+    #: model-not-found for anything it will not serve. Without it here,
+    #: `catalogued` was False for the DeepInfra column, `list_models()` returned
+    #: None, `resolve_model()` handed back the requested string VERBATIM, and
+    #: the probe's `resolved != model` check compared a string to itself and
+    #: could never fail — catalogue verification silently skipped, which is the
+    #: quiet half of #113.
+    CATALOGUED_HOSTS = ("together", "openai.com", "router.huggingface.co",
+                        "api.deepinfra.com")
 
     @property
     def catalogued(self) -> bool:

@@ -186,33 +186,52 @@ def test_the_SEED_BLOCK_is_disjoint_from_every_committed_seed():
         == PB.seed_for("together", "MiniMaxAI/MiniMax-M3", "LAT", "A0", day)
 
 
-def test_the_COST_is_MEASURED_and_inside_the_gate():
-    """**Both columns, both measured.** The spec sized $2.50/day for four
-    models; eight changed it, and the second provider changed it again. A wrong
-    cost inside a hashed payload gets quoted later as though it were derived.
+def test_the_COST_is_MEASURED_where_it_can_be_and_LABELLED_where_it_cannot():
+    """**One column measured, one estimated, and the difference is named.**
 
-    The DeepInfra figure comes from round 21's committed billing, not a rate
-    card — the plan assumed ~$2.50 a serving day and the truth is $6.17 without
-    Kimi-K3 and $13.59 with him.
+    Together's $7.86 is measured from committed billing on these exact models
+    at these exact worlds. DeepInfra's is NOT, and cannot be yet: the matched
+    pair's prices are `(0, 0)` until day one measures them, so the only figure
+    available is that grid priced off TOGETHER's rate card. That is an estimate
+    wearing another column's prices, and the constant says so in its name.
+
+    **This test previously asserted "both columns, both measured"** and
+    multiplied by `DEEPINFRA_DAY_USD` — a name that made a round-21 billing
+    figure look like this cohort's measured cost. Different models entirely; it
+    could never have carried over. A wrong cost inside a hashed payload gets
+    quoted later as though it were derived.
     """
     assert len(PB.cells()) * PB.EPISODES == PB.DAILY_EPISODES == 408
     assert PB.DAILY_USD < PB.BUDGET_PER_DAY
 
     projected = (PB.DAILY_USD * PB.PILOT_DAYS
-                 + PB.DEEPINFRA_DAY_USD * PB.DEEPINFRA_SERVING_DAYS)
+                 + PB.DEEPINFRA_DAY_USD_TOGETHER_PRICED
+                 * PB.DEEPINFRA_SERVING_DAYS)
     assert PB.PILOT_USD == pytest.approx(projected, abs=1.0)
     assert PB.PILOT_USD < PB.BUDGET_PILOT
     #: Slack is thin. If this fails, the CADENCE or the COHORT gives — not the
     #: gate. A gate raised to fit a projection is not a gate.
     assert PB.BUDGET_PILOT - PB.PILOT_USD > 20
 
-    #: **The excluded model is excluded for a stated, checkable amount.**
-    #: Keeping Kimi-K3 would breach even the amended gate, and that arithmetic
-    #: is the whole justification for dropping him.
-    with_kimi = projected + PB.DEEPINFRA_KIMI_WOULD_ADD * PB.DEEPINFRA_SERVING_DAYS
-    assert with_kimi > PB.BUDGET_PILOT, (
-        "Kimi-K3 now fits inside the gate, so the cost reason for excluding "
-        "him from the daily fleet has evaporated — put him back or restate why")
+    #: **The unqualified name must not come back.** `DEEPINFRA_DAY_USD` read as
+    #: this cohort's measured cost and was another round's; the qualifier is
+    #: the entire point of the rename.
+    assert not hasattr(PB, "DEEPINFRA_DAY_USD"), (
+        "the unqualified name is back — a Together-priced estimate must not be "
+        "spellable as though it were this column's measurement")
+
+    #: **The estimate is not allowed to become a measurement by typing.** The
+    #: pair carries (0, 0) deliberately and nothing may price a cell from it.
+    assert set(PB.DEEPINFRA_COHORT.values()) == {(0.0, 0.0)}, (
+        "a DeepInfra price is non-zero. If day one MEASURED it, amend "
+        "PILOT_USD and this test together at a pin boundary; if it was typed "
+        "off a rate card, that is precisely what the (0, 0) exists to prevent")
+
+    #: Kimi-K3 is still absent, but no longer for a cost reason: he is absent
+    #: because he is not in the exact-variant intersection of the two catalogs.
+    #: The arithmetic that used to justify his exclusion retired with the
+    #: six-model cohort it belonged to — and an assertion kept past the reason
+    #: for it is how a test starts protecting the wrong thing.
     assert "moonshotai/Kimi-K3" not in PB.DEEPINFRA_COHORT
 
 
@@ -282,7 +301,7 @@ def test_the_MULTI_PROVIDER_UNBLOCK_is_recorded_as_waiting_on_keys():
     """Together-only is a state, not a silent omission. The pin says what is
     missing and what it costs — the coincidence read, which is the pilot's
     headline — so nobody later reads a one-column instrument as the pilot."""
-    #: **DeepInfra no longer waits.** The HF router serves it on an HF_TOKEN,
+    #: **DeepInfra no longer waits.** The HF router served it on an HF_TOKEN,
     #: so the second column was taken without a DeepInfra account — weeks
     #: earlier than the plan assumed. Two errands remain.
     assert set(PB.PROVIDERS) == {"together", "deepinfra"}
@@ -310,6 +329,22 @@ def test_EVERY_PINNED_RULE_TRAVELS_IN_THE_PAYLOAD():
     assert body["day30_criteria"] == PB.DAY30_CRITERIA
     assert body["cost"]["daily_usd"] == PB.DAILY_USD
     assert body["alpha"] == PB.ALPHA
+
+    #: **The matched pair's selection rule, which was documentation until
+    #: 2026-08-17.** Its load-bearing clause is "SELECTED BEFORE ANY
+    #: CROSS-COLUMN TRACE EXISTED" — a claim whose whole value is that it
+    #: cannot be edited once the traces arrive. Stated in a module constant and
+    #: absent from the payload, it could have been, and no pin would have
+    #: broken. The same argument covers the EXHIBITS, which fix what the pilot
+    #: claims before the data can suggest which claim is easiest to support.
+    assert body["matched_pair_rule"] == PB.MATCHED_PAIR_RULE
+    assert "BEFORE ANY CROSS-COLUMN TRACE" in body["matched_pair_rule"]
+    assert body["exhibits"] == list(PB.EXHIBITS)
+    assert body["round21_column_stands"] == PB.ROUND21_COLUMN_STANDS
+
+    #: And the one constant standing between a DeepInfra verdict and Together's
+    #: epoch. Unhashed, the fix for blocker 1 could be undone silently.
+    assert body["anchor_owner"] == PB.ANCHOR_OWNER
 
 
 def test_the_PROBE_APPEARS_IN_BOTH_STANDING_INTEGRITY_SURFACES(capsys):
@@ -420,20 +455,115 @@ def test_the_TWO_COLUMNS_TAKE_DISJOINT_SEEDS():
         "a 30-day two-column pilot runs past the reserved block")
 
 
-def test_the_ROUTED_COLUMN_IS_DEFINED_BY_THE_HEADER_not_the_request():
-    """A router can reroute. What makes the column trustworthy is that the
-    runner refuses a cell whose `x-inference-provider` does not match the pin —
-    #113's lesson applied before the fact rather than after it."""
+def test_the_COLUMN_IS_DEFINED_BY_EVIDENCE_ON_THE_PATH_THAT_SERVES_IT():
+    """**This test used to grep the wrong module, and passed for it.**
+
+    It was named `..._DEFINED_BY_THE_HEADER_not_the_request` and asserted that
+    `SERVED BY THE WRONG PROVIDER` appears in `vetoworld.commands.run`. It does
+    — and the probe column is served by `probe._daily`, which never imports a
+    round and never reached any of those guards. The test protected a path that
+    was never at risk while the path that was went unguarded, which is the
+    "defining the rule is half the work" family living inside a witness.
+
+    The column now serves DIRECT, so the evidence is the endpoint host rather
+    than a routing header, and the guard is asserted where it has to run.
+    """
+    assert PB.PROVIDERS["deepinfra"]["base_url"] == \
+        "https://api.deepinfra.com/v1/openai"
+    assert PB.PROVIDERS["deepinfra"]["key_env"] == "DEEPINFRA_API_KEY"
+    assert "model_suffix" not in PB.PROVIDERS["deepinfra"], (
+        "dead config that LOOKS live: the suffix is applied only in the round "
+        "path via R.served_id and was never read here")
+
+    #: The rule in force names its own weakness rather than glossing it.
+    assert "who ANSWERED" in PB.TRANSPORT_RULE
+    assert "who was ASKED" in PB.TRANSPORT_RULE
+    assert "WEAKER THAN THE HEADER" in PB.TRANSPORT_RULE
+    #: And the router rule is KEPT, because round 21's cells answer to it.
     assert "x-inference-provider" in PB.ROUTER_ATTESTATION
     assert "REFUSES" in PB.ROUTER_ATTESTATION
-    assert PB.PROVIDERS["deepinfra"]["model_suffix"] == ":deepinfra"
-    assert PB.PROVIDERS["deepinfra"]["key_env"] == "HF_TOKEN"
 
+    #: **The guard is asserted on the PROBE path this time.**
     import inspect
-    from vetoworld.commands import run
-    src = inspect.getsource(run)
-    assert "SERVED BY THE WRONG PROVIDER" in src
-    assert "NO PROVIDER ATTESTATION" in src
+
+    from vetoworld.commands import probe as CMD
+    src = inspect.getsource(CMD._daily)
+    assert "REFUSING TO SERVE" in src
+    assert "served_provider_for" in src
+    assert "catalogued" in src
+    #: It must refuse BEFORE anything is served and paid for.
+    assert src.index("REFUSING TO SERVE") < src.index("for model, arm, level in todo")
+
+
+def test_THE_PAIR_IS_AN_INTERSECTION_and_NEAR_MISSES_ARE_REFUSED():
+    """**The pair is what the rule selects, not what was convenient.**
+
+    Servable on BOTH columns at EXACT variant. The refusal that matters is
+    `nvidia/nemotron-3-ultra-550b-a55b` against DeepInfra's
+    `NVIDIA-Nemotron-3-Ultra-550B-A55B` — a different string, therefore a
+    different model, which is round 4's generation-qualifier lesson and #113's
+    wire-id lesson in one. Matching case-insensitively here would have put a
+    model in the pair on the strength of its spelling.
+    """
+    assert set(PB.DEEPINFRA_COHORT) == {
+        "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo"}
+    #: Both are drawn from Together's own fleet, which is what makes them a
+    #: PAIR rather than two unrelated columns.
+    assert set(PB.DEEPINFRA_COHORT) <= set(PB.COHORT) | {PB.DECISION_MODEL}
+
+    #: The near-miss is refused and stays refused.
+    assert "nvidia/nemotron-3-ultra-550b-a55b" in PB.COHORT
+    assert "nvidia/nemotron-3-ultra-550b-a55b" not in PB.DEEPINFRA_COHORT
+    assert "NVIDIA-Nemotron-3-Ultra-550B-A55B" not in PB.DEEPINFRA_COHORT
+    assert "nemotron" in PB.MATCHED_PAIR_RULE or "near-miss" in \
+        PB.MATCHED_PAIR_RULE.lower(), "the refusal must be recorded, not just made"
+
+    #: One volatile probe and one damped control. Without the control a
+    #: divergence cannot be attributed to the provider rather than the method.
+    assert PB.DECISION_MODEL in PB.DEEPINFRA_COHORT
+    assert "control" in PB.MATCHED_PAIR_RULE
+    assert "BEFORE ANY CROSS-COLUMN TRACE" in PB.MATCHED_PAIR_RULE
+
+
+def test_A_DIRECT_ENDPOINT_CELL_PARTITIONS_TO_ITS_OWN_COLUMN():
+    """**Blocker 5.** The probe path wrote `provider` from INTENT with no
+    `served_provider` and no `base_url`, so `identity.provider_of` fell through
+    to `DIRECT_PROVIDER` and a DeepInfra probe cell partitioned as TOGETHER —
+    pooling two providers in the one place round 21's Rule 1 forbids it."""
+    from seahaven.eden._shared import identity as ID
+
+    di = PB.PROVIDERS["deepinfra"]["base_url"]
+    assert PB.served_provider_for(di) == "deepinfra"
+    assert ID.provider_of({"base_url": di}) == "deepinfra"
+    assert ID.provider_of({"served_provider": "deepinfra"}) == "deepinfra"
+
+    #: The two maps must agree, or the serving path and the corpus reader
+    #: disagree about which column a cell belongs to.
+    assert PB.HOST_PROVIDER == ID.HOST_PROVIDER
+
+    #: An unknown host is refused outright rather than attributed by intent.
+    assert PB.served_provider_for("https://api.example.com/v1") is None
+    #: And it must not quietly become Together, which is what falling through
+    #: to DIRECT_PROVIDER did.
+    assert ID.provider_of({"base_url": "https://api.example.com/v1"}) \
+        == "api.example.com"
+
+
+def test_THE_DEEPINFRA_HOST_IS_CATALOGUED_or_verification_is_SKIPPED_SILENTLY():
+    """**Blocker 7.** Absent from `CATALOGUED_HOSTS`, `catalogued` is False,
+    `list_models()` returns None, `resolve_model()` hands back the requested
+    string verbatim, and the probe's `resolved != model` check compares a
+    string to itself and can never fail."""
+    from vetoworld.backends.base import EndpointSpec
+
+    assert "api.deepinfra.com" in EndpointSpec.CATALOGUED_HOSTS
+    for name, cfg in PB.PROVIDERS.items():
+        spec = EndpointSpec(name=name, base_url=cfg["base_url"],
+                            key_env=cfg["key_env"], model="x")
+        assert spec.catalogued, (
+            f"{name} serves from an uncatalogued host, so its model strings "
+            "are never checked against a published record")
 
 
 def test_PHASE_E_IS_RESOLVED_WITH_FACTS_not_left_as_INVESTIGATE():
@@ -515,13 +645,35 @@ def test_the_UTC_HOUR_IS_PINNED_and_the_reason_is_the_confound():
 
 
 def test_the_CADENCE_IS_A_FUNCTION_not_a_sentence():
-    """'DeepInfra on Mon/Wed/Fri' written only in prose is a cadence someone
-    has to remember. `serves_today` is one the job obeys."""
-    #: Monday=0 ... Sunday=6
-    assert [d for d in range(7) if PB.serves_today("deepinfra", d)] == [0, 2, 4]
-    assert [d for d in range(7) if PB.serves_today("together", d)] == list(range(7))
+    """A cadence written only in prose is one someone has to remember.
+    `serves_today` is one the job obeys.
 
-    #: 13 DeepInfra serving days in 30, which is what the budget assumed.
+    **The cadence changed with the re-scope, and the reason is the read.**
+    Mon/Wed/Fri was sized for a six-model $6.17/day column. The matched pair
+    costs a third of that, and DIFFERENTIAL STABILITY is a day-over-day
+    variance comparison: matched cadence is what makes the two traces
+    comparable, and same-day coincidence is only observable on days both
+    columns serve. 13 of 30 would have thrown away more than half the primary
+    read to save about $30.
+    """
+    #: Monday=0 ... Sunday=6. Both columns daily — which is now the point, and
+    #: is the one thing a reader is most likely to assume is still MWF.
+    assert [d for d in range(7)
+            if PB.serves_today("deepinfra", d)] == list(range(7))
+    assert [d for d in range(7)
+            if PB.serves_today("together", d)] == list(range(7))
+
+    #: The MWF cadence is KEPT as a definition, because a later column may want
+    #: it — but nothing rides it, and that has to be visible rather than
+    #: assumed. A cadence with no subscriber that still looks live is how the
+    #: prose and the function drift apart again.
+    assert PB.CADENCES["mon_wed_fri"] == (0, 2, 4)
+    assert not [pv for pv, spec in PB.PROVIDERS.items()
+                if spec["cadence"] == "mon_wed_fri"], (
+        "a column is on mon_wed_fri again — if that is deliberate, the budget "
+        "projection and DEEPINFRA_SERVING_DAYS move with it")
+
+    #: 30 DeepInfra serving days in 30, which is what the budget assumed.
     import datetime as _dt
     start = _dt.date(2026, 8, 17)
     n = sum(PB.serves_today("deepinfra", (start + _dt.timedelta(days=i)).weekday())
@@ -538,7 +690,11 @@ def test_the_JOB_SPEC_DOES_NOT_INHERIT_THE_30_MINUTE_DEFAULT():
     job = PB.SCHEDULE_JOB
     assert "timeout" in job and job["timeout"] != "30m"
     assert job["flavor"] == "cpu-basic"
-    assert set(job["secrets"]) == {"TOGETHER_API_KEY", "HF_TOKEN"}
+    assert set(job["secrets"]) == {"TOGETHER_API_KEY", "HF_TOKEN",
+                                   "DEEPINFRA_API_KEY"}, (
+        "the direct second column needs its own key, and HF_TOKEN is not "
+        "vestigial: it pushes the day's rows and, since read_rows went live, "
+        "reads the prior ones back for the rolling window and the earn pool")
     #: Order matters: the columns run sequentially in one window, and the
     #: anchored column goes first so a DeepInfra outage cannot delay it.
     assert job["columns_in_order"][0] == "together"
@@ -567,19 +723,48 @@ def test_EACH_COLUMN_SERVES_ITS_OWN_COHORT():
     assert {m for m, _a, _l in tg} - {PB.DECISION_MODEL} == set(PB.COHORT)
     assert {m for m, _a, _l in di} == set(PB.DEEPINFRA_COHORT)
     assert len(tg) * PB.EPISODES == 408
-    assert len(di) * PB.EPISODES == 288
+    assert len(di) * PB.EPISODES == 120
 
-    #: The decision channel is Together's. A DeepInfra Flash cell would be a
-    #: different served artifact judged against a Together anchor.
-    assert PB.DECISION_MODEL in {m for m, _a, _l in tg}
-    assert PB.DECISION_MODEL not in {m for m, _a, _l in di}
+    #: **The decision channel is on BOTH columns now — that is the matched pair
+    #: working, and it is the change this test used to forbid.** What must not
+    #: travel with the cell is Together's BASELINE: DeepInfra's Flash A1 gets no
+    #: anchor and no envelope until it earns them, rather than inheriting the
+    #: ones the pre-event corpus happened to produce on another provider.
+    #:
+    #: The old objection — "a DeepInfra Flash cell would be judged against a
+    #: Together anchor" — was correct, and was an argument against the
+    #: INHERITANCE, not against the cell. `epoch_for`/`envelope_for` removed the
+    #: inheritance, so the cell can be served.
+    dec = (PB.DECISION_MODEL, PB.DECISION_ARM, PB.DECISION_LEVEL)
+    assert dec in tg and dec in di
+    assert PB.epoch_for("together", "LAT", "A1") == PB.FLASH_ANCHOR
+    assert PB.envelope_for("together", "LAT", "A1") == PB.FLASH_ENVELOPE
+    assert PB.epoch_for("deepinfra", "LAT", "A1") is None, (
+        "DeepInfra's decision cell resolved to an epoch it has not earned — "
+        "ANCHOR_OWNER exists for exactly this, and a verdict computed here "
+        "would Fisher-test DeepInfra's rate against Together's corpus")
+    assert PB.envelope_for("deepinfra", "LAT", "A1") is None
+
+    #: **Together keeps its decision cell by ANCHOR_OWNER, not by cohort
+    #: membership.** Flash is the decision channel, not one of the anchored
+    #: eight, so `DECISION_MODEL in COHORT` is False — gating the append on
+    #: membership alone drops Together from 17 cells to 16 and makes day one
+    #: underivable from the code that served it. Caught while writing the fix.
+    assert PB.DECISION_MODEL not in PB.COHORT
+    assert PB.DECISION_MODEL in PB.DEEPINFRA_COHORT
+    assert PB.ANCHOR_OWNER == "together"
 
 
 def test_SEED_FOR_INDEXES_WITHIN_THE_PROVIDERS_OWN_GRID():
     """It indexed into `cells()` — Together's grid — so the first DeepInfra
     cell raised `ValueError: not in list`. The scheduled job would have died on
-    its first MWF day."""
-    assert PB.seed_for("deepinfra", "zai-org/GLM-5", "LAT", "A0", 2) > 0
+    its first serving day."""
+    assert PB.seed_for(
+        "deepinfra", "deepseek-ai/DeepSeek-V4-Flash-0731", "LAT", "A0", 2) > 0
+    #: The decision cell too — it is in DeepInfra's grid now, and a seed for it
+    #: must come from DeepInfra's own range.
+    assert PB.seed_for(
+        "deepinfra", PB.DECISION_MODEL, "LAT", "A1", 2) > 0
 
     #: And a model outside the column's cohort is refused, not silently given
     #: another column's seed.
@@ -603,6 +788,35 @@ def test_THE_CADENCE_GATE_IS_CALLED_not_merely_defined():
     assert src.index("serves_today") < src.index("todo = [")
 
 
+def test_THE_STRIDE_REFUSES_A_COLUMN_IT_CANNOT_HOLD():
+    """**SEED_STRIDE says "across four providers" and holds two.**
+
+    864 reserves 36 cell-slots a day; four columns at Together's 17-cell grid
+    need 68. Slots 0 and 1 fit; slots 2 and 3 run past the stride into the NEXT
+    day's range, starting with Together's own. Latent, because those columns
+    have no keys — and silent when it fires, because nothing downstream would
+    notice two days sharing seeds.
+
+    **The guard refuses rather than widening.** Day one is day=1 and derives
+    from `100000 + 1*864`; moving SEED_STRIDE would make the 17 committed cells
+    unreproducible from the code that served them, which is exactly what
+    freezing PROVIDER_SLOT was for.
+    """
+    #: The live columns are unaffected, and day one still derives.
+    assert PB.seed_for("together", "MiniMaxAI/MiniMax-M3", "LAT", "A0", 1) == 100864
+    assert PB.seed_for("deepinfra", PB.DECISION_MODEL, "LAT", "A1", 2) > 0
+
+    #: A third column is refused at the seed, before it can serve a cell.
+    with pytest.raises(SystemExit, match="SEED_STRIDE"):
+        PB.seed_for("fireworks", "google/gemma-4-31B-it", "LAT", "A0", 1)
+
+    #: And the arithmetic the refusal rests on, so a later reader can check it
+    #: rather than take it.
+    slots = PB.SEED_STRIDE // PB.EPISODES
+    assert slots == 36
+    assert len(PB.cells("together")) * len(PB.PROVIDER_SLOT) == 68 > slots
+
+
 def test_THE_TWO_COLUMNS_STILL_TAKE_DISJOINT_SEEDS_AFTER_THE_GRID_SPLIT():
     a = {PB.seed_for("together", m, lv, ar, d)
          for m, ar, lv in PB.cells("together") for d in range(1, 31)}
@@ -613,13 +827,38 @@ def test_THE_TWO_COLUMNS_STILL_TAKE_DISJOINT_SEEDS_AFTER_THE_GRID_SPLIT():
     assert max(a | b) + PB.EPISODES - 1 <= hi
 
 
-def test_THE_PIN_DID_NOT_MOVE_because_no_RULE_moved():
-    """**The wiring fixes changed no pinned constant, and that is the point.**
+def test_THE_PIN_MOVED_because_the_RULES_moved_and_the_OLD_ONE_IS_KEPT():
+    """**This test asserted the opposite until 2026-08-17, and the inversion is
+    itself the record.**
 
-    The cohorts, cadences, slots and gates were all correct and hashed before
-    this build. What was wrong was that three of them had no caller. A pin
-    records what was decided; it cannot record whether the code obeys it, which
-    is what these tests are for.
+    Its previous name was `THE_PIN_DID_NOT_MOVE_because_no_RULE_moved`, and it
+    was right at the time: the wiring fixes changed no pinned constant, because
+    what was wrong was that three constants had no caller. A pin records what
+    was decided; it cannot record whether the code obeys it, which is what the
+    rest of this file is for.
+
+    The matched-pair re-scope is the other case. Cohort, cadence, cost, serving
+    days and grid all moved, so the pin MUST move — a re-scope that left the
+    hash alone would prove the payload was not carrying the design.
     """
-    assert PB.PINNED_PROBE_HASH.startswith("b380cc61")
+    assert PB.PINNED_PROBE_HASH.startswith("8bfb3da9")
     PB.assert_pinned()
+
+    #: **The pin it replaced is kept, and says it governed nothing.** A reader
+    #: who finds b380cc61 in git history — it is the head of the red-tree
+    #: commit — needs to know which day's cells answer to it. None do.
+    old = "b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e8a08f"
+    assert old in PB.SUPERSEDED_PINS
+    assert "NO CELLS WERE SERVED" in PB.SUPERSEDED_PINS[old]
+
+    #: And the invariant that makes superseding safe at all: every served cell
+    #: still cites a pin that is either current or recorded. Day one's 17 cells
+    #: cite 956f9059 and must keep verifying against it forever.
+    import json
+    from pathlib import Path
+    served = sorted(Path("results").glob("probe-*.json"))
+    pins = {json.loads(pth.read_text())["meta"].get("probe_pin")
+            for pth in served}
+    assert pins <= set(PB.SUPERSEDED_PINS) | {PB.PINNED_PROBE_HASH}, (
+        f"a served cell cites a pin that is neither current nor recorded as "
+        f"superseded: {pins - set(PB.SUPERSEDED_PINS) - {PB.PINNED_PROBE_HASH}}")

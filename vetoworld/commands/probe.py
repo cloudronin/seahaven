@@ -115,8 +115,34 @@ def _daily(args) -> int:
         from ..backends.base import EndpointSpec
 
         cfg = PB.PROVIDERS[provider]
+        #: **THE PROBE PATH'S ATTESTATION GUARD, which did not exist.**
+        #:
+        #: `NO PROVIDER ATTESTATION` / `SERVED BY THE WRONG PROVIDER` live in
+        #: `run.py` keyed on `R.PROVIDER` — a ROUND attribute. `_daily` never
+        #: imports a round, so none of it applied here: the cell recorded
+        #: `"provider": provider` from INTENT and nothing checked the endpoint
+        #: it was actually dialled against.
+        #:
+        #: Direct, the evidence is the host (`PB.TRANSPORT_RULE`). Refusing here
+        #: rather than at read time is deliberate: an unattributable cell that
+        #: has already been paid for and written is worse than one never served.
+        attested = PB.served_provider_for(cfg["base_url"])
+        if attested != provider:
+            raise SystemExit(
+                f"REFUSING TO SERVE: the pin routes {provider!r} at "
+                f"{cfg['base_url']!r}, which attributes to {attested!r}. A cell "
+                "served here could not be partitioned to the column that paid "
+                "for it. Add the host to probe.HOST_PROVIDER deliberately, or "
+                "fix the base_url — never let the column be decided by intent.")
         base = EndpointSpec(name=provider, base_url=cfg["base_url"],
                             key_env=cfg["key_env"], model="")
+        if not base.catalogued:
+            raise SystemExit(
+                f"REFUSING TO SERVE: {cfg['base_url']!r} is not in "
+                "EndpointSpec.CATALOGUED_HOSTS, so `resolve_model` returns the "
+                "requested string verbatim and the `resolved != model` check "
+                "below compares a string to itself. Catalogue verification "
+                "would be skipped silently — the quiet half of #113.")
         backends: dict = {}
 
         def backend_for(model):
@@ -169,7 +195,16 @@ def _daily(args) -> int:
             spent += billed
             res["meta"] = {
                 "served_name": model, "resolved_model_string": resolved,
-                "provider": provider, "probe_date": date,
+                #: `provider` is INTENT and is kept for readability.
+                #: `served_provider` and `base_url` are the EVIDENCE, and they
+                #: are what `identity.provider_of` partitions on. Without them a
+                #: DeepInfra probe cell fell through to DIRECT_PROVIDER and
+                #: partitioned as Together — two providers pooled in the one
+                #: place round 21's Rule 1 says they must never be.
+                "provider": provider,
+                "served_provider": attested,
+                "base_url": cfg["base_url"],
+                "probe_date": date,
                 "eden_level": level, "eden_arm": arm, "runs": PB.EPISODES,
                 "steps": 30, "seed0": seed0, "terminal_at_zero": True,
                 "probe_pin": PB.PINNED_PROBE_HASH,
@@ -186,18 +221,70 @@ def _daily(args) -> int:
                   "BUDGET_REFUSED" if any(f[3] == "BUDGET_REFUSED" for f in failed)
                   else "PARTIAL")
 
+    #: **THE JOB'S MEMORY.** `trace` rebuilds history from local disk cells;
+    #: the job runs in an ephemeral container and `vworld corpus fetch` pulls
+    #: only `eden_e*` and the raidex axis, never probe cells. So a scheduled run
+    #: sees today alone: the rolling anchor is permanently empty and no column
+    #: can ever earn an epoch. Day one worked ONLY because it ran on this
+    #: machine. `publish.read_rows` existed, filtered by provider correctly, and
+    #: was called by nothing.
+    #:
+    #: The fallback is LOCAL CELLS, which is right for offline use and wrong to
+    #: leave silent — a run with no memory produces NO-ANCHOR everywhere and
+    #: looks exactly like a column that has not earned an anchor yet. So the
+    #: source is recorded on every row rather than inferred later.
+    history_rows: list[dict] = []
+    history_source = "local-cells-only"
+    if getattr(args, "no_history", False):
+        history_source = "local-cells-only (--no-history)"
+    else:
+        try:
+            from ..publish import available as _log_available
+            from ..publish import read_rows
+            ok, why = _log_available()
+            if ok:
+                history_rows = read_rows(provider)
+                history_source = "published-log"
+            else:
+                print(f"  history: published log unavailable ({why})")
+        except Exception as e:                              # noqa: BLE001
+            print(f"  history: could not read the published log ({e})")
+    if history_source != "published-log":
+        print(f"  history: {history_source} — a run with no memory reads "
+              "NO-ANCHOR everywhere by construction, not by finding")
+
     try:
         cells = PC.read_cells(root, provider=provider, date=date)
         rows = []
         for ch in sorted({PC.channel_key(c.level, c.arm) for c in cells}):
             level, arm = ch.split(".")
-            epoch = (PB.FLASH_ANCHOR if arm == PB.DECISION_ARM
-                     else PB.EPOCH_ANCHOR.get(level))
-            env = PB.FLASH_ENVELOPE if arm == PB.DECISION_ARM else None
+            #: **PROVIDER FIRST — this is the SERVING path's copy of blocker
+            #: 1, and it outlived the fix.** It read `FLASH_ANCHOR` /
+            #: `EPOCH_ANCHOR` directly, so every column got TOGETHER's anchors:
+            #: a DeepInfra verdict Fisher-tested against Together's epoch, the
+            #: exact comparison `LEVELS_RULE` forbids, written straight into
+            #: the row that gets pushed to the public log with `LEVELS_RULE`
+            #: printed beside it.
+            #:
+            #: `occasion._epoch_for` was routed through `PB.epoch_for` and this
+            #: inlined twin was not, and the live check that confirmed the fix
+            #: — `occasion verdict --provider deepinfra` — exercises the routed
+            #: path and never touches this one. That is blocker 6's shape
+            #: exactly: a verification that passes while the path it claims to
+            #: cover stays unguarded. Hence the serving-path registry.
+            epoch = PB.epoch_for(provider, level, arm)
+            env = PB.envelope_for(provider, level, arm)
             hist = PC.read_cells(root, provider=provider)
+            #: `earn_days` is what makes NO-ANCHOR escapable for a column that
+            #: arrives without an epoch. Defined in the pin and not passed here,
+            #: DeepInfra would read NO-ANCHOR for all 30 days at full price.
             tr = PC.trace(hist, provider=provider, channel=ch, epoch=epoch,
                           alpha=PB.ALPHA, rolling_k=PB.ROLLING_K,
-                          stale_after_days=PB.STALE_AFTER_DAYS, envelope=env)
+                          stale_after_days=PB.STALE_AFTER_DAYS, envelope=env,
+                          earn_days=PB.EARN_DAYS,
+                          history=PC.rows_to_history(history_rows,
+                                                     provider=provider,
+                                                     channel=ch))
             v = next((x for x in tr if x.date == date), None)
             if v is None:
                 continue
@@ -207,9 +294,19 @@ def _daily(args) -> int:
                 "k": v.now[0], "n": v.now[1], "rate": round(v.rate, 4),
                 "wilson": [round(x, 4) for x in v.interval()],
                 "p_epoch": v.p_epoch, "p_rolling": v.p_rolling,
-                "epoch_anchor": list(epoch) if epoch else None,
-                "envelope": list(env) if env else None,
+                #: **What the verdict ACTUALLY used, not what was computed
+                #: beside it.** These wrote the locals, which diverge from the
+                #: verdict the moment a column earns its own anchor mid-trace:
+                #: the row would have said `null` while the verdict was judged
+                #: against a real earned anchor. Read it off the evidence.
+                "epoch_anchor": list(v.epoch) if v.epoch else None,
+                "envelope": list(v.envelope) if v.envelope else None,
                 "models": list(v.models), "serve_status": status,
+                #: Which memory this verdict was computed with. A NO-ANCHOR day
+                #: from a run that could not read the log means something quite
+                #: different from one that could, and the row is the only place
+                #: that distinction survives.
+                "history_source": history_source,
                 "spend_usd": round(spent, 4),
                 "pin_digest": PB.PINNED_PROBE_HASH,
                 "substrate_class": PB.PROVIDERS[provider]["substrate"],

@@ -59,11 +59,18 @@ def _envelope_for(provider: str, channel: str):
 
 def _traces(provider: str, root=None):
     cells = PC.read_cells(root or C.RESULTS, provider=provider)
+    #: **`earn_days` travels with BOTH callers or the two paths disagree.**
+    #: `commands/probe._daily` writes the row; this verb recomputes it from the
+    #: same cells and must reach the same verdict. A column earning its anchor
+    #: in one path and not the other would make `vworld occasion verdict`
+    #: contradict the log it is supposed to audit — and the audit is the thing
+    #: a reader trusts when the row and the cell disagree.
     return {ch: PC.trace(cells, provider=provider, channel=ch,
                          epoch=_epoch_for(provider, ch), alpha=PB.ALPHA,
                          rolling_k=PB.ROLLING_K,
                          stale_after_days=PB.STALE_AFTER_DAYS,
-                         envelope=_envelope_for(provider, ch))
+                         envelope=_envelope_for(provider, ch),
+                         earn_days=PB.EARN_DAYS)
             for ch in CHANNELS}
 
 

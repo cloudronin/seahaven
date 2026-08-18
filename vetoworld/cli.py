@@ -85,6 +85,9 @@ def build_parser() -> argparse.ArgumentParser:
                     help="print every would-be request and serve nothing")
     pr.add_argument("--no-push", action="store_true",
                     help="serve and verdict locally, push nothing")
+    pr.add_argument("--no-history", action="store_true",
+                    help="do not read the published log for the rolling window "
+                         "and earn pool; local cells only (offline use)")
 
     oc = sub.add_parser("occasion", help="the seismograph's $0 reads")
     oc.add_argument("action", choices=("verdict", "gate"))

@@ -112,6 +112,14 @@ def bare_model(name: str | None) -> str | None:
 #: boundary below compare `None` to `None` and quietly permit anything.
 DIRECT_PROVIDER = "together"
 
+#: Direct hosts whose column identity is known. Mirrors `probe.HOST_PROVIDER`
+#: and is asserted equal to it, so the serving path and the corpus reader cannot
+#: disagree about which column a cell belongs to.
+HOST_PROVIDER = {
+    "api.together.xyz": "together",
+    "api.deepinfra.com": "deepinfra",
+}
+
 
 def provider_of(meta: dict) -> str:
     """Which provider served this cell. **A hard boundary, like generation.**
@@ -140,7 +148,16 @@ def provider_of(meta: dict) -> str:
         return DIRECT_PROVIDER
     if not url:
         return DIRECT_PROVIDER
-    host = url.split("//")[-1].split("/")[0]
+    host = url.split("//")[-1].split("/")[0].lower()
+    #: **A known direct host names its column.** Without this,
+    #: `api.deepinfra.com` partitioned as the literal string
+    #: `"api.deepinfra.com"` — safe, in that it did not join `together`, but a
+    #: partition key no other module spells that way, so the DeepInfra column
+    #: would have split in two depending on which path attributed the cell.
+    #: A router host is deliberately ABSENT: it does not name a provider, and a
+    #: cell served through one must carry `served_provider` from the header.
+    if host in HOST_PROVIDER:
+        return HOST_PROVIDER[host]
     return host or DIRECT_PROVIDER
 
 
