@@ -33,12 +33,13 @@ __all__ = ["rows", "SUPERSEDED", "write_manifest"]
 SUPERSEDED = [
     ("corrections count", "13",
      "vworld emit corrections",
-     "The spec asked for 'all 13'. Three sources disagreed: the spec's 13, "
-     "the register's rows, and research-log's [CORRECTION] numbering. A "
-     "hand-maintained number living in conversation prose — the family this "
-     "programme keeps catching in code. The register is being backfilled from "
-     "the log with every row verified against its commit; the paper quotes the "
-     "EMITTED count."),
+     "The spec asked for 'all 13'. The register held 5, the research log held "
+     "11, and the two sets are DISJOINT — so the true total is 16, a number "
+     "no source carried. 13 sat between them and matched neither. Backfilled "
+     "2026-08-18: the 5 keep their verified commit pairs, the 11 carry exact "
+     "log coordinates because the log cites no SHA anywhere and a "
+     "reconstructed one would be guesswork in a ledger whose purpose is "
+     "verifiability. The paper quotes the EMITTED total and its split."),
     ("Exhibit 1 availability", "$0 and available now",
      "vworld emit exhibit-1",
      "Built, and reports ZERO. Money does not unblock it at any price: all 28 "

@@ -243,3 +243,51 @@ def test_PROGRAMME_COUNTS_KEEP_PROBE_CELLS_OUT_OF_THE_CORPUS():
     assert corpus > 400 and probe >= 0
     assert got["models joined (the correlation n)"] <= got["models scored"]
     assert len(got["corpus digest"]) == 64
+
+
+# --- §4 the corrections ledger ----------------------------------------------
+
+def test_THE_LEDGER_EMITS_THE_UNION_not_whichever_source_was_nearest():
+    """**Three sources disagreed and none held the truth.** The register had 5
+    commit-verified rows, the research log had 11, the two are DISJOINT, and a
+    spec written from memory asked for 13 — between them, matching neither.
+
+    The emitted total is the union, and the split is printed because the two
+    halves carry different kinds of evidence.
+    """
+    from vetoworld.register.artifacts import CORRECTIONS, LOG_CORRECTIONS
+
+    assert len(CORRECTIONS) == 5
+    assert len(LOG_CORRECTIONS) == 11
+    assert len(CORRECTIONS) + len(LOG_CORRECTIONS) == 16
+
+    #: Disjoint by construction: the register's rows carry commit pairs, the
+    #: log's carry coordinates. If a commit is ever established for a log row
+    #: it should MOVE, not be duplicated.
+    log_text = {t.lower() for _d, _n, t in LOG_CORRECTIONS}
+    reg_text = {c[0].lower() for c in CORRECTIONS}
+    assert not (log_text & reg_text)
+
+
+def test_EVERY_BACKFILLED_ROW_STILL_POINTS_AT_A_CORRECTION():
+    """**A line number is an exact anchor and a fragile one.** Any edit above
+    it shifts every row below, so the anchor is verified rather than trusted —
+    the same bar the commit rows meet."""
+    from vetoworld.register.artifacts import _log_rows_resolve
+
+    rows = _log_rows_resolve()
+    drifted = [r for r in rows if r[3] != "resolves"]
+    assert not drifted, f"log anchors no longer resolve: {drifted}"
+
+
+def test_THE_BACKFILL_DOES_NOT_INVENT_COMMITS():
+    """The log cites no SHA anywhere. Reconstructing one by matching dates to
+    git history would be guesswork, and a wrong SHA in a ledger whose entire
+    purpose is verifiability is worse than an absent one."""
+    import re
+
+    from vetoworld.register.artifacts import LOG_CORRECTIONS
+
+    for _date, _line, text in LOG_CORRECTIONS:
+        assert not re.search(r"\b[0-9a-f]{7,40}\b", text), (
+            f"a backfilled row carries something SHA-shaped: {text!r}")

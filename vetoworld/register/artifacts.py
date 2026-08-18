@@ -306,6 +306,65 @@ CORRECTIONS = [
 ]
 
 
+#: **THE LOG'S CORRECTIONS, BACKFILLED 2026-08-18.**
+#:
+#: `CORRECTIONS` above holds five rows, each carrying two commit SHAs the
+#: emitter verifies. The research log records ELEVEN more, and they are
+#: DISJOINT from those five — so the ledger was reporting five of sixteen, and
+#: a bundle spec written from memory asked for "all 13", a number between the
+#: two that matches neither.
+#:
+#: **These rows carry no commit, and that is recorded rather than papered
+#: over.** The log cites zero SHAs anywhere in its 12,000 lines; reconstructing
+#: them by matching dates to git history would be guesswork, and a wrong SHA in
+#: a ledger whose whole purpose is verifiability is worse than an absent one.
+#: So each row carries its LOG COORDINATES — date and line — which are exact,
+#: checkable, and honest about being a different kind of anchor.
+#:
+#: This is `NEVER_TOOK_UNVERIFIED`'s principle one layer up: the absence of the
+#: evidence that would decide is its own state, never a synonym for the
+#: positive one.
+LOG_CORRECTIONS = [
+    ("2026-08-08", 1289,
+     "the previous run's trajectory 'equilibrium' was inflated"),
+    ("2026-08-08", 1632,
+     "'behaviour stayed flat at ~0.044' was a within-model statement"),
+    ("2026-08-08", 1768, "concealment is not novel either"),
+    ("2026-08-08", 2002, "the inflation index is not a calibrated ratio"),
+    ("2026-08-09", 2776, "the published per-model table is withdrawn"),
+    ("2026-08-09", 2788, "I selected on an outcome-adjacent criterion"),
+    ("2026-08-09", 3029, "gate -1 was evaluated at the wrong level"),
+    ("2026-08-09", 3096, "'orthogonal' was unsupportable"),
+    ("2026-08-09", 3202, "the F1/F2/F3 verdicts are withdrawn"),
+    ("2026-08-15", 11887,
+     "[CORRECTION] 10 / [TRAP] 32 — 166 cells, one model, twenty-two name tags"),
+    ("2026-08-16", 12015,
+     "[CORRECTION] 11 — every zero on record is the rule's work"),
+]
+
+LOG_PATH = "docs/research-log.md"
+
+
+def _log_rows_resolve() -> list[tuple]:
+    """Check each backfilled row still points at a `[CORRECTION]` heading.
+
+    A line number is an exact anchor and a fragile one: any edit above it
+    shifts every row below. So the anchor is VERIFIED rather than trusted, the
+    same way the commit rows are — and a drifted line is reported, not assumed.
+    """
+    from pathlib import Path
+
+    try:
+        lines = Path(LOG_PATH).read_text().splitlines()
+    except OSError:
+        return [(d, n, t, "LOG NOT READABLE") for d, n, t in LOG_CORRECTIONS]
+    out = []
+    for date, n, text in LOG_CORRECTIONS:
+        ok = 1 <= n <= len(lines) and "[CORRECTION]" in lines[n - 1]
+        out.append((date, n, text, "resolves" if ok else "** LINE DRIFTED **"))
+    return out
+
+
 def corrections() -> int:
     """The ledger, with every row checked against the commit it cites."""
     import subprocess
@@ -326,12 +385,40 @@ def corrections() -> int:
         print(f"  retracted  {ret}  {sr or '** COMMIT NOT FOUND **'}")
         print(f"  mechanism  {mech}")
         print(f"  caught by  {caught}\n")
-    print(f"  {len(CORRECTIONS)} corrections, {bad} unverifiable")
+    print(f"  {len(CORRECTIONS)} COMMIT-VERIFIED corrections, "
+          f"{bad} unverifiable")
     print("\n  Two of these were retracted in the SAME commit that published")
     print("  them — caught while writing, before the claim left the session.")
     print("  That is the cheapest place to catch one and the only place where")
     print("  the correction costs nothing but a paragraph.")
-    return 1 if bad else 0
+
+    log_rows = _log_rows_resolve()
+    drifted = [r for r in log_rows if r[3] != "resolves"]
+    print(f"\n\nLOG-ANCHORED — recorded in {LOG_PATH}, no commit cited\n")
+    for date, line, text, state in log_rows:
+        flag = "" if state == "resolves" else f"   {state}"
+        print(f"  {date}  {LOG_PATH}:{line:<6} {text}{flag}")
+
+    print(f"\n  {len(log_rows)} log-anchored, {len(drifted)} whose line no "
+          "longer resolves.")
+    print("\n  **These carry no commit, and the reason is stated rather than")
+    print("  hidden.** The log cites no SHA anywhere in its 12,000 lines, and")
+    print("  reconstructing one by matching dates to git history would be")
+    print("  guesswork — a wrong SHA in a ledger whose purpose is")
+    print("  verifiability is worse than an absent one. The anchor is the log")
+    print("  coordinate instead: exact, checkable, and honest about being a")
+    print("  different kind of evidence.")
+
+    total = len(CORRECTIONS) + len(log_rows)
+    print(f"\n\n  TOTAL ON RECORD: {total} "
+          f"({len(CORRECTIONS)} commit-verified + {len(log_rows)} log-anchored)")
+    print("\n  The two sets are DISJOINT. Before this backfill the ledger")
+    print(f"  emitted {len(CORRECTIONS)}, the log held {len(log_rows)}, and a")
+    print("  bundle spec written from memory asked for 13 — a number matching")
+    print("  neither source and larger than one, smaller than the union. That")
+    print("  is the hand-maintained-number family, in the one document whose")
+    print("  premise is that such numbers go stale. The paper quotes THIS.")
+    return 1 if (bad or drifted) else 0
 
 
 # ---------------------------------------------------------------- related work
