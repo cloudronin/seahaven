@@ -11,7 +11,7 @@ from seahaven.eden._shared import corpus as C
 ARTIFACTS = ("matrix", "occasions", "occasion-health", "seeds", "spend",
              "floor-mechanisms", "generations", "limitations",
              "disclosures", "predictions", "corrections", "related-work",
-             "correlations", "convergence", "bands")
+             "correlations", "convergence", "bands", "exhibit-1")
 
 
 def _occasions() -> int:
@@ -145,6 +145,7 @@ def registry() -> dict:
     from ..register import artifacts as A
     from ..register import c5 as BN
     from ..register import correlations as CO
+    from ..register import exhibits as EX
     from ..register import occasion_health as OH
     return {"occasions": _occasions, "spend": _spend, "seeds": _seeds,
             "occasion-health": OH.occasion_health,
@@ -152,6 +153,7 @@ def registry() -> dict:
             "generations": A.generations, "limitations": A.limitations,
             "disclosures": A.disclosures, "predictions": A.predictions,
             "corrections": A.corrections, "related-work": A.related_work,
+            "exhibit-1": EX.exhibit_1,
             "correlations": CO.correlations,
             "convergence": CO.candidate_convergence,
             "bands": BN.report}
