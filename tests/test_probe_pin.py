@@ -841,15 +841,16 @@ def test_THE_PIN_MOVED_because_the_RULES_moved_and_the_OLD_ONE_IS_KEPT():
     days and grid all moved, so the pin MUST move — a re-scope that left the
     hash alone would prove the payload was not carrying the design.
     """
-    assert PB.PINNED_PROBE_HASH.startswith("8bfb3da9")
+    assert PB.PINNED_PROBE_HASH.startswith("3f543a02")
     PB.assert_pinned()
 
     #: **The pin it replaced is kept, and says it governed nothing.** A reader
     #: who finds b380cc61 in git history — it is the head of the red-tree
     #: commit — needs to know which day's cells answer to it. None do.
-    old = "b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e8a08f"
-    assert old in PB.SUPERSEDED_PINS
-    assert "NO CELLS WERE SERVED" in PB.SUPERSEDED_PINS[old]
+    for old in ("b380cc610df78fbd684a482cdd2e528c4a3be7758f77ebfc31c00fa938e8a08f",
+                "8bfb3da9ed3effda91554cc10176ed864f1549fb47002e2a4c2459a8b26936ad"):
+        assert old in PB.SUPERSEDED_PINS
+        assert "NO CELLS WERE SERVED" in PB.SUPERSEDED_PINS[old]
 
     #: And the invariant that makes superseding safe at all: every served cell
     #: still cites a pin that is either current or recorded. Day one's 17 cells

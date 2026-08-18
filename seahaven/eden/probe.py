@@ -507,7 +507,7 @@ SCHEDULE_FACTS = (
     "right flavour: the job calls APIs and computes Fisher tests, it does not "
     "need a GPU.\n"
     "**THE TIMEOUT IS THE TRAP.** The default is THIRTY MINUTES and a job is "
-    "killed at it. A two-column day serves 408 + 288 episodes against hosted "
+    "killed at it. A two-column day serves 408 + 120 episodes against hosted "
     "endpoints and will exceed that, so `timeout` MUST be passed explicitly "
     "(accepts seconds, or '2h'/'90m'/'1d'). A silent 30-minute kill would "
     "present as a PARTIAL day of unknown cause, which is the failure mode the "
@@ -739,7 +739,7 @@ ARTIFACTS = (
 #: **No cell has been served under any pin since day one.** The 17 cells in
 #: `results/` all cite 956f9059, and the scheduled job is deleted, so this
 #: re-pin governs nothing retroactively.
-PINNED_PROBE_HASH = "8bfb3da9ed3effda91554cc10176ed864f1549fb47002e2a4c2459a8b26936ad"
+PINNED_PROBE_HASH = "3f543a021e901a3d057f97b17b21710d562968af5b123ad6277022aed4ff0411"
 
 #: **Day one's pin, kept because day one's cells cite it.**
 #:
@@ -778,6 +778,18 @@ SUPERSEDED_PINS = {
         "2026-08-17. NO CELLS WERE SERVED under it — the scheduled job was "
         "deleted before its first fire, and the column it describes was "
         "re-scoped to the matched pair for the DIFFERENTIAL STABILITY read.",
+    #: **The re-scope pin, superseded hours later by its own stale arithmetic.**
+    #: `SCHEDULE_FACTS` still sized the timeout against "408 + 288 episodes" —
+    #: 288 being the six-model grid the same commit had replaced with a
+    #: 120-episode matched pair. Harmless to the timeout, which has hours of
+    #: headroom either way, and exactly the class this programme refuses to
+    #: leave standing: a wrong figure inside a hashed payload gets quoted later
+    #: as though it were derived.
+    "8bfb3da9ed3effda91554cc10176ed864f1549fb47002e2a4c2459a8b26936ad":
+        "the matched-pair re-scope, 2026-08-17, carrying a stale episode count "
+        "in SCHEDULE_FACTS. NO CELLS WERE SERVED under it — it was committed "
+        "and pushed but no scheduled job existed to fire, and the count was "
+        "corrected before the release that any job would install.",
 }
 
 
@@ -811,7 +823,8 @@ def cells(provider: str = "together"):
     **This took `provider` and ignored it**, so the DeepInfra column would have
     served TOGETHER's eight models through the router — models DeepInfra may not
     host at all, under a cohort constant that existed and was never read. Found
-    when the dry run printed 408 episodes for a column whose grid is 288.
+    when the dry run printed 408 episodes for a column whose grid was 288 —
+    round 21's six models, before the matched-pair re-scope cut it to 120.
 
     Third instance in this build of the same shape: a constant defined, a
     function written, and nothing calling it (`DEEPINFRA_COHORT`,
