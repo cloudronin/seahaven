@@ -37,6 +37,17 @@ jobs:
       #
       # `test_eden_banding` holds C5's rule, which is pinned rather than served
       # — nothing else would fail if the rule text moved.
+      #
+      # **The probe files are here because the release gate did not cover the
+      # standing instrument.** `test_pin_invariance` walks the ROUNDS registry
+      # and the probe is not a round; the wheel step below deliberately skips
+      # `pin check`. So nothing between a commit and PyPI verified the probe
+      # pin — on the one artifact the SCHEDULED JOB installs and then spends
+      # money with, daily, unattended.
+      #
+      # That is the same shape as blockers 5 and 6: a rule with a path it never
+      # reached. The release is a path. See AGENTS.md, "when a structural rule
+      # lands, enumerate every path it must cover", and tests/test_serving_paths.
       - run: python -m pytest tests/test_vworld_packaging.py
                               tests/test_vworld_cli.py
                               tests/test_vworld_verify.py
@@ -45,6 +56,10 @@ jobs:
                               tests/test_raidex_pool.py
                               tests/test_eden_banding.py
                               tests/test_pin_invariance.py
+                              tests/test_probe_pin.py
+                              tests/test_probe_channel.py
+                              tests/test_serving_paths.py
+                              tests/test_exhibits.py
                               tests/test_layering.py -q
 
   build:
