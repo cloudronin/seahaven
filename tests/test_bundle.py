@@ -17,6 +17,20 @@ from vetoworld.register import bundle as B
 from vetoworld.register import manifest as M
 from vetoworld.register import markdown as MD
 
+#: **The full build is legitimately slow and the default timeout is too thin.**
+#:
+#: `build()` runs all 27 emitters, several of which walk the whole corpus, and
+#: takes ~90s on this machine against the suite's 120s per-test limit. That
+#: passed locally and TIMED OUT in CI on the 0.3.1 release, because a hosted
+#: runner is slower — a 30-second margin is not a margin, it is a flake waiting
+#: for a slower machine.
+#:
+#: Raised here rather than globally: every other test in the suite should stay
+#: under 120s, and a slow one should have to say so. The cost is stated because
+#: it is real — this adds a couple of minutes to every release gate, and it buys
+#: the assertion that the manuscript's inputs still build.
+pytestmark = pytest.mark.timeout(600)
+
 
 @pytest.fixture(scope="module")
 def built(tmp_path_factory):
