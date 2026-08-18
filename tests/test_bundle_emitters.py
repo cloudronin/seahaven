@@ -291,3 +291,60 @@ def test_THE_BACKFILL_DOES_NOT_INVENT_COMMITS():
     for _date, _line, text in LOG_CORRECTIONS:
         assert not re.search(r"\b[0-9a-f]{7,40}\b", text), (
             f"a backfilled row carries something SHA-shaped: {text!r}")
+
+
+# --- §4 traps and named rules ------------------------------------------------
+
+def test_THE_TRAP_INDEX_COUNTS_HEADINGS_not_the_highest_number():
+    """**Quoting the maximum would overstate the index by a third.** Numbering
+    runs to 40; far fewer carry a heading of their own. A count taken from the
+    highest number would be the hand-maintained-number family eating the very
+    index that names it."""
+    from vetoworld.register import traps as TR
+
+    nums = sorted(n for n, _l, _t in TR.TRAPS)
+    assert len(nums) == len(set(nums)), "a trap number is registered twice"
+    assert len(nums) < max(nums), (
+        "every number now has a heading — the gap note needs revisiting")
+
+
+def test_EVERY_TRAP_ANCHOR_STILL_RESOLVES():
+    """A line number is exact and fragile: any edit above shifts every entry
+    below. Verified on every run, like the corrections backfill."""
+    from vetoworld.register import traps as TR
+
+    drifted = [r for r in TR._resolve(TR.TRAPS) if r[3] != "resolves"]
+    assert not drifted, f"trap anchors drifted: {drifted}"
+
+
+def test_EVERY_FAMILY_MEMBER_IS_A_REGISTERED_TRAP():
+    """A family citing a trap that does not exist is a taxonomy fitted to an
+    argument rather than to the record."""
+    from vetoworld.register import traps as TR
+
+    known = {n for n, _l, _t in TR.TRAPS}
+    for name, fam in TR.FAMILIES.items():
+        assert fam["members"], name
+        unknown = set(fam["members"]) - known
+        assert not unknown, f"{name} cites unregistered traps {unknown}"
+        assert len(fam["what"]) > 30, name
+
+
+def test_THE_TIMEZONE_DEFECT_IS_FILED_UNDER_OBSERVER_ENVIRONMENT():
+    """The newest instance of the oldest family. If the family stops naming it,
+    the shape has lost the member that proves it is still live."""
+    from vetoworld.register import traps as TR
+
+    assert "TIMEZONE" in TR.FAMILIES["observer-environment"]["what"]
+
+
+def test_NAMED_RULES_CARRY_THE_PATH_ENUMERATION_RULE():
+    """The rule this session added, and the one the serving-path registry
+    enforces. A rule that lives only in a document is one the machinery does
+    not follow."""
+    from vetoworld.register import traps as TR
+
+    rules = dict(TR.NAMED_RULES)
+    assert any("enumerate every path" in k for k in rules)
+    assert any("requested == served" in k for k in rules)
+    assert len(TR.NAMED_RULES) >= 7
