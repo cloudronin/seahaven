@@ -43,6 +43,58 @@ def test_EXHIBIT_1_IS_BLOCKED_AND_SAYS_WHY():
             assert set(rounds) <= set(ID.RETRACTED_SWEEPS)
 
 
+def test_THE_ZERO_READS_AS_SUBSTRATE_PENDING_NOT_ABANDONED():
+    """**A zero with no stated route out reads as a dead end**, and this one is
+    not. `SUBSTRATE_PENDING` is printed where the reader meets the zero.
+
+    It also corrects this module's own first guess. The exhibit originally said
+    unblocking it "costs money"; it does not, at any price — the blocked models
+    cannot be served on Together at all.
+    """
+    sp = EX.SUBSTRATE_PENDING
+    assert "SUBSTRATE PENDING" in sp and "NOT ABANDONED" in sp
+    assert "no budget reopens them" in sp, (
+        "the point is that money does NOT unblock this, which is the opposite "
+        "of what the plan and this module first recorded")
+    assert "MATCHED-PAIR FLEET" in sp, "a zero needs its route out named"
+    assert "PROBE-SOURCED" in sp and "DESCRIPTIVE" in sp, (
+        "probe cells are excluded from the score corpus by construction, so a "
+        "comparison drawn from them must never read as a round measurement")
+
+    #: It is printed, not merely defined — the defect this repo keeps finding.
+    import inspect
+    assert "SUBSTRATE_PENDING" in inspect.getsource(EX.exhibit_1)
+
+
+def test_THE_WALL_COUNT_IS_DERIVED_FROM_THE_ROUND_20_REGISTRY():
+    """**"Six of the seven" is a number, and numbers in prose drift.**
+
+    `SUBSTRATE_PENDING` claims six of the seven blocked models are
+    non-serverless on Together and that Kimi-K3 is walled by a different
+    mechanism. That is checked against round 20's own registry here, so the day
+    Together re-lists one of them this sentence fails rather than misinforms.
+    """
+    from seahaven.eden import round20 as R20
+
+    seven = {r["model"] for r in EX.blocked_by_retraction()}
+    assert len(seven) == 7, f"the blocked set is no longer seven models: {seven}"
+
+    walls = {}
+    for model in seven:
+        why = (getattr(R20, "BLOCKED", {}) or {}).get(model) \
+            or (getattr(R20, "EXCLUDED", {}) or {}).get(model)
+        assert why, f"{model} is blocked by retraction but round 20 gives no reason"
+        walls[model] = str(why)
+
+    tiered = [m for m, w in walls.items() if "non-serverless" in w]
+    assert len(tiered) == 6, (
+        f"SUBSTRATE_PENDING says six are non-serverless on Together; the "
+        f"registry says {len(tiered)}: {sorted(tiered)}")
+    other = [m for m in walls if m not in tiered]
+    assert other == ["moonshotai/Kimi-K3"], other
+    assert "EMPTY CONTENT" in walls[other[0]]
+
+
 def test_THE_ADMISSIBILITY_RULE_IS_THE_LEVELS_RULE_ONE_LAYER_DOWN():
     """**A NOT_ZERO/zero difference is a RATE difference wearing a mechanism
     label**, and `LEVELS_RULE` makes cross-provider rate differences

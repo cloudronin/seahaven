@@ -34,9 +34,14 @@ overlapping model come from rounds 15 and 16, and both are in
 `identity.RETRACTED_SWEEPS`. Twenty-eight model/level pairs are measured on two
 providers, and ZERO of them have an admissible cell on both sides.
 
-So Exhibit 1 is not merely empty, it is BLOCKED, and unblocking it costs money:
-the overlapping models have to be re-measured on Together at a live round. That
-is a finding about the plan, and it is recorded here rather than worked around,
+So Exhibit 1 is not merely empty, it is BLOCKED — and **money does not unblock
+it**, which was this module's own first wrong guess. Re-measuring the seven on
+Together is not available at any price: six are non-serverless there as of
+2026-08-16 (a tiering decision, not a capability one) and Kimi-K3 is servable
+but returns EMPTY CONTENT under this programme's pinned request form. Seven of
+seven walled, by two different mechanisms.
+
+That is a finding about the plan, and it is recorded rather than worked around,
 because an exhibit padded with retracted cells would be worth less than no
 exhibit at all.
 
@@ -44,6 +49,13 @@ A second bar sits behind the first even once cells exist: of the 28 pairs, none
 is zero-rate on both sides, so all of them would be LEVEL differences anyway.
 Both counts are printed, because they are separate obstacles and fixing the
 first does not fix the second.
+
+**THE ZERO IS SUBSTRATE PENDING, NOT ABANDONED**, and `SUBSTRATE_PENDING` says
+so on the emitted table. The matched-pair fleet is the honest roadmap: Flash
+carries the A1 decision cell on BOTH columns daily, so route labels for one
+model accrue from probe cells over the coming weeks without buying anything.
+That comparison will be PROBE-SOURCED and descriptive, and is labelled as such
+rather than being quietly pooled with round measurements.
 
 `test_EXHIBIT_1_IS_BLOCKED_AND_SAYS_WHY` asserts the emptiness and its cause,
 so the day a genuine flip lands somebody learns it from a failing test rather
@@ -60,7 +72,7 @@ from seahaven.eden._shared import corpus as C
 from seahaven.eden._shared import identity as ID
 from seahaven.eden.outcome import level_state, load_level
 
-__all__ = ["mechanism_rows", "exhibit_1", "ADMISSIBILITY"]
+__all__ = ["mechanism_rows", "exhibit_1", "ADMISSIBILITY", "SUBSTRATE_PENDING"]
 
 ADMISSIBILITY = (
     "A cross-provider MECHANISM claim is admissible only where the RATE is the "
@@ -71,6 +83,25 @@ ADMISSIBILITY = (
     "NEVER_TOOK_UNVERIFIED is neither: it is the absence of the counterfactual "
     "arm that would decide, and it is reported as undecidable rather than "
     "quietly counted as agreement.")
+
+
+#: **Why the zero is a waiting room and not a grave.**
+#: Printed on the table so a reader meeting `ADMISSIBLE MECHANISM FLIPS: 0` is
+#: told what would change it, and is not left to infer that the exhibit was
+#: tried and given up on.
+SUBSTRATE_PENDING = (
+    "SUBSTRATE PENDING, NOT ABANDONED. The blocked pairs cannot be recovered "
+    "by spending: six of the seven are non-serverless on Together as of "
+    "2026-08-16, and Kimi-K3 returns empty content there under this "
+    "programme's pinned request form — seven of seven walled, by two different "
+    "mechanisms, so no budget reopens them. "
+    "The route the design actually leaves open is the MATCHED-PAIR FLEET: "
+    "DeepSeek-V4-Flash-0731 carries the A1 decision cell on BOTH columns every "
+    "day, so route labels for one model accrue from PROBE cells over the coming "
+    "weeks at no additional cost. Any flip that emerges that way is "
+    "PROBE-SOURCED and DESCRIPTIVE, and must be labelled so on the table: probe "
+    "cells are excluded from the score corpus by construction, and a comparison "
+    "drawn from them is not a round measurement.")
 
 
 @functools.lru_cache(maxsize=1)
@@ -217,10 +248,11 @@ def exhibit_1() -> int:
         print("  supplied the DeepInfra side; nothing live supplies the other.")
         print()
         print("  So this exhibit is NOT $0 and NOT available now, which is what")
-        print("  the plan recorded. Unblocking it means re-measuring the")
-        print("  overlapping models on Together at a live round, and that costs")
-        print("  money. Padding it with retracted cells would be worth less")
-        print("  than leaving it empty.")
+        print("  the plan recorded. Padding it with retracted cells would be")
+        print("  worth less than leaving it empty.")
+        print()
+        for line in _wrap(SUBSTRATE_PENDING):
+            print(f"  {line}")
     for r in flips:
         print(f"  {r['model']:<44}{r['level']:<6}"
               + "  ".join(f"{p}={lab}" for p, lab in r["labels"].items()))
