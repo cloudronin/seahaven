@@ -61,6 +61,22 @@ def _daily(args) -> int:
     day = (dt.date.fromisoformat(date)
            - dt.date.fromisoformat(PB.SEED_EPOCH)).days
     root = C.RESULTS
+    #: **The serving path CREATES its output directory.** 0.3.2's scheduled day
+    #: served the first cell of each column, then died writing it:
+    #: `FileNotFoundError: results/probe-together-...json`. The container is
+    #: ephemeral and `results/` does not exist in it; `write_text` does not make
+    #: parents. So both columns paid for 24 episodes and threw them away.
+    #:
+    #: The write is also OUTSIDE the per-cell `except`, so this was not a
+    #: SERVE_FAIL — it was an unhandled crash that never reached the status
+    #: logic, the push refusal, or the exit-code branch added the day before.
+    #:
+    #: **It survived a pre-flight that served real cells**, because that
+    #: pre-flight ran `mkdir -p .../results` before serving and the scheduled
+    #: job does not. A pre-flight that prepares the environment differently
+    #: from the real path is testing a different path — which is the same shape
+    #: as the dry run that could not see `textworld`, one layer along.
+    root.mkdir(parents=True, exist_ok=True)
     grid = PB.cells(provider)
 
     def path_for(model, arm, level):

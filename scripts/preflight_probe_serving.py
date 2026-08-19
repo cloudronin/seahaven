@@ -53,7 +53,13 @@ echo
 echo '=== SERVE THE DEEPINFRA COLUMN FOR REAL (5 cells, ~$2.40) ==='
 # --no-push: a pre-flight must never write to the published log.
 rc=0
-mkdir -p /tmp/preflight/results && cd /tmp/preflight
+# **NOTHING IS PREPARED HERE.** This used to `mkdir -p .../results`, and the
+# scheduled job does not — so the pre-flight served into a directory that
+# existed only because the pre-flight made it, and 0.3.2's real day died at
+# `write_text` with FileNotFoundError after paying for the first cell of each
+# column. A pre-flight that prepares the environment differently from the real
+# path is testing a different path.
+mkdir -p /tmp/preflight && cd /tmp/preflight
 vworld probe deepinfra --daily --no-push || rc=$?
 echo "deepinfra exit=$rc"
 

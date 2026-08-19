@@ -263,3 +263,48 @@ def test_THE_SERVING_EXTRA_IS_DECLARED_and_probe_includes_it():
     assert "vetoworld[serve]" in probe, (
         "the scheduled job installs vetoworld[probe] and must get the serving "
         "deps with it, or it serves zero cells again")
+
+
+def test_THE_SERVING_PATH_CREATES_ITS_OWN_OUTPUT_DIRECTORY(tmp_path, monkeypatch):
+    """**0.3.2's day served two cells and threw them away.**
+
+    The container is ephemeral and has no `results/`; `write_text` does not
+    make parents, so `_daily` crashed at the write — AFTER serving and paying
+    for the first cell of each column. The write sits outside the per-cell
+    `except`, so it was not even a SERVE_FAIL: an unhandled crash that never
+    reached the status logic, the push refusal, or the exit-code branch.
+
+    A serving verb that requires its caller to have made a directory is a verb
+    with an unwritten precondition, and unwritten preconditions are what
+    ephemeral containers find.
+    """
+    import inspect
+
+    from vetoworld.commands import probe as CMD
+
+    src = inspect.getsource(CMD._daily)
+    assert "root.mkdir(parents=True, exist_ok=True)" in src
+    #: Before the first write, not lazily beside it. Compare against the CALL,
+    #: not the bare name — the comment above the mkdir explains the failure and
+    #: names `write_text`, so a substring test would match the prose.
+    assert (src.index("root.mkdir(parents=True")
+            < src.index("path_for(model, arm, level).write_text("))
+
+
+def test_THE_PREFLIGHT_DOES_NOT_PREPARE_WHAT_THE_JOB_DOES_NOT():
+    """**The pre-flight hid the defect it existed to catch.**
+
+    It ran `mkdir -p .../results` before serving; the scheduled job does not.
+    So it served into a directory that existed only because the pre-flight made
+    it, and the real day died on the write.
+
+    Same shape as the dry run that could not see `textworld`: a check that
+    diverges from the real path verifies the divergence, not the path.
+    """
+    from pathlib import Path
+
+    src = Path("scripts/preflight_probe_serving.py").read_text()
+    assert "mkdir -p /tmp/preflight/results" not in src, (
+        "the pre-flight prepares `results/` again — the job does not, so this "
+        "re-hides exactly the failure it was written to expose")
+    assert "NOTHING IS PREPARED HERE" in src
