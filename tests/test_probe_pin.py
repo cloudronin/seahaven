@@ -684,6 +684,47 @@ def test_the_CADENCE_IS_A_FUNCTION_not_a_sentence():
         "disagree, and the projection is what the gate was amended against")
 
 
+def test_THE_CONTAINER_IS_PINNED_BY_DIGEST_not_by_a_moving_tag():
+    """**Pinning the package says nothing about what it is installed INTO.**
+
+    0.3.0's scheduled day served ZERO of 22 cells. `vetoworld[probe]==0.3.0`
+    was correctly pinned and would have failed identically: the missing piece
+    was `make`. `jericho` publishes an sdist and NO wheels for any platform, so
+    pip compiles it, and `python:3.12-slim` carries no toolchain.
+
+    So the image is a load-bearing input and lives in the hashed payload beside
+    the schedule and the secrets — BY DIGEST, because `python:3.12` is a
+    floating tag that Docker rebuilds. A container that passes a pre-flight
+    would otherwise not be the container that fires tomorrow, leaving the only
+    unreproducible input in an instrument where everything else is hashed.
+    """
+    image = PB.SCHEDULE_JOB["image"]
+    assert "@sha256:" in image, (
+        f"{image!r} is a floating tag — it moves under the job without any "
+        "pin breaking, which is the one failure mode this key exists for")
+    tag, digest = image.split("@sha256:")
+    assert len(digest) == 64 and all(c in "0123456789abcdef" for c in digest)
+    assert not tag.endswith("-slim"), (
+        "a slim image has no C toolchain and cannot build jericho — this is "
+        "exactly what served zero cells on 2026-08-18")
+
+    #: It must travel in the payload, or it is documentation.
+    import json
+    assert json.loads(PB.payload())["schedule_job"]["image"] == image
+
+
+def test_THE_JOB_SCRIPT_DERIVES_THE_IMAGE_rather_than_retyping_it():
+    """The image was the last job parameter still typed into the creation
+    script. Everything else came from the pin, and the one that did not is the
+    one that broke."""
+    from pathlib import Path
+
+    src = Path("scripts/create_probe_schedule.py").read_text()
+    assert 'image=JOB["image"]' in src
+    assert '"python:3.12"' not in src, "the image is retyped again"
+    assert "@sha256:" in src, "the script must refuse a floating tag"
+
+
 def test_the_JOB_SPEC_DOES_NOT_INHERIT_THE_30_MINUTE_DEFAULT():
     """The default kills a two-column day mid-serve and would present as a
     PARTIAL day of unknown cause. The timeout must be explicit."""
@@ -841,7 +882,7 @@ def test_THE_PIN_MOVED_because_the_RULES_moved_and_the_OLD_ONE_IS_KEPT():
     days and grid all moved, so the pin MUST move — a re-scope that left the
     hash alone would prove the payload was not carrying the design.
     """
-    assert PB.PINNED_PROBE_HASH.startswith("3f543a02")
+    assert PB.PINNED_PROBE_HASH.startswith("feb19ba8")
     PB.assert_pinned()
 
     #: **The pin it replaced is kept, and says it governed nothing.** A reader

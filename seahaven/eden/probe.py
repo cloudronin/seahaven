@@ -545,6 +545,29 @@ SCHEDULE_JOB = {
     #: is NOT vestigial — it is what pushes the day's rows and, since Phase 3,
     #: what reads the prior ones back for the rolling window and the earn pool.
     "secrets": ("TOGETHER_API_KEY", "HF_TOKEN", "DEEPINFRA_API_KEY"),
+    #: **THE CONTAINER, PINNED BY DIGEST — added after 0.3.0 served zero cells.**
+    #:
+    #: Pinning the PACKAGE says nothing about what it is installed INTO, and the
+    #: 0.3.0 outage lived entirely in the "into": `vetoworld[probe]==0.3.0` was
+    #: correctly pinned and would have failed identically, because the missing
+    #: piece was `make`. `jericho` publishes an sdist and NO wheels for any
+    #: platform, so pip compiles it, and `python:3.12-slim` carries no toolchain.
+    #: The image is therefore a load-bearing input and belongs in the payload
+    #: beside the schedule and the secrets, not retyped in a script.
+    #:
+    #: **BY DIGEST, because `python:3.12` is a FLOATING TAG.** Docker rebuilds it
+    #: for point releases and security patches, so the container that passes a
+    #: pre-flight is not guaranteed to be the one that fires tomorrow — which
+    #: would leave the only unreproducible input in an instrument where every
+    #: other input is hashed or content-addressed. This is the OCI INDEX digest,
+    #: so it still resolves per-architecture at pull time.
+    #:
+    #: The cost is stated rather than discovered: a digest-pinned image stops
+    #: receiving patches until somebody bumps it deliberately. That is the same
+    #: trade every round pin already makes, so it is consistent rather than new,
+    #: and the bump is a pin boundary like any other.
+    "image": "python:3.12@sha256:"
+             "e5931cdb4a8cec0ad083277c16a39114f14123b8b6c858c8c9689b677789975c",
     "columns_in_order": ("together", "deepinfra"),
 }
 
@@ -710,6 +733,14 @@ ARTIFACTS = (
     "seahaven/eden/intent.py",
 )
 
+#: **The pin as of the CONTAINER BEING PINNED, 2026-08-18.**
+#:
+#: The 0.3.0 schedule served ZERO of 22 cells because its image could not build
+#: `jericho`. Pinning the PACKAGE never protected against that — the failure was
+#: in what the package was installed INTO — so the image is now a hashed input
+#: like the schedule and the secrets, and by DIGEST rather than by a tag that
+#: moves. See `SCHEDULE_JOB["image"]`.
+#:
 #: **The pin as of the MATCHED-PAIR RE-SCOPE, 2026-08-17, before day two.**
 #:
 #: **Re-pinned DELIBERATELY, ONCE, at the end of phase 4.** The previous pin was
@@ -739,7 +770,7 @@ ARTIFACTS = (
 #: **No cell has been served under any pin since day one.** The 17 cells in
 #: `results/` all cite 956f9059, and the scheduled job is deleted, so this
 #: re-pin governs nothing retroactively.
-PINNED_PROBE_HASH = "3f543a021e901a3d057f97b17b21710d562968af5b123ad6277022aed4ff0411"
+PINNED_PROBE_HASH = "feb19ba899f16130cbb1df80749c4758d1f5dcf6e1310e15f579a1a14cbee325"
 
 #: **Day one's pin, kept because day one's cells cite it.**
 #:
@@ -790,6 +821,15 @@ SUPERSEDED_PINS = {
         "in SCHEDULE_FACTS. NO CELLS WERE SERVED under it — it was committed "
         "and pushed but no scheduled job existed to fire, and the count was "
         "corrected before the release that any job would install.",
+    #: **The pin 0.3.0 and 0.3.1 both carried, superseded by pinning the
+    #: container it runs in — the input its own outage exposed.**
+    "3f543a021e901a3d057f97b17b21710d562968af5b123ad6277022aed4ff0411":
+        "matched pair on the direct API, 2026-08-17 to 2026-08-18, with the "
+        "job's IMAGE unpinned. Five DeepInfra cells were SERVED under it in a "
+        "pre-flight and deliberately discarded (--no-push, in an ephemeral "
+        "container), so no committed or published cell cites it. The 0.3.0 "
+        "scheduled day under it served nothing at all: the image could not "
+        "build jericho.",
 }
 
 

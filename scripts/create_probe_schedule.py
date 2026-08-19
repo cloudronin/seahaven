@@ -78,6 +78,7 @@ def main() -> int:
     print("--- spec (all from the pin) ---")
     for k in ("schedule", "flavor", "timeout"):
         print(f"  {k:9} {JOB[k]!r}")
+    print(f"  image     {JOB['image']}")
     print(f"  secrets   {sorted(JOB['secrets'])}")
     print(f"  version   {VERSION}")
 
@@ -87,18 +88,14 @@ def main() -> int:
         print(f"REFUSING: empty secret(s) {missing}")
         return 1
 
-    #: **NOT -slim, and this is the 0.3.0 failure's second half.** `jericho`
-    #: publishes an sdist and NO wheels for any platform, so pip compiles it and
-    #: needs make + a C toolchain. The slim image has neither. Declaring the
-    #: dependency was necessary and not sufficient: the container also has to be
-    #: able to BUILD it.
-    #:
-    #: NOT YET DERIVED FROM THE PIN — `probe.SCHEDULE_JOB` has no `image` key, so
-    #: this is the one job parameter still retyped here rather than read from the
-    #: hashed payload. That is the exact shape that caused today's outage and it
-    #: should move into the pin at the next release.
+    #: **Derived from the pin like everything else, since 0.3.2.** It was the
+    #: one job parameter still retyped here — and the 0.3.0 outage was caused
+    #: by exactly that: the image could not build `jericho`, which publishes an
+    #: sdist and no wheels, so pip compiles it and needs make plus a C
+    #: toolchain. Pinning the PACKAGE never protected against it, because the
+    #: failure was in what the package was installed INTO.
     job = create_scheduled_job(
-        image="python:3.12",
+        image=JOB["image"],
         command=command,
         schedule=JOB["schedule"],
         flavor=JOB["flavor"],
@@ -124,6 +121,18 @@ def main() -> int:
         print(f"MISMATCH: pinned {JOB['schedule']!r}, API says {echoed!r}")
         return 1
     print(f"cron matches the pin: {echoed!r}")
+
+    #: **The image must be digest-pinned, or the container is the one input
+    #: nothing records.** `python:3.12` is a FLOATING tag: Docker rebuilds it
+    #: for point releases and security patches, so a container that passes a
+    #: pre-flight is not the one that fires tomorrow.
+    if "@sha256:" not in JOB["image"]:
+        print(f"REFUSING: the pinned image {JOB['image']!r} is a floating tag. "
+              "Pin it by digest — every other input to this job is hashed or "
+              "content-addressed, and the container should not be the "
+              "exception.")
+        return 1
+    print(f"image is digest-pinned: {JOB['image'].split('@')[1][:23]}…")
     return 0
 
 
